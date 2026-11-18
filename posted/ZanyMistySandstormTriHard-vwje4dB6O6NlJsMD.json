@@ -1,0 +1,27 @@
+{
+ "id": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
+ "hook": "Lacy watched Donnie DIE in GTA 6",
+ "streamer": "Lacy",
+ "login": "lacy",
+ "campaign": "Lacy",
+ "tag": "#Lacy",
+ "caption": "",
+ "why": "5:37 PM slot",
+ "posted_at": "2026-11-18T22:39:24Z",
+ "video": "https://inballin15.github.io/Gtaclip-cloud/v/ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD_final.mp4?v=1bb0a0cf51",
+ "poster": "https://inballin15.github.io/Gtaclip-cloud/v/ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "error",
+   "buffer_id": "6afe291e4cace847b37af57d",
+   "error": "TikTok has detected a large number of posts published through the API for this channel. Wait 24 hours before trying to publish again."
+  },
+  "youtube": {
+   "state": "error",
+   "buffer_id": "6afe291fc462756e9e23c06e",
+   "error": "You've hit the daily video upload limit for an unverified YouTube account. Verify your account and retry sharing your post."
+  }
+ }
+}
