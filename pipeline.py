@@ -120,12 +120,32 @@ def apply_issue(st: dict) -> str:
 
 
 # ---------------------------------------------------------------- webcam
-_CASC = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+_CASCS = [cv2.CascadeClassifier(cv2.data.haarcascades + n) for n in
+          ("haarcascade_frontalface_default.xml", "haarcascade_frontalface_alt2.xml", "haarcascade_profileface.xml")]
 
 
-def _faces(frame):
-    g = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    return [tuple(int(v) for v in f) for f in _CASC.detectMultiScale(g, 1.1, 6, minSize=(36, 36))]
+def _faces(frame, neighbors=5):
+    g = cv2.equalizeHist(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+    out = []
+    for c in _CASCS:
+        for f in c.detectMultiScale(g, 1.08, neighbors, minSize=(30, 30)):
+            out.append(tuple(int(v) for v in f))
+        flipped = cv2.flip(g, 1) if c is _CASCS[2] else None  # profiles facing the other way
+        if flipped is not None:
+            W = g.shape[1]
+            for (x, y, w, h) in c.detectMultiScale(flipped, 1.08, neighbors, minSize=(30, 30)):
+                out.append((W - x - w, y, w, h))
+    return out
+
+
+def box_has_face(path: Path, duration: float, cam: str) -> bool:
+    x, y, w, h = [float(v) for v in cam.split(",")]
+    for fr in _frames(path, [max(0.5, duration * p) for p in (0.2, 0.5, 0.8)]):
+        H, W = fr.shape[:2]
+        crop = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+        if crop.size and _faces(cv2.resize(crop, None, fx=2, fy=2), neighbors=4):
+            return True
+    return False
 
 
 def _frames(path: Path, secs):
@@ -143,7 +163,7 @@ def _frames(path: Path, secs):
 def find_cam(path: Path, duration: float) -> str:
     """A face that stays in the same place across frames = the webcam. Returns x,y,w,h fractions
     of a 1080:960 box around it (shoulders included), or '' if none."""
-    secs = [max(0.5, duration * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)]
+    secs = [max(0.5, duration * p) for p in (0.08, 0.22, 0.36, 0.5, 0.64, 0.78, 0.92)]
     frames = _frames(path, secs)
     if not frames:
         return ""
@@ -221,6 +241,27 @@ def main() -> None:
     RAW.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp())
 
+    # retry clips that failed the webcam check with the older detector
+    for cid, c in clips.items():
+        if c.get("status") == "skip" and c.get("skip_reason") == "no webcam found" and c.get("cam_v", 1) < 2:
+            raw = RAW / f"{cid}.mp4"
+            c["cam_v"] = 2
+            if not raw.exists():
+                try:
+                    shutil.move(str(download(c["twitch"], Path(tempfile.mkdtemp()))), raw)
+                except Exception as e:  # noqa: BLE001
+                    log(f"retry download failed {cid}: {e}")
+                    continue
+            dur = duration_of(raw)
+            cam = find_cam(raw, dur)
+            usual = ",".join(str(v) for v in (CFG["streamers"].get(c["login"], {}).get("facecam") or []))
+            if not cam and usual and box_has_face(raw, dur, usual):
+                cam = usual
+            if cam:
+                c.update(status="new", cam=cam)
+                c.pop("skip_reason", None)
+                log(f"webcam found on retry: {c['streamer']} '{c['title']}' {cam}")
+
     # 3. new clips (not on issue-triggered runs, to keep those fast)
     if os.environ.get("FETCH", "1") == "1":
         try:
@@ -250,6 +291,9 @@ def main() -> None:
                     rec.update(status="skip", skip_reason="title filter")
                 else:
                     cam = find_cam(raw, dur)
+                    usual = ",".join(str(v) for v in (s.get("facecam") or []))
+                    if not cam and usual and box_has_face(raw, dur, usual):
+                        cam = usual
                     if not cam:
                         rec.update(status="skip", skip_reason="no webcam found")
                     else:
