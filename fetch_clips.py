@@ -38,9 +38,14 @@ def log(msg: str) -> None:
 
 
 def twitch_headers() -> dict:
-    cid, secret = os.environ["TWITCH_CLIENT_ID"], os.environ["TWITCH_CLIENT_SECRET"]
+    cid = os.environ.get("TWITCH_CLIENT_ID", "").strip().strip('"').strip("'")
+    secret = os.environ.get("TWITCH_CLIENT_SECRET", "").strip().strip('"').strip("'")
+    # diagnostics only (never print the values)
+    log(f"twitch id length={len(cid)} secret length={len(secret)} (both should be 30)")
     r = requests.post("https://id.twitch.tv/oauth2/token", data={
         "client_id": cid, "client_secret": secret, "grant_type": "client_credentials"}, timeout=20)
+    if r.status_code != 200:
+        log(f"Twitch said {r.status_code}: {r.text[:200]}")
     r.raise_for_status()
     return {"Client-ID": cid, "Authorization": f"Bearer {r.json()['access_token']}"}
 
