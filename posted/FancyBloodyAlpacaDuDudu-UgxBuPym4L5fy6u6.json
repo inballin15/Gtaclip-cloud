@@ -17,9 +17,11 @@
    "error": ""
   },
   "youtube": {
-   "state": "error",
-   "buffer_id": "6afe21d801ba7c5e7916be22",
-   "error": "You've hit the daily video upload limit for an unverified YouTube account. Verify your account and retry sharing your post."
+   "state": "uploading",
+   "buffer_id": "6afe26b4c462756e9e22d0ad",
+   "error": "",
+   "tries": 2,
+   "last_try": "2026-11-18T22:29:07Z"
   }
  }
 }
