@@ -232,8 +232,8 @@ const etParts = (d) => {
   return { day: `${p.year}-${p.month}-${p.day}`, mins: (+p.hour % 24) * 60 + +p.minute };
 };
 
-// Posting schedule (Eastern): runs at :37, posts go out right away.
-const SLOTS = [[7, 37], [9, 37], [11, 37], [12, 37], [14, 37], [16, 37], [18, 37], [20, 37]];
+// Posting schedule (Eastern): every 30 minutes, at :07 and :37, 7am to 10:37pm.
+const SLOTS = []; for (let h = 7; h <= 22; h++) { SLOTS.push([h, 7], [h, 37]); }
 const label = (h, m) => `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
 
 function overview() {
@@ -247,7 +247,7 @@ function overview() {
     const mins = next[0] * 60 + next[1] - now.mins;
     $('k-next').textContent = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
     $('k-next-s').textContent = `at ${label(...next)}`;
-  } else { $('k-next').textContent = 'Tomorrow'; $('k-next-s').textContent = 'at 7:37 am'; }
+  } else { $('k-next').textContent = 'Tomorrow'; $('k-next-s').textContent = 'at 7:07 am'; }
   const f = data.fetcher || {};
   if (f.last_run_utc) {
     const t = new Date(`${new Date().toISOString().slice(0, 10)}T${f.last_run_utc}Z`);
@@ -260,7 +260,7 @@ function overview() {
   let marked = false;
   for (const [h, m] of SLOTS) {
     const t = h * 60 + m;
-    const done = postedMins.some((x) => x >= t - 10 && x <= t + 70);
+    const done = postedMins.some((x) => x >= t - 5 && x < t + 30);
     const d = el('div', 'slot');
     let word = done ? 'Posted' : t < now.mins - 20 ? 'Missed' : 'Coming up';
     if (done) d.classList.add('done'); else if (t < now.mins - 20) d.classList.add('past');
@@ -284,7 +284,7 @@ function overview() {
 function upcomingPlan() {
   const now = etParts(new Date());
   const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day).map((p) => etParts(new Date(p.posted)).mins);
-  const open = SLOTS.map(([h, m], i) => ({ i, t: h * 60 + m })).filter(({ t }) => t > now.mins - 5 && !todays.some((x) => x >= t - 10 && x <= t + 70));
+  const open = SLOTS.map(([h, m], i) => ({ i, t: h * 60 + m })).filter(({ t }) => t > now.mins - 5 && !todays.some((x) => x >= t - 5 && x < t + 30));
   const plan = {};
   open.forEach((s, k) => { if (data.ready[k]) plan[s.i] = data.ready[k]; });
   return plan;
@@ -301,7 +301,7 @@ function openSlot(i, done, todays, t) {
   const x = el('button', 'btn x', 'Close'); x.onclick = closeSheet; head.append(x);
   inner.append(head);
   if (done) {
-    const p = todays.find((q) => { const mm = etParts(new Date(q.posted)).mins; return mm >= t - 10 && mm <= t + 70; });
+    const p = todays.find((q) => { const mm = etParts(new Date(q.posted)).mins; return mm >= t - 5 && mm < t + 30; });
     inner.append(el('div', 'meta', 'Already posted:'));
     if (p) inner.append(postRow(p));
   } else {
@@ -311,7 +311,7 @@ function openSlot(i, done, todays, t) {
     } else {
       const e = edits[c.id];
       const hook = e ? e.hook : c.hook;
-      const src = hook ? finalUrl(c.id, c.facecam || facecamOf(c), hook) : (c.final || c.as_post);
+      const src = hook ? finalUrl(c.id, c.cam, hook) : (c.final || c.as_post);
       const v = document.createElement('video');
       v.controls = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'metadata'; v.poster = c.poster; v.src = src;
       const top = el('div', 'row');
@@ -376,7 +376,7 @@ function clipCard(c0) {
   const c = { ...c0 };
   if (e0 && (e0.hook !== c0.hook || e0.caption !== (c0.caption || ''))) {
     c.hook = e0.hook; c.caption = e0.caption; c.pending = true;
-    if (typeof finalUrl === 'function' && c.hook) c.final = finalUrl(c.id, c.facecam || facecamOf(c0), c.hook);
+    if (typeof finalUrl === 'function' && c.hook) c.final = finalUrl(c.id, c.cam, c.hook);
   }
   const card = el('div', 'card');
   card.dataset.clip = c0.id;
@@ -400,7 +400,7 @@ function clipCard(c0) {
   const btns = el('div', 'btns');
   const finalSrc = c.final || c.as_post;
   const raw = el('button', 'btn', 'Original');
-  const post = el('button', 'btn on', c.final ? 'Will post' : 'As a post');
+  const post = el('button', 'btn on', c.final ? 'Will post' : 'Layout preview');
   const show = (which) => {
     const isPost = which === 'post';
     card.classList.toggle('post', isPost); post.classList.toggle('on', isPost); raw.classList.toggle('on', !isPost);
@@ -441,7 +441,7 @@ function clipCard(c0) {
   cancel.onclick = () => { form.hidden = true; };
   prev.onclick = () => {
     const h = cleanHook(); if (!h) return;
-    v.src = finalUrl(c.id, c.facecam || facecamOf(c0), h); show('post'); v.src = finalUrl(c.id, c.facecam || facecamOf(c0), h);
+    v.src = finalUrl(c.id, c.cam, h); show('post'); v.src = finalUrl(c.id, c.cam, h);
     v.play().catch(() => {});
   };
   save.onclick = async () => {
@@ -477,25 +477,21 @@ function renderLists() {
 const CLOUD = 'https://res.cloudinary.com/ws7344kt/video';
 const PREVIEW_TX = 'c_limit,w_960/q_auto:good/vc_h264/f_mp4';
 const POSTER_TX = 'so_3,c_fill,w_640,h_360/q_auto/f_jpg';
-const asPost = (pid, fc) => {
-  const f = String(fc || '').split(',').map(Number);
-  const cam = f.length === 4 && f[2] > 0
-    ? `l_video:${pid.replace(/\//g, ':')}/ac_none/c_crop,g_north_west,h_${f[3]},w_${f[2]},x_0,y_0/c_scale,w_560/bo_4px_solid_black/fl_layer_apply,g_north_east,y_250/`
-    : '';
-  return `${CLOUD}/upload/c_fill,g_center,h_1920,w_1080/${cam}q_auto/f_mp4/${pid}.mp4`;
-};
+// The posting layout (split screen) — must match split_tx() in export_queue.py.
 const hookEnc = (h) => encodeURIComponent(h).replace(/[!'()*]/g, (ch) => '%' + ch.charCodeAt(0).toString(16).toUpperCase()).replace(/%2C/g, '%252C').replace(/%2F/g, '%252F');
-const finalUrl = (pid, fc, hook) => {
-  if (!hook) return '';
-  const cam = asPost(pid, fc).split('/upload/c_fill,g_center,h_1920,w_1080/')[1].split('q_auto/f_mp4/')[0];
-  return `${CLOUD}/upload/c_fill,g_center,h_1920,w_1080/${cam}bo_6px_solid_black,c_fit,co_white,l_text:Arial_68_bold_stroke_center:${hookEnc(hook)},w_900/fl_layer_apply,g_north,y_1200/q_auto:best/f_mp4/${pid}.mp4`;
+const splitUrl = (pid, cam, hook) => {
+  const [x, y, w, h] = String(cam).split(',');
+  let tx = `c_fill,g_center,h_960,w_1080/c_pad,b_black,g_south,h_1920,w_1080/l_video:${pid.replace(/\//g, ':')}/ac_none/c_crop,g_north_west,h_${h},w_${w},x_${x},y_${y}/c_fill,h_960,w_1080/fl_layer_apply,g_north/`;
+  if (hook) tx += `l_text:Arial_64_bold_center:${hookEnc(hook)},co_black,b_white,c_fit,w_880/bo_24px_solid_white/r_28/fl_layer_apply,g_center/`;
+  return `${CLOUD}/upload/${tx}q_auto:best/f_mp4/${pid}.mp4`;
 };
+const finalUrl = (pid, cam, hook) => (hook && cam ? splitUrl(pid, cam, hook) : '');
 async function liveReady() {
   const r = await fetch(`${CLOUD}/list/gtaclip_new.json?t=${Math.floor(Date.now() / 30000)}`);
   if (!r.ok) throw new Error('list ' + r.status);
   const j = await r.json();
   const now = Date.now() / 1000;
-  const rows = (j.resources || []).map((x) => {
+  const rows = (j.resources || []).filter((x) => x.context && x.context.custom && x.context.custom.cam).map((x) => {
     const c = (x.context && x.context.custom) || {};
     const pid = x.public_id;
     const warmed = +(c.warmed || 0);
@@ -505,8 +501,8 @@ async function liveReady() {
       views: /^\d+$/.test(c.views || '') ? +c.views : null, clipped: c.created || x.created_at,
       transcript: c.transcript || '', twitch: c.url || '',
       video: fast ? `${CLOUD}/upload/${PREVIEW_TX}/${pid}.mp4` : `${CLOUD}/upload/v${x.version}/${pid}.${x.format}`,
-      poster: `${CLOUD}/upload/${POSTER_TX}/${pid}.jpg`, as_post: asPost(pid, c.facecam),
-      hook: c.hook || '', final: finalUrl(pid, c.facecam, c.hook || ''), facecam: c.facecam || '',
+      poster: `${CLOUD}/upload/${POSTER_TX}/${pid}.jpg`, as_post: splitUrl(pid, c.cam, ''), cam: c.cam,
+      hook: c.hook || '', final: finalUrl(pid, c.cam, c.hook || ''),
       caption: c.caption || '', tag: c.tag || '', login: c.login || '',
     };
   });

@@ -9,7 +9,7 @@ on:
     types: [completed]
   push:
     branches: [main]
-    paths: ["site/**", "export_queue.py", ".github/workflows/queue.yml"]
+    paths: ["site/**", "export_queue.py", "facecam.py", ".github/workflows/queue.yml"]
 
 concurrency:
   group: queue-page

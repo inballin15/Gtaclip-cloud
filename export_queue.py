@@ -19,19 +19,9 @@ CLOUD = cloudinary.config().cloud_name
 BASE = f"https://res.cloudinary.com/{CLOUD}/video/upload"
 
 
-def post_preview(pid, fc):
-    cam = ""
-    try:
-        x, y, w, h = [float(v) for v in fc.split(",")]
-        if w > 0:
-            cam = (f"l_video:{pid.replace('/', ':')}/ac_none/c_crop,g_north_west,h_{h},w_{w},x_0,y_0/"
-                   f"c_scale,w_560/bo_4px_solid_black/fl_layer_apply,g_north_east,y_250/")
-    except Exception:  # noqa: BLE001
-        pass
-    return f"{BASE}/c_fill,g_center,h_1920,w_1080/{cam}q_auto/f_mp4/{pid}.mp4"
+from facecam import find_cam  # noqa: E402
 
-
-# Light phone-friendly copy (720p-ish, smaller file) and the 9:16 "as a post" copy.
+# Light phone-friendly copy (720p-ish, smaller file).
 PREVIEW_TX = "c_limit,w_960/q_auto:good/vc_h264/f_mp4"
 POSTER_TX = "so_3,c_fill,w_640,h_360/q_auto/f_jpg"
 
@@ -41,28 +31,48 @@ def hook_enc(hook):
     return quote(hook, safe="").replace("%2C", "%252C").replace("%2F", "%252F")
 
 
-def final_tx(pid, fc, hook):
-    """Exactly what gets posted: boat layout + the hook text (same as the posting rules)."""
-    cam = post_tx(pid, fc).replace("c_fill,g_center,h_1920,w_1080/", "", 1).rsplit("q_auto/f_mp4", 1)[0]
-    return (f"c_fill,g_center,h_1920,w_1080/{cam}bo_6px_solid_black,c_fit,co_white,"
-            f"l_text:Arial_68_bold_stroke_center:{hook_enc(hook)},w_900/fl_layer_apply,g_north,y_1200/q_auto:best/f_mp4")
+def split_tx(pid, cam, hook=""):
+    """The posting layout (split screen): streamer's webcam on top, gameplay on the bottom,
+    hook in a white rounded box with black bold text across the middle."""
+    x, y, w, h = [float(v) for v in cam.split(",")]
+    tx = (f"c_fill,g_center,h_960,w_1080/c_pad,b_black,g_south,h_1920,w_1080/"
+          f"l_video:{pid.replace('/', ':')}/ac_none/c_crop,g_north_west,h_{h},w_{w},x_{x},y_{y}/"
+          f"c_fill,h_960,w_1080/fl_layer_apply,g_north/")
+    if hook:
+        tx += (f"l_text:Arial_64_bold_center:{hook_enc(hook)},co_black,b_white,c_fit,w_880/"
+               f"bo_24px_solid_white/r_28/fl_layer_apply,g_center/")
+    return tx + "q_auto:best/f_mp4"
 
 
-def post_tx(pid, fc):
-    return post_preview(pid, fc).split("/upload/", 1)[1].rsplit("/", len(pid.split("/")))[0]
-
-
-def warm(pid, fc, hook="", only_final=False):
+def warm(pid, cam, hook="", only_final=False):
     """Ask Cloudinary to build the preview copies now, so playback is instant later."""
     try:
-        eager = [] if only_final else [PREVIEW_TX, post_tx(pid, fc)]
+        eager = [] if only_final else [PREVIEW_TX, split_tx(pid, cam)]
         if hook:
-            eager.append(final_tx(pid, fc, hook))
+            eager.append(split_tx(pid, cam, hook))
         cloudinary.uploader.explicit(pid, type="upload", resource_type="video", eager_async=True, eager=eager)
         ctx = {"warmed_hook": hook} if only_final else {"warmed": str(int(time.time())), "warmed_hook": hook}
         cloudinary.uploader.add_context(ctx, [pid], resource_type="video")
     except Exception as e:  # noqa: BLE001
         print(f"warm failed {pid}: {e}")
+
+
+def cam_for(pid, c):
+    """Webcam box for the split layout: known box for paid streamers, else detected."""
+    if c.get("cam"):
+        return c["cam"]
+    cam = c.get("facecam", "")
+    if not cam:
+        cam = find_cam(CLOUD, pid, 0)
+    if cam:
+        cloudinary.uploader.add_context({"cam": cam}, [pid], resource_type="video")
+    else:
+        # No webcam visible -> can't make the split layout -> never post it.
+        cloudinary.uploader.add_tag("gtaclip_skip", [pid], resource_type="video")
+        cloudinary.uploader.remove_tag("gtaclip_new", [pid], resource_type="video")
+        cloudinary.uploader.add_context({"skip_reason": "no webcam found"}, [pid], resource_type="video")
+        print(f"no webcam -> skipped {pid}")
+    return cam
 
 
 def rows(tag, do_warm=False):
@@ -75,12 +85,15 @@ def rows(tag, do_warm=False):
         for r in res.get("resources", []):
             c = (r.get("context") or {}).get("custom", {})
             pid = r["public_id"]
-            warmed = int(c.get("warmed", "0") or 0)
+            cam = cam_for(pid, c) if do_warm else c.get("cam", "")
+            if not cam:
+                continue
+            warmed = int(c.get("warmed", "0") or 0) if c.get("cam") else 0
             hook = c.get("hook", "")
             if do_warm and not warmed:
-                warm(pid, c.get("facecam", ""), hook)
+                warm(pid, cam, hook)
             elif do_warm and hook and c.get("warmed_hook", "") != hook:
-                warm(pid, c.get("facecam", ""), hook, only_final=True)
+                warm(pid, cam, hook, only_final=True)
             ready_fast = warmed and time.time() - warmed > 180
             out.append({
                 "id": pid,
@@ -90,18 +103,17 @@ def rows(tag, do_warm=False):
                 "views": int(c["views"]) if str(c.get("views", "")).isdigit() else None,
                 "clipped": c.get("created") or r.get("created_at"),
                 "saved": r.get("created_at"),
-                "seconds": round(r.get("duration") or 0),
                 "transcript": c.get("transcript", ""),
                 "twitch": c.get("url", ""),
                 "video": f"{BASE}/{PREVIEW_TX}/{pid}.mp4" if ready_fast else r.get("secure_url"),
                 "poster": f"{BASE}/{POSTER_TX}/{pid}.jpg",
-                "fast": bool(ready_fast),
-                "as_post": post_preview(pid, c.get("facecam", "")),
+                "cam": cam,
+                "as_post": f"{BASE}/{split_tx(pid, cam)}/{pid}.mp4",
                 "hook": hook,
                 "caption": c.get("caption", ""),
                 "tag": c.get("tag", ""),
                 "login": c.get("login", ""),
-                "final": f"{BASE}/{final_tx(pid, c.get('facecam', ''), hook)}/{pid}.mp4" if hook else "",
+                "final": f"{BASE}/{split_tx(pid, cam, hook)}/{pid}.mp4" if hook else "",
             })
         cursor = res.get("next_cursor")
         if not cursor:
