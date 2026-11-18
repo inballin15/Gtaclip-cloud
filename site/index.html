@@ -129,6 +129,7 @@
 <script>
 const BUILD = '__BUILD__';
 const REPO = 'inballin15/Gtaclip-cloud';
+const SLOTS = [[7, 7], [8, 37], [10, 7], [11, 37], [13, 7], [14, 37], [16, 7], [17, 37], [19, 7], [20, 37], [22, 7]];
 const PAGES = 'https://inballin15.github.io/Gtaclip-cloud/';
 const CR = { Clix: 'https://contentrewards.com/discover/7a6a234b-1e9e-4da3-a600-54cc3142e710',
              Lacy: 'https://contentrewards.com/c/campaigns/4479e5e2-9a00-489e-8b0c-345834f37cc7?group=1' };
@@ -238,7 +239,7 @@ function platState(p, s) {
 function slotPlan() {
   const now = new Date(); const day = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const offset = now - day; const out = [];
-  for (let h = 7; h <= 22; h++) for (const m of [7, 37]) { const d = new Date(day); d.setHours(h, m, 0, 0); out.push(new Date(+d + offset)); }
+  for (const [h, m] of SLOTS) { const d = new Date(day); d.setHours(h, m, 0, 0); out.push(new Date(+d + offset)); }
   return out;
 }
 
@@ -264,6 +265,9 @@ function renderSetup() {
     n.append(el('div', null, L.buffer_error || 'Buffer is not connected.'));
     const b = el('button', 'btn pink', 'How to connect Buffer'); b.style.marginTop = '8px'; b.onclick = openBufferHelp; n.append(b); box.append(n);
   }
+  for (const [sv, until] of Object.entries((L && L.cooldown) || {})) {
+    if (new Date(until) > Date.now()) box.append(el('div', 'box note warn', `${sv === 'tiktok' ? 'TikTok' : 'YouTube'} hit its upload limit — uploads there pause until ${dET(until)}, then start again by themselves. No clips are lost.`));
+  }
   for (const e of ((L && L.errors) || []).slice(0, 2)) {
     if (Date.now() - new Date(e.at) > 6 * 3600e3) continue;
     box.append(el('div', 'box note bad', `Post failed ${ago(e.at)}: ${e.error}`));
@@ -279,7 +283,7 @@ function renderRun() {
   if (on) {
     const nxt = L.next_slot ? tET(L.next_slot) : '';
     const c = (Q.ready || []).find((r) => r.id === L.up_next);
-    box.append(el('div', 'meta', `Every 30 min at :07 and :37, 7am–10:37pm. Next post ${nxt}${c ? ' — "' + c.hook + '"' : ''}.`));
+    box.append(el('div', 'meta', `Every 90 min, 11 a day (7:07am–10:07pm). Next post ${nxt}${c ? ' — "' + c.hook + '"' : ''}.`));
   } else box.append(el('div', 'meta', 'Nothing posts on the schedule. Post now still works.'));
   const b = el('button', 'bigbtn ' + (on ? 'stop' : 'start'), on ? 'Stop posting' : 'Start posting');
   if (wantOn || wantOff) {

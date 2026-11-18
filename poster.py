@@ -244,9 +244,14 @@ def metrics(node: dict) -> dict:
 
 
 # ------------------------------------------------------------------ schedule
+# TikTok blocks accounts that publish too much through the API, so: every 90 minutes (11 a day)
+SLOTS = [(7, 7), (8, 37), (10, 7), (11, 37), (13, 7), (14, 37), (16, 7), (17, 37), (19, 7), (20, 37), (22, 7)]
+DAILY_CAP = 12   # most posts (slots + Post now) in any 24 hours
+
+
 def slots_today() -> list[datetime]:
     d = NOW.astimezone(ET).date()
-    return [datetime(d.year, d.month, d.day, h, m, tzinfo=ET) for h in range(7, 23) for m in (7, 37)]
+    return [datetime(d.year, d.month, d.day, h, m, tzinfo=ET) for h, m in SLOTS]
 
 
 def due_slot() -> datetime | None:
@@ -257,12 +262,13 @@ def due_slot() -> datetime | None:
     return s if (NOW - s) <= timedelta(minutes=SLOT_GRACE_MIN) else None
 
 
-def next_slot() -> datetime | None:
-    nxt = [s for s in slots_today() if s > NOW]
+def next_slot(after: datetime | None = None) -> datetime | None:
+    after = after or NOW
+    nxt = [s for s in slots_today() if s > after]
     if nxt:
         return nxt[0]
-    d = NOW.astimezone(ET).date() + timedelta(days=1)
-    return datetime(d.year, d.month, d.day, 7, 7, tzinfo=ET)
+    d = after.astimezone(ET).date() + timedelta(days=1)
+    return datetime(d.year, d.month, d.day, SLOTS[0][0], SLOTS[0][1], tzinfo=ET)
 
 
 # ------------------------------------------------------------------ main
@@ -298,6 +304,11 @@ def main() -> None:
             to_post.append((by_id[cid], "post now"))
     slot = due_slot()
     slot_key = iso(slot) if slot else ""
+    last24 = sum(1 for r in recs.values() if r.get("posted_at") and NOW - parse(r["posted_at"]) < timedelta(hours=24)
+                 and (r.get("tiktok") or (r.get("status") or {}).get("tiktok", {}).get("state") in ("live", "uploading")))
+    if not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key and last24 >= DAILY_CAP:
+        log(f"daily cap reached ({last24} posts in 24 h) — skipping this slot")
+        ctl["last_slot"] = slot_key
     if not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key:
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now]
@@ -430,6 +441,9 @@ def main() -> None:
 
     # 4) live.json for the dashboard
     nxt = next_slot()
+    cd = [parse(v) for v in ctl.get("cooldown", {}).values() if v and parse(v) > NOW]
+    if len(cd) >= 2:  # both platforms waiting
+        nxt = next_slot(min(cd))
     up_next = None
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
