@@ -321,7 +321,7 @@ def main() -> None:
             ok = any(r["state"] != "error" for r in res.values())
             recs[cid] = {
                 "id": cid, "hook": c.get("hook", ""), "streamer": c.get("streamer", ""), "login": c.get("login", ""),
-                "campaign": c.get("campaign", ""), "why": why, "posted_at": iso(NOW), "video": c["final_abs"],
+                "campaign": c.get("campaign", ""), "tag": c.get("tag", ""), "caption": c.get("caption", ""), "why": why, "posted_at": iso(NOW), "video": c["final_abs"],
                 "poster": f"https://inballin15.github.io/Gtaclip-cloud/{c.get('poster', '')}",
                 "tiktok": "", "youtube": "", "status": res,
             }
@@ -366,6 +366,19 @@ def main() -> None:
                         r[s] = link
                     changed = True
             if changed:
+                wj(P / "posted" / f"{cid}.json", r)
+        # retry a platform that failed (e.g. YouTube upload limit), up to 3 times, 20 min apart, within 6 h
+        for cid, r in recs.items():
+            if not r.get("video") or (NOW - parse(r.get("posted_at", iso(NOW)))) > timedelta(hours=6):
+                continue
+            for s, st in (r.get("status") or {}).items():
+                last = st.get("last_try") or r.get("posted_at")
+                if st.get("state") != "error" or st.get("tries", 1) >= 3 or (NOW - parse(last)) < timedelta(minutes=20):
+                    continue
+                info = {**r, "final_abs": r["video"], "tag": r.get("tag") or "#" + re.sub(r"\W", "", r.get("streamer", ""))}
+                res = create(s, info)
+                log(f"retry {s} for {cid}: {res['state']} {res.get('error', '')}")
+                st.update(res, tries=st.get("tries", 1) + 1, last_try=iso(NOW))
                 wj(P / "posted" / f"{cid}.json", r)
         hooks = {(r.get("hook") or "")[:40].lower(): (cid, r) for cid, r in recs.items() if r.get("hook")}
         for n in nodes:
