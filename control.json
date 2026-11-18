@@ -1,5 +1,6 @@
 {
- "paused": true,
+ "paused": false,
  "postnow": [],
- "last_slot": ""
+ "last_slot": "",
+ "switched_at": "2026-11-18T22:03:12Z"
 }
