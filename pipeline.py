@@ -182,6 +182,31 @@ def auto_hook(c: dict) -> str:
     return hook[:110]
 
 
+def mix_order(ready: list) -> list:
+    """Post-now first, then take turns: a paid clip (Clix/Lacy, rotating), then two from other streamers (rotating),
+    never the same streamer twice in a row when it can be avoided. Newest first within each streamer."""
+    now = sorted([r for r in ready if r.get("post_now")], key=lambda r: r["post_now"])
+    rest = sorted([r for r in ready if not r.get("post_now")], key=lambda r: r.get("created") or "", reverse=True)
+    by: dict = {}
+    for r in rest:
+        by.setdefault(r["streamer"], []).append(r)
+    paid = [n for n in by if by[n][0].get("campaign")]
+    free = [n for n in by if n not in paid]
+    out, last, k = [], None, 0
+    while any(by.values()):
+        want_paid = k % 3 == 0          # pattern: paid, other, other, paid, other, other ...
+        pool = [n for n in (paid if want_paid else free) if by[n]] or [n for n in by if by[n]]
+        pool.sort(key=lambda n: n == last)   # stable: keeps the rotation order
+        n = pool[0]
+        out.append(by[n].pop(0))
+        last, k = n, k + 1
+        # rotate the group so the next pick in that group is a different streamer
+        grp = paid if n in paid else free
+        if n in grp:
+            grp.remove(n); grp.append(n)
+    return now + out
+
+
 # ---------------------------------------------------------------- webcam
 _CASCS = [cv2.CascadeClassifier(cv2.data.haarcascades + n) for n in
           ("haarcascade_frontalface_default.xml", "haarcascade_frontalface_alt2.xml", "haarcascade_profileface.xml")]
@@ -426,9 +451,7 @@ def main() -> None:
         r["final"] = f"v/{r['id']}_final.mp4?v={r['final_v']}" if r.get("final_v") and r.get("hook") else ""
         r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
         r["clipped"] = r.get("created")
-    ready.sort(key=lambda r: r.get("created") or "", reverse=True)
-    ready.sort(key=lambda r: not r.get("campaign"))
-    ready.sort(key=lambda r: r.get("post_now") or "~")
+    ready = mix_order(ready)
     for r in ready:
         r["approved"] = bool(r.get("approved"))
         r["post_now"] = bool(r.get("post_now"))
