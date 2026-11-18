@@ -2,5 +2,19 @@
  "paused": false,
  "postnow": [],
  "last_slot": "2026-11-18T22:37:00Z",
- "switched_at": "2026-11-18T22:03:12Z"
+ "switched_at": "2026-11-18T22:03:12Z",
+ "cooldown": {
+  "youtube": "2026-11-19T08:05:00Z",
+  "tiktok": "2026-11-19T22:49:33Z"
+ },
+ "errors": [
+  {
+   "at": "2026-11-18T22:49:33Z",
+   "id": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
+   "error": "TikTok has detected a large number of posts published through the API for this channel. Wait 24 hours before trying to publish again.; You've hit the daily video upload limit for an unverified YouTube account. Verify your account and retry sharing your post."
+  }
+ ],
+ "returned": [
+  "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD"
+ ]
 }

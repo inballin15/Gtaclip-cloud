@@ -1,13 +1,23 @@
 {
- "updated": "2026-11-18T22:44:41Z",
+ "updated": "2026-11-18T22:49:33Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
  "next_slot": "2026-11-18T23:07:00Z",
- "up_next": "MuddyFamousHabaneroDAESuppy-uLoFP9fCoQPD4Rou",
+ "up_next": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
  "buffer_ok": true,
  "buffer_error": "",
- "errors": [],
+ "cooldown": {
+  "youtube": "2026-11-19T08:05:00Z",
+  "tiktok": "2026-11-19T22:49:33Z"
+ },
+ "errors": [
+  {
+   "at": "2026-11-18T22:49:33Z",
+   "id": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
+   "error": "TikTok has detected a large number of posts published through the API for this channel. Wait 24 hours before trying to publish again.; You've hit the daily video upload limit for an unverified YouTube account. Verify your account and retry sharing your post."
+  }
+ ],
  "blocked": [
   "AffluentAuspiciousShieldArgieB8-mFf3ThrEyPR80JRX",
   "EasyThirstyBottlePeanutButterJellyTime-naAgu52jJiR9uPnF",
@@ -24,33 +34,6 @@
   "ToughYawningGooseMau5-2PnplpOOX4eow-YN"
  ],
  "posts": {
-  "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD": {
-   "id": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
-   "hook": "Lacy watched Donnie DIE in GTA 6",
-   "streamer": "Lacy",
-   "login": "lacy",
-   "campaign": "Lacy",
-   "tag": "#Lacy",
-   "caption": "",
-   "why": "5:37 PM slot",
-   "posted_at": "2026-11-18T22:39:24Z",
-   "video": "https://inballin15.github.io/Gtaclip-cloud/v/ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD_final.mp4?v=1bb0a0cf51",
-   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD.jpg",
-   "tiktok": "",
-   "youtube": "",
-   "status": {
-    "tiktok": {
-     "state": "error",
-     "buffer_id": "6afe291e4cace847b37af57d",
-     "error": "TikTok has detected a large number of posts published through the API for this channel. Wait 24 hours before trying to publish again."
-    },
-    "youtube": {
-     "state": "error",
-     "buffer_id": "6afe291fc462756e9e23c06e",
-     "error": "You've hit the daily video upload limit for an unverified YouTube account. Verify your account and retry sharing your post."
-    }
-   }
-  },
   "FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6": {
    "id": "FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6",
    "hook": "Lacy in GTA 6: \"Girl you okay? Oh I'm fine. It's just hormones\"",
@@ -429,6 +412,10 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-18T22:44:41Z",
- "log": []
+ "stats_updated": "2026-11-18T22:49:33Z",
+ "log": [
+  "[22:49:34Z] youtube limit hit — pausing youtube uploads until 2026-11-19T08:05:00Z",
+  "[22:49:34Z] tiktok limit hit — pausing tiktok uploads until 2026-11-19T22:49:33Z",
+  "[22:49:34Z] ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD failed everywhere — back in the queue"
+ ]
 }
