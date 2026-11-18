@@ -1,0 +1,41 @@
+name: gtaclip clock (starts the poster every 5 min, the clip finder every 20 min)
+
+# GitHub's own cron is often late or skipped, so this keeps time itself:
+# one long run (~5h50m) that kicks the other workflows, then restarts itself.
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # backup restart in case the clock ever stops
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: [".github/workflows/clock.yml"]
+
+concurrency:
+  group: clock
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - name: tick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          R: ${{ github.repository }}
+        shell: bash
+        run: |
+          for i in $(seq 0 69); do
+            gh workflow run poster.yml --repo "$R" --ref main || echo "poster kick failed"
+            if [ $((i % 4)) -eq 0 ]; then gh workflow run pipeline.yml --repo "$R" --ref main || echo "pipeline kick failed"; fi
+            sleep 300
+          done
+      - name: restart the clock
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run clock.yml --repo "${{ github.repository }}" --ref main
