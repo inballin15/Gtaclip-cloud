@@ -5,6 +5,9 @@ on:
     # every 30 minutes (UTC). GitHub may start scheduled runs a few minutes late.
     - cron: "7,37 * * * *"
   workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ["fetch_clips.py", "streamers.yaml", ".github/workflows/fetch.yml"]
 
 concurrency:
   group: fetch
