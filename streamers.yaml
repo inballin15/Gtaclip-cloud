@@ -9,7 +9,7 @@ discovery:
   min_seconds: 8
   max_seconds: 60
   max_per_streamer: 2
-  max_total: 4             # per run
+  max_total: 5             # per run
   skip_title_words: ["abuse", "abusing", "lady", "women", "girl", "freaky", "strip", "horny",
                      "dog", "slur", "nsfw", "spoiler", "ending", "loading", "ban"]
 
@@ -24,3 +24,7 @@ streamers:
   ishowspeed:  {name: "IShowSpeed",    tag: "#IShowSpeed", facecam: null}
   stableronaldo: {name: "Stable Ronaldo", tag: "#StableRonaldo", facecam: null}
   jasontheween: {name: "JasonTheWeen", tag: "#JasonTheWeen", facecam: null}
+  nickmercs:   {name: "NICKMERCS",     tag: "#Nickmercs", facecam: null}
+  marlon:      {name: "Marlon",        tag: "#Marlon",   facecam: null}
+  adapt:       {name: "Adapt",         tag: "#Adapt",    facecam: null}
+  silky:       {name: "Silky",         tag: "#Silky",    facecam: null}
