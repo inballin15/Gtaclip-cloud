@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-18T22:03:40Z",
+ "updated": "2026-11-18T22:08:13Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
- "next_slot": "2026-11-18T22:07:00Z",
- "up_next": "ToughYawningGooseMau5-2PnplpOOX4eow-YN",
+ "next_slot": "2026-11-18T22:37:00Z",
+ "up_next": "CrazyDullAnacondaHassaanChop-eMiP3teFxVK3HuSI",
  "buffer_ok": true,
  "buffer_error": "",
  "errors": [],
@@ -12,13 +12,43 @@
   "AffluentAuspiciousShieldArgieB8-mFf3ThrEyPR80JRX",
   "EasyThirstyBottlePeanutButterJellyTime-naAgu52jJiR9uPnF",
   "FlaccidTubularGerbilMoreCowbell-ZnsEqpqa-F1GYqrF",
+  "FreezingSavagePheasantVoHiYo-EBaAN9gMaae0kLrb",
   "FurryOutstandingEndiveWow-vQ1V-slRhqE_Btw9",
   "HelplessSneakyPizzaDatSheffy-m_mjee7JqSU",
+  "JazzyPrettiestDogeDendiFace-61fOM3hM6Y_cOt1g",
   "MoistSmilingPlumberNotATK-jloy4snFc_Q3Qj",
   "PoliteVastVultureDAESuppy-mS6bXiic5sZiRI4t",
-  "SmallBlightedMacaroniCharlieBitMe-F3O-LH"
+  "SillySwissBeefHoneyBadger-zyoWv8KtrlrAm62o",
+  "SmallBlightedMacaroniCharlieBitMe-F3O-LH",
+  "ThankfulSpookyWoodpeckerWow-Gs7udfXVH_yXstNU",
+  "ToughYawningGooseMau5-2PnplpOOX4eow-YN"
  ],
  "posts": {
+  "FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6": {
+   "id": "FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6",
+   "hook": "Lacy in GTA 6: \"Girl you okay? Oh I'm fine. It's just hormones\"",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "campaign": "Lacy",
+   "why": "5:07 PM slot",
+   "posted_at": "2026-11-18T22:08:13Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6_final.mp4?v=77613642f5",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6afe21ce01ba7c5e7916b684",
+     "error": ""
+    },
+    "youtube": {
+     "state": "error",
+     "buffer_id": "6afe21d801ba7c5e7916be22",
+     "error": "You've hit the daily video upload limit for an unverified YouTube account. Verify your account and retry sharing your post."
+    }
+   }
+  },
   "EvilKindChamoisFreakinStinkin-_Q6h9MGvEezIzSw0": {
    "tiktok": "https://tiktok.com/@gtaclip96/video/7709627025228664077",
    "youtube": "",
@@ -356,6 +386,10 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-18T22:03:40Z",
- "log": []
+ "stats_updated": "2026-11-18T22:08:13Z",
+ "log": [
+  "[22:08:13Z] posting FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6 (5:07 PM slot): Lacy in GTA 6: \"Girl you okay? Oh I'm fine. It's just hormones\"",
+  "[22:08:26Z]   tiktok: uploading ",
+  "[22:08:26Z]   youtube: uploading "
+ ]
 }
