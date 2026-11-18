@@ -67,6 +67,9 @@
   .links a { text-align:center; padding:12px; border-radius:999px; background:var(--panel2); text-decoration:none; font-weight:600; }
   .links a.pink { background:var(--pink); color:#000; }
   .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .hookline { font-size:13px; padding:8px 10px; border-radius:12px; background:#29e3ff1a; border:1px solid #29e3ff44; }
+  .btn.del { border-color:#ff5a5a66; color:#ff8a8a; margin-left:auto; }
+  .card.skipped { opacity:.35; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -136,6 +139,9 @@
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 let data = { ready: [], posted: [], fetcher: {} }, live = false, lastKey = '';
+let skipped = new Set();
+try { skipped = new Set(JSON.parse(localStorage.getItem('gc-skipped') || '[]')); } catch (e) { /* private mode */ }
+const saveSkipped = () => { try { localStorage.setItem('gc-skipped', JSON.stringify([...skipped].slice(-200))); } catch (e) { /* ignore */ } };
 
 const ago = (iso) => {
   if (!iso) return '';
@@ -215,20 +221,33 @@ function clipCard(c) {
   const card = el('div', 'card');
   const v = document.createElement('video');
   v.controls = true; v.preload = 'metadata'; v.playsInline = true; v.setAttribute('playsinline', '');
-  v.poster = c.poster; v.src = c.video;
+  v.poster = c.poster; v.src = c.final || c.as_post;
+  card.classList.add('post');
   const body = el('div', 'body');
   const top = el('div', 'row');
   top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
   body.append(top, el('div', 'title', c.title || '(no title)'));
   body.append(el('div', 'meta', `${c.views != null ? c.views.toLocaleString() + ' Twitch views · ' : ''}clipped ${ago(c.clipped)}`));
   if (c.transcript) { const s = el('div', 'say', `“${c.transcript}”`); s.onclick = () => s.classList.toggle('open'); body.append(s); }
+  body.append(el('div', 'hookline', c.hook ? `Hook: ${c.hook}` : 'Hook: written at posting time'));
   const btns = el('div', 'btns');
-  const raw = el('button', 'btn on', 'Original');
-  const post = el('button', 'btn', 'As a post');
-  raw.onclick = () => { card.classList.remove('post'); raw.classList.add('on'); post.classList.remove('on'); v.src = c.video; v.play().catch(() => {}); };
-  post.onclick = () => { card.classList.add('post'); post.classList.add('on'); raw.classList.remove('on'); v.src = c.as_post; v.play().catch(() => {}); };
-  btns.append(raw, post);
+  const finalSrc = c.final || c.as_post;
+  const raw = el('button', 'btn', 'Original');
+  const post = el('button', 'btn on', c.final ? 'Will post' : 'As a post');
+  const show = (which) => {
+    const isPost = which === 'post';
+    card.classList.toggle('post', isPost); post.classList.toggle('on', isPost); raw.classList.toggle('on', !isPost);
+    v.src = isPost ? finalSrc : c.video;
+  };
+  raw.onclick = () => { show('raw'); v.play().catch(() => {}); };
+  post.onclick = () => { show('post'); v.play().catch(() => {}); };
+  btns.append(post, raw);
   if (c.twitch) { const a = el('a', 'btn', 'Twitch'); a.href = c.twitch; a.target = '_blank'; a.rel = 'noopener'; btns.append(a); }
+  const del = el('a', 'btn del', "Don't post");
+  del.href = `https://github.com/inballin15/Gtaclip-cloud/issues/new?title=${encodeURIComponent('skip: ' + c.id)}&body=${encodeURIComponent('Tap "Submit new issue" to remove this clip from the queue.\n\n' + (c.streamer || '') + ' - ' + (c.title || ''))}`;
+  del.target = '_blank'; del.rel = 'noopener';
+  del.onclick = () => { skipped.add(c.id); saveSkipped(); setTimeout(() => card.classList.add('skipped'), 400); };
+  btns.append(del);
   body.append(btns);
   card.append(v, body);
   return card;
@@ -236,7 +255,7 @@ function clipCard(c) {
 
 function renderLists() {
   $('n-ready').textContent = `(${data.ready.length})`;
-  const key = data.ready.map((c) => c.id + c.video).join('|') + '#' + data.posted.map((p) => p.tiktok + p.youtube).join('|');
+  const key = data.ready.map((c) => c.id + c.video + c.final).join('|') + '#' + data.posted.map((p) => p.tiktok + p.youtube).join('|');
   if (key === lastKey) return; // don't interrupt a video that's playing
   lastKey = key;
   const rl = $('readylist'); rl.replaceChildren();
@@ -259,6 +278,12 @@ const asPost = (pid, fc) => {
     : '';
   return `${CLOUD}/upload/c_fill,g_center,h_1920,w_1080/${cam}q_auto/f_mp4/${pid}.mp4`;
 };
+const hookEnc = (h) => encodeURIComponent(h).replace(/[!'()*]/g, (ch) => '%' + ch.charCodeAt(0).toString(16).toUpperCase()).replace(/%2C/g, '%252C').replace(/%2F/g, '%252F');
+const finalUrl = (pid, fc, hook) => {
+  if (!hook) return '';
+  const cam = asPost(pid, fc).split('/upload/c_fill,g_center,h_1920,w_1080/')[1].split('q_auto/f_mp4/')[0];
+  return `${CLOUD}/upload/c_fill,g_center,h_1920,w_1080/${cam}bo_6px_solid_black,c_fit,co_white,l_text:Arial_68_bold_stroke_center:${hookEnc(hook)},w_900/fl_layer_apply,g_north,y_1200/q_auto:best/f_mp4/${pid}.mp4`;
+};
 async function liveReady() {
   const r = await fetch(`${CLOUD}/list/gtaclip_new.json?t=${Math.floor(Date.now() / 30000)}`);
   if (!r.ok) throw new Error('list ' + r.status);
@@ -275,6 +300,7 @@ async function liveReady() {
       transcript: c.transcript || '', twitch: c.url || '',
       video: fast ? `${CLOUD}/upload/${PREVIEW_TX}/${pid}.mp4` : `${CLOUD}/upload/v${x.version}/${pid}.${x.format}`,
       poster: `${CLOUD}/upload/${POSTER_TX}/${pid}.jpg`, as_post: asPost(pid, c.facecam),
+      hook: c.hook || '', final: finalUrl(pid, c.facecam, c.hook || ''),
     };
   });
   rows.sort((a, b) => (!!b.campaign - !!a.campaign) || String(b.clipped).localeCompare(String(a.clipped)));
@@ -286,6 +312,7 @@ async function load() {
   try { base = await (await fetch(`queue.json?t=${Date.now()}`, { cache: 'no-store' })).json(); } catch (e) { /* offline */ }
   if (base) data = { ready: base.ready || [], posted: base.posted || [], fetcher: base.fetcher || {}, updated: base.updated };
   try { data.ready = await liveReady(); live = true; } catch (e) { live = false; }
+  data.ready = data.ready.filter((c) => !skipped.has(c.id));
   $('dot').classList.toggle('stale', !live);
   $('livetxt').textContent = live ? 'Live' : 'Auto-updating';
   $('status').textContent = live ? `${data.ready.length} clips ready · live` : `${data.ready.length} clips ready · updated ${ago(data.updated)}`;

@@ -36,17 +36,31 @@ PREVIEW_TX = "c_limit,w_960/q_auto:good/vc_h264/f_mp4"
 POSTER_TX = "so_3,c_fill,w_640,h_360/q_auto/f_jpg"
 
 
+def hook_enc(hook):
+    from urllib.parse import quote
+    return quote(hook, safe="").replace("%2C", "%252C").replace("%2F", "%252F")
+
+
+def final_tx(pid, fc, hook):
+    """Exactly what gets posted: boat layout + the hook text (same as the posting rules)."""
+    cam = post_tx(pid, fc).replace("c_fill,g_center,h_1920,w_1080/", "", 1).rsplit("q_auto/f_mp4", 1)[0]
+    return (f"c_fill,g_center,h_1920,w_1080/{cam}bo_6px_solid_black,c_fit,co_white,"
+            f"l_text:Arial_68_bold_stroke_center:{hook_enc(hook)},w_900/fl_layer_apply,g_north,y_1200/q_auto:best/f_mp4")
+
+
 def post_tx(pid, fc):
     return post_preview(pid, fc).split("/upload/", 1)[1].rsplit("/", len(pid.split("/")))[0]
 
 
-def warm(pid, fc):
+def warm(pid, fc, hook="", only_final=False):
     """Ask Cloudinary to build the preview copies now, so playback is instant later."""
     try:
-        cloudinary.uploader.explicit(
-            pid, type="upload", resource_type="video", eager_async=True,
-            eager=[PREVIEW_TX, post_tx(pid, fc)])
-        cloudinary.uploader.add_context({"warmed": str(int(time.time()))}, [pid], resource_type="video")
+        eager = [] if only_final else [PREVIEW_TX, post_tx(pid, fc)]
+        if hook:
+            eager.append(final_tx(pid, fc, hook))
+        cloudinary.uploader.explicit(pid, type="upload", resource_type="video", eager_async=True, eager=eager)
+        ctx = {"warmed_hook": hook} if only_final else {"warmed": str(int(time.time())), "warmed_hook": hook}
+        cloudinary.uploader.add_context(ctx, [pid], resource_type="video")
     except Exception as e:  # noqa: BLE001
         print(f"warm failed {pid}: {e}")
 
@@ -62,8 +76,11 @@ def rows(tag, do_warm=False):
             c = (r.get("context") or {}).get("custom", {})
             pid = r["public_id"]
             warmed = int(c.get("warmed", "0") or 0)
+            hook = c.get("hook", "")
             if do_warm and not warmed:
-                warm(pid, c.get("facecam", ""))
+                warm(pid, c.get("facecam", ""), hook)
+            elif do_warm and hook and c.get("warmed_hook", "") != hook:
+                warm(pid, c.get("facecam", ""), hook, only_final=True)
             ready_fast = warmed and time.time() - warmed > 180
             out.append({
                 "id": pid,
@@ -80,6 +97,8 @@ def rows(tag, do_warm=False):
                 "poster": f"{BASE}/{POSTER_TX}/{pid}.jpg",
                 "fast": bool(ready_fast),
                 "as_post": post_preview(pid, c.get("facecam", "")),
+                "hook": hook,
+                "final": f"{BASE}/{final_tx(pid, c.get('facecam', ''), hook)}/{pid}.mp4" if hook else "",
             })
         cursor = res.get("next_cursor")
         if not cursor:
