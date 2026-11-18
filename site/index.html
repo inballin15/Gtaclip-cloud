@@ -290,7 +290,8 @@ function upcomingPlan() {
   const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day).map((p) => etParts(new Date(p.posted)).mins);
   const open = SLOTS.map(([h, m], i) => ({ i, t: h * 60 + m })).filter(({ t }) => t > now.mins - 5 && !todays.some((x) => x >= t - 5 && x < t + 30));
   const plan = {};
-  open.forEach((s, k) => { if (data.ready[k]) plan[s.i] = data.ready[k]; });
+  const okd = data.ready.filter((c) => c.approved && c.final);
+  open.forEach((s, k) => { if (okd[k]) plan[s.i] = okd[k]; });
   return plan;
 }
 
@@ -311,7 +312,7 @@ function openSlot(i, done, todays, t) {
   } else {
     const c = upcomingPlan()[i];
     if (!c) {
-      inner.append(el('div', 'empty', t < etParts(new Date()).mins - 20 ? 'This slot was missed.' : 'No clip lined up yet. New clips arrive every 30 minutes.'));
+      inner.append(el('div', 'empty', t < etParts(new Date()).mins - 20 ? 'This slot was missed.' : 'Nothing approved for this slot yet. Approve clips in the Clip queue.'));
     } else {
       const e = edits[c.id];
       const hook = e ? e.hook : c.hook;
@@ -325,7 +326,7 @@ function openSlot(i, done, todays, t) {
       inner.append(el('div', 'hookline', hook ? `Hook: ${hook}` : 'Hook: written at posting time'));
       const cap = (e ? e.caption : c.caption) || (hook ? defaultCaption(c, hook) : '');
       if (cap) inner.append(el('div', 'capline', `Caption: ${cap}`));
-      inner.append(el('div', 'meta', 'Lined up from the queue order. It can change if a fresher paid clip comes in, or if you skip this one.'));
+      inner.append(el('div', 'meta', 'Only clips you approve get posted. Post now jumps the line.'));
       const b = el('div', 'btns');
       const go = el('button', 'btn on', 'Edit or skip this clip');
       go.onclick = () => {
@@ -391,6 +392,7 @@ function clipCard(c0) {
   const body = el('div', 'body');
   const top = el('div', 'row');
   top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
+  top.append(el('span', c.post_now ? 'pill paid' : 'pill', c.post_now ? 'Posting next' : (c.approved ? 'Approved' : 'Needs your OK')));
   const plan = upcomingPlan();
   const slotI = Object.keys(plan).find((k) => plan[k].id === c0.id);
   if (slotI != null) top.append(el('span', 'pill', `Posts ${label(...SLOTS[slotI])}`));
@@ -414,6 +416,26 @@ function clipCard(c0) {
   post.onclick = () => { show('post'); v.play().catch(() => {}); };
   btns.append(post, raw);
   if (c.twitch) { const a = el('a', 'btn', 'Twitch'); a.href = c.twitch; a.target = '_blank'; a.rel = 'noopener'; btns.append(a); }
+  const appr = el('button', c.approved ? 'btn on' : 'btn pink', c.approved ? 'Approved ✓' : 'Approve');
+  appr.onclick = async () => {
+    const want = !(appr.dataset.state ? appr.dataset.state === '1' : c.approved);
+    appr.textContent = want ? 'Approving…' : 'Un-approving…';
+    const r = await ghAction(`${want ? 'approve' : 'unapprove'}: ${c.id}`, `${c.streamer || ''} - ${c.hook || c.title || ''}`);
+    if (!r.ok) { appr.textContent = r.msg; return; }
+    appr.dataset.state = want ? '1' : '0';
+    appr.className = want ? 'btn on' : 'btn pink';
+    appr.textContent = want ? 'Approved ✓' : 'Approve';
+  };
+  const now = el('button', 'btn pink', 'Post now');
+  now.onclick = async () => {
+    if (!c.final) { now.textContent = 'Video still rendering'; return; }
+    if (!confirmTap(now, 'Tap again to post now')) return;
+    now.textContent = 'Sending…';
+    const r = await ghAction(`postnow: ${c.id}`, `${c.streamer || ''} - ${c.hook || c.title || ''}`);
+    now.textContent = r.ok ? 'Posting within ~15 min ✓' : r.msg;
+    if (r.ok) { appr.className = 'btn on'; appr.textContent = 'Approved ✓'; appr.dataset.state = '1'; }
+  };
+  btns.prepend(appr, now);
   const editBtn = el('button', 'btn', 'Edit hook & caption');
   btns.append(editBtn);
   const del = el('button', 'btn del', "Don't post");

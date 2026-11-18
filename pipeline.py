@@ -100,7 +100,7 @@ def apply_issue(st: dict) -> str:
     """Dashboard 'Don't post' / 'Edit' requests (GitHub issues by the repo owner)."""
     title = os.environ.get("ISSUE_TITLE", "")
     body = os.environ.get("ISSUE_BODY", "").replace("\r\n", "\n")
-    m = re.match(r"^\s*(skip|edit):\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title)
+    m = re.match(r"^\s*(skip|edit|approve|unapprove|postnow):\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title)
     if not m:
         return ""
     action, key = m.groups()
@@ -108,6 +108,17 @@ def apply_issue(st: dict) -> str:
     if not cid:
         return f"Couldn't find clip {key}."
     c = st["clips"][cid]
+    if action == "approve":
+        c["approved"] = True
+        return "Approved — it will post in its slot."
+    if action == "unapprove":
+        c["approved"] = False
+        c["post_now"] = False
+        return "Un-approved — it won't post until you approve it."
+    if action == "postnow":
+        c["approved"] = True
+        c["post_now"] = iso(NOW)
+        return "Approved and moved to the top — it posts within about 15 minutes."
     if action == "skip":
         c["status"] = "skip"
         c["skip_reason"] = "removed by Nicholas"
@@ -355,6 +366,11 @@ def main() -> None:
         r["clipped"] = r.get("created")
     ready.sort(key=lambda r: r.get("created") or "", reverse=True)
     ready.sort(key=lambda r: not r.get("campaign"))
+    ready.sort(key=lambda r: not r.get("approved"))
+    ready.sort(key=lambda r: r.get("post_now") or "~")
+    for r in ready:
+        r["approved"] = bool(r.get("approved"))
+        r["post_now"] = bool(r.get("post_now"))
     posted = []
     try:
         posted = json.loads((ROOT / "posts_history.json").read_text())
