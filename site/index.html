@@ -231,6 +231,7 @@ function statFor(link) { return ((L && L.stats) || []).find((s) => s.link && lin
 function platState(p, s) {
   const st = (p.status || {})[s];
   if (p[s]) return { cls: 's-live', txt: 'Live', link: p[s] };
+  if (p.manual) return { cls: 's-wait', txt: 'You post this one' };
   if (!st) return (p._new && Date.now() - new Date(p.posted_at) < 3600e3) ? { cls: 's-busy', txt: 'Uploading', spin: true } : { cls: 's-wait', txt: 'Not posted' };
   if (st.state === 'error') return { cls: 's-err', txt: 'Failed: ' + (st.error || 'unknown error') };
   if (st.state === 'live') return { cls: 's-live', txt: 'Live' };
