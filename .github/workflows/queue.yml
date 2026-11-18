@@ -27,10 +27,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install cloudinary
+      - run: pip install cloudinary pillow
       - name: grab latest fetcher log
         run: git fetch -q origin logs && git show FETCH_HEAD:last_run.log > last_run.log || true
-      - run: python export_queue.py
+      - name: build queue
+        shell: bash
+        run: python export_queue.py 2>&1 | tee /tmp/queue_run.log; exit ${PIPESTATUS[0]}
         env:
           CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
       - name: push site to gh-pages
@@ -46,3 +48,12 @@ jobs:
           git add -A
           git commit -qm "queue $(date -u +%FT%TZ)"
           git push -f origin gh-pages-new:gh-pages
+      - name: save log (so Claude can read it)
+        if: always()
+        shell: bash
+        run: |
+          cd /tmp && rm -rf ql && mkdir ql && cd ql && git init -q
+          cp /tmp/queue_run.log . 2>/dev/null || echo "no log" > queue_run.log
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          git add queue_run.log && git commit -qm "queue log $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:queue-log

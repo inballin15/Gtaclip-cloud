@@ -376,7 +376,6 @@ function clipCard(c0) {
   const c = { ...c0 };
   if (e0 && (e0.hook !== c0.hook || e0.caption !== (c0.caption || ''))) {
     c.hook = e0.hook; c.caption = e0.caption; c.pending = true;
-    if (typeof finalUrl === 'function' && c.hook) c.final = finalUrl(c.id, c.cam, c.hook);
   }
   const card = el('div', 'card');
   card.dataset.clip = c0.id;
@@ -424,7 +423,7 @@ function clipCard(c0) {
   body.append(btns);
   // edit form
   const form = el('div', 'edit'); form.hidden = true;
-  const hl = el('label', null, 'Hook (on-screen text, no emojis)');
+  const hl = el('label', null, 'Hook (on-screen text — emojis OK 😭)');
   const hi = document.createElement('input'); hi.value = c.hook || ''; hi.maxLength = 120;
   const cl = el('label', null, 'Caption (post text, emojis + hashtags OK)');
   const ci = document.createElement('textarea'); ci.value = capText;
@@ -436,7 +435,7 @@ function clipCard(c0) {
   const note = el('div', 'note', 'Saved changes are used by the next post. Takes about a minute to lock in.');
   form.append(hl, hi, cl, ci, fb, note);
   body.append(form);
-  const cleanHook = () => [...hi.value].filter((ch) => ch.codePointAt(0) < 0x2000).join('').trim();
+  const cleanHook = () => hi.value.trim();
   editBtn.onclick = () => { form.hidden = !form.hidden; };
   cancel.onclick = () => { form.hidden = true; };
   prev.onclick = () => {
@@ -479,13 +478,18 @@ const PREVIEW_TX = 'c_limit,w_960/q_auto:good/vc_h264/f_mp4';
 const POSTER_TX = 'so_3,c_fill,w_640,h_360/q_auto/f_jpg';
 // The posting layout (split screen) — must match split_tx() in export_queue.py.
 const hookEnc = (h) => encodeURIComponent(h).replace(/[!'()*]/g, (ch) => '%' + ch.charCodeAt(0).toString(16).toUpperCase()).replace(/%2C/g, '%252C').replace(/%2F/g, '%252F');
-const splitUrl = (pid, cam, hook) => {
+const splitBase = (pid, cam) => {
   const [x, y, w, h] = String(cam).split(',');
-  let tx = `c_fill,g_center,h_960,w_1080/c_pad,b_black,g_south,h_1920,w_1080/l_video:${pid.replace(/\//g, ':')}/ac_none/c_crop,g_north_west,h_${h},w_${w},x_${x},y_${y}/c_fill,h_960,w_1080/fl_layer_apply,g_north/`;
-  if (hook) tx += `l_text:Arial_64_bold_center:${hookEnc(hook)},co_black,b_white,c_fit,w_880/bo_24px_solid_white/r_28/fl_layer_apply,g_center/`;
-  return `${CLOUD}/upload/${tx}q_auto:best/f_mp4/${pid}.mp4`;
+  return `c_fill,g_center,h_960,w_1080/c_pad,b_black,g_south,h_1920,w_1080/l_video:${pid.replace(/\//g, ':')}/ac_none/c_crop,g_north_west,h_${h},w_${w},x_${x},y_${y}/c_fill,h_960,w_1080/fl_layer_apply,g_north/`;
 };
-const finalUrl = (pid, cam, hook) => (hook && cam ? splitUrl(pid, cam, hook) : '');
+// Saved hooks are drawn as a picture (white rounded boxes + color emoji) by the site builder.
+const splitUrl = (pid, cam, hookImg) => `${CLOUD}/upload/${splitBase(pid, cam)}${hookImg ? `l_${hookImg.replace(/\//g, ':')}/fl_layer_apply,g_center/` : ''}q_auto:best/f_mp4/${pid}.mp4`;
+// Quick preview of an unsaved hook (plain text box; emojis appear once saved).
+const finalUrl = (pid, cam, hook) => {
+  if (!hook || !cam) return '';
+  const plain = [...hook].filter((ch) => ch.codePointAt(0) < 0x2000).join('').trim();
+  return `${CLOUD}/upload/${splitBase(pid, cam)}l_text:Arial_64_bold_center:${hookEnc(plain)},co_black,b_white,c_fit,w_860/bo_14px_solid_white/r_22/fl_layer_apply,g_center/q_auto:best/f_mp4/${pid}.mp4`;
+};
 async function liveReady() {
   const r = await fetch(`${CLOUD}/list/gtaclip_new.json?t=${Math.floor(Date.now() / 30000)}`);
   if (!r.ok) throw new Error('list ' + r.status);
@@ -502,7 +506,7 @@ async function liveReady() {
       transcript: c.transcript || '', twitch: c.url || '',
       video: fast ? `${CLOUD}/upload/${PREVIEW_TX}/${pid}.mp4` : `${CLOUD}/upload/v${x.version}/${pid}.${x.format}`,
       poster: `${CLOUD}/upload/${POSTER_TX}/${pid}.jpg`, as_post: splitUrl(pid, c.cam, ''), cam: c.cam,
-      hook: c.hook || '', final: finalUrl(pid, c.cam, c.hook || ''),
+      hook: c.hook || '', final: c.final_url || (c.hook_img ? splitUrl(pid, c.cam, c.hook_img) : ''),
       caption: c.caption || '', tag: c.tag || '', login: c.login || '',
     };
   });

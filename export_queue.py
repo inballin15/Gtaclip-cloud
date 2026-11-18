@@ -31,25 +31,41 @@ def hook_enc(hook):
     return quote(hook, safe="").replace("%2C", "%252C").replace("%2F", "%252F")
 
 
-def split_tx(pid, cam, hook=""):
+def split_tx(pid, cam, hook_img=""):
     """The posting layout (split screen): streamer's webcam on top, gameplay on the bottom,
-    hook in a white rounded box with black bold text across the middle."""
+    hook caption (white rounded boxes, black bold text, color emoji — a PNG) across the middle."""
     x, y, w, h = [float(v) for v in cam.split(",")]
     tx = (f"c_fill,g_center,h_960,w_1080/c_pad,b_black,g_south,h_1920,w_1080/"
           f"l_video:{pid.replace('/', ':')}/ac_none/c_crop,g_north_west,h_{h},w_{w},x_{x},y_{y}/"
           f"c_fill,h_960,w_1080/fl_layer_apply,g_north/")
-    if hook:
-        tx += (f"l_text:Arial_64_bold_center:{hook_enc(hook)},co_black,b_white,c_fit,w_880/"
-               f"bo_24px_solid_white/r_28/fl_layer_apply,g_center/")
+    if hook_img:
+        tx += f"l_{hook_img.replace('/', ':')}/fl_layer_apply,g_center/"
     return tx + "q_auto:best/f_mp4"
 
 
-def warm(pid, cam, hook="", only_final=False):
+def hook_image(pid, c):
+    """Render the hook as a PNG and upload it (once per hook text). Returns its public_id."""
+    import hashlib
+    hook = c.get("hook", "")
+    if not hook:
+        return ""
+    hsh = hashlib.sha1(hook.encode()).hexdigest()[:10]
+    img_id = f"gtaclip_hooks/{pid.split('/')[-1]}_{hsh}"
+    if c.get("hook_img") == img_id:
+        return img_id
+    from render_hook import render
+    path = render(hook, f"/tmp/{hsh}.png")
+    cloudinary.uploader.upload(path, public_id=img_id, overwrite=True, resource_type="image")
+    cloudinary.uploader.add_context({"hook_img": img_id}, [pid], resource_type="video")
+    return img_id
+
+
+def warm(pid, cam, hook="", only_final=False, hook_img=""):
     """Ask Cloudinary to build the preview copies now, so playback is instant later."""
     try:
         eager = [] if only_final else [PREVIEW_TX, split_tx(pid, cam)]
-        if hook:
-            eager.append(split_tx(pid, cam, hook))
+        if hook_img:
+            eager.append(split_tx(pid, cam, hook_img))
         cloudinary.uploader.explicit(pid, type="upload", resource_type="video", eager_async=True, eager=eager)
         ctx = {"warmed_hook": hook} if only_final else {"warmed": str(int(time.time())), "warmed_hook": hook}
         cloudinary.uploader.add_context(ctx, [pid], resource_type="video")
@@ -93,10 +109,19 @@ def rows(tag, do_warm=False):
                 continue
             warmed = int(c.get("warmed", "0") or 0) if c.get("cam") else 0
             hook = c.get("hook", "")
+            hook_img = ""
+            if hook:
+                try:
+                    hook_img = hook_image(pid, c) if do_warm else c.get("hook_img", "")
+                except Exception as e:  # noqa: BLE001
+                    print(f"hook render failed {pid}: {e}")
             if do_warm and not warmed:
-                warm(pid, cam, hook)
-            elif do_warm and hook and c.get("warmed_hook", "") != hook:
-                warm(pid, cam, hook, only_final=True)
+                warm(pid, cam, hook, hook_img=hook_img)
+            elif do_warm and hook_img and c.get("warmed_hook", "") != hook:
+                warm(pid, cam, hook, only_final=True, hook_img=hook_img)
+            final = f"{BASE}/{split_tx(pid, cam, hook_img)}/{pid}.mp4" if hook_img else ""
+            if do_warm and final and c.get("final_url") != final:
+                cloudinary.uploader.add_context({"final_url": final}, [pid], resource_type="video")
             ready_fast = warmed and time.time() - warmed > 180
             out.append({
                 "id": pid,
@@ -116,7 +141,8 @@ def rows(tag, do_warm=False):
                 "caption": c.get("caption", ""),
                 "tag": c.get("tag", ""),
                 "login": c.get("login", ""),
-                "final": f"{BASE}/{split_tx(pid, cam, hook)}/{pid}.mp4" if hook else "",
+                "hook_img": hook_img,
+                "final": final,
             })
         cursor = res.get("next_cursor")
         if not cursor:

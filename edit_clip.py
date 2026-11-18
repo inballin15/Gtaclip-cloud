@@ -25,7 +25,7 @@ hm = re.search(r"^hook:[ \t]*(.*)$", body, re.M)
 if hm:
     hook = hm.group(1).strip()
     # on-screen text: plain characters only (emojis break the video render)
-    hook = "".join(ch for ch in hook if ord(ch) < 0x2000).strip()[:120]
+    hook = hook.strip()[:120]
     ctx["hook"] = hook
 cm = re.search(r"^caption:[ \t]*(.*)\Z", body, re.M | re.S)
 if cm:
