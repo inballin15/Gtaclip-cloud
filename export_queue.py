@@ -19,7 +19,7 @@ CLOUD = cloudinary.config().cloud_name
 BASE = f"https://res.cloudinary.com/{CLOUD}/video/upload"
 
 
-from facecam import find_cam  # noqa: E402
+from facecam import cam_shows_face, find_cam  # noqa: E402
 
 # Light phone-friendly copy (720p-ish, smaller file).
 PREVIEW_TX = "c_limit,w_960/q_auto:good/vc_h264/f_mp4"
@@ -58,20 +58,23 @@ def warm(pid, cam, hook="", only_final=False):
 
 
 def cam_for(pid, c):
-    """Webcam box for the split layout: known box for paid streamers, else detected."""
+    """Webcam box for the split layout. Detected per clip (streamers move their cam), falling
+    back to the streamer's usual box. A clip only qualifies if the top half really shows a face."""
     if c.get("cam"):
         return c["cam"]
-    cam = c.get("facecam", "")
-    if not cam:
-        cam = find_cam(CLOUD, pid, 0)
+    cam = ""
+    for cand in (find_cam(CLOUD, pid, 0), c.get("facecam", "")):
+        if cand and cam_shows_face(CLOUD, pid, cand):
+            cam = cand
+            break
     if cam:
         cloudinary.uploader.add_context({"cam": cam}, [pid], resource_type="video")
     else:
-        # No webcam visible -> can't make the split layout -> never post it.
+        # No webcam face -> can't make the split layout -> never post it.
         cloudinary.uploader.add_tag("gtaclip_skip", [pid], resource_type="video")
         cloudinary.uploader.remove_tag("gtaclip_new", [pid], resource_type="video")
-        cloudinary.uploader.add_context({"skip_reason": "no webcam found"}, [pid], resource_type="video")
-        print(f"no webcam -> skipped {pid}")
+        cloudinary.uploader.add_context({"skip_reason": "no webcam face found"}, [pid], resource_type="video")
+        print(f"no webcam face -> skipped {pid}")
     return cam
 
 

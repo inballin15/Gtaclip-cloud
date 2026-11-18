@@ -48,3 +48,20 @@ def find_cam(cloud, pid, duration):
     bx = min(max(0, cx - bw / 2), W - bw)
     by = min(max(0, cy - bh / 2), H - bh)
     return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
+
+
+def cam_shows_face(cloud, pid, cam):
+    """Final check before a clip can post: the top half (the webcam crop) must show a face
+    in at least one of two frames."""
+    x, y, w, h = cam.split(",")
+    for sec in (2, 5):
+        url = (f"https://res.cloudinary.com/{cloud}/video/upload/so_{sec}/"
+               f"c_crop,g_north_west,h_{h},w_{w},x_{x},y_{y}/c_fill,h_960,w_1080/f_jpg/{pid}.jpg")
+        try:
+            r = cloudinary.uploader.upload(url, public_id=f"gtaclip_frames/{pid.split('/')[-1]}_top{sec}",
+                                           faces=True, overwrite=True, invalidate=True, resource_type="image")
+            if r.get("faces"):
+                return True
+        except Exception as e:  # noqa: BLE001
+            print(f"top-half check failed {pid}: {e}")
+    return False
