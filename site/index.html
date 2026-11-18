@@ -209,8 +209,24 @@ function postRow(p) {
   r.append(top, el('div', 'title', p.hook || ''));
   const b = el('div', 'btns');
   const a = (href, text, cls) => { const x = el('a', `btn ${cls || ''}`, text); x.href = href; x.target = '_blank'; x.rel = 'noopener'; b.append(x); };
-  if (p.tiktok) a(p.tiktok, 'TikTok');
-  if (p.youtube) a(p.youtube, 'YouTube');
+  const copy = (url, name) => {
+    const x = el('button', 'btn', `Copy ${name} link`);
+    x.onclick = async () => {
+      let ok = false;
+      try { await navigator.clipboard.writeText(url); ok = true; } catch (e) {
+        const t = document.createElement('textarea'); t.value = url; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
+        document.body.append(t); t.select(); t.setSelectionRange(0, url.length);
+        try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+        t.remove();
+      }
+      x.textContent = ok ? `${name} link copied ✓` : url;
+      x.classList.toggle('on', ok);
+      setTimeout(() => { x.textContent = `Copy ${name} link`; x.classList.remove('on'); }, 2500);
+    };
+    b.append(x);
+  };
+  if (p.tiktok) copy(p.tiktok, 'TikTok');
+  if (p.youtube) copy(p.youtube, 'YouTube');
   if (p.campaign === 'Clix') a('https://contentrewards.com/discover/7a6a234b-1e9e-4da3-a600-54cc3142e710', 'Submit', 'pink');
   if (p.campaign === 'Lacy') a('https://contentrewards.com/c/campaigns/4479e5e2-9a00-489e-8b0c-345834f37cc7?group=1', 'Submit', 'pink');
   r.append(b);
