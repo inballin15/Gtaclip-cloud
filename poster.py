@@ -249,8 +249,8 @@ SLOTS = [(7, 7), (8, 37), (10, 7), (11, 37), (13, 7), (14, 37), (16, 7), (17, 37
 DAILY_CAP = 12   # most posts (slots + Post now) in any 24 hours
 
 
-def slots_today() -> list[datetime]:
-    d = NOW.astimezone(ET).date()
+def slots_today(on: datetime | None = None) -> list[datetime]:
+    d = (on or NOW).astimezone(ET).date()
     return [datetime(d.year, d.month, d.day, h, m, tzinfo=ET) for h, m in SLOTS]
 
 
@@ -264,7 +264,7 @@ def due_slot() -> datetime | None:
 
 def next_slot(after: datetime | None = None) -> datetime | None:
     after = after or NOW
-    nxt = [s for s in slots_today() if s > after]
+    nxt = [s for s in slots_today(after) if s > after]
     if nxt:
         return nxt[0]
     d = after.astimezone(ET).date() + timedelta(days=1)
