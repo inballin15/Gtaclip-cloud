@@ -10,8 +10,8 @@ HERE = Path(__file__).parent / "fonts"
 TEXT_FONT = str(HERE / "Inter-SemiBold.otf")
 EMOJI_FONT = str(HERE / "NotoColorEmoji.ttf")
 
-SIZE = 68          # text size on a 1080-wide video
-MAX_W = 860        # widest a line may be
+SIZE = 76          # text size on a 1080-wide video
+MAX_W = 900        # widest a line may be
 PAD_X, PAD_Y = 26, 8
 RADIUS = 22
 

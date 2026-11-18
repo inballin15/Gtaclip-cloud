@@ -1,0 +1,91 @@
+name: gtaclip pipeline (find clips, render videos, publish site)
+
+on:
+  schedule:
+    - cron: "5,25,45 * * * *"   # every 20 min (GitHub may start a few minutes late)
+  workflow_dispatch: {}
+  push:
+    branches: [main, posted]
+  issues:
+    types: [opened]
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  run:
+    # issues: only the repo owner's "skip:" / "edit:" requests
+    if: github.event_name != 'issues' || ((startsWith(github.event.issue.title, 'skip:') || startsWith(github.event.issue.title, 'edit:')) && github.event.issue.user.login == github.repository_owner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: cache raw clips + speech model
+        uses: actions/cache@v4
+        with:
+          path: |
+            _raw
+            ~/.cache/huggingface
+          key: raw-${{ github.run_id }}
+          restore-keys: raw-
+      - name: load state, posted reports and the current site
+        shell: bash
+        run: |
+          mkdir -p _state _posted _site
+          for b in state posted gh-pages; do git fetch -q --depth=1 origin "$b:refs/remotes/origin/$b" || true; done
+          git show origin/state:state.json > _state/state.json 2>/dev/null || rm -f _state/state.json
+          git archive origin/posted 2>/dev/null | tar -x -C _posted || true
+          git archive origin/gh-pages 2>/dev/null | tar -x -C _site || true
+      - name: pipeline
+        shell: bash
+        run: python pipeline.py 2>&1 | tee /tmp/pipeline.log; exit ${PIPESTATUS[0]}
+        env:
+          FETCH: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && '1' || '0' }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+      - name: publish site + save state
+        shell: bash
+        run: |
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          cp -r site/. _site/ && touch _site/.nojekyll
+          publish () {  # dir branch  (fresh commit; unchanged videos aren't uploaded again)
+            export GIT_INDEX_FILE=/tmp/idx-$2; rm -f "$GIT_INDEX_FILE"
+            git --work-tree="$1" add -A
+            tree=$(git write-tree); unset GIT_INDEX_FILE
+            c=$(git commit-tree "$tree" -m "$2 $(date -u +%FT%TZ)")
+            git push -qf origin "$c:refs/heads/$2"
+          }
+          publish _site gh-pages
+          publish _state state
+      - name: answer the dashboard request
+        if: always() && github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUM: ${{ github.event.issue.number }}
+        shell: bash
+        run: |
+          msg=$(cat /tmp/issue_reply.txt 2>/dev/null || echo "Couldn't do that one — check the Actions log.")
+          gh issue close "$NUM" --repo "$GITHUB_REPOSITORY" --comment "$msg"
+      - name: save log (so Claude can read it)
+        if: always()
+        shell: bash
+        run: |
+          cd /tmp && rm -rf lg && mkdir lg && cd lg && git init -q
+          cp /tmp/pipeline.log last_run.log 2>/dev/null || echo "no log" > last_run.log
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          git add last_run.log && git commit -qm "log $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:logs

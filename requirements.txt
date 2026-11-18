@@ -1,8 +1,9 @@
-yt-dlp>=2026.1.1
-cloudinary>=1.40
+yt-dlp
+cloudinary
 requests
 pyyaml
-faster-whisper>=1.0
+faster-whisper
 numpy
 imageio-ffmpeg
 pillow
+opencv-python-headless<5
