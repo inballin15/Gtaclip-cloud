@@ -1,4 +1,4 @@
-# rerun 2
+# rerun 3
 # Approved streamers. Key = Twitch login (twitch.tv/<login>).
 # facecam = webcam box on the 16:9 stream as FRACTIONS [x, y, width, height]; null = unknown.
 game_id: "1867279146"   # Grand Theft Auto VI
