@@ -11,7 +11,8 @@ discovery:
   max_per_streamer: 2
   max_total: 5             # per run
   skip_title_words: ["abuse", "abusing", "lady", "women", "girl", "freaky", "strip", "horny",
-                     "dog", "slur", "nsfw", "spoiler", "ending", "loading", "ban"]
+                     "dog", "slur", "nsfw", "spoiler", "ending", "loading", "ban",
+                     "stripper", "mandy", "club", "twerk", "thirst", "booty", "lap dance", "hooker", "pole"]
 
 streamers:
   clix:        {name: "Clix",          tag: "#Clix",     campaign: "Clix", facecam: [0, 0, 0.248, 0.248]}
