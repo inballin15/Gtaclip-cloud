@@ -84,6 +84,18 @@ def apply_posted(st: dict) -> None:
             c.update(status="used", tiktok=rec.get("tiktok", "") or c.get("tiktok", ""),
                      youtube=rec.get("youtube", "") or c.get("youtube", ""),
                      posted_at=c.get("posted_at") or rec.get("posted_at") or iso(NOW))
+    # posts that failed on every platform come back to the queue
+    try:
+        returned = json.loads((POSTED_DIR / "control.json").read_text()).get("returned", [])
+    except Exception:  # noqa: BLE001
+        returned = []
+    for cid in returned:
+        c = st["clips"].get(cid)
+        if c and c["status"] == "used" and not (POSTED_DIR / "posted" / f"{cid}.json").exists():
+            c["status"] = "new"
+            for k in ("posted_at", "tiktok", "youtube"):
+                c.pop(k, None)
+            log(f"back in queue (upload failed): {cid}")
     for f in sorted((POSTED_DIR / "skips").glob("*.json")):
         c = st["clips"].get(f.stem)
         if c and c["status"] == "new":

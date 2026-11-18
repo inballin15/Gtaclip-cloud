@@ -199,6 +199,9 @@ def texts(c: dict) -> tuple[str, str, str]:
     return tt, yt, title
 
 
+COOLDOWN_RE = re.compile(r"24 hours|daily video upload limit|large number of posts|rate limit|too many", re.I)
+
+
 def create(service: str, c: dict) -> dict:
     tt, yt, title = texts(c)
     inp = {"channelId": CH[service], "schedulingType": "automatic", "mode": "shareNow",
@@ -318,7 +321,14 @@ def main() -> None:
         for c, why in to_post:
             cid = c["id"]
             log(f"posting {cid} ({why}): {c.get('hook')}")
-            res = {s: create(s, c) for s in ("tiktok", "youtube")}
+            cool = ctl.get("cooldown", {})
+            live_svcs = [s for s in ("tiktok", "youtube") if not cool.get(s) or parse(cool[s]) <= NOW]
+            if not live_svcs:
+                log("both TikTok and YouTube are in a cooldown — not posting")
+                break
+            res = {s: create(s, c) for s in live_svcs}
+            res.update({s: {"state": "error", "error": "skipped — waiting out the platform limit", "tries": 3}
+                        for s in ("tiktok", "youtube") if s not in live_svcs})
             ok = any(r["state"] != "error" for r in res.values())
             recs[cid] = {
                 "id": cid, "hook": c.get("hook", ""), "streamer": c.get("streamer", ""), "login": c.get("login", ""),
@@ -351,6 +361,7 @@ def main() -> None:
             nodes = []
             buffer_err = str(e)[:300]
         by_buf = {n["id"]: n for n in nodes}
+        gone: list[str] = []
         svc = {v: k for k, v in CH.items()}
         for cid, r in recs.items():
             changed = False
@@ -366,8 +377,30 @@ def main() -> None:
                     if link:
                         r[s] = link
                     changed = True
+            for s, st in (r.get("status") or {}).items():
+                if st.get("state") == "error" and COOLDOWN_RE.search(st.get("error", "")):
+                    if "24 hours" in st["error"]:
+                        until = iso(NOW + timedelta(hours=24))
+                    elif "daily" in st["error"]:  # YouTube's daily limit resets at midnight Pacific
+                        nxt = (NOW + timedelta(hours=16)).replace(hour=8, minute=5, second=0, microsecond=0)
+                        until = iso(nxt if nxt > NOW else nxt + timedelta(days=1))
+                    else:
+                        until = iso(NOW + timedelta(hours=2))
+                    if ctl.setdefault("cooldown", {}).get(s, "") < iso(NOW):
+                        ctl["cooldown"][s] = until
+                        log(f"{s} limit hit — pausing {s} uploads until {until}")
             if changed:
                 wj(P / "posted" / f"{cid}.json", r)
+            sts = list((r.get("status") or {}).values())
+            if sts and all(x.get("state") == "error" for x in sts) and not (r.get("tiktok") or r.get("youtube")):
+                (P / "posted" / f"{cid}.json").unlink(missing_ok=True)
+                ctl.setdefault("errors", []).insert(0, {"at": iso(NOW), "id": cid, "error": "; ".join(x.get("error", "") for x in sts)})
+                ctl["errors"] = ctl["errors"][:10]
+                ctl["returned"] = sorted(set(ctl.get("returned", [])) | {cid})
+                log(f"{cid} failed everywhere — back in the queue")
+                gone.append(cid)
+        for g in gone:
+            recs.pop(g, None)
         # retry a platform that failed (e.g. YouTube upload limit), up to 3 times, 20 min apart, within 6 h
         for cid, r in recs.items():
             if not r.get("video") or (NOW - parse(r.get("posted_at", iso(NOW)))) > timedelta(hours=6):
@@ -375,6 +408,8 @@ def main() -> None:
             for s, st in (r.get("status") or {}).items():
                 last = st.get("last_try") or r.get("posted_at")
                 if st.get("state") != "error" or st.get("tries", 1) >= 3 or (NOW - parse(last)) < timedelta(minutes=20):
+                    continue
+                if ctl.get("cooldown", {}).get(s, "") > iso(NOW):
                     continue
                 info = {**r, "final_abs": r["video"], "tag": r.get("tag") or "#" + re.sub(r"\W", "", r.get("streamer", ""))}
                 res = create(s, info)
@@ -405,7 +440,7 @@ def main() -> None:
     live = {
         "updated": iso(NOW), "paused": bool(ctl.get("paused")), "switched_at": ctl.get("switched_at", ""),
         "postnow": ctl["postnow"], "next_slot": iso(nxt) if nxt else "", "up_next": up_next,
-        "buffer_ok": buffer_ok, "buffer_error": buffer_err, "errors": ctl.get("errors", []),
+        "buffer_ok": buffer_ok, "buffer_error": buffer_err, "cooldown": ctl.get("cooldown", {}), "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
         "posts": dict(sorted(recs.items(), key=lambda kv: kv[1].get("posted_at", ""), reverse=True)[:120]),
         "stats": stats_posts if buffer_ok else old.get("stats", []),
