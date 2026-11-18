@@ -1,0 +1,46 @@
+name: publish clip queue page
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+  workflow_run:
+    workflows: ["fetch fresh GTA 6 clips"]
+    types: [completed]
+  push:
+    branches: [main]
+    paths: ["site/**", "export_queue.py", ".github/workflows/queue.yml"]
+
+concurrency:
+  group: queue-page
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install cloudinary
+      - run: python export_queue.py
+        env:
+          CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+      - name: push site to gh-pages
+        shell: bash
+        run: |
+          git config user.name "gtaclip-bot"
+          git config user.email "gtaclip-bot@users.noreply.github.com"
+          mkdir -p /tmp/site && cp -r site/. /tmp/site/ && touch /tmp/site/.nojekyll
+          git checkout --orphan gh-pages-new
+          git rm -rq --cached . >/dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -r /tmp/site/. .
+          git add -A
+          git commit -qm "queue $(date -u +%FT%TZ)"
+          git push -f origin gh-pages-new:gh-pages

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GTA Clip · Queue</title>
+<meta name="theme-color" content="#0b0b12">
+<style>
+  :root { --bg:#0b0b12; --panel:#161622; --line:#262636; --fg:#f4f4f8; --muted:#9a9ab0; --pink:#ff3d8b; --cyan:#29e3ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { position:sticky; top:0; z-index:5; background:rgba(11,11,18,.92); backdrop-filter:blur(10px);
+           padding:14px 16px 10px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px; }
+  .logo { width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-weight:800;
+          background:linear-gradient(135deg,var(--pink),var(--cyan)); color:#000; flex:none; }
+  h1 { font-size:18px; margin:0; }
+  .sub { color:var(--muted); font-size:12px; }
+  .live { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); white-space:nowrap; }
+  .dot { width:8px; height:8px; border-radius:50%; background:#2ee59d; box-shadow:0 0 0 0 #2ee59d88; animation:p 2s infinite; }
+  @keyframes p { 50% { box-shadow:0 0 0 6px transparent; } }
+  .tabs { display:flex; gap:8px; padding:12px 16px 0; }
+  .tab { flex:1; padding:10px; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--fg);
+         font:inherit; font-weight:600; }
+  .tab[aria-selected="true"] { background:var(--fg); color:var(--bg); }
+  main { padding:12px 16px 40px; display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); max-width:1300px; margin:0 auto; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:20px; overflow:hidden; display:flex; flex-direction:column; }
+  .vwrap { background:#000; position:relative; }
+  video { width:100%; display:block; background:#000; aspect-ratio:16/9; object-fit:contain; }
+  .card.post video { aspect-ratio:9/16; max-height:78vh; }
+  .body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; }
+  .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .pill { padding:4px 10px; border-radius:999px; background:#ffffff12; font-size:12px; font-weight:600; }
+  .pill.paid { background:var(--pink); color:#000; }
+  .title { font-size:16px; font-weight:600; }
+  .meta { color:var(--muted); font-size:12px; }
+  .say { color:var(--muted); font-size:13px; font-style:italic; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .say.open { -webkit-line-clamp:unset; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn { padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--fg);
+         font:inherit; font-size:13px; text-decoration:none; }
+  .btn.on { background:var(--cyan); color:#000; border-color:var(--cyan); }
+  .empty { grid-column:1/-1; text-align:center; color:var(--muted); padding:40px 10px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">GC</div>
+  <div>
+    <h1>GTA Clip queue</h1>
+    <div class="sub" id="status">Loading…</div>
+  </div>
+  <div class="live"><span class="dot"></span>Live</div>
+</header>
+<div class="tabs" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-tab="ready">Ready <span id="n-ready"></span></button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="posted">Posted</button>
+</div>
+<main id="list"></main>
+
+<script>
+const list = document.getElementById('list');
+const statusEl = document.getElementById('status');
+let data = { ready: [], posted: [] }, tab = 'ready', lastKey = '';
+
+const ago = (iso) => {
+  if (!iso) return '';
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+  return m < 60 ? `${m}m ago` : m < 1440 ? `${Math.floor(m / 60)}h ${m % 60}m ago` : `${Math.floor(m / 1440)}d ago`;
+};
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+function card(c) {
+  const card = el('div', 'card');
+  const wrap = el('div', 'vwrap');
+  const v = document.createElement('video');
+  v.controls = true; v.preload = 'none'; v.playsInline = true;
+  v.setAttribute('playsinline', ''); v.poster = c.poster; v.src = c.video;
+  wrap.appendChild(v);
+  const body = el('div', 'body');
+  const top = el('div', 'row');
+  top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
+  if (c.seconds) top.append(el('span', 'pill', `${c.seconds}s`));
+  body.append(top, el('div', 'title', c.title || '(no title)'));
+  body.append(el('div', 'meta', `${c.views != null ? c.views.toLocaleString() + ' Twitch views · ' : ''}clipped ${ago(c.clipped)}`));
+  if (c.transcript) {
+    const s = el('div', 'say', `“${c.transcript}”`);
+    s.onclick = () => s.classList.toggle('open');
+    body.append(s);
+  }
+  const btns = el('div', 'btns');
+  const raw = el('button', 'btn on', 'Original');
+  const post = el('button', 'btn', 'As a post');
+  raw.onclick = () => { card.classList.remove('post'); raw.classList.add('on'); post.classList.remove('on'); v.src = c.video; v.play().catch(() => {}); };
+  post.onclick = () => { card.classList.add('post'); post.classList.add('on'); raw.classList.remove('on'); v.src = c.as_post; v.play().catch(() => {}); };
+  btns.append(raw, post);
+  if (c.twitch) { const a = el('a', 'btn', 'Twitch'); a.href = c.twitch; a.target = '_blank'; a.rel = 'noopener'; btns.append(a); }
+  body.append(btns);
+  card.append(wrap, body);
+  return card;
+}
+
+function render(force) {
+  const items = data[tab] || [];
+  const key = tab + items.map((c) => c.id).join('|');
+  document.getElementById('n-ready').textContent = `(${data.ready.length})`;
+  if (!force && key === lastKey) return; // don't interrupt a playing video if nothing changed
+  lastKey = key;
+  list.replaceChildren();
+  if (!items.length) { list.append(el('div', 'empty', tab === 'ready' ? 'No fresh clips right now. New ones arrive every 30 minutes.' : 'Nothing posted yet.')); return; }
+  items.forEach((c) => list.append(card(c)));
+}
+
+async function load() {
+  try {
+    const r = await fetch(`queue.json?t=${Date.now()}`, { cache: 'no-store' });
+    data = await r.json();
+    statusEl.textContent = `${data.ready.length} ready · updated ${ago(data.updated)}`;
+    render(false);
+  } catch (e) {
+    statusEl.textContent = 'Could not load the queue. Retrying…';
+  }
+}
+
+document.querySelectorAll('.tab').forEach((b) => b.onclick = () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', x === b));
+  render(true);
+});
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>
