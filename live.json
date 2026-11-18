@@ -1,9 +1,9 @@
 {
- "updated": "2026-11-18T22:54:50Z",
+ "updated": "2026-11-18T22:59:37Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
- "next_slot": "2026-11-20T12:07:00Z",
+ "next_slot": "2026-11-19T12:07:00Z",
  "up_next": "MoralDullCourgetteCopyThis-6p5yRI9Que0Z2alv",
  "buffer_ok": true,
  "buffer_error": "",
@@ -412,6 +412,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-18T22:54:50Z",
+ "stats_updated": "2026-11-18T22:59:37Z",
  "log": []
 }
