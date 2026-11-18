@@ -370,7 +370,6 @@ def main() -> None:
         r["clipped"] = r.get("created")
     ready.sort(key=lambda r: r.get("created") or "", reverse=True)
     ready.sort(key=lambda r: not r.get("campaign"))
-    ready.sort(key=lambda r: not r.get("approved"))
     ready.sort(key=lambda r: r.get("post_now") or "~")
     for r in ready:
         r["approved"] = bool(r.get("approved"))
