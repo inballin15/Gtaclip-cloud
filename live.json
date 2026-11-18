@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-18T22:39:24Z",
+ "updated": "2026-11-18T22:44:41Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
  "next_slot": "2026-11-18T23:07:00Z",
- "up_next": "RacyWiseTaroStinkyCheese-qdP3REhe8QY_8d0K",
+ "up_next": "MuddyFamousHabaneroDAESuppy-uLoFP9fCoQPD4Rou",
  "buffer_ok": true,
  "buffer_error": "",
  "errors": [],
@@ -429,10 +429,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-18T22:39:24Z",
- "log": [
-  "[22:39:25Z] posting ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD (5:37 PM slot): Lacy watched Donnie DIE in GTA 6",
-  "[22:39:29Z]   tiktok: uploading ",
-  "[22:39:29Z]   youtube: uploading "
- ]
+ "stats_updated": "2026-11-18T22:44:41Z",
+ "log": []
 }
