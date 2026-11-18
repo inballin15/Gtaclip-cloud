@@ -78,6 +78,10 @@
   .edit textarea { min-height:110px; resize:vertical; }
   .edit .note { font-size:12px; color:var(--muted); }
   .slot { cursor:pointer; }
+  details.box > summary { cursor:pointer; list-style:none; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  details.box > summary::-webkit-details-marker { display:none; }
+  details.box > summary::after { content:'▾ show'; margin-left:auto; color:var(--muted); font-size:12px; }
+  details.box[open] > summary::after { content:'▴ hide'; }
   .sheet { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.7); display:flex; align-items:flex-end; justify-content:center; }
   .sheet[hidden] { display:none; }
   .sheet .inner { width:min(520px,100%); max-height:92vh; overflow:auto; background:var(--panel); border-radius:22px 22px 0 0; padding:14px; display:flex; flex-direction:column; gap:10px; }
@@ -128,11 +132,11 @@
       <div class="kpi"><div class="l">Clip finder</div><div class="n" id="k-fetch">—</div><div class="s" id="k-fetch-s"></div></div>
     </div>
 
-    <div class="box">
-      <h2>Today's slots</h2>
-      <div class="plist" id="postnow-box" style="margin-bottom:10px"></div>
-      <div class="slots" id="slots"></div>
-    </div>
+    <div class="plist" id="postnow-box" style="margin-bottom:14px"></div>
+    <details class="box" id="slots-box">
+      <summary><h2 style="display:inline">Today's slots</h2> <span class="meta" id="slots-sum"></span></summary>
+      <div class="slots" id="slots" style="margin-top:10px"></div>
+    </details>
 
     <div class="box">
       <h2>Latest posts</h2>
@@ -290,7 +294,7 @@ function overview() {
     const r = el('div', 'prow');
     r.style.border = '1px solid var(--pink)';
     const top = el('div', 'row');
-    top.append(el('span', 'pill paid', 'POST NOW'), el('span', 'meta', `goes out by ${label(h % 24, m)}${data.paused ? ' (even while posting is stopped)' : ''}`));
+    top.append(el('span', 'pill paid', 'POST NOW'), el('span', 'meta', `goes out within ~5 min${data.paused ? ' (even while posting is stopped)' : ''}`));
     r.append(top, el('div', 'title', c.hook || c.title || ''));
     r.onclick = () => { document.querySelector('.tab[data-tab="ready"]').click(); const card = document.querySelector(`[data-clip="${CSS.escape(c.id)}"]`); if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth' }), 50); };
     pn.append(r);
@@ -328,6 +332,8 @@ function overview() {
     d.onclick = () => openSlot(slotIdx, done, todays, t);
     box.append(d);
   }
+  const nxt = SLOTS.find(([h, m]) => h * 60 + m > now.mins);
+  $('slots-sum').textContent = `${todays.length} posted today${nxt ? ` · next ${label(...nxt)}` : ''}${data.paused ? ' · posting stopped' : ''}`;
   const latest = $('latest'); latest.replaceChildren();
   data.posted.slice(0, 4).forEach((p) => latest.append(postRow(p)));
   if (!data.posted.length) latest.append(el('div', 'empty', 'Nothing posted yet.'));
@@ -446,7 +452,7 @@ function clipCard(c0) {
   const body = el('div', 'body');
   const top = el('div', 'row');
   top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
-  if (c.post_now) { const [ph, pm] = nextPostNowCheck(); top.append(el('span', 'pill paid', `Post now · by ${label(ph % 24, pm)}`)); }
+  if (c.post_now) top.append(el('span', 'pill paid', 'Post now · within ~5 min'));
   const plan = upcomingPlan();
   const slotI = Object.keys(plan).find((k) => plan[k].id === c0.id);
   if (slotI != null) top.append(el('span', 'pill', `Posts ${label(...SLOTS[slotI])}`));
@@ -476,7 +482,7 @@ function clipCard(c0) {
     if (!confirmTap(now, 'Tap again to post now')) return;
     now.textContent = 'Sending…';
     const r = await ghAction(`postnow: ${c.id}`, `${c.streamer || ''} - ${c.hook || c.title || ''}`);
-    now.textContent = r.ok ? 'Posting within ~15 min ✓' : r.msg;
+    now.textContent = r.ok ? 'Posting within ~5 min ✓' : r.msg;
     if (r.ok) { postNowLocal[c.id] = Date.now(); savePostNow(); lastKey = ''; applyPostNow(); overview(); renderLists(); }
   };
   btns.prepend(now);
