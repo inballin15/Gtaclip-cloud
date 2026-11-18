@@ -127,7 +127,7 @@ def transcript(path: Path) -> str:
             _WHISPER = WhisperModel("base", device="cpu", compute_type="int8")
         import subprocess
         import numpy as np
-        pcm = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", str(path), "-f", "s16le",
+        pcm = subprocess.run([__import__("imageio_ffmpeg").get_ffmpeg_exe(), "-nostdin", "-loglevel", "error", "-i", str(path), "-f", "s16le",
                               "-ac", "1", "-ar", "16000", "-"], capture_output=True, check=True).stdout
         audio = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768.0
         segs, _ = _WHISPER.transcribe(audio, language="en", vad_filter=True)
