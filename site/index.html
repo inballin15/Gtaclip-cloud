@@ -110,6 +110,11 @@
 
 <div class="wrap">
   <section id="overview">
+    <div class="box" id="run-box">
+      <h2 id="run-title">Automatic posting</h2>
+      <div class="meta" id="run-sub" style="margin-bottom:10px">—</div>
+      <button class="btn" id="run-btn">…</button>
+    </div>
     <div class="box" id="connect-box" style="border-color:var(--cyan)">
       <h2>Turn on one-tap editing</h2>
       <div class="meta" style="margin-bottom:10px">Connect GitHub once so "Don't post" and "Save" work right here, without opening GitHub.</div>
@@ -240,7 +245,23 @@ const etParts = (d) => {
 const SLOTS = []; for (let h = 7; h <= 22; h++) { SLOTS.push([h, 7], [h, 37]); }
 const label = (h, m) => `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
 
+function runBox() {
+  const paused = !!data.paused;
+  $('run-title').textContent = paused ? 'Automatic posting is STOPPED' : 'Automatic posting is ON';
+  $('run-sub').textContent = paused ? 'Nothing will post until you press Start. Same schedule when you restart.' : 'Every 30 minutes (:07 and :37, 7am–10:37pm), approved clips only.';
+  const b = $('run-btn');
+  if (!b.dataset.busy) { b.textContent = paused ? 'Start posting' : 'Stop posting'; b.className = paused ? 'btn on' : 'btn del'; }
+  b.onclick = async () => {
+    if (!paused && !confirmTap(b, 'Tap again to stop')) return;
+    b.dataset.busy = '1'; b.textContent = paused ? 'Starting…' : 'Stopping…';
+    const r = await ghAction(paused ? 'resume: posting' : 'pause: posting', 'from the dashboard');
+    b.textContent = r.ok ? (paused ? 'Starting — takes ~1 min ✓' : 'Stopping — takes ~1 min ✓') : r.msg;
+    setTimeout(() => { delete b.dataset.busy; }, 90000);
+  };
+}
+
 function overview() {
+  runBox();
   const now = etParts(new Date());
   const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day);
   $('k-today').textContent = todays.length;
@@ -510,7 +531,7 @@ const capOverlay = (text) => {
 async function load() {
   try {
     const base = await (await fetch(`queue.json?t=${Date.now()}`, { cache: 'no-store' })).json();
-    data = { ready: base.ready || [], posted: base.posted || [], fetcher: base.fetcher || {}, updated: base.updated };
+    data = { ready: base.ready || [], posted: base.posted || [], fetcher: base.fetcher || {}, updated: base.updated, paused: !!base.paused };
   } catch (e) { $('status').textContent = 'Could not load. Retrying…'; return; }
   data.ready = data.ready.filter((c) => !skipped.has(c.id));
   for (const c of data.ready) { const e = edits[c.id]; if (e && e.hook === c.hook && e.caption === (c.caption || '')) { delete edits[c.id]; saveEdits(); } }

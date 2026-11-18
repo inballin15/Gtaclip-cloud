@@ -100,6 +100,10 @@ def apply_issue(st: dict) -> str:
     """Dashboard 'Don't post' / 'Edit' requests (GitHub issues by the repo owner)."""
     title = os.environ.get("ISSUE_TITLE", "")
     body = os.environ.get("ISSUE_BODY", "").replace("\r\n", "\n")
+    t = title.strip().lower()
+    if t.startswith("pause:") or t.startswith("resume:"):
+        st["paused"] = t.startswith("pause:")
+        return "Automatic posting STOPPED. Nothing will post until you press Start." if st["paused"] else "Automatic posting is back ON (every 30 min, approved clips only)."
     m = re.match(r"^\s*(skip|edit|approve|unapprove|postnow):\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title)
     if not m:
         return ""
@@ -389,7 +393,7 @@ def main() -> None:
     except Exception:  # noqa: BLE001
         pass
     (SITE / "queue.json").write_text(json.dumps({
-        "updated": iso(NOW), "ready": ready, "posted": posted[:40],
+        "updated": iso(NOW), "paused": bool(st.get("paused")), "ready": ready, "posted": posted[:40],
         "fetcher": {"last_run_utc": NOW.strftime("%H:%M:%S"), "fresh_by_streamer": status},
     }, indent=1, ensure_ascii=False))
     save_state(st)
