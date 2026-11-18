@@ -1,0 +1,25 @@
+# Approved streamers. Key = Twitch login (twitch.tv/<login>).
+# facecam = webcam box on the 16:9 stream as FRACTIONS [x, y, width, height]; null = unknown.
+game_id: "1867279146"   # Grand Theft Auto VI
+
+discovery:
+  lookback_hours: 3        # only fresh clips
+  min_views: 15
+  min_seconds: 8
+  max_seconds: 60
+  max_per_streamer: 2
+  max_total: 4             # per run
+  skip_title_words: ["abuse", "abusing", "lady", "women", "girl", "freaky", "strip", "horny",
+                     "dog", "slur", "nsfw", "spoiler", "ending", "loading", "ban"]
+
+streamers:
+  clix:        {name: "Clix",          tag: "#Clix",     campaign: "Clix", facecam: [0, 0, 0.248, 0.248]}
+  lacy:        {name: "Lacy",          tag: "#Lacy",     campaign: "Lacy", facecam: [0, 0, 0.256, 0.255]}
+  kaicenat:    {name: "Kai Cenat",     tag: "#KaiCenat", facecam: null}
+  jynxzi:      {name: "Jynxzi",        tag: "#Jynxzi",   facecam: null}
+  xqc:         {name: "xQc",           tag: "#xQc",      facecam: null}
+  vanossgaming: {name: "Vanoss",       tag: "#Vanoss",   facecam: null}
+  h2odelirious: {name: "H2O Delirious", tag: "#Vanoss",  facecam: null}
+  ishowspeed:  {name: "IShowSpeed",    tag: "#IShowSpeed", facecam: null}
+  stableronaldo: {name: "Stable Ronaldo", tag: "#StableRonaldo", facecam: null}
+  jasontheween: {name: "JasonTheWeen", tag: "#JasonTheWeen", facecam: null}
