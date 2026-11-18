@@ -1,0 +1,40 @@
+{
+ "updated": "2026-11-18T21:35:49Z",
+ "paused": true,
+ "switched_at": "",
+ "postnow": [],
+ "next_slot": "2026-11-18T21:37:00Z",
+ "up_next": null,
+ "buffer_ok": false,
+ "buffer_error": "Buffer API key missing — add the BUFFER_API_KEY secret in GitHub (see dashboard Settings).",
+ "errors": [],
+ "blocked": [
+  "AffluentAuspiciousShieldArgieB8-mFf3ThrEyPR80JRX",
+  "EasyThirstyBottlePeanutButterJellyTime-naAgu52jJiR9uPnF",
+  "FlaccidTubularGerbilMoreCowbell-ZnsEqpqa-F1GYqrF",
+  "FurryOutstandingEndiveWow-vQ1V-slRhqE_Btw9",
+  "HelplessSneakyPizzaDatSheffy-m_mjee7JqSU",
+  "MoistSmilingPlumberNotATK-jloy4snFc_Q3Qj",
+  "PoliteVastVultureDAESuppy-mS6bXiic5sZiRI4t",
+  "SmallBlightedMacaroniCharlieBitMe-F3O-LH"
+ ],
+ "posts": {
+  "EvilKindChamoisFreakinStinkin-_Q6h9MGvEezIzSw0": {
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7709627025228664077",
+   "youtube": "",
+   "posted_at": "2026-11-18T21:32:12Z",
+   "hook": "Jynxzi plays GTA 6 for the FIRST time"
+  },
+  "StrongPolishedKimchiTF2John-Z5vIrsZXbD2vHmuh": {
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7709592055097380109",
+   "youtube": "",
+   "posted_at": "2026-11-18T19:15:18Z",
+   "hook": "Lacy tried to SWEET talk his way home in GTA 6 😭💀"
+  }
+ },
+ "stats": [],
+ "stats_updated": "",
+ "log": [
+  "[21:35:50Z] Buffer API key missing — add the BUFFER_API_KEY secret in GitHub (see dashboard Settings)."
+ ]
+}
