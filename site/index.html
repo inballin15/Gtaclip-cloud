@@ -76,6 +76,13 @@
   .edit input, .edit textarea { width:100%; font:inherit; font-size:16px; color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 10px; }
   .edit textarea { min-height:110px; resize:vertical; }
   .edit .note { font-size:12px; color:var(--muted); }
+  .slot { cursor:pointer; }
+  .sheet { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.7); display:flex; align-items:flex-end; justify-content:center; }
+  .sheet[hidden] { display:none; }
+  .sheet .inner { width:min(520px,100%); max-height:92vh; overflow:auto; background:var(--panel); border-radius:22px 22px 0 0; padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .sheet video { aspect-ratio:9/16; max-height:62vh; border-radius:14px; }
+  .sheet .head { display:flex; align-items:center; gap:8px; }
+  .sheet .x { margin-left:auto; }
   .capline { font-size:13px; color:var(--muted); white-space:pre-wrap; }
 </style>
 </head>
@@ -142,6 +149,7 @@
   </section>
 </div>
 
+<div class="sheet" id="sheet" hidden><div class="inner" id="sheet-inner"></div></div>
 <script>
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -200,6 +208,8 @@ function overview() {
     if (done) d.classList.add('done'); else if (t < now.mins - 20) d.classList.add('past');
     else if (!marked) { d.classList.add('next'); word = 'Next'; marked = true; }
     d.append(el('div', 't', label(h, m)), el('div', 'w', word));
+    const slotIdx = SLOTS.findIndex((x) => x[0] === h && x[1] === m);
+    d.onclick = () => openSlot(slotIdx, done, todays, t);
     box.append(d);
   }
   const latest = $('latest'); latest.replaceChildren();
@@ -210,6 +220,61 @@ function overview() {
   const names = Object.keys(by).sort((a, b) => by[b] - by[a]);
   names.forEach((n) => chips.append(el('span', by[n] ? 'pill paid' : 'pill', `${n}${by[n] ? ` · ${by[n]} clips` : ' · no GTA clips'}`)));
   if (!names.length) chips.append(el('span', 'meta', 'Waiting for the next finder run.'));
+}
+
+// Which queued clip goes in which upcoming slot: the queue order (paid campaigns first, then newest).
+function upcomingPlan() {
+  const now = etParts(new Date());
+  const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day).map((p) => etParts(new Date(p.posted)).mins);
+  const open = SLOTS.map(([h, m], i) => ({ i, t: h * 60 + m })).filter(({ t }) => t > now.mins - 5 && !todays.some((x) => x >= t - 10 && x <= t + 70));
+  const plan = {};
+  open.forEach((s, k) => { if (data.ready[k]) plan[s.i] = data.ready[k]; });
+  return plan;
+}
+
+function closeSheet() { const sh = $('sheet'); sh.hidden = true; sh.querySelectorAll('video').forEach((v) => v.pause()); $('sheet-inner').replaceChildren(); }
+$('sheet').onclick = (e) => { if (e.target.id === 'sheet') closeSheet(); };
+
+function openSlot(i, done, todays, t) {
+  const [h, m] = SLOTS[i];
+  const inner = $('sheet-inner'); inner.replaceChildren();
+  const head = el('div', 'head');
+  head.append(el('h2', null, `${label(h, m)} slot`));
+  const x = el('button', 'btn x', 'Close'); x.onclick = closeSheet; head.append(x);
+  inner.append(head);
+  if (done) {
+    const p = todays.find((q) => { const mm = etParts(new Date(q.posted)).mins; return mm >= t - 10 && mm <= t + 70; });
+    inner.append(el('div', 'meta', 'Already posted:'));
+    if (p) inner.append(postRow(p));
+  } else {
+    const c = upcomingPlan()[i];
+    if (!c) {
+      inner.append(el('div', 'empty', t < etParts(new Date()).mins - 20 ? 'This slot was missed.' : 'No clip lined up yet. New clips arrive every 30 minutes.'));
+    } else {
+      const e = edits[c.id];
+      const hook = e ? e.hook : c.hook;
+      const src = hook ? finalUrl(c.id, c.facecam || facecamOf(c), hook) : (c.final || c.as_post);
+      const v = document.createElement('video');
+      v.controls = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'metadata'; v.poster = c.poster; v.src = src;
+      const top = el('div', 'row');
+      top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
+      inner.append(top, v);
+      inner.append(el('div', 'hookline', hook ? `Hook: ${hook}` : 'Hook: written at posting time'));
+      const cap = (e ? e.caption : c.caption) || (hook ? defaultCaption(c, hook) : '');
+      if (cap) inner.append(el('div', 'capline', `Caption: ${cap}`));
+      inner.append(el('div', 'meta', 'Lined up from the queue order. It can change if a fresher paid clip comes in, or if you skip this one.'));
+      const b = el('div', 'btns');
+      const go = el('button', 'btn on', 'Edit or skip this clip');
+      go.onclick = () => {
+        closeSheet();
+        document.querySelector('.tab[data-tab="ready"]').click();
+        const card = document.querySelector(`[data-clip="${CSS.escape(c.id)}"]`);
+        if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+      };
+      b.append(go); inner.append(b);
+    }
+  }
+  $('sheet').hidden = false;
 }
 
 function postRow(p) {
@@ -256,6 +321,7 @@ function clipCard(c0) {
     if (typeof finalUrl === 'function' && c.hook) c.final = finalUrl(c.id, c.facecam || facecamOf(c0), c.hook);
   }
   const card = el('div', 'card');
+  card.dataset.clip = c0.id;
   const v = document.createElement('video');
   v.controls = true; v.preload = 'metadata'; v.playsInline = true; v.setAttribute('playsinline', '');
   v.poster = c.poster; v.src = c.final || c.as_post;
@@ -263,6 +329,9 @@ function clipCard(c0) {
   const body = el('div', 'body');
   const top = el('div', 'row');
   top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
+  const plan = upcomingPlan();
+  const slotI = Object.keys(plan).find((k) => plan[k].id === c0.id);
+  if (slotI != null) top.append(el('span', 'pill', `Posts ${label(...SLOTS[slotI])}`));
   body.append(top, el('div', 'title', c.title || '(no title)'));
   body.append(el('div', 'meta', `${c.views != null ? c.views.toLocaleString() + ' Twitch views · ' : ''}clipped ${ago(c.clipped)}`));
   if (c.transcript) { const s = el('div', 'say', `“${c.transcript}”`); s.onclick = () => s.classList.toggle('open'); body.append(s); }
@@ -330,7 +399,7 @@ function clipCard(c0) {
 
 function renderLists() {
   $('n-ready').textContent = `(${data.ready.length})`;
-  const key = data.ready.map((c) => c.id + c.video + c.final + (c.caption || '')).join('|') + '#' + data.posted.map((p) => p.tiktok + p.youtube).join('|');
+  const key = Object.keys(upcomingPlan()).join(',') + '@' + data.ready.map((c) => c.id + c.video + c.final + (c.caption || '')).join('|') + '#' + data.posted.map((p) => p.tiktok + p.youtube).join('|');
   if (key === lastKey) return; // don't interrupt a video that's playing
   lastKey = key;
   const rl = $('readylist'); rl.replaceChildren();
