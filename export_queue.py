@@ -98,6 +98,9 @@ def rows(tag, do_warm=False):
                 "fast": bool(ready_fast),
                 "as_post": post_preview(pid, c.get("facecam", "")),
                 "hook": hook,
+                "caption": c.get("caption", ""),
+                "tag": c.get("tag", ""),
+                "login": c.get("login", ""),
                 "final": f"{BASE}/{final_tx(pid, c.get('facecam', ''), hook)}/{pid}.mp4" if hook else "",
             })
         cursor = res.get("next_cursor")

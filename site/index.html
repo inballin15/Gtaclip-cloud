@@ -70,6 +70,13 @@
   .hookline { font-size:13px; padding:8px 10px; border-radius:12px; background:#29e3ff1a; border:1px solid #29e3ff44; }
   .btn.del { border-color:#ff5a5a66; color:#ff8a8a; margin-left:auto; }
   .card.skipped { opacity:.35; pointer-events:none; }
+  .edit { display:flex; flex-direction:column; gap:8px; padding:10px; border-radius:14px; background:var(--panel2); }
+  .edit[hidden] { display:none; }
+  .edit label { font-size:12px; color:var(--muted); }
+  .edit input, .edit textarea { width:100%; font:inherit; font-size:16px; color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 10px; }
+  .edit textarea { min-height:110px; resize:vertical; }
+  .edit .note { font-size:12px; color:var(--muted); }
+  .capline { font-size:13px; color:var(--muted); white-space:pre-wrap; }
 </style>
 </head>
 <body>
@@ -141,6 +148,10 @@ const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls)
 let data = { ready: [], posted: [], fetcher: {} }, live = false, lastKey = '';
 let skipped = new Set();
 try { skipped = new Set(JSON.parse(localStorage.getItem('gc-skipped') || '[]')); } catch (e) { /* private mode */ }
+let edits = {};
+try { edits = JSON.parse(localStorage.getItem('gc-edits') || '{}'); } catch (e) { /* private mode */ }
+const saveEdits = () => { try { localStorage.setItem('gc-edits', JSON.stringify(edits)); } catch (e) { /* ignore */ } };
+const defaultCaption = (c, hook) => `${hook} 😭\n\n🎥 @${c.login || (c.streamer || '').toLowerCase().replace(/\s+/g, '')}\n\n${c.tag || ''} #GTA6 #GTAVI #gaming #fyp`.replace(/\n\n {0,1}#GTA6/, '\n\n#GTA6');
 const saveSkipped = () => { try { localStorage.setItem('gc-skipped', JSON.stringify([...skipped].slice(-200))); } catch (e) { /* ignore */ } };
 
 const ago = (iso) => {
@@ -233,7 +244,17 @@ function postRow(p) {
   return r;
 }
 
-function clipCard(c) {
+const facecamOf = (c) => {
+  const m = String(c.as_post || '').match(/c_crop,g_north_west,h_([\d.]+),w_([\d.]+)/);
+  return m ? `0,0,${m[2]},${m[1]}` : '';
+};
+function clipCard(c0) {
+  const e0 = edits[c0.id];
+  const c = { ...c0 };
+  if (e0 && (e0.hook !== c0.hook || e0.caption !== (c0.caption || ''))) {
+    c.hook = e0.hook; c.caption = e0.caption; c.pending = true;
+    if (typeof finalUrl === 'function' && c.hook) c.final = finalUrl(c.id, c.facecam || facecamOf(c0), c.hook);
+  }
   const card = el('div', 'card');
   const v = document.createElement('video');
   v.controls = true; v.preload = 'metadata'; v.playsInline = true; v.setAttribute('playsinline', '');
@@ -245,7 +266,10 @@ function clipCard(c) {
   body.append(top, el('div', 'title', c.title || '(no title)'));
   body.append(el('div', 'meta', `${c.views != null ? c.views.toLocaleString() + ' Twitch views · ' : ''}clipped ${ago(c.clipped)}`));
   if (c.transcript) { const s = el('div', 'say', `“${c.transcript}”`); s.onclick = () => s.classList.toggle('open'); body.append(s); }
-  body.append(el('div', 'hookline', c.hook ? `Hook: ${c.hook}` : 'Hook: written at posting time'));
+  const hookline = el('div', 'hookline', c.hook ? `Hook: ${c.hook}${c.pending ? ' (saving…)' : ''}` : 'Hook: written at posting time');
+  const capText = c.caption || (c.hook ? defaultCaption(c, c.hook) : '');
+  const capline = el('div', 'capline', capText ? `Caption: ${capText}${c.caption ? '' : '  (default)'}` : '');
+  body.append(hookline, capline);
   const btns = el('div', 'btns');
   const finalSrc = c.final || c.as_post;
   const raw = el('button', 'btn', 'Original');
@@ -259,19 +283,54 @@ function clipCard(c) {
   post.onclick = () => { show('post'); v.play().catch(() => {}); };
   btns.append(post, raw);
   if (c.twitch) { const a = el('a', 'btn', 'Twitch'); a.href = c.twitch; a.target = '_blank'; a.rel = 'noopener'; btns.append(a); }
+  const editBtn = el('button', 'btn', 'Edit hook & caption');
+  btns.append(editBtn);
   const del = el('a', 'btn del', "Don't post");
   del.href = `https://github.com/inballin15/Gtaclip-cloud/issues/new?title=${encodeURIComponent('skip: ' + c.id)}&body=${encodeURIComponent('Tap "Submit new issue" to remove this clip from the queue.\n\n' + (c.streamer || '') + ' - ' + (c.title || ''))}`;
   del.target = '_blank'; del.rel = 'noopener';
   del.onclick = () => { skipped.add(c.id); saveSkipped(); setTimeout(() => card.classList.add('skipped'), 400); };
   btns.append(del);
   body.append(btns);
+  // edit form
+  const form = el('div', 'edit'); form.hidden = true;
+  const hl = el('label', null, 'Hook (on-screen text, no emojis)');
+  const hi = document.createElement('input'); hi.value = c.hook || ''; hi.maxLength = 120;
+  const cl = el('label', null, 'Caption (post text, emojis + hashtags OK)');
+  const ci = document.createElement('textarea'); ci.value = capText;
+  const fb = el('div', 'btns');
+  const prev = el('button', 'btn', 'Preview');
+  const save = el('a', 'btn pink', 'Save');
+  const cancel = el('button', 'btn', 'Cancel');
+  fb.append(prev, save, cancel);
+  const note = el('div', 'note', 'Save opens GitHub. Tap "Submit new issue" to lock it in. The next post will use it.');
+  form.append(hl, hi, cl, ci, fb, note);
+  body.append(form);
+  const cleanHook = () => [...hi.value].filter((ch) => ch.codePointAt(0) < 0x2000).join('').trim();
+  editBtn.onclick = () => { form.hidden = !form.hidden; };
+  cancel.onclick = () => { form.hidden = true; };
+  prev.onclick = () => {
+    const h = cleanHook(); if (!h) return;
+    v.src = finalUrl(c.id, c.facecam || facecamOf(c0), h); show('post'); v.src = finalUrl(c.id, c.facecam || facecamOf(c0), h);
+    v.play().catch(() => {});
+  };
+  const syncSave = () => {
+    const h = cleanHook();
+    save.href = `https://github.com/inballin15/Gtaclip-cloud/issues/new?title=${encodeURIComponent('edit: ' + c.id)}&body=${encodeURIComponent(`hook: ${h}\ncaption: ${ci.value.trim()}`)}`;
+  };
+  hi.oninput = syncSave; ci.oninput = syncSave; syncSave();
+  save.target = '_blank'; save.rel = 'noopener';
+  save.onclick = () => {
+    edits[c.id] = { hook: cleanHook(), caption: ci.value.trim() }; saveEdits();
+    hookline.textContent = `Hook: ${cleanHook()} (saving…)`; capline.textContent = `Caption: ${ci.value.trim()}`;
+    form.hidden = true;
+  };
   card.append(v, body);
   return card;
 }
 
 function renderLists() {
   $('n-ready').textContent = `(${data.ready.length})`;
-  const key = data.ready.map((c) => c.id + c.video + c.final).join('|') + '#' + data.posted.map((p) => p.tiktok + p.youtube).join('|');
+  const key = data.ready.map((c) => c.id + c.video + c.final + (c.caption || '')).join('|') + '#' + data.posted.map((p) => p.tiktok + p.youtube).join('|');
   if (key === lastKey) return; // don't interrupt a video that's playing
   lastKey = key;
   const rl = $('readylist'); rl.replaceChildren();
@@ -316,7 +375,8 @@ async function liveReady() {
       transcript: c.transcript || '', twitch: c.url || '',
       video: fast ? `${CLOUD}/upload/${PREVIEW_TX}/${pid}.mp4` : `${CLOUD}/upload/v${x.version}/${pid}.${x.format}`,
       poster: `${CLOUD}/upload/${POSTER_TX}/${pid}.jpg`, as_post: asPost(pid, c.facecam),
-      hook: c.hook || '', final: finalUrl(pid, c.facecam, c.hook || ''),
+      hook: c.hook || '', final: finalUrl(pid, c.facecam, c.hook || ''), facecam: c.facecam || '',
+      caption: c.caption || '', tag: c.tag || '', login: c.login || '',
     };
   });
   rows.sort((a, b) => (!!b.campaign - !!a.campaign) || String(b.clipped).localeCompare(String(a.clipped)));
@@ -329,6 +389,7 @@ async function load() {
   if (base) data = { ready: base.ready || [], posted: base.posted || [], fetcher: base.fetcher || {}, updated: base.updated };
   try { data.ready = await liveReady(); live = true; } catch (e) { live = false; }
   data.ready = data.ready.filter((c) => !skipped.has(c.id));
+  for (const c of data.ready) { const e = edits[c.id]; if (e && e.hook === c.hook && e.caption === (c.caption || '')) { delete edits[c.id]; saveEdits(); } }
   $('dot').classList.toggle('stale', !live);
   $('livetxt').textContent = live ? 'Live' : 'Auto-updating';
   $('status').textContent = live ? `${data.ready.length} clips ready · live` : `${data.ready.length} clips ready · updated ${ago(data.updated)}`;

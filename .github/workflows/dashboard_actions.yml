@@ -1,4 +1,4 @@
-name: skip a clip (from the dashboard)
+name: dashboard actions (skip / edit a clip)
 
 on:
   issues:
@@ -12,7 +12,7 @@ permissions:
 jobs:
   skip:
     # Only the repo owner can skip clips.
-    if: startsWith(github.event.issue.title, 'skip:') && github.event.issue.user.login == github.repository_owner
+    if: (startsWith(github.event.issue.title, 'skip:') || startsWith(github.event.issue.title, 'edit:')) && github.event.issue.user.login == github.repository_owner
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -22,9 +22,17 @@ jobs:
           python-version: "3.12"
       - run: pip install cloudinary
       - name: skip it
+        if: startsWith(github.event.issue.title, 'skip:')
         run: python skip_clip.py
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
+          CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+      - name: edit hook / caption
+        if: startsWith(github.event.issue.title, 'edit:')
+        run: python edit_clip.py
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
           CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
       - name: close the request
         if: always()
@@ -33,7 +41,7 @@ jobs:
           NUM: ${{ github.event.issue.number }}
           OK: ${{ job.status }}
         run: |
-          msg="Done — this clip won't be posted. The dashboard updates within a few minutes."
+          msg="Done. The dashboard updates within a few minutes."
           [ "$OK" = "success" ] || msg="Couldn't skip this one — check the Actions log."
           gh issue close "$NUM" --repo "$GITHUB_REPOSITORY" --comment "$msg"
       - name: refresh the dashboard
