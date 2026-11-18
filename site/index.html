@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>GTA Clip · Dashboard</title>
 <meta name="theme-color" content="#0b0b12">
@@ -267,7 +268,7 @@ function overview() {
   const now = etParts(new Date());
   const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day);
   $('k-today').textContent = todays.length;
-  $('k-ready').textContent = data.ready.length;
+  $('k-ready').textContent = data.ready.filter((c) => c.final).length;
   $('k-paid').textContent = `${data.ready.filter((c) => c.campaign).length} from paid campaigns`;
   const next = SLOTS.find(([h, m]) => h * 60 + m > now.mins);
   if (next) {
@@ -500,13 +501,16 @@ function clipCard(c0) {
 }
 
 function renderLists() {
-  $('n-ready').textContent = `(${data.ready.length})`;
+  $('n-ready').textContent = `(${data.ready.filter((c) => c.final).length})`;
   const key = Object.keys(upcomingPlan()).join(',') + '@' + data.ready.map((c) => c.id + c.video + c.final + (c.caption || '')).join('|') + '#' + data.posted.map((p) => p.tiktok + p.youtube).join('|');
   if (key === lastKey) return; // don't interrupt a video that's playing
   lastKey = key;
   const rl = $('readylist'); rl.replaceChildren();
-  if (!data.ready.length) rl.append(el('div', 'empty', 'No fresh clips right now. The finder checks Twitch every hour.'));
-  data.ready.forEach((c) => rl.append(clipCard(c)));
+  const done = data.ready.filter((c) => c.final);
+  const prepping = data.ready.length - done.length;
+  if (prepping) rl.append(el('div', 'meta', `${prepping} more clip${prepping === 1 ? ' is' : 's are'} being made into final videos — they show up here when ready.`));
+  if (!done.length) rl.append(el('div', 'empty', 'No finished videos yet. New ones arrive about every 20 minutes.'));
+  done.forEach((c) => rl.append(clipCard(c)));
   const pl = $('postedlist'); pl.replaceChildren();
   if (!data.posted.length) pl.append(el('div', 'empty', 'Nothing posted yet.'));
   data.posted.forEach((p) => pl.append(postRow(p)));
@@ -519,9 +523,15 @@ const capOverlay = (text) => {
   const o = el('div', 'capov'); const sp = el('span', null, text); o.append(sp); return o;
 };
 
+const BUILD = '__BUILD__';
 async function load() {
   try {
     const base = await (await fetch(`queue.json?t=${Date.now()}`, { cache: 'no-store' })).json();
+    if (base.site_build && base.site_build !== BUILD && !sessionStorage.getItem('gc-reloaded-' + base.site_build)) {
+      sessionStorage.setItem('gc-reloaded-' + base.site_build, '1');
+      location.replace(location.pathname + '?v=' + base.site_build);
+      return;
+    }
     data = { ready: base.ready || [], posted: base.posted || [], fetcher: base.fetcher || {}, updated: base.updated, paused: !!base.paused };
   } catch (e) { $('status').textContent = 'Could not load. Retrying…'; return; }
   data.ready = data.ready.filter((c) => !skipped.has(c.id));
@@ -529,7 +539,7 @@ async function load() {
   const mins = (Date.now() - new Date(data.updated)) / 60000;
   $('dot').classList.toggle('stale', mins > 30);
   $('livetxt').textContent = 'Auto-updating';
-  $('status').textContent = `${data.ready.length} clips ready · updated ${ago(data.updated)}`;
+  $('status').textContent = `${data.ready.filter((c) => c.final).length} videos ready · updated ${ago(data.updated)}`;
   overview();
   renderLists();
 }

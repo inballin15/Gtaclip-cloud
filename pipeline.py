@@ -391,7 +391,9 @@ def main() -> None:
             status[m.group(1)] = int(m.group(2))
     except Exception:  # noqa: BLE001
         pass
+    build = hashlib.sha1((ROOT / "site" / "index.html").read_bytes()).hexdigest()[:10]
     (SITE / "queue.json").write_text(json.dumps({
+        "site_build": build,
         "updated": iso(NOW), "paused": bool(st.get("paused")), "ready": ready, "posted": posted[:40],
         "fetcher": {"last_run_utc": NOW.strftime("%H:%M:%S"), "fresh_by_streamer": status},
     }, indent=1, ensure_ascii=False))
