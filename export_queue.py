@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 import cloudinary
 import cloudinary.api
+import cloudinary.uploader
 
 raw = os.environ.get("CLOUDINARY_URL", "").strip().strip('"').strip("'")
 if raw.upper().startswith("CLOUDINARY_URL="):
@@ -30,7 +31,27 @@ def post_preview(pid, fc):
     return f"{BASE}/c_fill,g_center,h_1920,w_1080/{cam}q_auto/f_mp4/{pid}.mp4"
 
 
-def rows(tag):
+# Light phone-friendly copy (720p-ish, smaller file) and the 9:16 "as a post" copy.
+PREVIEW_TX = "c_limit,w_960/q_auto:good/vc_h264/f_mp4"
+POSTER_TX = "so_3,c_fill,w_640,h_360/q_auto/f_jpg"
+
+
+def post_tx(pid, fc):
+    return post_preview(pid, fc).split("/upload/", 1)[1].rsplit("/", len(pid.split("/")))[0]
+
+
+def warm(pid, fc):
+    """Ask Cloudinary to build the preview copies now, so playback is instant later."""
+    try:
+        cloudinary.uploader.explicit(
+            pid, type="upload", resource_type="video", eager_async=True,
+            eager=[PREVIEW_TX, post_tx(pid, fc)])
+        cloudinary.uploader.add_context({"warmed": str(int(time.time()))}, [pid], resource_type="video")
+    except Exception as e:  # noqa: BLE001
+        print(f"warm failed {pid}: {e}")
+
+
+def rows(tag, do_warm=False):
     out, cursor = [], None
     while True:
         kw = dict(resource_type="video", context=True, tags=True, max_results=100)
@@ -40,6 +61,10 @@ def rows(tag):
         for r in res.get("resources", []):
             c = (r.get("context") or {}).get("custom", {})
             pid = r["public_id"]
+            warmed = int(c.get("warmed", "0") or 0)
+            if do_warm and not warmed:
+                warm(pid, c.get("facecam", ""))
+            ready_fast = warmed and time.time() - warmed > 180
             out.append({
                 "id": pid,
                 "streamer": c.get("streamer", ""),
@@ -51,8 +76,9 @@ def rows(tag):
                 "seconds": round(r.get("duration") or 0),
                 "transcript": c.get("transcript", ""),
                 "twitch": c.get("url", ""),
-                "video": f"{BASE}/q_auto/f_mp4/{pid}.mp4",
-                "poster": f"{BASE}/so_3,c_fill,w_640,h_360/{pid}.jpg",
+                "video": f"{BASE}/{PREVIEW_TX}/{pid}.mp4" if ready_fast else r.get("secure_url"),
+                "poster": f"{BASE}/{POSTER_TX}/{pid}.jpg",
+                "fast": bool(ready_fast),
                 "as_post": post_preview(pid, c.get("facecam", "")),
             })
         cursor = res.get("next_cursor")
@@ -60,7 +86,7 @@ def rows(tag):
             return out
 
 
-ready = rows("gtaclip_new")
+ready = rows("gtaclip_new", do_warm=True)
 ready.sort(key=lambda r: (not r["campaign"], r["clipped"] or ""), reverse=False)
 ready.sort(key=lambda r: r["clipped"] or "", reverse=True)
 ready.sort(key=lambda r: not r["campaign"])

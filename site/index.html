@@ -73,7 +73,7 @@ function card(c) {
   const card = el('div', 'card');
   const wrap = el('div', 'vwrap');
   const v = document.createElement('video');
-  v.controls = true; v.preload = 'none'; v.playsInline = true;
+  v.controls = true; v.preload = 'metadata'; v.playsInline = true;
   v.setAttribute('playsinline', ''); v.poster = c.poster; v.src = c.video;
   wrap.appendChild(v);
   const body = el('div', 'body');
