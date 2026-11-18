@@ -106,13 +106,31 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
 
 
 def download(url: str, folder: Path) -> Path:
-    opts = {"outtmpl": str(folder / "%(id)s.%(ext)s"), "quiet": True, "noplaylist": True,
+    opts = {"outtmpl": str(folder / "%(id)s.%(ext)s"), "quiet": True, "noprogress": True, "noplaylist": True,
             "format": "bestvideo*+bestaudio/best", "merge_output_format": "mp4"}
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=True)
         p = Path(ydl.prepare_filename(info))
     mp4 = p.with_suffix(".mp4")
     return mp4 if mp4.exists() else p
+
+
+_WHISPER = None
+
+
+def transcript(path: Path) -> str:
+    """What the streamer says (so the hook writer knows what happens). Free, runs on CPU."""
+    global _WHISPER
+    try:
+        from faster_whisper import WhisperModel
+        if _WHISPER is None:
+            _WHISPER = WhisperModel("base", device="cpu", compute_type="int8")
+        segs, _ = _WHISPER.transcribe(str(path), language="en", vad_filter=True)
+        text = " ".join(s.text.strip() for s in segs)
+    except Exception as e:  # noqa: BLE001
+        log(f"transcript failed: {e}")
+        return ""
+    return " ".join(text.replace("|", " ").replace("=", " ").split())[:900]
 
 
 def main() -> None:
@@ -147,6 +165,7 @@ def main() -> None:
                     "views": str(c["view_count"]), "created": c["created_at"],
                     "url": c["url"], "facecam": ",".join(str(v) for v in fc) if fc else "",
                     "tag": s.get("tag", ""), "campaign": s.get("campaign", "") or "",
+                    "transcript": transcript(f),
                 }
                 res = cloudinary.uploader.upload_large(
                     str(f), resource_type="video", public_id=f"gtaclip/tw_{c['login']}_{c['id'][:40]}",
