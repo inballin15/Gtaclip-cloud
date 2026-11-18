@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-18T22:08:13Z",
+ "updated": "2026-11-18T22:14:14Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
  "next_slot": "2026-11-18T22:37:00Z",
- "up_next": "CrazyDullAnacondaHassaanChop-eMiP3teFxVK3HuSI",
+ "up_next": "AbstruseOriginalClipsdadSuperVinlin-rcT0JdjgpjRAjWCt",
  "buffer_ok": true,
  "buffer_error": "",
  "errors": [],
@@ -34,11 +34,11 @@
    "posted_at": "2026-11-18T22:08:13Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6_final.mp4?v=77613642f5",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7709636743162645774",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6afe21ce01ba7c5e7916b684",
      "error": ""
     },
@@ -63,6 +63,20 @@
   }
  },
  "stats": [
+  {
+   "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7709636743162645774",
+   "sent": "2026-11-18T22:08:55.931Z",
+   "hook": "Lacy in GTA 6: \"Girl you okay? Oh I'm fine. It's just hormones\"",
+   "clip": "FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6",
+   "streamer": "Lacy",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
   {
    "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7709627025228664077",
@@ -386,10 +400,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-18T22:08:13Z",
- "log": [
-  "[22:08:13Z] posting FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6 (5:07 PM slot): Lacy in GTA 6: \"Girl you okay? Oh I'm fine. It's just hormones\"",
-  "[22:08:26Z]   tiktok: uploading ",
-  "[22:08:26Z]   youtube: uploading "
- ]
+ "stats_updated": "2026-11-18T22:14:14Z",
+ "log": []
 }
