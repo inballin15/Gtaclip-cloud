@@ -3,3 +3,4 @@ cloudinary>=1.40
 requests
 pyyaml
 faster-whisper>=1.0
+numpy

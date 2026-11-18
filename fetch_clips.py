@@ -125,12 +125,23 @@ def transcript(path: Path) -> str:
         from faster_whisper import WhisperModel
         if _WHISPER is None:
             _WHISPER = WhisperModel("base", device="cpu", compute_type="int8")
-        segs, _ = _WHISPER.transcribe(str(path), language="en", vad_filter=True)
+        import subprocess
+        import numpy as np
+        pcm = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", str(path), "-f", "s16le",
+                              "-ac", "1", "-ar", "16000", "-"], capture_output=True, check=True).stdout
+        audio = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768.0
+        segs, _ = _WHISPER.transcribe(audio, language="en", vad_filter=True)
         text = " ".join(s.text.strip() for s in segs)
     except Exception as e:  # noqa: BLE001
         log(f"transcript failed: {e}")
         return ""
-    return " ".join(text.replace("|", " ").replace("=", " ").split())[:900]
+    return clean(text)[:900]
+
+
+def clean(t: str) -> str:
+    """Cloudinary context only accepts plain text: drop emojis/odd symbols and separators."""
+    t = t.encode("ascii", "ignore").decode().replace("|", " ").replace("=", " ")
+    return " ".join(t.split())
 
 
 def main() -> None:
@@ -161,7 +172,7 @@ def main() -> None:
                 fc = s.get("facecam") or ""
                 ctx = {
                     "clip_id": c["id"], "streamer": c["name"], "login": c["login"],
-                    "title": c["title"][:200].replace("|", " ").replace("=", " "),
+                    "title": clean(c["title"])[:200] or "clip",
                     "views": str(c["view_count"]), "created": c["created_at"],
                     "url": c["url"], "facecam": ",".join(str(v) for v in fc) if fc else "",
                     "tag": s.get("tag", ""), "campaign": s.get("campaign", "") or "",
