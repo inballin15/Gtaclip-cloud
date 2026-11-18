@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-18T22:29:07Z",
+ "updated": "2026-11-18T22:34:53Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
  "next_slot": "2026-11-18T22:37:00Z",
- "up_next": "MuddyFamousHabaneroDAESuppy-uLoFP9fCoQPD4Rou",
+ "up_next": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
  "buffer_ok": true,
  "buffer_error": "",
  "errors": [],
@@ -43,9 +43,9 @@
      "error": ""
     },
     "youtube": {
-     "state": "uploading",
+     "state": "error",
      "buffer_id": "6afe26b4c462756e9e22d0ad",
-     "error": "",
+     "error": "You've hit the daily video upload limit for an unverified YouTube account. Verify your account and retry sharing your post.",
      "tries": 2,
      "last_try": "2026-11-18T22:29:07Z"
     }
@@ -402,8 +402,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-18T22:29:07Z",
- "log": [
-  "[22:29:09Z] retry youtube for FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6: uploading "
- ]
+ "stats_updated": "2026-11-18T22:34:53Z",
+ "log": []
 }
