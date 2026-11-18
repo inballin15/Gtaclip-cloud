@@ -66,8 +66,13 @@ def _wrap(text):
     return lines
 
 
+def strip_emoji(text):
+    """Captions are text only (no emoji)."""
+    return " ".join(EMOJI_RE.sub("", text).replace("\uFE0F", "").split())
+
+
 def render(text, out_path):
-    lines = _wrap(text.strip())
+    lines = _wrap(strip_emoji(text))
     asc, desc = _font.getmetrics()
     line_h = asc + desc + PAD_Y * 2
     widths = [int(_width(l)) + PAD_X * 2 for l in lines]

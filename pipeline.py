@@ -32,6 +32,7 @@ import imageio_ffmpeg
 
 from fetch_clips import CFG, download, log, pick_clips, transcript, twitch_headers
 from render_hook import render as render_hook
+from render_hook import strip_emoji
 
 ROOT = Path(__file__).resolve().parent
 FF = imageio_ffmpeg.get_ffmpeg_exe()
@@ -42,6 +43,8 @@ VID = SITE / "v"
 RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (actions cache)
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_NEW_HOURS = 30
+CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
+LAYOUT_V = "v3-textonly-capcut"
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
 
@@ -90,7 +93,7 @@ def apply_posted(st: dict) -> None:
             continue
         c = st["clips"].get(f.stem)
         if c and not c.get("hook_by_user") and rec.get("hook") and not c.get("hook"):
-            c["hook"] = rec["hook"].strip()[:140]
+            c["hook"] = strip_emoji(rec["hook"])[:140]
 
 
 def apply_issue(st: dict) -> str:
@@ -112,7 +115,7 @@ def apply_issue(st: dict) -> str:
     hm = re.search(r"^hook:[ \t]*(.*)$", body, re.M)
     cm = re.search(r"^caption:[ \t]*(.*)\Z", body, re.M | re.S)
     if hm and hm.group(1).strip():
-        c["hook"] = hm.group(1).strip()[:140]
+        c["hook"] = strip_emoji(hm.group(1))[:140]
         c["hook_by_user"] = True
     if cm:
         c["caption"] = cm.group(1).strip()[:2000]
@@ -217,7 +220,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str, tmp: Path) -> None:
         f"[0:v]split=2[a][b];"
         f"[a]crop=iw*{w}:ih*{h}:iw*{x}:ih*{y},scale=1080:960:force_original_aspect_ratio=increase,"
         f"crop=1080:960,setsar=1[top];"
-        f"[b]scale=-2:960,crop=1080:960,setsar=1[bot];"
+        f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:960,crop=1080:960,setsar=1[bot];"
         f"[top][bot]vstack=inputs=2[st];"
         f"[st][1:v]overlay=(W-w)/2:(H-h)/2,format=yuv420p[out]"
     )
@@ -240,6 +243,10 @@ def main() -> None:
     VID.mkdir(parents=True, exist_ok=True)
     RAW.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp())
+
+    for c in clips.values():
+        if c.get("hook") and strip_emoji(c["hook"]) != c["hook"]:
+            c["hook"] = strip_emoji(c["hook"])
 
     # retry clips that failed the webcam check with the older detector
     for cid, c in clips.items():
@@ -328,7 +335,7 @@ def main() -> None:
             if not (VID / f"{cid}.mp4").exists():
                 render_preview(raw, cid)
             if c.get("hook"):
-                hh = hashlib.sha1((c["hook"] + c["cam"]).encode()).hexdigest()[:10]
+                hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V).encode()).hexdigest()[:10]
                 if c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists():
                     render_final(raw, cid, c["cam"], c["hook"], tmp)
                     c["final_hash"] = hh
