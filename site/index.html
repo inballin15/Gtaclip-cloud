@@ -217,7 +217,7 @@ function queueList() {
   const now = new Set(((L && L.postnow) || []).map((p) => p.id));
   const list = (Q.ready || []).filter((r) => !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
-  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing));
+  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || (!!a.hook_auto - !!b.hook_auto));
 }
 function postList() {
   const out = Object.values(posts()).map((p) => ({ ...p, _new: true }));

@@ -297,8 +297,9 @@ def main() -> None:
     slot_key = iso(slot) if slot else ""
     if not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key:
         pending_now = {p["id"] for p in ctl["postnow"]}
-        pick = next((r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked
-                     and r["id"] not in pending_now), None)
+        ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now]
+        # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
+        pick = next((r for r in ok if not r.get("hook_auto")), None) or (ok[0] if ok else None)
         if pick:
             to_post.append((pick, f"{slot.astimezone(ET):%-I:%M %p} slot"))
         else:
@@ -397,8 +398,9 @@ def main() -> None:
     up_next = None
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
-        up_next = next((r["id"] for r in ready if r["id"] not in recs and r["id"] not in blocked
-                        and r["id"] not in pending_now), None)
+        ok = [r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now]
+        up = next((r for r in ok if not r.get("hook_auto")), None) or (ok[0] if ok else None)
+        up_next = up["id"] if up else None
     old = rj(P / "live.json", {})
     live = {
         "updated": iso(NOW), "paused": bool(ctl.get("paused")), "switched_at": ctl.get("switched_at", ""),

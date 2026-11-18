@@ -174,9 +174,7 @@ def auto_hook(c: dict) -> str:
         if name.lower() not in hook.lower():
             hook = f"{name}: {hook}"
     else:
-        said = clean_hook(c.get("transcript", ""))
-        said = " ".join(said.split()[:9])
-        hook = f'{name} in GTA 6: "{said}"' if len(said.split()) >= 3 else f"{name} can't believe this in GTA 6"
+        hook = f"{name} can't believe this in GTA 6"
     if "gta" not in hook.lower():
         hook += " in GTA 6"
     return hook[:110]
