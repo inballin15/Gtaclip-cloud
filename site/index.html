@@ -193,7 +193,9 @@ async function ghAction(title, body) {
       headers: { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, body }),
     });
-    if (r.status === 401 || r.status === 403) return { ok: false, msg: 'GitHub key not accepted — check it in settings' };
+    if (r.status === 401) return { ok: false, msg: 'GitHub key expired or wrong — make a new one in Settings' };
+    if (r.status === 403 || r.status === 404) return { ok: false, msg: 'Key needs Issues: Read and write on Gtaclip-cloud (Settings)' };
+    if (r.status === 410) return { ok: false, msg: 'Issues are turned off on the repo — turn them on in GitHub settings' };
     if (!r.ok) return { ok: false, msg: `GitHub error ${r.status}` };
     return { ok: true };
   } catch (e) { return { ok: false, msg: 'No connection — try again' }; }
