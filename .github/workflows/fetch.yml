@@ -13,6 +13,9 @@ concurrency:
   group: fetch
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -24,8 +27,24 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python fetch_clips.py
+      - name: fetch clips
+        run: python fetch_clips.py 2>&1 | tee last_run.log; exit ${PIPESTATUS[0]}
+        shell: bash
         env:
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
           CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+      - name: save log (so Claude can read it)
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "gtaclip-bot"
+          git config user.email "gtaclip-bot@users.noreply.github.com"
+          git fetch origin logs 2>/dev/null || true
+          mkdir -p /tmp/l && cp last_run.log /tmp/l/last_run.log 2>/dev/null || echo "no log" > /tmp/l/last_run.log
+          git checkout -B logs
+          git rm -rq --cached . >/dev/null 2>&1 || true
+          cp /tmp/l/last_run.log last_run.log
+          git add -f last_run.log
+          git commit -qm "log $(date -u +%FT%TZ)" || true
+          git push -f origin logs
