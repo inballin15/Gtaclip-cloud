@@ -130,6 +130,7 @@
 
     <div class="box">
       <h2>Today's slots</h2>
+      <div class="plist" id="postnow-box" style="margin-bottom:10px"></div>
       <div class="slots" id="slots"></div>
     </div>
 
@@ -230,6 +231,24 @@ function openSettings(why) {
   inner.append(steps, mk, form);
   $('sheet').hidden = false;
 }
+let postNowLocal = {};
+try { postNowLocal = JSON.parse(localStorage.getItem('gc-postnow') || '{}'); } catch (e) { /* ignore */ }
+const savePostNow = () => { try { localStorage.setItem('gc-postnow', JSON.stringify(postNowLocal)); } catch (e) { /* ignore */ } };
+// Next "Post now" check (:22 / :52 Eastern)
+const nextPostNowCheck = () => {
+  const m = etParts(new Date()).mins; const h = Math.floor(m / 60), mm = m % 60;
+  return mm < 22 ? [h, 22] : mm < 52 ? [h, 52] : [h + 1, 22];
+};
+function applyPostNow() {
+  const now = Date.now();
+  for (const [id, t] of Object.entries(postNowLocal)) {
+    const c = data.ready.find((x) => x.id === id);
+    if (!c || now - t > 3 * 3600 * 1000) { delete postNowLocal[id]; continue; }  // posted or stale
+    c.post_now = true;
+  }
+  savePostNow();
+  data.ready.sort((a, b) => (!!b.post_now - !!a.post_now));
+}
 const saveSkipped = () => { try { localStorage.setItem('gc-skipped', JSON.stringify([...skipped].slice(-200))); } catch (e) { /* ignore */ } };
 
 const ago = (iso) => {
@@ -265,6 +284,17 @@ function runBox() {
 
 function overview() {
   runBox();
+  const pn = $('postnow-box'); pn.replaceChildren();
+  data.ready.filter((c) => c.post_now && c.final).forEach((c) => {
+    const [h, m] = nextPostNowCheck();
+    const r = el('div', 'prow');
+    r.style.border = '1px solid var(--pink)';
+    const top = el('div', 'row');
+    top.append(el('span', 'pill paid', 'POST NOW'), el('span', 'meta', `goes out by ${label(h % 24, m)}${data.paused ? ' (even while posting is stopped)' : ''}`));
+    r.append(top, el('div', 'title', c.hook || c.title || ''));
+    r.onclick = () => { document.querySelector('.tab[data-tab="ready"]').click(); const card = document.querySelector(`[data-clip="${CSS.escape(c.id)}"]`); if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth' }), 50); };
+    pn.append(r);
+  });
   const now = etParts(new Date());
   const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day);
   $('k-today').textContent = todays.length;
@@ -314,7 +344,7 @@ function upcomingPlan() {
   const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day).map((p) => etParts(new Date(p.posted)).mins);
   const open = SLOTS.map(([h, m], i) => ({ i, t: h * 60 + m })).filter(({ t }) => t > now.mins - 5 && !todays.some((x) => x >= t - 5 && x < t + 30));
   const plan = {};
-  const okd = data.ready.filter((c) => c.final);
+  const okd = data.ready.filter((c) => c.final && !c.post_now);
   open.forEach((s, k) => { if (okd[k]) plan[s.i] = okd[k]; });
   return plan;
 }
@@ -416,7 +446,7 @@ function clipCard(c0) {
   const body = el('div', 'body');
   const top = el('div', 'row');
   top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
-  if (c.post_now) top.append(el('span', 'pill paid', 'Posting next'));
+  if (c.post_now) { const [ph, pm] = nextPostNowCheck(); top.append(el('span', 'pill paid', `Post now · by ${label(ph % 24, pm)}`)); }
   const plan = upcomingPlan();
   const slotI = Object.keys(plan).find((k) => plan[k].id === c0.id);
   if (slotI != null) top.append(el('span', 'pill', `Posts ${label(...SLOTS[slotI])}`));
@@ -447,6 +477,7 @@ function clipCard(c0) {
     now.textContent = 'Sending…';
     const r = await ghAction(`postnow: ${c.id}`, `${c.streamer || ''} - ${c.hook || c.title || ''}`);
     now.textContent = r.ok ? 'Posting within ~15 min ✓' : r.msg;
+    if (r.ok) { postNowLocal[c.id] = Date.now(); savePostNow(); lastKey = ''; applyPostNow(); overview(); renderLists(); }
   };
   btns.prepend(now);
   const editBtn = el('button', 'btn', 'Edit hook & caption');
@@ -535,6 +566,7 @@ async function load() {
     data = { ready: base.ready || [], posted: base.posted || [], fetcher: base.fetcher || {}, updated: base.updated, paused: !!base.paused };
   } catch (e) { $('status').textContent = 'Could not load. Retrying…'; return; }
   data.ready = data.ready.filter((c) => !skipped.has(c.id));
+  applyPostNow();
   for (const c of data.ready) { const e = edits[c.id]; if (e && e.hook === c.hook && e.caption === (c.caption || '')) { delete edits[c.id]; saveEdits(); } }
   const mins = (Date.now() - new Date(data.updated)) / 60000;
   $('dot').classList.toggle('stale', mins > 30);
