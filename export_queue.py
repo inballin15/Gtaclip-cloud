@@ -87,12 +87,52 @@ def rows(tag, do_warm=False):
 
 
 ready = rows("gtaclip_new", do_warm=True)
-ready.sort(key=lambda r: (not r["campaign"], r["clipped"] or ""), reverse=False)
 ready.sort(key=lambda r: r["clipped"] or "", reverse=True)
 ready.sort(key=lambda r: not r["campaign"])
-posted = sorted(rows("gtaclip_used"), key=lambda r: r["saved"] or "", reverse=True)[:12]
+
+
+def posted_list():
+    """Posts with live links: the hand-kept history plus any clip a posting run marked
+    with tiktok/youtube links in its Cloudinary context."""
+    out = {}
+    try:
+        for p in json.load(open("posts_history.json")):
+            out[p.get("tiktok") or p.get("youtube")] = p
+    except Exception as e:  # noqa: BLE001
+        print(f"history: {e}")
+    try:
+        res = cloudinary.api.resources_by_tag("gtaclip_used", resource_type="video", context=True, max_results=100)
+        for r in res.get("resources", []):
+            c = (r.get("context") or {}).get("custom", {})
+            if not (c.get("tiktok_url") or c.get("youtube_url")):
+                continue
+            pid = r["public_id"]
+            key = c.get("tiktok_url") or c.get("youtube_url")
+            out[key] = {
+                "hook": c.get("hook") or c.get("title", ""), "streamer": c.get("streamer", ""),
+                "campaign": c.get("campaign", ""), "posted": c.get("posted_at") or r.get("created_at"),
+                "tiktok": c.get("tiktok_url", ""), "youtube": c.get("youtube_url", ""),
+                "poster": f"{BASE}/{POSTER_TX}/{pid}.jpg",
+            }
+    except Exception as e:  # noqa: BLE001
+        print(f"used: {e}")
+    return sorted(out.values(), key=lambda p: p.get("posted") or "", reverse=True)[:40]
+
+
+def fetcher_status():
+    try:
+        log = open("last_run.log").read()
+    except Exception:  # noqa: BLE001
+        return {}
+    import re
+    times = re.findall(r"^\[(\d\d:\d\d:\d\d)Z\]", log, re.M)
+    found = {m.group(1): int(m.group(2)) for m in re.finditer(r"\] (.+?): (\d+) fresh GTA 6 clips", log)}
+    return {"last_run_utc": times[-1] if times else "", "uploaded": len(re.findall(r"\] uploaded ", log)),
+            "failed": len(re.findall(r"\] failed ", log)), "fresh_by_streamer": found}
+
+
 os.makedirs("site", exist_ok=True)
 with open("site/queue.json", "w") as f:
     json.dump({"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-               "ready": ready, "posted": posted}, f, indent=1)
-print(f"queue.json: {len(ready)} ready, {len(posted)} posted")
+               "ready": ready, "posted": posted_list(), "fetcher": fetcher_status()}, f, indent=1)
+print(f"queue.json: {len(ready)} ready")

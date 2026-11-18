@@ -28,6 +28,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install cloudinary
+      - name: grab latest fetcher log
+        run: git fetch -q origin logs && git show FETCH_HEAD:last_run.log > last_run.log || true
       - run: python export_queue.py
         env:
           CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
