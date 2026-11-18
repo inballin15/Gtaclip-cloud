@@ -1,0 +1,21 @@
+face check failed gtaclip/tw_stableronaldo_ColdCalmStapleKippa-0emciRkS_QLV-B2a @1s: action is disabled for ws7344kt
+face check failed gtaclip/tw_stableronaldo_ColdCalmStapleKippa-0emciRkS_QLV-B2a @4s: action is disabled for ws7344kt
+face check failed gtaclip/tw_stableronaldo_ColdCalmStapleKippa-0emciRkS_QLV-B2a @7s: action is disabled for ws7344kt
+Traceback (most recent call last):
+  File "/home/runner/work/Gtaclip-cloud/Gtaclip-cloud/export_queue.py", line 152, in <module>
+    ready = rows("gtaclip_new", do_warm=True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Gtaclip-cloud/Gtaclip-cloud/export_queue.py", line 107, in rows
+    cam = cam_for(pid, c) if do_warm else c.get("cam", "")
+          ^^^^^^^^^^^^^^^
+  File "/home/runner/work/Gtaclip-cloud/Gtaclip-cloud/export_queue.py", line 90, in cam_for
+    cloudinary.uploader.add_tag("gtaclip_skip", [pid], resource_type="video")
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/cloudinary/uploader.py", line 638, in add_tag
+    return call_tags_api(tag, command, public_ids, **options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/cloudinary/uploader.py", line 751, in call_tags_api
+    return call_api("tags", params, **options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/cloudinary/uploader.py", line 1002, in call_api
+    raise exception_class(result["error"]["message"])
+cloudinary.exceptions.AuthorizationRequired: action is disabled for ws7344kt
