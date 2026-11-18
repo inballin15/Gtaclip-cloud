@@ -79,6 +79,10 @@ def apply_posted(st: dict) -> None:
             c.update(status="used", tiktok=rec.get("tiktok", ""), youtube=rec.get("youtube", ""),
                      posted_at=rec.get("posted_at") or iso(NOW))
             log(f"posted: {f.stem}")
+    for f in sorted((POSTED_DIR / "skips").glob("*.json")):
+        c = st["clips"].get(f.stem)
+        if c and c["status"] == "new":
+            c.update(status="skip", skip_reason="flagged by posting run")
     for f in sorted((POSTED_DIR / "hooks").glob("*.json")):
         try:
             rec = json.loads(f.read_text())
