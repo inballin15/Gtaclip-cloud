@@ -12,7 +12,7 @@ discovery:
   max_total: 10            # per run (runs hourly)
   skip_title_words: ["abuse", "abusing", "lady", "women", "girl", "freaky", "strip", "horny",
                      "dog", "slur", "nsfw", "spoiler", "ending", "loading", "ban",
-                     "stripper", "mandy", "club", "twerk", "thirst", "booty", "lap dance", "hooker", "pole", "gyatt", "gyat", "stepbro", "stepsis", "step bro", "step sis", "onlyfans"]
+                     "stripper", "mandy", "club", "twerk", "thirst", "booty", "lap dance", "hooker", "pole", "gyatt", "gyat", "stepbro", "stepsis", "step bro", "step sis", "onlyfans", "gyaa", "disabled", "retard"]
 
 streamers:
   clix:        {name: "Clix",          tag: "#Clix",     campaign: "Clix", facecam: [0, 0, 0.248, 0.248]}
