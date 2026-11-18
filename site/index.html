@@ -465,7 +465,7 @@ function renderLists() {
   if (key === lastKey) return; // don't interrupt a video that's playing
   lastKey = key;
   const rl = $('readylist'); rl.replaceChildren();
-  if (!data.ready.length) rl.append(el('div', 'empty', 'No fresh clips right now. The finder checks Twitch every 30 minutes.'));
+  if (!data.ready.length) rl.append(el('div', 'empty', 'No fresh clips right now. The finder checks Twitch every hour.'));
   data.ready.forEach((c) => rl.append(clipCard(c)));
   const pl = $('postedlist'); pl.replaceChildren();
   if (!data.posted.length) pl.append(el('div', 'empty', 'Nothing posted yet.'));
