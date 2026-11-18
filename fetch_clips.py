@@ -116,7 +116,18 @@ def download(url: str, folder: Path) -> Path:
 
 
 def main() -> None:
+    raw = os.environ.get("CLOUDINARY_URL", "").strip().strip('"').strip("'")
+    if raw.upper().startswith("CLOUDINARY_URL="):
+        raw = raw.split("=", 1)[1].strip()
+    os.environ["CLOUDINARY_URL"] = raw
+    cloudinary.reset_config()
     cloudinary.config(secure=True)  # reads CLOUDINARY_URL
+    c = cloudinary.config()
+    k = str(c.api_key or "")
+    # diagnostics only: never print the secret
+    log(f"cloudinary: starts_ok={raw.startswith('cloudinary://')} cloud_name={c.cloud_name!r} "
+        f"api_key_len={len(k)} api_key_digits={k.isdigit()} api_key_end=...{k[-3:]} "
+        f"secret_len={len(str(c.api_secret or ''))}")
     h = twitch_headers()
     seen = already_have()
     picks = pick_clips(h, seen)
