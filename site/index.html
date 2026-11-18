@@ -7,592 +7,534 @@
 <title>GTA Clip · Dashboard</title>
 <meta name="theme-color" content="#0b0b12">
 <style>
-  :root { --bg:#0b0b12; --panel:#161622; --panel2:#1d1d2c; --line:#262636; --fg:#f4f4f8; --muted:#9a9ab0; --pink:#ff3d8b; --cyan:#29e3ff; --green:#2ee59d; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  :root { --bg:#0b0b12; --panel:#161622; --panel2:#1d1d2c; --line:#262636; --fg:#f4f4f8; --muted:#9a9ab0;
+          --pink:#ff3d8b; --cyan:#29e3ff; --green:#2ee59d; --amber:#f5b544; --red:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
   a { color:inherit; }
-  header { position:sticky; top:0; z-index:5; background:rgba(11,11,18,.92); backdrop-filter:blur(10px);
-           padding:12px 16px 0; border-bottom:1px solid var(--line); }
-  .bar { display:flex; align-items:center; gap:12px; }
-  .logo { width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-weight:800;
-          background:linear-gradient(135deg,var(--pink),var(--cyan)); color:#000; flex:none; }
-  h1 { font-size:18px; margin:0; }
-  h2 { font-size:16px; margin:0 0 10px; }
-  .sub { color:var(--muted); font-size:12px; }
-  .live { margin-left:auto; flex-shrink:1; min-width:0; display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); white-space:nowrap; }
-  .dot { width:8px; height:8px; border-radius:50%; background:var(--green); animation:p 2s infinite; }
-  .dot.stale { background:#f5b544; }
-  @keyframes p { 0% { box-shadow:0 0 0 0 #2ee59d88; } 50% { box-shadow:0 0 0 6px transparent; } }
+  header { position:sticky; top:0; z-index:5; background:rgba(11,11,18,.94); backdrop-filter:blur(10px); padding:12px 16px 0; border-bottom:1px solid var(--line); }
+  .bar { display:flex; align-items:center; gap:10px; }
+  .logo { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-weight:800; background:linear-gradient(135deg,var(--pink),var(--cyan)); color:#000; flex:none; }
+  h1 { font-size:17px; margin:0; } h2 { font-size:16px; margin:0 0 10px; }
+  .sub, .meta { color:var(--muted); font-size:12px; }
+  .live { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); white-space:nowrap; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--green); }
+  .dot.warn { background:var(--amber); } .dot.bad { background:var(--red); }
+  .gear { background:none; border:1px solid var(--line); color:var(--fg); border-radius:999px; padding:6px 10px; font:inherit; font-size:13px; }
   .tabs { display:flex; gap:6px; padding:10px 0; overflow-x:auto; }
-  .tab { flex:1; min-width:max-content; padding:9px 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--fg);
-         font:inherit; font-weight:600; font-size:14px; }
+  .tab { flex:1; min-width:max-content; padding:9px 12px; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--fg); font:inherit; font-weight:600; font-size:14px; }
   .tab[aria-selected="true"] { background:var(--fg); color:var(--bg); }
-  .wrap { padding:14px 16px 48px; max-width:1300px; margin:0 auto; }
-  section[hidden], .box[hidden] { display:none; }
-  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
-  .kpi { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:14px; }
-  .kpi .l { color:var(--muted); font-size:12px; }
-  .kpi .n { font-size:28px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums; }
-  .kpi .s { color:var(--muted); font-size:12px; }
-  .kpi.hot { background:linear-gradient(135deg,#ff3d8b33,var(--panel) 70%); }
+  .wrap { padding:14px 16px 60px; max-width:1200px; margin:0 auto; }
+  section[hidden], [hidden] { display:none !important; }
   .box { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:14px; margin-bottom:14px; }
-  .slots { display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:8px; }
-  .slot { border-radius:14px; padding:9px 10px; background:var(--panel2); border:1px solid transparent; }
-  .slot .t { font-weight:700; font-variant-numeric:tabular-nums; }
-  .slot .w { color:var(--muted); font-size:12px; }
-  .slot.done { background:#2ee59d26; }
-  .slot.next { border-color:var(--cyan); }
-  .slot.past { opacity:.5; }
-  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px; }
+  .kpi { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:12px 14px; }
+  .kpi .l { color:var(--muted); font-size:12px; } .kpi .n { font-size:26px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums; } .kpi .s { color:var(--muted); font-size:12px; }
+  .run { display:flex; flex-direction:column; gap:10px; }
+  .run .state { font-size:20px; font-weight:800; }
+  .run.on { background:linear-gradient(135deg,#2ee59d22,var(--panel) 70%); border-color:#2ee59d55; }
+  .run.off { background:linear-gradient(135deg,#ff6b6b1a,var(--panel) 70%); border-color:#ff6b6b44; }
+  .bigbtn { padding:14px; border-radius:16px; border:0; font:inherit; font-size:17px; font-weight:800; }
+  .bigbtn.start { background:var(--green); color:#000; } .bigbtn.stop { background:var(--red); color:#000; }
+  .bigbtn:disabled { opacity:.6; }
+  .note { font-size:13px; padding:9px 11px; border-radius:12px; background:#29e3ff14; border:1px solid #29e3ff40; }
+  .note.warn { background:#f5b5441a; border-color:#f5b54466; } .note.bad { background:#ff6b6b1a; border-color:#ff6b6b66; } .note.good { background:#2ee59d1a; border-color:#2ee59d66; }
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); }
   .card { background:var(--panel); border:1px solid var(--line); border-radius:20px; overflow:hidden; display:flex; flex-direction:column; }
-  video { width:100%; display:block; background:#000; aspect-ratio:16/9; object-fit:contain; }
-  .card.post video { aspect-ratio:9/16; max-height:78vh; }
+  .card.now { border-color:var(--pink); box-shadow:0 0 0 1px var(--pink); }
+  .vwrap { background:#000; aspect-ratio:9/16; max-height:70vh; width:100%; position:relative; }
+  .vwrap video { width:100%; height:100%; display:block; object-fit:contain; background:#000; }
   .body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; }
-  .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-  .pill { padding:4px 10px; border-radius:999px; background:#ffffff12; font-size:12px; font-weight:600; }
+  .row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .pill { padding:4px 10px; border-radius:999px; background:#ffffff14; font-size:12px; font-weight:600; }
   .pill.paid { background:var(--pink); color:#000; }
-  .title { font-size:16px; font-weight:600; }
-  .meta { color:var(--muted); font-size:12px; }
-  .say { color:var(--muted); font-size:13px; font-style:italic; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-  .say.open { -webkit-line-clamp:unset; }
+  .status { padding:5px 10px; border-radius:999px; font-size:12px; font-weight:700; display:inline-flex; gap:6px; align-items:center; }
+  .s-wait { background:#ffffff14; color:var(--muted); } .s-next { background:#29e3ff26; color:var(--cyan); }
+  .s-busy { background:#f5b54426; color:var(--amber); } .s-live { background:#2ee59d26; color:var(--green); } .s-err { background:#ff6b6b26; color:var(--red); }
+  .spin { width:10px; height:10px; border-radius:50%; border:2px solid currentColor; border-right-color:transparent; animation:sp 1s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+  .title { font-size:16px; font-weight:650; }
   .btns { display:flex; gap:8px; flex-wrap:wrap; }
-  .btn { padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--fg);
-         font:inherit; font-size:13px; text-decoration:none; display:inline-block; }
-  .btn.on { background:var(--cyan); color:#000; border-color:var(--cyan); }
-  .btn.pink { background:var(--pink); color:#000; border-color:var(--pink); font-weight:600; }
-  .plist { display:flex; flex-direction:column; gap:10px; }
-  .prow { background:var(--panel2); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:8px; }
-  #postedlist .prow { background:var(--panel); border:1px solid var(--line); }
-  .empty { text-align:center; color:var(--muted); padding:30px 10px; }
-  .links { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
-  .links a { text-align:center; padding:12px; border-radius:999px; background:var(--panel2); text-decoration:none; font-weight:600; }
-  .links a.pink { background:var(--pink); color:#000; }
-  .chips { display:flex; flex-wrap:wrap; gap:6px; }
-  .hookline { font-size:13px; padding:8px 10px; border-radius:12px; background:#29e3ff1a; border:1px solid #29e3ff44; }
-  .btn.del { border-color:#ff5a5a66; color:#ff8a8a; margin-left:auto; }
-  .card.skipped { opacity:.35; pointer-events:none; }
+  .btn { padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--fg); font:inherit; font-size:13px; text-decoration:none; display:inline-block; cursor:pointer; }
+  .btn.pink { background:var(--pink); color:#000; border-color:var(--pink); font-weight:700; }
+  .btn.cyan { background:var(--cyan); color:#000; border-color:var(--cyan); font-weight:600; }
+  .btn.del { border-color:#ff6b6b66; color:#ff9a9a; }
+  .btn:disabled { opacity:.5; }
   .edit { display:flex; flex-direction:column; gap:8px; padding:10px; border-radius:14px; background:var(--panel2); }
-  .edit[hidden] { display:none; }
   .edit label { font-size:12px; color:var(--muted); }
-  .edit input, .edit textarea { width:100%; font:inherit; font-size:16px; color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 10px; }
+  .edit input, .edit textarea, .setin { width:100%; font:inherit; font-size:16px; color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 10px; }
   .edit textarea { min-height:110px; resize:vertical; }
-  .edit .note { font-size:12px; color:var(--muted); }
-  .slot { cursor:pointer; }
-  details.box > summary { cursor:pointer; list-style:none; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
-  details.box > summary::-webkit-details-marker { display:none; }
-  details.box > summary::after { content:'▾ show'; margin-left:auto; color:var(--muted); font-size:12px; }
-  details.box[open] > summary::after { content:'▴ hide'; }
-  .sheet { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.7); display:flex; align-items:flex-end; justify-content:center; }
-  .sheet[hidden] { display:none; }
-  .sheet .inner { width:min(520px,100%); max-height:92vh; overflow:auto; background:var(--panel); border-radius:22px 22px 0 0; padding:14px; display:flex; flex-direction:column; gap:10px; }
-  .sheet video { aspect-ratio:9/16; max-height:62vh; border-radius:14px; }
-  .sheet .head { display:flex; align-items:center; gap:8px; }
-  .sheet .x { margin-left:auto; }
-  .vwrap { position:relative; background:#000; }
-  .capov { position:absolute; left:6%; right:6%; top:50%; transform:translateY(-50%); text-align:center; pointer-events:none; }
-  .capov span { background:#fff; color:#000; font-weight:700; font-size:clamp(14px,4.2vw,22px); line-height:1.5;
-                padding:3px 10px; border-radius:8px; -webkit-box-decoration-break:clone; box-decoration-break:clone; }
-  .capline { font-size:13px; color:var(--muted); white-space:pre-wrap; }
+  .plist { display:flex; flex-direction:column; gap:10px; }
+  .prow { background:var(--panel2); border-radius:16px; padding:12px; display:flex; gap:12px; }
+  .prow img { width:64px; height:114px; object-fit:cover; border-radius:10px; background:#000; flex:none; }
+  .prow .info { display:flex; flex-direction:column; gap:7px; min-width:0; flex:1; }
+  .plat { display:grid; grid-template-columns:auto 1fr; gap:4px 8px; align-items:center; font-size:13px; }
+  .nums { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .nums b { color:var(--fg); }
+  details > summary { cursor:pointer; list-style:none; font-weight:700; display:flex; align-items:center; gap:8px; }
+  details > summary::-webkit-details-marker { display:none; }
+  details > summary::after { content:"▾"; margin-left:auto; color:var(--muted); }
+  details[open] > summary::after { content:"▴"; }
+  .slots { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-top:12px; }
+  .slot { border-radius:14px; padding:9px 10px; background:var(--panel2); border:1px solid transparent; font-size:12px; }
+  .slot .t { font-weight:700; font-size:14px; } .slot .w { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .slot.done { background:#2ee59d1f; } .slot.next { border-color:var(--cyan); } .slot.past { opacity:.45; }
+  table { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+  th, td { text-align:left; padding:7px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:12px; } td.n, th.n { text-align:right; }
+  .barrow { display:grid; grid-template-columns:90px 1fr 70px; gap:8px; align-items:center; font-size:13px; margin:6px 0; }
+  .barbg { height:10px; border-radius:6px; background:var(--panel2); overflow:hidden; } .barfg { height:100%; background:linear-gradient(90deg,var(--pink),var(--cyan)); }
+  .empty { text-align:center; color:var(--muted); padding:28px 10px; }
+  .toast { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); background:var(--fg); color:var(--bg); padding:10px 16px; border-radius:999px; font-weight:600; font-size:14px; z-index:30; max-width:92vw; }
+  .sheet { position:fixed; inset:0; background:#000a; z-index:20; display:flex; align-items:flex-end; justify-content:center; }
+  .sheet .in { background:var(--panel); width:100%; max-width:560px; max-height:88vh; overflow:auto; border-radius:22px 22px 0 0; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .sheet .head { display:flex; align-items:center; } .sheet .head .btn { margin-left:auto; }
+  .steps { white-space:pre-line; font-size:14px; }
+  .scroll { overflow-x:auto; }
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
     <div class="logo">GC</div>
-    <div>
-      <h1>GTA Clip</h1>
-      <div class="sub" id="status">Loading…</div>
-    </div>
-    <div class="live"><span class="dot" id="dot"></span><span id="livetxt">Live</span></div>
-    <button class="btn" id="gear" aria-label="Settings" style="padding:6px 10px;font-size:13px;white-space:nowrap">Settings</button>
+    <div><h1>GTA Clip</h1><div class="sub">@gtaclip96 · Clipper Central</div></div>
+    <div class="live"><span class="dot" id="dot"></span><span id="livetxt">loading…</span></div>
+    <button class="gear" id="gear" aria-label="Settings">⚙︎</button>
   </div>
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="true" data-tab="overview">Overview</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="ready">Clip queue <span id="n-ready"></span></button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="posted">Posted</button>
-  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" data-tab="home" aria-selected="true">Overview</button>
+    <button class="tab" data-tab="queue" aria-selected="false">Queue <span id="qcount"></span></button>
+    <button class="tab" data-tab="posted" aria-selected="false">Posted</button>
+    <button class="tab" data-tab="stats" aria-selected="false">Stats</button>
+  </nav>
 </header>
-
-<div class="wrap">
-  <section id="overview">
-    <div class="box" id="run-box">
-      <h2 id="run-title">Automatic posting</h2>
-      <div class="meta" id="run-sub" style="margin-bottom:10px">—</div>
-      <button class="btn" id="run-btn">…</button>
-    </div>
-    <div class="box" id="connect-box" style="border-color:var(--cyan)">
-      <h2>Turn on one-tap editing</h2>
-      <div class="meta" style="margin-bottom:10px">Connect GitHub once so "Don't post" and "Save" work right here, without opening GitHub.</div>
-      <button class="btn on" id="connect-btn">Set it up</button>
-    </div>
-    <div class="kpis">
-      <div class="kpi hot"><div class="l">Next post</div><div class="n" id="k-next">—</div><div class="s" id="k-next-s"></div></div>
-      <div class="kpi"><div class="l">Clips ready</div><div class="n" id="k-ready">—</div><div class="s" id="k-paid"></div></div>
-      <div class="kpi"><div class="l">Posted today</div><div class="n" id="k-today">—</div><div class="s">TikTok + YouTube</div></div>
-      <div class="kpi"><div class="l">Clip finder</div><div class="n" id="k-fetch">—</div><div class="s" id="k-fetch-s"></div></div>
-    </div>
-
-    <div class="plist" id="postnow-box" style="margin-bottom:14px"></div>
-    <details class="box" id="slots-box">
-      <summary><h2 style="display:inline">Today's slots</h2> <span class="meta" id="slots-sum"></span></summary>
-      <div class="slots" id="slots" style="margin-top:10px"></div>
-    </details>
-
-    <div class="box">
-      <h2>Latest posts</h2>
-      <div class="plist" id="latest"></div>
-    </div>
-
-    <div class="box">
-      <h2>Who's streaming GTA 6 (last finder run)</h2>
-      <div class="chips" id="streamers"></div>
-    </div>
-
-    <div class="box">
-      <h2>Quick links</h2>
-      <div class="links">
-        <a class="pink" href="https://contentrewards.com/discover/7a6a234b-1e9e-4da3-a600-54cc3142e710" target="_blank" rel="noopener">Submit to Clix</a>
-        <a class="pink" href="https://contentrewards.com/c/campaigns/4479e5e2-9a00-489e-8b0c-345834f37cc7?group=1" target="_blank" rel="noopener">Submit to Lacy</a>
-        <a href="https://www.tiktok.com/@gtaclip96" target="_blank" rel="noopener">TikTok</a>
-        <a href="https://publish.buffer.com" target="_blank" rel="noopener">Buffer</a>
-        <a href="https://claude.ai/artifact/KXkLe52AM3S8kh31Xw2oDr" target="_blank" rel="noopener">View stats</a>
-        <a href="https://drive.google.com/drive/folders/1uYObtVCMGhlTM6pxuSShFvml0dyXhh2k" target="_blank" rel="noopener">Rules &amp; logs</a>
-      </div>
-    </div>
+<main class="wrap">
+  <section id="tab-home">
+    <div id="setup"></div>
+    <div class="box run" id="run"></div>
+    <div id="nowbox"></div>
+    <div class="kpis" id="kpis"></div>
+    <details class="box" id="slots-box"><summary id="slots-sum">Today's slots</summary><div class="slots" id="slots"></div></details>
+    <div class="box"><h2>Submit to Content Rewards</h2><div class="meta" style="margin-bottom:8px">Clix and Lacy posts that are live. Copy the links, paste them on the campaign page, then tap "Submitted".</div><div class="plist" id="submitlist"></div></div>
+    <div class="box"><h2>Latest posts</h2><div class="plist" id="latest"></div></div>
   </section>
-
-  <section id="ready" hidden>
-    <div class="grid" id="readylist"></div>
+  <section id="tab-queue" hidden>
+    <div class="meta" id="queuemeta" style="margin-bottom:10px"></div>
+    <div class="grid" id="queuelist"></div>
   </section>
-
-  <section id="posted" hidden>
-    <div class="plist" id="postedlist"></div>
-  </section>
-</div>
-
-<div class="sheet" id="sheet" hidden><div class="inner" id="sheet-inner"></div></div>
+  <section id="tab-posted" hidden><div class="plist" id="postedlist"></div></section>
+  <section id="tab-stats" hidden><div id="statsbox"></div></section>
+</main>
+<div class="sheet" id="sheet" hidden><div class="in" id="sheet-in"></div></div>
 <script>
+const BUILD = '__BUILD__';
+const REPO = 'inballin15/Gtaclip-cloud';
+const PAGES = 'https://inballin15.github.io/Gtaclip-cloud/';
+const CR = { Clix: 'https://contentrewards.com/discover/7a6a234b-1e9e-4da3-a600-54cc3142e710',
+             Lacy: 'https://contentrewards.com/c/campaigns/4479e5e2-9a00-489e-8b0c-345834f37cc7?group=1' };
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-let data = { ready: [], posted: [], fetcher: {} }, live = false, lastKey = '';
-let skipped = new Set();
-try { skipped = new Set(JSON.parse(localStorage.getItem('gc-skipped') || '[]')); } catch (e) { /* private mode */ }
-let edits = {};
-try { edits = JSON.parse(localStorage.getItem('gc-edits') || '{}'); } catch (e) { /* private mode */ }
-const saveEdits = () => { try { localStorage.setItem('gc-edits', JSON.stringify(edits)); } catch (e) { /* ignore */ } };
-const defaultCaption = (c, hook) => `${hook} 😭\n\n🎥 @${c.login || (c.streamer || '').toLowerCase().replace(/\s+/g, '')}\n\n${c.tag || ''} #GTA6 #GTAVI #gaming #fyp`.replace(/\n\n {0,1}#GTA6/, '\n\n#GTA6');
-// ---- One-tap actions: the site files the request on GitHub for you using your own key (kept only on this device).
-const GH_REPO = 'inballin15/Gtaclip-cloud';
-const ghKey = () => { try { return localStorage.getItem('gc-gh') || ''; } catch (e) { return ''; } };
-const confirmTap = (btn, text) => {
-  if (btn.dataset.armed) return true;
-  const old = btn.textContent; btn.dataset.armed = '1'; btn.textContent = text;
-  setTimeout(() => { delete btn.dataset.armed; if (btn.textContent === text) btn.textContent = old; }, 3000);
-  return false;
-};
-async function ghAction(title, body) {
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+             set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode */ } } };
+const ghKey = () => ls.get('gc-gh2', '') || (() => { try { return localStorage.getItem('gc-gh') || ''; } catch (e) { return ''; } })();
+const fmt = (n) => n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(n || 0);
+const tET = (iso) => new Date(iso).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' });
+const dET = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const ago = (iso) => { const s = Math.max(0, (Date.now() - new Date(iso)) / 1000); return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; };
+function toast(msg) { const t = el('div', 'toast', msg); document.body.append(t); setTimeout(() => t.remove(), 2600); }
+async function copy(text, what) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { const ta = el('textarea'); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  toast(`${what} copied`);
+}
+
+// ------------------------------------------------------------ state
+let Q = { ready: [], posted: [] };     // queue.json  (rebuilt by the render pipeline)
+let L = null;                          // live.json   (written by the poster every few minutes / right after a tap)
+let openIssues = [];                   // your taps GitHub hasn't finished yet
+let pend = ls.get('gc-pending', {});   // taps made on this phone: {key: {at, title}}
+let submitted = ls.get('gc-submitted', {});
+let tab = 'home';
+const savePend = () => ls.set('gc-pending', pend);
+
+async function ghTap(title, body = '') {
   const key = ghKey();
-  if (!key) { openSettings('Connect GitHub once so changes save with one tap.'); return { ok: false, msg: 'Connect GitHub first (gear icon)' }; }
+  if (!key) { openSettings('Connect GitHub once so buttons work with one tap.'); return false; }
   try {
-    const r = await fetch(`https://api.github.com/repos/${GH_REPO}/issues`, {
-      method: 'POST',
+    const r = await fetch(`https://api.github.com/repos/${REPO}/issues`, { method: 'POST',
       headers: { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, body }),
-    });
-    if (r.status === 401) return { ok: false, msg: 'GitHub key expired or wrong — make a new one in Settings' };
-    if (r.status === 403 || r.status === 404) return { ok: false, msg: 'Key needs Issues: Read and write on Gtaclip-cloud (Settings)' };
-    if (r.status === 410) return { ok: false, msg: 'Issues are turned off on the repo — turn them on in GitHub settings' };
-    if (!r.ok) return { ok: false, msg: `GitHub error ${r.status}` };
-    return { ok: true };
-  } catch (e) { return { ok: false, msg: 'No connection — try again' }; }
-}
-function openSettings(why) {
-  const inner = $('sheet-inner'); inner.replaceChildren();
-  const head = el('div', 'head'); head.append(el('h2', null, 'Settings'));
-  const x = el('button', 'btn x', 'Close'); x.onclick = closeSheet; head.append(x);
-  inner.append(head);
-  if (why) inner.append(el('div', 'hookline', why));
-  const has = !!ghKey();
-  inner.append(el('div', 'meta', has ? 'GitHub is connected on this device ✓' : 'GitHub is not connected on this device.'));
-  const steps = el('div', 'capline', [
-    'One-time setup (2 minutes):',
-    '1. Tap "Make a key" below (opens GitHub).',
-    '2. Name it "gtaclip site". Expiration: 1 year.',
-    '3. Repository access: Only select repositories → Gtaclip-cloud.',
-    '4. Permissions → Repository permissions → Issues: Read and write.',
-    '5. Generate token, copy it, paste it here, tap Save.',
-    'The key stays only on this phone. It can only file requests on this one project.',
-  ].join('\n'));
-  const mk = el('a', 'btn on', 'Make a key'); mk.href = 'https://github.com/settings/personal-access-tokens/new'; mk.target = '_blank'; mk.rel = 'noopener';
-  const form = el('div', 'edit');
-  const inp = document.createElement('input'); inp.type = 'password'; inp.placeholder = 'Paste key (github_pat_…)'; inp.autocomplete = 'off';
-  const b = el('div', 'btns');
-  const sv = el('button', 'btn pink', 'Save'); const rm = el('button', 'btn', 'Disconnect');
-  sv.onclick = () => { try { localStorage.setItem('gc-gh', inp.value.trim()); } catch (e) { /* ignore */ } openSettings('Connected ✓ — Don\'t post and Save now work with one tap.'); };
-  rm.onclick = () => { try { localStorage.removeItem('gc-gh'); } catch (e) { /* ignore */ } openSettings(); };
-  b.append(sv); if (has) b.append(rm);
-  form.append(inp, b);
-  inner.append(steps, mk, form);
-  $('sheet').hidden = false;
-}
-let postNowLocal = {};
-try { postNowLocal = JSON.parse(localStorage.getItem('gc-postnow') || '{}'); } catch (e) { /* ignore */ }
-const savePostNow = () => { try { localStorage.setItem('gc-postnow', JSON.stringify(postNowLocal)); } catch (e) { /* ignore */ } };
-// Next "Post now" check (:22 / :52 Eastern)
-const nextPostNowCheck = () => {
-  const m = etParts(new Date()).mins; const h = Math.floor(m / 60), mm = m % 60;
-  return mm < 22 ? [h, 22] : mm < 52 ? [h, 52] : [h + 1, 22];
-};
-function applyPostNow() {
-  const now = Date.now();
-  for (const [id, t] of Object.entries(postNowLocal)) {
-    const c = data.ready.find((x) => x.id === id);
-    if (!c || now - t > 3 * 3600 * 1000) { delete postNowLocal[id]; continue; }  // posted or stale
-    c.post_now = true;
-  }
-  savePostNow();
-  data.ready.sort((a, b) => (!!b.post_now - !!a.post_now));
-}
-const saveSkipped = () => { try { localStorage.setItem('gc-skipped', JSON.stringify([...skipped].slice(-200))); } catch (e) { /* ignore */ } };
-
-const ago = (iso) => {
-  if (!iso) return '';
-  const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
-  return m < 60 ? `${m}m ago` : m < 1440 ? `${Math.floor(m / 60)}h ${m % 60}m ago` : `${Math.floor(m / 1440)}d ago`;
-};
-const etTime = (d) => new Date(d).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' });
-const etParts = (d) => {
-  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-    .formatToParts(d).map((x) => [x.type, x.value]));
-  return { day: `${p.year}-${p.month}-${p.day}`, mins: (+p.hour % 24) * 60 + +p.minute };
-};
-
-// Posting schedule (Eastern): every 30 minutes, at :07 and :37, 7am to 10:37pm.
-const SLOTS = []; for (let h = 7; h <= 22; h++) { SLOTS.push([h, 7], [h, 37]); }
-const label = (h, m) => `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
-
-function runBox() {
-  const paused = !!data.paused;
-  $('run-title').textContent = paused ? 'Automatic posting is STOPPED' : 'Automatic posting is ON';
-  $('run-sub').textContent = paused ? 'Nothing will post until you press Start. Same schedule when you restart.' : 'Every 30 minutes (:07 and :37, 7am–10:37pm), in queue order.';
-  const b = $('run-btn');
-  if (!b.dataset.busy) { b.textContent = paused ? 'Start posting' : 'Stop posting'; b.className = paused ? 'btn on' : 'btn del'; }
-  b.onclick = async () => {
-    if (!paused && !confirmTap(b, 'Tap again to stop')) return;
-    b.dataset.busy = '1'; b.textContent = paused ? 'Starting…' : 'Stopping…';
-    const r = await ghAction(paused ? 'resume: posting' : 'pause: posting', 'from the dashboard');
-    b.textContent = r.ok ? (paused ? 'Starting — takes ~1 min ✓' : 'Stopping — takes ~1 min ✓') : r.msg;
-    setTimeout(() => { delete b.dataset.busy; }, 90000);
-  };
+      body: JSON.stringify({ title, body }) });
+    if (r.status === 401) { openSettings('Your GitHub key expired or is wrong. Make a new one below.'); return false; }
+    if (r.status === 403 || r.status === 404) { openSettings('Your GitHub key needs "Issues: Read and write" on Gtaclip-cloud.'); return false; }
+    if (!r.ok) { toast(`GitHub error ${r.status} — try again`); return false; }
+    pend[title] = { at: Date.now(), title }; savePend();
+    setTimeout(refreshLive, 4000); setTimeout(refreshLive, 15000);
+    return true;
+  } catch (e) { toast('No connection — try again'); return false; }
 }
 
-function overview() {
-  runBox();
-  const pn = $('postnow-box'); pn.replaceChildren();
-  data.ready.filter((c) => c.post_now && c.final).forEach((c) => {
-    const [h, m] = nextPostNowCheck();
-    const r = el('div', 'prow');
-    r.style.border = '1px solid var(--pink)';
-    const top = el('div', 'row');
-    top.append(el('span', 'pill paid', 'POST NOW'), el('span', 'meta', `goes out within ~5 min${data.paused ? ' (even while posting is stopped)' : ''}`));
-    r.append(top, el('div', 'title', c.hook || c.title || ''));
-    r.onclick = () => { document.querySelector('.tab[data-tab="ready"]').click(); const card = document.querySelector(`[data-clip="${CSS.escape(c.id)}"]`); if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth' }), 50); };
-    pn.append(r);
-  });
-  const now = etParts(new Date());
-  const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day);
-  $('k-today').textContent = todays.length;
-  $('k-ready').textContent = data.ready.filter((c) => c.final).length;
-  $('k-paid').textContent = `${data.ready.filter((c) => c.campaign).length} from paid campaigns`;
-  const next = SLOTS.find(([h, m]) => h * 60 + m > now.mins);
-  if (next) {
-    const mins = next[0] * 60 + next[1] - now.mins;
-    $('k-next').textContent = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
-    $('k-next-s').textContent = `at ${label(...next)}`;
-  } else { $('k-next').textContent = 'Tomorrow'; $('k-next-s').textContent = 'at 7:07 am'; }
-  const f = data.fetcher || {};
-  if (f.last_run_utc) {
-    const t = new Date(`${new Date().toISOString().slice(0, 10)}T${f.last_run_utc}Z`);
-    if (t > new Date()) t.setUTCDate(t.getUTCDate() - 1);
-    $('k-fetch').textContent = ago(t.toISOString()).replace(' ago', '');
-    $('k-fetch-s').textContent = `since last check · ${f.uploaded || 0} new clip${f.uploaded === 1 ? '' : 's'}${f.failed ? ` · ${f.failed} failed` : ''}`;
-  }
-  const box = $('slots'); box.replaceChildren();
-  const postedMins = todays.map((p) => etParts(new Date(p.posted)).mins);
-  let marked = false;
-  for (const [h, m] of SLOTS) {
-    const t = h * 60 + m;
-    const done = postedMins.some((x) => x >= t - 5 && x < t + 30);
-    const d = el('div', 'slot');
-    let word = done ? 'Posted' : t < now.mins - 20 ? 'Missed' : 'Coming up';
-    if (done) d.classList.add('done'); else if (t < now.mins - 20) d.classList.add('past');
-    else if (!marked) { d.classList.add('next'); word = 'Next'; marked = true; }
-    d.append(el('div', 't', label(h, m)), el('div', 'w', word));
-    const slotIdx = SLOTS.findIndex((x) => x[0] === h && x[1] === m);
-    d.onclick = () => openSlot(slotIdx, done, todays, t);
-    box.append(d);
-  }
-  const nxt = SLOTS.find(([h, m]) => h * 60 + m > now.mins);
-  $('slots-sum').textContent = `${todays.length} posted today${nxt ? ` · next ${label(...nxt)}` : ''}${data.paused ? ' · posting stopped' : ''}`;
-  const latest = $('latest'); latest.replaceChildren();
-  data.posted.slice(0, 4).forEach((p) => latest.append(postRow(p)));
-  if (!data.posted.length) latest.append(el('div', 'empty', 'Nothing posted yet.'));
-  const chips = $('streamers'); chips.replaceChildren();
-  const by = f.fresh_by_streamer || {};
-  const names = Object.keys(by).sort((a, b) => by[b] - by[a]);
-  names.forEach((n) => chips.append(el('span', by[n] ? 'pill paid' : 'pill', `${n}${by[n] ? ` · ${by[n]} clips` : ' · no GTA clips'}`)));
-  if (!names.length) chips.append(el('span', 'meta', 'Waiting for the next finder run.'));
+async function getJSON(url, headers) {
+  const r = await fetch(url, { cache: 'no-store', headers }); if (!r.ok) throw new Error(r.status); return r.json();
 }
-
-// Which queued clip goes in which upcoming slot: the queue order (paid campaigns first, then newest).
-function upcomingPlan() {
-  const now = etParts(new Date());
-  const todays = data.posted.filter((p) => p.posted && etParts(new Date(p.posted)).day === now.day).map((p) => etParts(new Date(p.posted)).mins);
-  const open = SLOTS.map(([h, m], i) => ({ i, t: h * 60 + m })).filter(({ t }) => t > now.mins - 5 && !todays.some((x) => x >= t - 5 && x < t + 30));
-  const plan = {};
-  const okd = data.ready.filter((c) => c.final && !c.post_now);
-  open.forEach((s, k) => { if (okd[k]) plan[s.i] = okd[k]; });
-  return plan;
-}
-
-function closeSheet() { const sh = $('sheet'); sh.hidden = true; sh.querySelectorAll('video').forEach((v) => v.pause()); $('sheet-inner').replaceChildren(); }
-$('sheet').onclick = (e) => { if (e.target.id === 'sheet') closeSheet(); };
-
-function openSlot(i, done, todays, t) {
-  const [h, m] = SLOTS[i];
-  const inner = $('sheet-inner'); inner.replaceChildren();
-  const head = el('div', 'head');
-  head.append(el('h2', null, `${label(h, m)} slot`));
-  const x = el('button', 'btn x', 'Close'); x.onclick = closeSheet; head.append(x);
-  inner.append(head);
-  if (done) {
-    const p = todays.find((q) => { const mm = etParts(new Date(q.posted)).mins; return mm >= t - 5 && mm < t + 30; });
-    inner.append(el('div', 'meta', 'Already posted:'));
-    if (p) inner.append(postRow(p));
-  } else {
-    const c = upcomingPlan()[i];
-    if (!c) {
-      inner.append(el('div', 'empty', t < etParts(new Date()).mins - 20 ? 'This slot was missed.' : 'No finished clip for this slot yet.'));
-    } else {
-      const e = edits[c.id];
-      const hook = e ? e.hook : c.hook;
-      const src = (!e && c.final) ? c.final : (c.final || c.video);
-      const v = document.createElement('video');
-      v.controls = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'metadata'; v.poster = c.poster; v.src = src;
-      const top = el('div', 'row');
-      top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
-      const vw = el('div', 'vwrap'); vw.append(v); if (hook && (e || !c.final)) vw.append(capOverlay(hook));
-      inner.append(top, vw);
-      inner.append(el('div', 'hookline', hook ? `Hook: ${hook}` : 'Hook: written at posting time'));
-      const cap = (e ? e.caption : c.caption) || (hook ? defaultCaption(c, hook) : '');
-      if (cap) inner.append(el('div', 'capline', `Caption: ${cap}`));
-      inner.append(el('div', 'meta', 'Lined up in queue order. Post now jumps the line; Stop posting pauses everything.'));
-      const b = el('div', 'btns');
-      const go = el('button', 'btn on', 'Edit or skip this clip');
-      go.onclick = () => {
-        closeSheet();
-        document.querySelector('.tab[data-tab="ready"]').click();
-        const card = document.querySelector(`[data-clip="${CSS.escape(c.id)}"]`);
-        if (card) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-      };
-      b.append(go); inner.append(b);
+async function refreshQueue() {
+  try {
+    Q = await getJSON(PAGES + 'queue.json?t=' + Date.now());
+    if (Q.site_build && BUILD !== '__BUILD__' && Q.site_build !== BUILD && !sessionStorage.getItem('rl-' + Q.site_build)) {
+      sessionStorage.setItem('rl-' + Q.site_build, '1'); location.reload(); return;
     }
+  } catch (e) { /* keep last */ }
+}
+async function refreshLive() {
+  const key = ghKey();
+  try {
+    if (key) {
+      L = await getJSON(`https://api.github.com/repos/${REPO}/contents/live.json?ref=posted&t=${Date.now()}`,
+        { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github.raw+json' });
+      const iss = await getJSON(`https://api.github.com/repos/${REPO}/issues?state=open&per_page=50&t=${Date.now()}`,
+        { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github+json' });
+      openIssues = iss.filter((i) => !i.pull_request).map((i) => i.title);
+    } else {
+      L = await getJSON(`https://raw.githubusercontent.com/${REPO}/posted/live.json?t=${Date.now()}`);
+    }
+  } catch (e) {
+    try { L = await getJSON(`https://raw.githubusercontent.com/${REPO}/posted/live.json?t=${Date.now()}`); } catch (e2) { /* keep last */ }
   }
-  $('sheet').hidden = false;
+  // a tap is done when GitHub closed it, or it's old
+  for (const [k, p] of Object.entries(pend)) {
+    const stillOpen = openIssues.includes(k);
+    const age = Date.now() - p.at;
+    if ((!stillOpen && age > 20000 && key) || age > 15 * 60000) delete pend[k];
+  }
+  savePend();
+  render();
 }
 
-function postRow(p) {
-  const r = el('div', 'prow');
-  const top = el('div', 'row');
-  top.append(el('span', p.campaign ? 'pill paid' : 'pill', p.campaign ? `${p.streamer} · paid` : p.streamer || 'Clip'));
-  top.append(el('span', 'meta', p.posted ? `${etTime(p.posted)} · ${ago(p.posted)}` : ''));
-  r.append(top, el('div', 'title', p.hook || ''));
-  const b = el('div', 'btns');
-  const a = (href, text, cls) => { const x = el('a', `btn ${cls || ''}`, text); x.href = href; x.target = '_blank'; x.rel = 'noopener'; b.append(x); };
-  const copy = (url, name) => {
-    const x = el('button', 'btn', `Copy ${name} link`);
-    x.onclick = async () => {
-      let ok = false;
-      try { await navigator.clipboard.writeText(url); ok = true; } catch (e) {
-        const t = document.createElement('textarea'); t.value = url; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0';
-        document.body.append(t); t.select(); t.setSelectionRange(0, url.length);
-        try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
-        t.remove();
-      }
-      x.textContent = ok ? `${name} link copied ✓` : url;
-      x.classList.toggle('on', ok);
-      setTimeout(() => { x.textContent = `Copy ${name} link`; x.classList.remove('on'); }, 2500);
-    };
-    b.append(x);
+// ------------------------------------------------------------ derived data
+const posts = () => (L && L.posts) || {};
+const isPending = (prefix) => Object.keys(pend).some((k) => k.startsWith(prefix)) || openIssues.some((t) => t.startsWith(prefix));
+function queueList() {
+  const P = posts(); const blocked = new Set((L && L.blocked) || []);
+  const now = new Set(((L && L.postnow) || []).map((p) => p.id));
+  const list = (Q.ready || []).filter((r) => !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id));
+  const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
+  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing));
+}
+function postList() {
+  const out = Object.values(posts()).map((p) => ({ ...p, _new: true }));
+  const norm = (h) => (h || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+  const have = new Set(out.map((p) => norm(p.hook)));
+  for (const p of Q.posted || []) if (!have.has(norm(p.hook))) out.push({ hook: p.hook, streamer: p.streamer, campaign: p.campaign, posted_at: p.posted, tiktok: p.tiktok, youtube: p.youtube });
+  return out.sort((a, b) => (b.posted_at || '').localeCompare(a.posted_at || ''));
+}
+function statFor(link) { return ((L && L.stats) || []).find((s) => s.link && link && (s.link === link || link.includes(s.link) || s.link.includes(link.split('/').pop()))); }
+function platState(p, s) {
+  const st = (p.status || {})[s];
+  if (p[s]) return { cls: 's-live', txt: 'Live', link: p[s] };
+  if (!st) return (p._new && Date.now() - new Date(p.posted_at) < 3600e3) ? { cls: 's-busy', txt: 'Uploading', spin: true } : { cls: 's-wait', txt: 'Not posted' };
+  if (st.state === 'error') return { cls: 's-err', txt: 'Failed: ' + (st.error || 'unknown error') };
+  if (st.state === 'live') return { cls: 's-live', txt: 'Live' };
+  return { cls: 's-busy', txt: 'Uploading to ' + (s === 'tiktok' ? 'TikTok' : 'YouTube') + '…', spin: true };
+}
+function slotPlan() {
+  const now = new Date(); const day = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const offset = now - day; const out = [];
+  for (let h = 7; h <= 22; h++) for (const m of [7, 37]) { const d = new Date(day); d.setHours(h, m, 0, 0); out.push(new Date(+d + offset)); }
+  return out;
+}
+
+// ------------------------------------------------------------ render
+function render() {
+  $('qcount').textContent = queueList().filter((r) => r.final).length || '';
+  const age = L ? (Date.now() - new Date(L.updated)) / 60000 : 99;
+  $('dot').className = 'dot' + (!L ? ' bad' : age > 15 ? ' warn' : '');
+  $('livetxt').textContent = L ? `checked ${ago(L.updated)}` : 'connecting…';
+  renderSetup(); renderRun(); renderNow(); renderKpis(); renderSlots(); renderSubmit(); renderLatest();
+  if (tab === 'queue') renderQueue();
+  if (tab === 'posted') renderPosted();
+  if (tab === 'stats') renderStats();
+}
+function renderSetup() {
+  const box = $('setup'); box.replaceChildren();
+  if (!ghKey()) {
+    const n = el('div', 'box note warn'); n.append(el('div', null, 'Connect GitHub on this phone so Start/Stop, Post now and Edit work. '));
+    const b = el('button', 'btn cyan', 'Connect GitHub'); b.onclick = () => openSettings(); n.append(b); box.append(n);
+  }
+  if (L && !L.buffer_ok) {
+    const n = el('div', 'box note bad');
+    n.append(el('div', null, L.buffer_error || 'Buffer is not connected.'));
+    const b = el('button', 'btn pink', 'How to connect Buffer'); b.style.marginTop = '8px'; b.onclick = openBufferHelp; n.append(b); box.append(n);
+  }
+  for (const e of ((L && L.errors) || []).slice(0, 2)) {
+    if (Date.now() - new Date(e.at) > 6 * 3600e3) continue;
+    box.append(el('div', 'box note bad', `Post failed ${ago(e.at)}: ${e.error}`));
+  }
+}
+function renderRun() {
+  const box = $('run'); box.replaceChildren();
+  if (!L) { box.className = 'box run'; box.append(el('div', 'meta', 'Loading posting status…')); return; }
+  const wantOn = isPending('resume:'), wantOff = isPending('pause:');
+  const on = !L.paused;
+  box.className = 'box run ' + (on ? 'on' : 'off');
+  box.append(el('div', 'state', on ? '● Automatic posting is ON' : '■ Automatic posting is STOPPED'));
+  if (on) {
+    const nxt = L.next_slot ? tET(L.next_slot) : '';
+    const c = (Q.ready || []).find((r) => r.id === L.up_next);
+    box.append(el('div', 'meta', `Every 30 min at :07 and :37, 7am–10:37pm. Next post ${nxt}${c ? ' — "' + c.hook + '"' : ''}.`));
+  } else box.append(el('div', 'meta', 'Nothing posts on the schedule. Post now still works.'));
+  const b = el('button', 'bigbtn ' + (on ? 'stop' : 'start'), on ? 'Stop posting' : 'Start posting');
+  if (wantOn || wantOff) {
+    b.disabled = true;
+    const goal = wantOn ? 'ON' : 'OFF';
+    if ((wantOn && on) || (wantOff && !on)) { /* done; wait for GitHub to close */ }
+    b.textContent = `Turning ${goal}… (usually under 1 min)`;
+  }
+  b.onclick = async () => {
+    b.disabled = true; b.textContent = 'Sending…';
+    const ok = await ghTap(on ? 'pause: posting' : 'resume: posting');
+    if (ok) toast(on ? 'Stopping…' : 'Starting…'); render();
   };
-  if (p.tiktok) copy(p.tiktok, 'TikTok');
-  if (p.youtube) copy(p.youtube, 'YouTube');
-  if (p.campaign === 'Clix') a('https://contentrewards.com/discover/7a6a234b-1e9e-4da3-a600-54cc3142e710', 'Submit', 'pink');
-  if (p.campaign === 'Lacy') a('https://contentrewards.com/c/campaigns/4479e5e2-9a00-489e-8b0c-345834f37cc7?group=1', 'Submit', 'pink');
-  r.append(b);
+  box.append(b);
+  if (L.switched_at) box.append(el('div', 'meta', `Last changed ${dET(L.switched_at)} · confirmed by GitHub`));
+}
+function renderNow() {
+  const box = $('nowbox'); box.replaceChildren();
+  const P = posts(); const items = queueList().filter((r) => r.nowing);
+  const recent = Object.values(P).filter((p) => Date.now() - new Date(p.posted_at) < 30 * 60000);
+  if (!items.length && !recent.length) return;
+  const b = el('div', 'box'); b.append(el('h2', null, 'Posting now'));
+  for (const r of items) b.append(statusRow(r.hook, { cls: 's-busy', txt: 'Sending to Buffer… (about 1 min)', spin: true }));
+  for (const p of recent) for (const s of ['tiktok', 'youtube']) b.append(statusRow(`${p.hook} — ${s === 'tiktok' ? 'TikTok' : 'YouTube'}`, platState(p, s)));
+  box.append(b);
+}
+function statusRow(text, st) {
+  const r = el('div', 'row'); r.style.margin = '6px 0';
+  r.append(badge(st)); const t = el('span', null, text); t.style.fontSize = '13px'; r.append(t);
+  if (st.link) { const a = el('a', 'btn', 'Open'); a.href = st.link; a.target = '_blank'; r.append(a); }
   return r;
 }
-
-const facecamOf = (c) => {
-  const m = String(c.as_post || '').match(/c_crop,g_north_west,h_([\d.]+),w_([\d.]+)/);
-  return m ? `0,0,${m[2]},${m[1]}` : '';
-};
-function clipCard(c0) {
-  const e0 = edits[c0.id];
-  const c = { ...c0 };
-  if (e0 && (e0.hook !== c0.hook || e0.caption !== (c0.caption || ''))) {
-    c.hook = e0.hook; c.caption = e0.caption; c.pending = true;
+function badge(st) { const b = el('span', 'status ' + st.cls); if (st.spin) b.append(el('span', 'spin')); b.append(document.createTextNode(st.txt)); return b; }
+function totals() {
+  const S = (L && L.stats) || []; const t = { views: 0, likes: 0, comments: 0, shares: 0, reposts: 0, tiktok: 0, youtube: 0, n: S.length };
+  for (const s of S) { for (const k of ['views', 'likes', 'comments', 'shares', 'reposts']) t[k] += s[k] || 0; t[s.service] = (t[s.service] || 0) + (s.views || 0); }
+  return t;
+}
+function renderKpis() {
+  const t = totals(); const box = $('kpis'); box.replaceChildren();
+  const today = postList().filter((p) => p.posted_at && new Date(p.posted_at).toLocaleDateString('en-US', { timeZone: 'America/New_York' }) === new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York' })).length;
+  const k = (l, n, s) => { const d = el('div', 'kpi'); d.append(el('div', 'l', l), el('div', 'n', n), el('div', 's', s || '')); box.append(d); };
+  k('Views (45 days)', fmt(t.views), `TikTok ${fmt(t.tiktok)} · YouTube ${fmt(t.youtube)}`);
+  k('Likes', fmt(t.likes), `${fmt(t.comments)} comments`);
+  k('Shares + reposts', fmt(t.shares + t.reposts), `${fmt(t.shares)} shares · ${fmt(t.reposts)} reposts`);
+  k('Posted today', String(today), `${queueList().filter((r) => r.final).length} ready in queue`);
+}
+function renderSlots() {
+  const box = $('slots'); box.replaceChildren();
+  const plan = slotPlan(); const now = Date.now(); const P = Object.values(posts());
+  const q = queueList().filter((r) => r.final && !r.nowing);
+  let qi = 0, done = 0, nextLbl = '';
+  for (const s of plan) {
+    const d = el('div', 'slot'); const t = +s;
+    const hit = P.find((p) => p.why && p.why.endsWith('slot') && Math.abs(new Date(p.posted_at) - t) < 26 * 60000);
+    let w;
+    if (hit) { d.classList.add('done'); w = '✓ ' + hit.hook; done++; }
+    else if (t < now - 25 * 60000) { d.classList.add('past'); w = '—'; }
+    else if (L && L.paused) { w = 'stopped'; }
+    else { const c = q[qi++]; w = c ? c.hook : 'nothing ready'; if (!nextLbl) { d.classList.add('next'); nextLbl = tET(s); } }
+    d.append(el('div', 't', tET(s)), el('div', 'w', w)); box.append(d);
   }
-  const card = el('div', 'card');
-  card.dataset.clip = c0.id;
-  const v = document.createElement('video');
-  v.controls = true; v.preload = 'metadata'; v.playsInline = true; v.setAttribute('playsinline', '');
-  v.poster = c.poster; v.src = c.final || c.video;
-  card.classList.add('post');
-  const body = el('div', 'body');
-  const top = el('div', 'row');
-  top.append(el('span', c.campaign ? 'pill paid' : 'pill', c.campaign ? `${c.streamer} · paid` : c.streamer));
-  if (c.post_now) top.append(el('span', 'pill paid', 'Post now · within ~5 min'));
-  const plan = upcomingPlan();
-  const slotI = Object.keys(plan).find((k) => plan[k].id === c0.id);
-  if (slotI != null) top.append(el('span', 'pill', `Posts ${label(...SLOTS[slotI])}`));
-  body.append(top, el('div', 'title', c.title || '(no title)'));
-  body.append(el('div', 'meta', `${c.views != null ? c.views.toLocaleString() + ' Twitch views · ' : ''}clipped ${ago(c.clipped)}`));
-  if (c.transcript) { const s = el('div', 'say', `“${c.transcript}”`); s.onclick = () => s.classList.toggle('open'); body.append(s); }
-  const hookline = el('div', 'hookline', c.hook ? `Hook: ${c.hook}${c.pending ? ' (saving…)' : ''}` : 'Hook: written at posting time');
-  const capText = c.caption || (c.hook ? defaultCaption(c, c.hook) : '');
-  const capline = el('div', 'capline', capText ? `Caption: ${capText}${c.caption ? '' : '  (default)'}` : '');
-  body.append(hookline, capline);
+  $('slots-sum').textContent = `Today's slots · ${done} posted · ${L && L.paused ? 'posting stopped' : nextLbl ? 'next ' + nextLbl : 'done for today'}`;
+}
+function linkBtns(p, wrap) {
+  if (p.tiktok) { const b = el('button', 'btn', 'Copy TikTok link'); b.onclick = () => copy(p.tiktok, 'TikTok link'); wrap.append(b); }
+  if (p.youtube) { const b = el('button', 'btn', 'Copy YouTube link'); b.onclick = () => copy(p.youtube, 'YouTube link'); wrap.append(b); }
+  if (p.tiktok && p.youtube) { const b = el('button', 'btn cyan', 'Copy both'); b.onclick = () => copy(p.tiktok + '\n' + p.youtube, 'Both links'); wrap.append(b); }
+  if (CR[p.campaign]) { const a = el('a', 'btn pink', `Submit to ${p.campaign}`); a.href = CR[p.campaign]; a.target = '_blank'; a.rel = 'noopener'; wrap.append(a); }
+}
+function postRow(p, opts = {}) {
+  const r = el('div', 'prow');
+  if (p.poster && p._new) { const img = el('img'); img.src = p.poster; img.loading = 'lazy'; img.onerror = () => img.remove(); r.append(img); }
+  const info = el('div', 'info');
+  const top = el('div', 'row'); top.append(el('span', 'pill', p.streamer || '?'));
+  if (CR[p.campaign]) top.append(el('span', 'pill paid', 'Paid · ' + p.campaign));
+  top.append(el('span', 'meta', p.posted_at ? dET(p.posted_at) + (p.why ? ' · ' + p.why : '') : ''));
+  info.append(top, el('div', 'title', p.hook || ''));
+  const plat = el('div', 'plat');
+  for (const s of ['tiktok', 'youtube']) {
+    plat.append(el('span', 'meta', s === 'tiktok' ? 'TikTok' : 'YouTube'));
+    const cell = el('div', 'row'); const st = platState(p, s); cell.append(badge(st));
+    const m = statFor(p[s]);
+    if (m) { const n = el('span', 'nums'); n.innerHTML = `<span><b>${fmt(m.views)}</b> views</span><span><b>${fmt(m.likes)}</b> likes</span><span><b>${fmt(m.comments)}</b> comm.</span><span><b>${fmt(m.shares + m.reposts)}</b> shares</span>`; cell.append(n); }
+    plat.append(cell);
+  }
+  info.append(plat);
+  const b = el('div', 'btns'); linkBtns(p, b);
+  if (opts.submit) {
+    const key = p.tiktok || p.youtube; const sb = el('button', 'btn', submitted[key] ? '✓ Submitted' : 'Mark submitted');
+    sb.onclick = () => { submitted[key] = !submitted[key]; ls.set('gc-submitted', submitted); render(); }; b.append(sb);
+  }
+  info.append(b); r.append(info); return r;
+}
+function renderSubmit() {
+  const box = $('submitlist'); box.replaceChildren();
+  const list = postList().filter((p) => CR[p.campaign] && (p.tiktok || p.youtube) && !submitted[p.tiktok || p.youtube]).slice(0, 5);
+  if (!list.length) { box.append(el('div', 'meta', 'All caught up — nothing waiting to submit.')); return; }
+  for (const p of list) box.append(postRow(p, { submit: true }));
+}
+function renderLatest() {
+  const box = $('latest'); box.replaceChildren();
+  const list = postList().slice(0, 4);
+  if (!list.length) box.append(el('div', 'empty', 'No posts yet.'));
+  for (const p of list) box.append(postRow(p));
+}
+function renderPosted() {
+  const box = $('postedlist'); box.replaceChildren();
+  const list = postList();
+  if (!list.length) box.append(el('div', 'empty', 'Nothing posted yet.'));
+  for (const p of list) box.append(postRow(p, { submit: !!CR[p.campaign] }));
+}
+
+let editing = null;
+function renderQueue() {
+  const all = queueList(); const ready = all.filter((r) => r.final); const prep = all.length - ready.length;
+  $('queuemeta').textContent = `${ready.length} finished videos, in posting order${prep ? ` · ${prep} more being made` : ''} · each video is exactly what gets posted. Clip finder last ran ${Q.updated ? ago(Q.updated) : '—'}.`;
+  const box = $('queuelist');
+  // keep playing videos alive: rebuild only when the list changed
+  const sig = JSON.stringify(ready.map((r) => [r.id, r.final, r.nowing, r.hook])) + (L && L.paused) + (L && L.next_slot) + editing;
+  if (box.dataset.sig === sig) return; box.dataset.sig = sig; box.replaceChildren();
+  if (!ready.length) { box.append(el('div', 'empty', 'Queue is empty — new clips are found every 20 minutes.')); return; }
+  const plan = slotPlan().filter((s) => +s > Date.now() - 60000); let qi = 0;
+  for (const r of ready) {
+    let st;
+    if (r.nowing) st = { cls: 's-busy', txt: 'Posting now — sending to TikTok & YouTube', spin: true };
+    else if (L && L.paused) st = { cls: 's-wait', txt: `#${qi + 1} in line · posting stopped` };
+    else { const s = plan[qi]; st = { cls: qi === 0 ? 's-next' : 's-wait', txt: s ? `${qi === 0 ? 'Next · ' : ''}posts ~${tET(s)}` : `#${qi + 1} · tomorrow` }; }
+    if (!r.nowing) qi++;
+    box.append(clipCard(r, st));
+  }
+}
+function clipCard(r, st) {
+  const c = el('div', 'card' + (r.nowing ? ' now' : ''));
+  const vw = el('div', 'vwrap'); const v = el('video'); v.controls = true; v.playsInline = true; v.preload = 'none';
+  v.poster = PAGES + r.poster; v.src = PAGES + r.final; vw.append(v); c.append(vw);
+  const b = el('div', 'body');
+  const top = el('div', 'row'); top.append(badge(st)); b.append(top);
+  const tags = el('div', 'row'); tags.append(el('span', 'pill', r.streamer));
+  if (CR[r.campaign]) tags.append(el('span', 'pill paid', 'Paid · ' + r.campaign));
+  tags.append(el('span', 'meta', `${r.seconds || '?'}s · clipped ${r.created ? ago(r.created) : ''}`));
+  b.append(tags, el('div', 'title', r.hook || ''));
   const btns = el('div', 'btns');
-  const finalSrc = c.final || c.video;
-  const raw = el('button', 'btn', 'Original');
-  const post = el('button', 'btn on', c.final ? 'Will post' : (c.hook ? 'Final video rendering…' : 'Needs a hook'));
-  const show = (which) => {
-    const isPost = which === 'post';
-    card.classList.toggle('post', isPost); post.classList.toggle('on', isPost); raw.classList.toggle('on', !isPost);
-    v.src = isPost ? finalSrc : c.video;
-  };
-  raw.onclick = () => { show('raw'); v.play().catch(() => {}); };
-  post.onclick = () => { show('post'); v.play().catch(() => {}); };
-  btns.append(post, raw);
-  if (c.twitch) { const a = el('a', 'btn', 'Twitch'); a.href = c.twitch; a.target = '_blank'; a.rel = 'noopener'; btns.append(a); }
-  const now = el('button', 'btn pink', 'Post now');
-  now.onclick = async () => {
-    if (!c.final) { now.textContent = 'Video still rendering'; return; }
-    if (!confirmTap(now, 'Tap again to post now')) return;
-    now.textContent = 'Sending…';
-    const r = await ghAction(`postnow: ${c.id}`, `${c.streamer || ''} - ${c.hook || c.title || ''}`);
-    now.textContent = r.ok ? 'Posting within ~5 min ✓' : r.msg;
-    if (r.ok) { postNowLocal[c.id] = Date.now(); savePostNow(); lastKey = ''; applyPostNow(); overview(); renderLists(); }
-  };
-  btns.prepend(now);
-  const editBtn = el('button', 'btn', 'Edit hook & caption');
-  btns.append(editBtn);
-  const del = el('button', 'btn del', "Don't post");
-  del.onclick = async () => {
-    if (!confirmTap(del, 'Tap again to remove')) return;
-    del.textContent = 'Removing…';
-    const r = await ghAction(`skip: ${c.id}`, `${c.streamer || ''} - ${c.title || ''}`);
-    if (r.ok) { skipped.add(c.id); saveSkipped(); card.classList.add('skipped'); del.textContent = 'Removed ✓'; }
-    else del.textContent = r.msg;
-  };
-  btns.append(del);
-  body.append(btns);
-  // edit form
-  const form = el('div', 'edit'); form.hidden = true;
-  const hl = el('label', null, 'Hook (on-screen text — emojis OK 😭)');
-  const hi = document.createElement('input'); hi.value = c.hook || ''; hi.maxLength = 120;
-  const cl = el('label', null, 'Caption (post text, emojis + hashtags OK)');
-  const ci = document.createElement('textarea'); ci.value = capText;
-  const fb = el('div', 'btns');
-  const prev = el('button', 'btn', 'Preview');
-  const save = el('button', 'btn pink', 'Save');
-  const cancel = el('button', 'btn', 'Cancel');
-  fb.append(prev, save, cancel);
-  const note = el('div', 'note', 'Saved changes are used by the next post. Takes about a minute to lock in.');
-  form.append(hl, hi, cl, ci, fb, note);
-  body.append(form);
-  const cleanHook = () => hi.value.trim();
-  editBtn.onclick = () => { form.hidden = !form.hidden; };
-  cancel.onclick = () => { form.hidden = true; };
-  prev.onclick = () => {
-    const h = cleanHook(); if (!h) return;
-    vw.querySelectorAll('.capov').forEach((n) => n.remove());
-    vw.append(capOverlay(h));
-  };
-  save.onclick = async () => {
-    const h = cleanHook(), cap = ci.value.trim();
-    if (!h) { note.textContent = 'The hook can\'t be empty.'; return; }
-    save.textContent = 'Saving…';
-    const r = await ghAction(`edit: ${c.id}`, `hook: ${h}\ncaption: ${cap}`);
-    save.textContent = 'Save';
-    if (!r.ok) { note.textContent = r.msg; return; }
-    edits[c.id] = { hook: h, caption: cap }; saveEdits();
-    hookline.textContent = `Hook: ${h} (saving…)`; capline.textContent = `Caption: ${cap}`;
-    form.hidden = true;
-  };
-  const vw = el('div', 'vwrap'); vw.append(v);
-  if (c.pending && c.hook) vw.append(capOverlay(c.hook));
-  card.append(vw, body);
-  return card;
+  if (!r.nowing) {
+    const pn = el('button', 'btn pink', 'Post now');
+    pn.onclick = async () => { pn.disabled = true; pn.textContent = 'Sending…'; if (await ghTap('post: ' + r.id)) toast('Posting — goes out in about 1 minute'); render(); };
+    btns.append(pn);
+  }
+  const ed = el('button', 'btn', 'Edit hook & caption'); ed.onclick = () => { editing = editing === r.id ? null : r.id; $('queuelist').dataset.sig = ''; renderQueue(); };
+  const tw = el('a', 'btn', 'Twitch'); tw.href = r.twitch; tw.target = '_blank'; tw.rel = 'noopener';
+  const sk = el('button', 'btn del', "Don't post");
+  sk.onclick = async () => { if (sk.dataset.arm) { sk.disabled = true; if (await ghTap('skip: ' + r.id)) toast('Removed from the queue'); render(); } else { sk.dataset.arm = 1; sk.textContent = 'Tap again to remove'; setTimeout(() => { delete sk.dataset.arm; sk.textContent = "Don't post"; }, 3000); } };
+  btns.append(ed, tw, sk); b.append(btns);
+  if (isPending('edit: ' + r.id)) b.append(el('div', 'note warn', 'Re-making the video with your new hook… (2–4 min)'));
+  if (editing === r.id) {
+    const f = el('div', 'edit');
+    const hi = el('input'); hi.value = r.hook || ''; hi.maxLength = 110;
+    const ci = el('textarea'); ci.placeholder = 'Leave empty for the automatic caption'; ci.value = r.caption || '';
+    const sv = el('button', 'btn pink', 'Save');
+    sv.onclick = async () => { sv.disabled = true; if (await ghTap('edit: ' + r.id, `hook: ${hi.value.trim()}\ncaption: ${ci.value.trim()}`)) { toast('Saved — video is being re-made'); editing = null; } render(); };
+    f.append(el('label', null, 'Hook (the text on the video, no emojis)'), hi, el('label', null, 'Caption (TikTok/YouTube description)'), ci, sv);
+    b.append(f);
+  }
+  c.append(b); return c;
+}
+function renderStats() {
+  const box = $('statsbox'); box.replaceChildren();
+  const S = ((L && L.stats) || []).slice(); const t = totals();
+  const k = el('div', 'kpis');
+  const kp = (l, n, s) => { const d = el('div', 'kpi'); d.append(el('div', 'l', l), el('div', 'n', n), el('div', 's', s || '')); k.append(d); };
+  kp('Total views', fmt(t.views), `${S.length} posts · last 45 days`); kp('TikTok views', fmt(t.tiktok)); kp('YouTube views', fmt(t.youtube));
+  kp('Likes', fmt(t.likes)); kp('Comments', fmt(t.comments)); kp('Shares', fmt(t.shares)); kp('Reposts', fmt(t.reposts));
+  kp('Avg views / post', fmt(S.length ? Math.round(t.views / S.length) : 0));
+  box.append(k);
+  if (!S.length) { box.append(el('div', 'box empty', L && !L.buffer_ok ? 'Stats appear once Buffer is connected (Settings).' : 'No stats yet — they show up a few hours after posts go live.')); return; }
+  box.append(el('div', 'meta', `Stats from Buffer · updated ${L.stats_updated ? ago(L.stats_updated) : '—'}`));
+  // by streamer
+  const by = {}; for (const s of S) { const n = s.streamer || 'Other'; by[n] = by[n] || { v: 0, n: 0 }; by[n].v += s.views || 0; by[n].n++; }
+  const rows = Object.entries(by).map(([n, o]) => [n, Math.round(o.v / o.n), o.n]).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...rows.map((r) => r[1]));
+  const sb = el('div', 'box'); sb.append(el('h2', null, 'Average views by streamer'));
+  for (const [n, avg, cnt] of rows) { const r = el('div', 'barrow'); r.append(el('span', null, n)); const bg = el('div', 'barbg'); const fg = el('div', 'barfg'); fg.style.width = (avg / max * 100) + '%'; bg.append(fg); r.append(bg, el('span', 'meta', `${fmt(avg)} · ${cnt}`)); sb.append(r); }
+  box.append(sb);
+  // platform comparison
+  const pb = el('div', 'box'); pb.append(el('h2', null, 'TikTok vs YouTube'));
+  const tbl = el('table'); tbl.innerHTML = '<tr><th></th><th class="n">Posts</th><th class="n">Views</th><th class="n">Avg</th><th class="n">Likes</th><th class="n">Shares</th></tr>';
+  for (const sv of ['tiktok', 'youtube']) { const L2 = S.filter((s) => s.service === sv); const sum = (k2) => L2.reduce((a, s) => a + (s[k2] || 0), 0);
+    const tr = el('tr'); tr.innerHTML = `<td>${sv === 'tiktok' ? 'TikTok' : 'YouTube'}</td><td class="n">${L2.length}</td><td class="n">${fmt(sum('views'))}</td><td class="n">${fmt(L2.length ? Math.round(sum('views') / L2.length) : 0)}</td><td class="n">${fmt(sum('likes'))}</td><td class="n">${fmt(sum('shares') + sum('reposts'))}</td>`; tbl.append(tr); }
+  pb.append(tbl); box.append(pb);
+  // every post
+  const ab = el('div', 'box'); ab.append(el('h2', null, 'Every post (best first)'));
+  const wrap = el('div', 'scroll'); const t2 = el('table');
+  t2.innerHTML = '<tr><th>Post</th><th>Where</th><th class="n">Views</th><th class="n">Likes</th><th class="n">Comm.</th><th class="n">Shares</th></tr>';
+  for (const s of S.sort((a, b) => (b.views || 0) - (a.views || 0))) {
+    const tr = el('tr'); const td = el('td'); const a = el('a', null, s.hook || '(no text)'); a.href = s.link || '#'; a.target = '_blank'; td.append(a, el('div', 'meta', `${s.streamer || ''} · ${s.sent ? dET(s.sent) : ''}`)); tr.append(td);
+    tr.insertAdjacentHTML('beforeend', `<td>${s.service === 'tiktok' ? 'TikTok' : 'YouTube'}</td><td class="n">${fmt(s.views)}</td><td class="n">${fmt(s.likes)}</td><td class="n">${fmt(s.comments)}</td><td class="n">${fmt((s.shares || 0) + (s.reposts || 0))}</td>`);
+    t2.append(tr);
+  }
+  wrap.append(t2); ab.append(wrap); box.append(ab);
 }
 
-function renderLists() {
-  $('n-ready').textContent = `(${data.ready.filter((c) => c.final).length})`;
-  const key = Object.keys(upcomingPlan()).join(',') + '@' + data.ready.map((c) => c.id + c.video + c.final + (c.caption || '')).join('|') + '#' + data.posted.map((p) => p.tiktok + p.youtube).join('|');
-  if (key === lastKey) return; // don't interrupt a video that's playing
-  lastKey = key;
-  const rl = $('readylist'); rl.replaceChildren();
-  const done = data.ready.filter((c) => c.final);
-  const prepping = data.ready.length - done.length;
-  if (prepping) rl.append(el('div', 'meta', `${prepping} more clip${prepping === 1 ? ' is' : 's are'} being made into final videos — they show up here when ready.`));
-  if (!done.length) rl.append(el('div', 'empty', 'No finished videos yet. New ones arrive about every 20 minutes.'));
-  done.forEach((c) => rl.append(clipCard(c)));
-  const pl = $('postedlist'); pl.replaceChildren();
-  if (!data.posted.length) pl.append(el('div', 'empty', 'Nothing posted yet.'));
-  data.posted.forEach((p) => pl.append(postRow(p)));
+// ------------------------------------------------------------ sheets
+function sheet(title, nodes) {
+  const inn = $('sheet-in'); inn.replaceChildren();
+  const h = el('div', 'head'); h.append(el('h2', null, title)); const x = el('button', 'btn', 'Close'); x.onclick = () => { $('sheet').hidden = true; }; h.append(x);
+  inn.append(h, ...nodes); $('sheet').hidden = false;
+}
+function openSettings(why) {
+  const nodes = [];
+  if (why) nodes.push(el('div', 'note warn', why));
+  nodes.push(el('div', 'meta', ghKey() ? 'GitHub is connected on this phone ✓' : 'GitHub is not connected on this phone.'));
+  nodes.push(el('div', 'steps', ['GitHub key (one time, 2 minutes):', '1. Tap "Make a key" (opens GitHub).', '2. Name: gtaclip site · Expiration: 1 year.',
+    '3. Repository access: Only select repositories → Gtaclip-cloud.', '4. Repository permissions → Issues: Read and write.',
+    '5. Generate, copy, paste below, Save.', 'The key stays only on this phone.'].join('\n')));
+  const mk = el('a', 'btn cyan', 'Make a key'); mk.href = 'https://github.com/settings/personal-access-tokens/new'; mk.target = '_blank'; nodes.push(mk);
+  const inp = el('input', 'setin'); inp.type = 'password'; inp.placeholder = 'Paste key (github_pat_…)'; inp.autocomplete = 'off';
+  const sv = el('button', 'btn pink', 'Save'); sv.onclick = async () => {
+    const k = inp.value.trim(); if (!k) return;
+    const r = await fetch(`https://api.github.com/repos/${REPO}`, { headers: { Authorization: `Bearer ${k}` } }).catch(() => null);
+    if (!r || !r.ok) { toast('That key did not work — check the steps'); return; }
+    ls.set('gc-gh2', k); toast('Connected ✓'); $('sheet').hidden = true; refreshLive();
+  };
+  const rm = el('button', 'btn', 'Disconnect'); rm.onclick = () => { ls.set('gc-gh2', ''); try { localStorage.removeItem('gc-gh'); } catch (e) { /* */ } openSettings(); };
+  const row = el('div', 'btns'); row.append(sv); if (ghKey()) row.append(rm); nodes.push(inp, row);
+  const bh = el('button', 'btn', 'Buffer connection help'); bh.onclick = openBufferHelp; nodes.push(el('hr'), bh);
+  sheet('Settings', nodes);
+}
+function openBufferHelp() {
+  const ok = L && L.buffer_ok;
+  sheet('Connect Buffer (one time)', [
+    el('div', 'note ' + (ok ? 'good' : 'warn'), ok ? 'Buffer is connected ✓ — posts go out automatically.' : 'GitHub posts straight to Buffer. It needs your Buffer API key saved as a GitHub secret.'),
+    el('div', 'steps', ['1. Tap "Open Buffer API page" and sign in.', '2. Personal Access → + New Key (name it gtaclip). Copy the key.',
+      '3. Tap "Open GitHub secrets" → New repository secret.', '4. Name: BUFFER_API_KEY  ·  Secret: paste the key → Add secret.',
+      '5. Come back here — within 5 minutes this shows "Buffer is connected".', 'Never paste the key in a chat.'].join('\n')),
+    Object.assign(el('a', 'btn cyan', 'Open Buffer API page'), { href: 'https://publish.buffer.com/settings/api', target: '_blank' }),
+    Object.assign(el('a', 'btn cyan', 'Open GitHub secrets'), { href: `https://github.com/${REPO}/settings/secrets/actions/new`, target: '_blank' }),
+  ]);
 }
 
-// Live source: Cloudinary's tag list (fresh within about a minute) when it's allowed;
-// otherwise queue.json, which GitHub rebuilds every few minutes.
-// TikTok-style caption drawn in the page (for previewing an edit before the final video is rebuilt).
-const capOverlay = (text) => {
-  const o = el('div', 'capov'); const sp = el('span', null, text); o.append(sp); return o;
-};
-
-const BUILD = '__BUILD__';
-async function load() {
-  try {
-    const base = await (await fetch(`queue.json?t=${Date.now()}`, { cache: 'no-store' })).json();
-    if (base.site_build && base.site_build !== BUILD && !sessionStorage.getItem('gc-reloaded-' + base.site_build)) {
-      sessionStorage.setItem('gc-reloaded-' + base.site_build, '1');
-      location.replace(location.pathname + '?v=' + base.site_build);
-      return;
-    }
-    data = { ready: base.ready || [], posted: base.posted || [], fetcher: base.fetcher || {}, updated: base.updated, paused: !!base.paused };
-  } catch (e) { $('status').textContent = 'Could not load. Retrying…'; return; }
-  data.ready = data.ready.filter((c) => !skipped.has(c.id));
-  applyPostNow();
-  for (const c of data.ready) { const e = edits[c.id]; if (e && e.hook === c.hook && e.caption === (c.caption || '')) { delete edits[c.id]; saveEdits(); } }
-  const mins = (Date.now() - new Date(data.updated)) / 60000;
-  $('dot').classList.toggle('stale', mins > 30);
-  $('livetxt').textContent = 'Auto-updating';
-  $('status').textContent = `${data.ready.filter((c) => c.final).length} videos ready · updated ${ago(data.updated)}`;
-  overview();
-  renderLists();
-}
-
+// ------------------------------------------------------------ boot
 document.querySelectorAll('.tab').forEach((b) => b.onclick = () => {
+  tab = b.dataset.tab;
   document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', x === b));
-  document.querySelectorAll('.wrap > section').forEach((s) => { s.hidden = s.id !== b.dataset.tab; });
-  window.scrollTo(0, 0);
+  for (const s of ['home', 'queue', 'posted', 'stats']) $('tab-' + s).hidden = s !== tab;
+  render(); window.scrollTo(0, 0);
 });
 $('gear').onclick = () => openSettings();
-$('connect-btn').onclick = () => openSettings();
-const syncConnect = () => { $('connect-box').hidden = !!ghKey(); };
-syncConnect(); setInterval(syncConnect, 2000);
-load();
-setInterval(load, 30000);
+$('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
+(async () => {
+  await Promise.all([refreshQueue(), refreshLive()]);
+  render();
+  setInterval(refreshQueue, 60000);
+  setInterval(() => { const busy = Object.keys(pend).length > 0; if (busy || Date.now() % 30000 < 10000) refreshLive(); }, 10000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshQueue(); refreshLive(); } });
+})();
 </script>
 </body>
 </html>

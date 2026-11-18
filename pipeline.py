@@ -78,10 +78,12 @@ def apply_posted(st: dict) -> None:
         except Exception:  # noqa: BLE001
             continue
         c = st["clips"].get(f.stem)
-        if c and c["status"] != "used":
-            c.update(status="used", tiktok=rec.get("tiktok", ""), youtube=rec.get("youtube", ""),
-                     posted_at=rec.get("posted_at") or iso(NOW))
-            log(f"posted: {f.stem}")
+        if c:
+            if c["status"] != "used":
+                log(f"posted: {f.stem}")
+            c.update(status="used", tiktok=rec.get("tiktok", "") or c.get("tiktok", ""),
+                     youtube=rec.get("youtube", "") or c.get("youtube", ""),
+                     posted_at=c.get("posted_at") or rec.get("posted_at") or iso(NOW))
     for f in sorted((POSTED_DIR / "skips").glob("*.json")):
         c = st["clips"].get(f.stem)
         if c and c["status"] == "new":
@@ -92,49 +94,92 @@ def apply_posted(st: dict) -> None:
         except Exception:  # noqa: BLE001
             continue
         c = st["clips"].get(f.stem)
-        if c and not c.get("hook_by_user") and rec.get("hook") and not c.get("hook"):
+        if c and not c.get("hook_by_user") and rec.get("hook") and (not c.get("hook") or c.get("hook_auto")):
             c["hook"] = strip_emoji(rec["hook"])[:140]
+            c.pop("hook_auto", None)
 
 
-def apply_issue(st: dict) -> str:
-    """Dashboard 'Don't post' / 'Edit' requests (GitHub issues by the repo owner)."""
-    title = os.environ.get("ISSUE_TITLE", "")
-    body = os.environ.get("ISSUE_BODY", "").replace("\r\n", "\n")
-    t = title.strip().lower()
-    if t.startswith("pause:") or t.startswith("resume:"):
-        st["paused"] = t.startswith("pause:")
-        return "Automatic posting STOPPED. Nothing will post until you press Start." if st["paused"] else "Automatic posting is back ON (every 30 min, approved clips only)."
-    m = re.match(r"^\s*(skip|edit|approve|unapprove|postnow):\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title)
-    if not m:
-        return ""
-    action, key = m.groups()
-    cid = next((k for k in st["clips"] if k == key or k.startswith(key) or key.startswith(k)), None)
-    if not cid:
-        return f"Couldn't find clip {key}."
-    c = st["clips"][cid]
-    if action == "approve":
-        c["approved"] = True
-        return "Approved — it will post in its slot."
-    if action == "unapprove":
-        c["approved"] = False
-        c["post_now"] = False
-        return "Un-approved — it won't post until you approve it."
-    if action == "postnow":
-        c["approved"] = True
-        c["post_now"] = iso(NOW)
-        return "Approved and moved to the top — it posts within about 15 minutes."
-    if action == "skip":
-        c["status"] = "skip"
-        c["skip_reason"] = "removed by Nicholas"
-        return "Done — this clip won't be posted."
-    hm = re.search(r"^hook:[ \t]*(.*)$", body, re.M)
-    cm = re.search(r"^caption:[ \t]*(.*)\Z", body, re.M | re.S)
-    if hm and hm.group(1).strip():
-        c["hook"] = strip_emoji(hm.group(1))[:140]
-        c["hook_by_user"] = True
-    if cm:
-        c["caption"] = cm.group(1).strip()[:2000]
-    return "Done — the next post will use your hook and caption."
+GH_TOKEN = os.environ.get("GH_TOKEN", "")
+REPO = os.environ.get("GITHUB_REPOSITORY", "inballin15/Gtaclip-cloud")
+
+
+def _gh(method: str, path: str, body=None):
+    import requests
+    r = requests.request(method, f"https://api.github.com{path}", json=body, timeout=30,
+                         headers={"Authorization": f"Bearer {GH_TOKEN}", "Accept": "application/vnd.github+json"})
+    try:
+        return r.status_code, r.json()
+    except Exception:  # noqa: BLE001
+        return r.status_code, {}
+
+
+def apply_issues(st: dict) -> None:
+    """Dashboard 'Don't post' / 'Edit' taps. Handles EVERY open one, so a tap is never lost
+    (GitHub drops queued runs when several taps arrive together)."""
+    if not GH_TOKEN:
+        return
+    owner = REPO.split("/")[0]
+    code, items = _gh("GET", f"/repos/{REPO}/issues?state=open&creator={owner}&per_page=100")
+    if code != 200 or not isinstance(items, list):
+        log(f"couldn't read dashboard requests ({code})")
+        return
+    for it in sorted(items, key=lambda i: i["created_at"]):
+        title = it["title"].strip()
+        body = (it.get("body") or "").replace("\r\n", "\n")
+        m = re.match(r"^\s*(skip|edit|approve|unapprove):\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title, re.I)
+        if not m:
+            continue
+        action, key = m.group(1).lower(), m.group(2)
+        cid = next((k for k in st["clips"] if k == key or k.startswith(key) or key.startswith(k)), None)
+        if not cid:
+            msg = "Couldn't find that clip (it may have expired)."
+        elif action == "skip":
+            st["clips"][cid].update(status="skip", skip_reason="removed by Nicholas")
+            msg = "Done — this clip won't be posted."
+        elif action == "edit":
+            c = st["clips"][cid]
+            hm = re.search(r"^hook:[ \t]*(.*)$", body, re.M)
+            cm = re.search(r"^caption:[ \t]*(.*)\Z", body, re.M | re.S)
+            if hm and hm.group(1).strip():
+                c["hook"] = strip_emoji(hm.group(1))[:140]
+                c["hook_by_user"] = True
+            if cm:
+                c["caption"] = cm.group(1).strip()[:2000]
+            msg = "Done — the video was re-made with your hook and caption."
+        else:
+            msg = "Not needed anymore — use Start/Stop on the dashboard."
+        log(f"{action} {cid}: {msg}")
+        _gh("POST", f"/repos/{REPO}/issues/{it['number']}/comments", {"body": msg})
+        _gh("PATCH", f"/repos/{REPO}/issues/{it['number']}", {"state": "closed"})
+
+
+SWEARS = re.compile(r"\b(f+u+c*k+\w*|sh+i+t+\w*|bitch\w*|ass(hole)?|damn|dick|hell|wtf|stfu|crap|bastard|motherf\w*)\b", re.I)
+
+
+def clean_hook(t: str) -> str:
+    t = strip_emoji(t)
+    t = SWEARS.sub("", t)
+    t = re.sub(r"https?://\S+|[#@]\w+", "", t)
+    t = re.sub(r"\s+", " ", t).strip(" -|:,.")
+    return t
+
+
+def auto_hook(c: dict) -> str:
+    """Simple hook for new clips (no AI needed). Nicholas can edit it on the dashboard."""
+    name = c.get("streamer", "")
+    title = clean_hook(c.get("title", ""))
+    words = title.split()
+    if len(words) >= 3 and len(title) >= 14:
+        hook = title[0].upper() + title[1:]
+        if name.lower() not in hook.lower():
+            hook = f"{name}: {hook}"
+    else:
+        said = clean_hook(c.get("transcript", ""))
+        said = " ".join(said.split()[:9])
+        hook = f'{name} in GTA 6: "{said}"' if len(said.split()) >= 3 else f"{name} can't believe this in GTA 6"
+    if "gta" not in hook.lower():
+        hook += " in GTA 6"
+    return hook[:110]
 
 
 # ---------------------------------------------------------------- webcam
@@ -249,10 +294,17 @@ def main() -> None:
     st = load_state()
     clips = st["clips"]
     apply_posted(st)
-    issue_msg = apply_issue(st)
-    if issue_msg:
-        Path("/tmp/issue_reply.txt").write_text(issue_msg)
-        log(issue_msg)
+    apply_issues(st)
+    control = {}
+    try:
+        control = json.loads((POSTED_DIR / "control.json").read_text())
+    except Exception:  # noqa: BLE001
+        pass
+    for c in clips.values():
+        c.pop("post_now", None)
+    for p in control.get("postnow", []):
+        if p.get("id") in clips:
+            clips[p["id"]]["post_now"] = p.get("at") or iso(NOW)
 
     SITE.mkdir(parents=True, exist_ok=True)
     VID.mkdir(parents=True, exist_ok=True)
@@ -331,6 +383,8 @@ def main() -> None:
         age_h = (NOW - parse(age_ref)).total_seconds() / 3600
         if (c["status"] == "new" and age_h > KEEP_NEW_HOURS) or (c["status"] != "new" and age_h > KEEP_POSTED_HOURS):
             c["status"] = "expired" if c["status"] == "new" else c["status"]
+        if c["status"] == "used" and age_h < 24:
+            continue  # keep the posted video online a day (Buffer downloads it from here)
         if c["status"] != "new":
             for suf in (".mp4", "_final.mp4", ".jpg"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
@@ -349,6 +403,10 @@ def main() -> None:
         try:
             if not (VID / f"{cid}.mp4").exists():
                 render_preview(raw, cid)
+            if not c.get("hook"):
+                c["hook"] = auto_hook(c)
+                c["hook_auto"] = True
+                log(f"auto hook {cid}: {c['hook']}")
             if c.get("hook"):
                 hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V).encode()).hexdigest()[:10]
                 if c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists():
@@ -394,7 +452,10 @@ def main() -> None:
     build = hashlib.sha1((ROOT / "site" / "index.html").read_bytes()).hexdigest()[:10]
     (SITE / "queue.json").write_text(json.dumps({
         "site_build": build,
-        "updated": iso(NOW), "paused": bool(st.get("paused")), "ready": ready, "posted": posted[:40],
+        "updated": iso(NOW),
+        # 'paused' stays true for the old Claude posting tasks (they must not post anymore);
+        # the real Start/Stop lives in live.json on the 'posted' branch, run by poster.py
+        "paused": True, "posting_on": not control.get("paused", True), "ready": ready, "posted": posted[:40],
         "fetcher": {"last_run_utc": NOW.strftime("%H:%M:%S"), "fresh_by_streamer": status},
     }, indent=1, ensure_ascii=False))
     save_state(st)

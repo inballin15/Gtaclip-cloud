@@ -1,0 +1,61 @@
+name: gtaclip poster (Start/Stop, Post now, scheduled posts, stats)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+  issues:
+    types: [opened]
+
+concurrency:
+  group: poster
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+jobs:
+  post:
+    # dashboard taps: only the owner's Start/Stop and Post-now requests
+    if: github.event_name != 'issues' || ((startsWith(github.event.issue.title, 'post:') || startsWith(github.event.issue.title, 'postnow:') || startsWith(github.event.issue.title, 'pause:') || startsWith(github.event.issue.title, 'resume:')) && github.event.issue.user.login == github.repository_owner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          sparse-checkout: poster.py
+          sparse-checkout-cone-mode: false
+      - name: load the posted records and the site queue
+        shell: bash
+        run: |
+          git fetch -q --depth=1 origin gh-pages:refs/remotes/origin/gh-pages || true
+          git show origin/gh-pages:queue.json > /tmp/queue.json 2>/dev/null || echo '{"ready":[]}' > /tmp/queue.json
+          git fetch -q origin posted:refs/remotes/origin/posted
+          git worktree add -q -B posted _posted origin/posted
+      - name: post
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: python poster.py 2>&1 | tee /tmp/poster.log; exit ${PIPESTATUS[0]}
+      - name: save
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd _posted
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          new_posts=$(git status --porcelain posted/ | grep -c '^??' || true)
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -qm "poster $(date -u +%FT%TZ)"
+          for i in 1 2 3; do
+            git push -q origin HEAD:posted && break
+            git fetch -q origin posted && git rebase -q -X theirs origin/posted || true
+          done
+          # a clip just went out: rebuild the site so it leaves the queue
+          if [ "$new_posts" != "0" ]; then gh workflow run pipeline.yml --repo "$GITHUB_REPOSITORY" --ref main || true; fi
