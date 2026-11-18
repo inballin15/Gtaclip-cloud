@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-18T23:15:24Z",
+ "updated": "2026-11-18T23:20:54Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
  "next_slot": "2026-11-19T12:07:00Z",
- "up_next": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
+ "up_next": "ExcitedCheerfulFiddleheadsTF2John-bNif_90znDTW1eIu",
  "buffer_ok": true,
  "buffer_error": "",
  "cooldown": {
@@ -34,6 +34,72 @@
   "ToughYawningGooseMau5-2PnplpOOX4eow-YN"
  ],
  "posts": {
+  "BoringMoldyClipzStoneLightning-FZ7Ow0YtleieU2ol": {
+   "id": "BoringMoldyClipzStoneLightning-FZ7Ow0YtleieU2ol",
+   "hook": "Stable Ronaldo learns EVERYTHING from Snapmatic in GTA 6",
+   "streamer": "Stable Ronaldo",
+   "campaign": "",
+   "why": "sent to Nicholas to post himself",
+   "posted_at": "2026-11-18T23:20:03Z",
+   "tiktok": "",
+   "youtube": "",
+   "manual": true
+  },
+  "DirtyPleasantDragonJKanStyle-cKmdMt8QulnRtOSZ": {
+   "id": "DirtyPleasantDragonJKanStyle-cKmdMt8QulnRtOSZ",
+   "hook": "Marlon runs into CLIX in GTA 6",
+   "streamer": "Marlon",
+   "campaign": "",
+   "why": "sent to Nicholas to post himself",
+   "posted_at": "2026-11-18T23:20:03Z",
+   "tiktok": "",
+   "youtube": "",
+   "manual": true
+  },
+  "MoralDullCourgetteCopyThis-6p5yRI9Que0Z2alv": {
+   "id": "MoralDullCourgetteCopyThis-6p5yRI9Que0Z2alv",
+   "hook": "Lacy takes on a plane mission in GTA 6",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "why": "sent to Nicholas to post himself",
+   "posted_at": "2026-11-18T23:20:03Z",
+   "tiktok": "",
+   "youtube": "",
+   "manual": true
+  },
+  "MuddyFamousHabaneroDAESuppy-uLoFP9fCoQPD4Rou": {
+   "id": "MuddyFamousHabaneroDAESuppy-uLoFP9fCoQPD4Rou",
+   "hook": "Clix is giving away PS5s during his GTA 6 MARATHON",
+   "streamer": "Clix",
+   "campaign": "Clix",
+   "why": "sent to Nicholas to post himself",
+   "posted_at": "2026-11-18T23:20:03Z",
+   "tiktok": "",
+   "youtube": "",
+   "manual": true
+  },
+  "RealSleepyVelociraptorDxAbomb-nrbBFjqGLM1W-8W4": {
+   "id": "RealSleepyVelociraptorDxAbomb-nrbBFjqGLM1W-8W4",
+   "hook": "xQc checks his phone between gym sets in GTA 6",
+   "streamer": "xQc",
+   "campaign": "",
+   "why": "sent to Nicholas to post himself",
+   "posted_at": "2026-11-18T23:20:03Z",
+   "tiktok": "",
+   "youtube": "",
+   "manual": true
+  },
+  "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD": {
+   "id": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
+   "hook": "Lacy watched Donnie DIE in GTA 6",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "why": "sent to Nicholas to post himself",
+   "posted_at": "2026-11-18T23:20:03Z",
+   "tiktok": "",
+   "youtube": "",
+   "manual": true
+  },
   "FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6": {
    "id": "FancyBloodyAlpacaDuDudu-UgxBuPym4L5fy6u6",
    "hook": "Lacy in GTA 6: \"Girl you okay? Oh I'm fine. It's just hormones\"",
@@ -412,6 +478,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-18T23:15:24Z",
+ "stats_updated": "2026-11-18T23:20:54Z",
  "log": []
 }
