@@ -650,7 +650,7 @@ function renderSysline() {
   if (!RUNS.length) { b.hidden = true; return; } b.hidden = false;
   const s = sysState(); const p = el('span', 'pulse');
   let t, m;
-  if (s.running) { p.classList.add('run'); t = `Clip maker: ${RUNSTEP[s.running.id] || 'working'}`; m = `${dur(s.running.run_started_at)}${s.waiting ? ` · ${s.waiting} waiting` : ''}`; }
+  if (s.running) { p.classList.add('run'); t = `Clip maker: ${RUNSTEP[s.running.id] || 'working'}`; m = `${dur(s.running.run_started_at)}${s.waiting ? ' · next run queued' : ''}`; }
   else if (s.waiting) { p.classList.add('wait'); t = 'Clip maker: starting soon'; m = `${s.waiting} run${s.waiting > 1 ? 's' : ''} waiting`; }
   else if (s.lastDone) { p.classList.add(s.lastDone.conclusion === 'success' ? 'ok' : 'bad'); t = `Clip maker: idle`; m = `last run ${ago(s.lastDone.updated_at)} · ${s.lastDone.conclusion === 'success' ? 'OK' : 'had a problem'}`; }
   else { t = 'Clip maker'; m = '—'; }
@@ -661,7 +661,7 @@ function renderSys() {
   if (!RUNS.length) { box.append(el('div', 'meta', 'Loading…')); return; }
   const s = sysState();
   const row = (cls, title, sub) => { const r = el('div', 'sysrow'); r.append(el('span', 'pulse ' + cls)); const d = el('div'); d.append(el('b', null, title), el('div', 'meta', sub)); r.append(d); box.append(r); };
-  if (s.running) row('run', `Clip maker is running — ${RUNSTEP[s.running.id] || 'working'}`, `Started ${dur(s.running.run_started_at)} ago${s.waiting ? ` · ${s.waiting} more waiting in line` : ''}. It finds new clips, checks webcams, writes hooks, rates them and makes the videos.`);
+  if (s.running) row('run', `Clip maker is running — ${RUNSTEP[s.running.id] || 'working'}`, `Started ${dur(s.running.run_started_at)} ago${s.waiting ? ' · another run is queued to start right after' : ''}. It finds new clips, checks webcams, writes hooks, rates them and makes the videos.`);
   else if (s.waiting) row('wait', 'Clip maker is about to start', `${s.waiting} run${s.waiting > 1 ? 's' : ''} waiting in line`);
   else row(s.lastDone && s.lastDone.conclusion === 'success' ? 'ok' : 'bad', 'Clip maker is idle', s.lastDone ? `Last run finished ${ago(s.lastDone.updated_at)} (${s.lastDone.conclusion === 'success' ? 'OK' : s.lastDone.conclusion}) and took ${dur(s.lastDone.run_started_at, s.lastDone.updated_at)}. Runs every 10 min.` : 'No runs yet.');
   if (s.procUploads) row('run', `Your videos: ${s.procUploads} being processed`, 'Clips appear in the Queue tagged "Your video".');

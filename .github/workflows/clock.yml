@@ -31,7 +31,10 @@ jobs:
         run: |
           for i in $(seq 0 69); do
             gh workflow run poster.yml --repo "$R" --ref main || echo "poster kick failed"
-            if [ $((i % 2)) -eq 0 ]; then gh workflow run pipeline.yml --repo "$R" --ref main || echo "pipeline kick failed"; fi
+            if [ $((i % 2)) -eq 0 ]; then
+              busy=$(gh run list --repo "$R" --workflow pipeline.yml --limit 5 --json status -q '[.[]|select(.status!="completed")]|length' || echo 0)
+              if [ "$busy" = "0" ]; then gh workflow run pipeline.yml --repo "$R" --ref main || echo "pipeline kick failed"; else echo "clip maker busy — not queuing another run"; fi
+            fi
             if [ $((i % 6)) -eq 3 ]; then gh workflow run vods.yml --repo "$R" --ref main || echo "vods kick failed"; fi
             sleep 300
           done
