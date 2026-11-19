@@ -45,6 +45,7 @@ RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (ac
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
 KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
+REPLACE_QUEUE_EACH_RUN = False   # off: clips stay until they're 9 h old (max 30 in the queue)
 MAX_RENDERS = 10         # videos made per run (2 at a time); the rest next run
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
@@ -953,7 +954,7 @@ def main() -> None:
 
     # 3c. every clip-finder run replaces the queue with its fresh finds (if it found any).
     #     Kept: your uploads, Post-now picks, clips you edited, and VOD moments from the last hour.
-    if picks:
+    if picks and REPLACE_QUEUE_EACH_RUN:
         fresh_ids = {p["id"] for p in picks if clips.get(p["id"], {}).get("status") == "new"}
         if fresh_ids:
             n_old = 0
