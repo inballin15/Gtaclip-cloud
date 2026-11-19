@@ -83,7 +83,7 @@ def transcribe(audio: np.ndarray):
 
 def clean_line(t: str) -> str:
     t = SWEARS.sub("", t)
-    t = re.sub(r"[^\w\s'?!.,-]", "", t)
+    t = re.sub(r"[^\w\s'?!.,$%-]", "", t.replace("\u2019", "'"))
     t = re.sub(r"\s+", " ", t).strip(" -,.")
     return t
 
@@ -324,12 +324,19 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
             "Score each 0-100 for how likely it is to go viral: a strong hook in the first seconds, a funny/shocking/"
             "dramatic or relatable moment, a clear payoff, makes sense without context, big-name streamer appeal.\n"
             "Give 0-10 for anything sexual, hateful, about strippers/clubs, harming animals, or where nothing happens.\n"
-            "Also write the on-screen hook: max 65 characters, plain words, no emojis, no swearing, no quotes, one or two "
-            "CAPS words, true to what happens, names the streamer, ends with 'in GTA 6' when natural.\n"
+            "Also write the on-screen hook in the style of the top GTA 6 clip pages (hundreds of thousands of views). "
+            "Examples of that style: 'IShowSpeed was SHOCKED seeing the HULK in GTA 6' / 'No way they CHARGED Kai $100 REAL "
+            "life dollars to ENTER the ONE CLUB in all of VICE CITY' / 'n3on called CPS because Lucia wouldn't respond to him' "
+            "/ 'IShowSpeed just now BECAME the FIRST streamer to FINISH GTA 6 Story MODE in UNDER 25H'.\n"
+            "Rules: 45-110 characters (2-3 lines); starts with the streamer's well-known name; 3-6 CAPS words on the key "
+            "action/emotion/thing; a specific detail (a character like Lucia or Jason, a place like Vice City, a number or "
+            "dollar amount, a first/record); feels like breaking news or 'no way this happened'; exaggerate the reaction, "
+            "but the event itself must come from the transcript, title or streamer's real story (never invent fake records "
+            "or crimes); no emojis, no swearing, no quotes, no hashtags.\n"
             "Return JSON list: [{\"id\": \"...\", \"score\": 0-100, \"why\": \"max 12 words\", \"hook\": \"...\"}]\n\n"
             "Clips:\n" + _json.dumps(batch))
         body = {"contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"responseMimeType": "application/json", "temperature": 0.3,
+                "generationConfig": {"responseMimeType": "application/json", "temperature": 0.6,
                                      "thinkingConfig": {"thinkingBudget": 0}}}
         done = False
         for model in gemini_models(key, log):
@@ -350,7 +357,7 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
                     out[str(row.get("id"))] = {
                         "score": sc, "why": clean_line(str(row.get("why", "")))[:90],
                         "verdict": "post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
-                        "hook": clean_line(str(row.get("hook", "")))[:70], "model": model}
+                        "hook": clean_line(str(row.get("hook", "")))[:120], "model": model}
                 done = True
                 break
             except urllib.error.HTTPError as e:
