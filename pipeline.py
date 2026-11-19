@@ -489,7 +489,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
     for it in [i for i in items if i["title"].lower().startswith("upload:")]:
         num = it["number"]
         try:
-            job = json.loads(it.get("body") or "{}")
+            body = (it.get("body") or "{}").strip()
+            job = json.JSONDecoder().raw_decode(body[body.index("{"):])[0]   # ignore anything after the JSON
             ref, parts = job["ref"], job["parts"]
         except Exception:  # noqa: BLE001
             _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Couldn't read this upload — please try again."})
