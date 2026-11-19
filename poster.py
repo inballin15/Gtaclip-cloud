@@ -444,11 +444,27 @@ def main() -> None:
         buffer_err = "Buffer API key missing — add the BUFFER_API_KEY secret in GitHub (see dashboard Settings)."
         log(buffer_err)
 
+    # 0) never post the same clip twice: look at everything Buffer sent / is sending (it retries failed posts itself)
+    early_nodes: list[dict] = []
+    if BUFFER_KEY and not DRY_RUN:
+        try:
+            early_nodes = recent_buffer_posts()
+        except Exception as e:  # noqa: BLE001
+            log(f"duplicate check skipped: {e}")
+    buffer_texts = [norm(n.get("text", "")) for n in early_nodes if n.get("status") in ("sent", "sending", "scheduled", "draft", "error")]
+
+    def already_on_buffer(r: dict) -> bool:
+        h = norm(r.get("hook"))[:30]
+        return len(h) >= 12 and any(h in t for t in buffer_texts)
+
     # 1) what should go out now?
     to_post: list[tuple[dict, str]] = []
     if ctl["postnow"]:
         cid = ctl["postnow"][0]["id"]
-        if by_id.get(cid, {}).get("final_abs"):
+        if by_id.get(cid) and already_on_buffer(by_id[cid]):
+            log(f"post now skipped — {cid} is already on Buffer (no duplicates)")
+            ctl["postnow"] = ctl["postnow"][1:]
+        elif by_id.get(cid, {}).get("final_abs"):
             to_post.append((by_id[cid], "post now"))
     slot = due_slot()
     slot_key = iso(slot) if slot else ""
@@ -460,7 +476,7 @@ def main() -> None:
     if not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key:
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now
-              and not too_old(r)]
+              and not too_old(r) and not already_on_buffer(r)]
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
         ok = sorted(ok, key=tier)  # newest clips with a real hook first (stable: keeps the streamer mix)
@@ -562,7 +578,8 @@ def main() -> None:
             if changed:
                 wj(P / "posted" / f"{cid}.json", r)
             sts = list((r.get("status") or {}).values())
-            if sts and all(x.get("state") == "error" for x in sts) and not (r.get("tiktok") or r.get("youtube")):
+            if sts and all(x.get("state") == "error" for x in sts) and not (r.get("tiktok") or r.get("youtube")) \
+                    and not any(by_buf.get(x.get("buffer_id", ""), {}).get("status") in ("sending", "scheduled", "sent") for x in sts):
                 (P / "posted" / f"{cid}.json").unlink(missing_ok=True)
                 ctl.setdefault("errors", []).insert(0, {"at": iso(NOW), "id": cid, "error": "; ".join(x.get("error", "") for x in sts)})
                 ctl["errors"] = ctl["errors"][:10]
