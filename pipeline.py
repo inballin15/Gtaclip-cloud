@@ -50,6 +50,7 @@ MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v3-textonly-capcut"
+TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
 
@@ -518,15 +519,18 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     else:
         base = (
             f"[0:v]split=2[a][b];"
-            f"[a]crop=iw*{w}:ih*{h}:iw*{x}:ih*{y},scale=1080:960:force_original_aspect_ratio=increase,"
-            f"crop=1080:960,setsar=1[top];"
-            f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:960,crop=1080:960,setsar=1[bot];"
+            # webcam: a wide strip, ~1/3 of the screen (cam boxes taller than that lose a little top/bottom,
+            # cut so the face stays in the upper-middle)
+            f"[a]crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{TOP_H}/1080)':x=iw*{x}:y='ih*{y}+(ih*{h}-oh)*0.3',"
+            f"scale=1080:{TOP_H}:force_original_aspect_ratio=increase,crop=1080:{TOP_H},setsar=1[top];"
+            f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:{1920 - TOP_H},crop=1080:{1920 - TOP_H},setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
     if hook:
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"))
         inputs = ["-i", str(raw), "-i", png]
-        flt = base + "[st];[st][1:v]overlay=(W-w)/2:(H-h)/2,format=yuv420p[out]"
+        oy = "(H-h)/2" if layout == "full" else f"{TOP_H}-h*0.2"   # hook box sits on the webcam/gameplay line
+        flt = base + f"[st];[st][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]"
     else:
         inputs = ["-i", str(raw)]
         flt = base + ",format=yuv420p[out]"

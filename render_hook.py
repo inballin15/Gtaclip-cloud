@@ -1,5 +1,5 @@
 """Draw the hook caption as a transparent PNG, TikTok "text with background" style:
-black bold text, each line on its own white rounded box, boxes touching, color emoji."""
+black bold text in one wide white rounded box (like the reference clip Nick sent), text only."""
 import re
 import sys
 from pathlib import Path
@@ -7,13 +7,14 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).parent / "fonts"
-TEXT_FONT = str(HERE / "Inter-SemiBold.otf")
+TEXT_FONT = str(HERE / "Inter-Bold.otf")
 EMOJI_FONT = str(HERE / "NotoColorEmoji.ttf")
 
-SIZE = 76          # text size on a 1080-wide video
-MAX_W = 900        # widest a line may be
-PAD_X, PAD_Y = 26, 8
-RADIUS = 22
+SIZE = 72          # text size on a 1080-wide video
+MAX_W = 940        # widest a line may be
+PAD_X, PAD_Y = 30, 18   # box padding (sides, top/bottom)
+LINE_GAP = 2
+RADIUS = 18
 
 EMOJI_RE = re.compile(
     "(?:[\U0001F1E6-\U0001F1FF]{2})|"
@@ -74,21 +75,17 @@ def strip_emoji(text):
 def render(text, out_path):
     lines = _wrap(strip_emoji(text))
     asc, desc = _font.getmetrics()
-    line_h = asc + desc + PAD_Y * 2
-    widths = [int(_width(l)) + PAD_X * 2 for l in lines]
-    W = max(widths) + 8
-    H = line_h * len(lines) + 8
+    lh = asc + desc + LINE_GAP
+    widths = [int(_width(l)) for l in lines]
+    bw = max(widths) + PAD_X * 2
+    bh = lh * len(lines) - LINE_GAP + PAD_Y * 2
+    W, H = bw + 8, bh + 8
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    # white boxes (drawn first so they merge where lines touch)
-    for i, lw in enumerate(widths):
-        x0 = (W - lw) // 2
-        y0 = 4 + i * line_h
-        d.rounded_rectangle([x0, y0, x0 + lw, y0 + line_h], radius=RADIUS, fill=(255, 255, 255, 255))
-    # text + emoji
+    d.rounded_rectangle([4, 4, 4 + bw, 4 + bh], radius=RADIUS, fill=(255, 255, 255, 255))
     for i, line in enumerate(lines):
-        x = (W - widths[i]) // 2 + PAD_X
-        y = 4 + i * line_h + PAD_Y
+        x = (W - widths[i]) / 2
+        y = 4 + PAD_Y + i * lh
         for kind, s in _pieces(line):
             if kind == "t":
                 d.text((x, y), s, font=_font, fill=(0, 0, 0, 255))
