@@ -283,7 +283,9 @@ def find_cam(path: Path, duration: float) -> str:
             hits = sum(1 for j, o in enumerate(per) if j != i and any(
                 abs(ox + ow / 2 - cx) < 0.5 * w and abs(oy + oh / 2 - cy) < 0.5 * h and 0.6 < ow / w < 1.6
                 for (ox, oy, ow, oh) in o))
-            if hits >= 2 and (hits > best_hits or (hits == best_hits and w * h > best[2] * best[3])):
+            fx, fy = (x + w / 2) / W, (y + h / 2) / H
+            in_middle = 0.28 < fx < 0.72 and 0.25 < fy < 0.75   # webcams sit at the edges, not mid-screen
+            if hits >= 3 and not in_middle and (hits > best_hits or (hits == best_hits and w * h > best[2] * best[3])):
                 best, best_hits = (x, y, w, h), hits
     if not best:
         return ""
