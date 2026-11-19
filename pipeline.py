@@ -272,7 +272,7 @@ def _frames(path: Path, secs):
     return out
 
 
-CAM_V = 5   # bump to re-check every queued clip with a newer webcam detector
+CAM_V = 6   # bump to re-check every queued clip with a newer webcam detector
 
 
 def _best_face(frames):
@@ -419,13 +419,11 @@ def _face_in_box(frames, box: str, need: int = 3) -> bool:
 
 def find_cam_info(path: Path, duration: float, learned: list | None = None) -> tuple[str, str, list | None]:
     cam, q, frac = _find_cam_info(path, duration, learned)
-    if not cam:
-        return cam, q, frac
+    if not cam or q == "guess":
+        return "", "", None   # no traced border and no known spot -> skip the clip rather than risk a wrong face
     frames = _frames(path, [max(0.5, duration * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)])
     if frames:
         cam = _trim_black(frames, cam)
-        if q == "guess" and not _face_in_box(frames, cam, need=3):
-            return "", "", None   # no reliable webcam -> the clip is skipped instead of looking bad
     return cam, q, frac
 
 
@@ -832,7 +830,7 @@ def main() -> None:
     for cid, c in clips.items():
         if c.get("status") != "new" or c.get("cam_v", 1) >= CAM_V or c.get("layout") == "full":
             continue
-        if c.get("cam_v", 1) in (3, 4) and c.get("cam_q") in ("edge", "learned"):  # v5 only changes guessed boxes
+        if c.get("cam_v", 1) in (3, 4, 5) and c.get("cam_q") in ("edge", "learned"):  # v6 only changes guessed boxes
             c["cam_v"] = CAM_V
             continue
         raw = RAW / f"{cid}.mp4"
