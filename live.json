@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-19T15:41:17Z",
+ "updated": "2026-11-19T15:46:14Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
@@ -156,6 +156,20 @@
   }
  },
  "stats": [
+  {
+   "service": "youtube",
+   "link": "https://www.youtube.com/shorts/jR8AnrCvB7M",
+   "sent": "2026-11-19T15:41:31.000Z",
+   "hook": "",
+   "clip": "",
+   "streamer": "",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
   {
    "service": "youtube",
    "link": "https://www.youtube.com/shorts/O1uZeeJa_vA",
@@ -507,6 +521,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-19T15:41:17Z",
+ "stats_updated": "2026-11-19T15:46:14Z",
  "log": []
 }
