@@ -1,17 +1,22 @@
 {
- "updated": "2026-11-19T15:05:37Z",
+ "updated": "2026-11-19T15:10:59Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
- "next_slot": "2026-11-19T16:37:00Z",
- "up_next": "PrettiestWildKiwiTwitchRPG-CU3ne8t4PaT03wBb",
+ "next_slot": "2026-11-19T19:37:00Z",
+ "up_next": "PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL",
  "buffer_ok": true,
  "buffer_error": "",
  "cooldown": {
-  "youtube": "2026-11-19T15:10:00Z",
+  "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
  },
  "errors": [
+  {
+   "at": "2026-11-19T15:10:59Z",
+   "id": "PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL",
+   "error": "The daily posting limit for this channel has been reached! Please try reducing the amount of times per day in your schedule and try again later.; skipped — waiting out the platform limit"
+  },
   {
    "at": "2026-11-19T12:09:30Z",
    "id": "SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde",
@@ -146,6 +151,20 @@
   }
  },
  "stats": [
+  {
+   "service": "youtube",
+   "link": "https://www.youtube.com/shorts/O1uZeeJa_vA",
+   "sent": "2026-11-19T15:06:46.000Z",
+   "hook": "",
+   "clip": "",
+   "streamer": "",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
   {
    "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7709636743162645774",
@@ -483,6 +502,12 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-19T15:05:37Z",
- "log": []
+ "stats_updated": "2026-11-19T15:10:59Z",
+ "log": [
+  "[15:11:01Z] posting PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL (10:07 AM slot) to youtube: ohnePixel: IPad Kid max brainrot in GTA 6",
+  "[15:11:03Z]   youtube: uploading ",
+  "[15:11:03Z]   tiktok: error skipped — waiting out the platform limit",
+  "[15:11:03Z] youtube limit hit — pausing youtube uploads until 2026-11-19T18:10:59Z",
+  "[15:11:03Z] PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL failed everywhere — back in the queue"
+ ]
 }

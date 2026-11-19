@@ -1,13 +1,18 @@
 {
  "paused": false,
  "postnow": [],
- "last_slot": "2026-11-19T12:07:00Z",
+ "last_slot": "2026-11-19T15:07:00Z",
  "switched_at": "2026-11-18T22:03:12Z",
  "cooldown": {
-  "youtube": "2026-11-19T15:10:00Z",
+  "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
  },
  "errors": [
+  {
+   "at": "2026-11-19T15:10:59Z",
+   "id": "PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL",
+   "error": "The daily posting limit for this channel has been reached! Please try reducing the amount of times per day in your schedule and try again later.; skipped — waiting out the platform limit"
+  },
   {
    "at": "2026-11-19T12:09:30Z",
    "id": "SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde",
@@ -20,6 +25,7 @@
   }
  ],
  "returned": [
+  "PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL",
   "SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde",
   "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD"
  ]
