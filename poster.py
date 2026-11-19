@@ -246,6 +246,20 @@ def metrics(node: dict) -> dict:
             "saves": int(out.get("saves", 0) or 0)}
 
 
+FRESH_HOURS = 14   # "new" = clipped in the last 14 hours (last night's / today's streams)
+
+
+def tier(r: dict) -> int:
+    """0 = new clip with a real hook, 1 = older clip with a real hook, 2 = new clip still waiting for a hook, 3 = rest."""
+    found = r.get("found") or r.get("created") or ""
+    try:
+        fresh = (NOW - parse(found)) < timedelta(hours=FRESH_HOURS)
+    except Exception:  # noqa: BLE001
+        fresh = False
+    real = not r.get("hook_auto") or r.get("hook_kind") == "title"
+    return 0 if (fresh and real) else 1 if real else 2 if fresh else 3
+
+
 # ------------------------------------------------------------------ schedule
 # TikTok blocks accounts that publish too much through the API, so: every 90 minutes (11 a day)
 SLOTS = [(7, 7), (8, 37), (10, 7), (11, 37), (13, 7), (14, 37), (16, 7), (17, 37), (19, 7), (20, 37), (22, 7)]
@@ -317,10 +331,9 @@ def main() -> None:
         ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now]
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
-        pick = (next((r for r in ok if not r.get("hook_auto") and r.get("streamer") != last_streamer), None)
-                or next((r for r in ok if not r.get("hook_auto")), None)
-                or next((r for r in ok if r.get("streamer") != last_streamer), None)
-                or (ok[0] if ok else None))
+        ok = sorted(ok, key=tier)  # newest clips with a real hook first (stable: keeps the streamer mix)
+        pick = (next((r for r in ok if tier(r) == tier(ok[0]) and r.get("streamer") != last_streamer), None)
+                or (ok[0] if ok else None)) if ok else None
         if pick:
             to_post.append((pick, f"{slot.astimezone(ET):%-I:%M %p} slot"))
         else:
@@ -459,8 +472,8 @@ def main() -> None:
     up_next = None
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
-        ok = [r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now]
-        up = next((r for r in ok if not r.get("hook_auto")), None) or (ok[0] if ok else None)
+        ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now], key=tier)
+        up = ok[0] if ok else None
         up_next = up["id"] if up else None
     old = rj(P / "live.json", {})
     live = {

@@ -42,7 +42,7 @@ SITE = Path(os.environ.get("SITE_OUT", ROOT / "_site"))
 VID = SITE / "v"
 RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (actions cache)
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
-KEEP_NEW_HOURS = 30
+KEEP_NEW_HOURS = 24      # a clip not posted within a day is old news
 QUEUE_MAX = 36           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
 LAYOUT_V = "v3-textonly-capcut"
@@ -177,20 +177,28 @@ def clean_hook(t: str) -> str:
     return t
 
 
-def auto_hook(c: dict) -> str:
-    """Simple hook for new clips (no AI needed). Nicholas can edit it on the dashboard."""
+JUNK_TITLE = re.compile(r"^(lol|lmao|w|l|yo|wow|omg|bro|gta ?6?|clip|meme|\W*)$", re.I)
+
+
+def auto_hook(c: dict) -> tuple[str, str]:
+    """Hook for a new clip without AI. Returns (hook, kind): kind "title" = cleaned-up Twitch title
+    (good enough to post), "placeholder" = waits for a written hook."""
     name = c.get("streamer", "")
-    title = clean_hook(c.get("title", ""))
-    words = title.split()
-    if len(words) >= 3 and len(title) >= 14:
-        hook = title[0].upper() + title[1:]
-        if name.lower() not in hook.lower():
+    t = clean_hook(c.get("title", ""))
+    t = re.sub(r"(\w)\1{2,}", r"\1", t)                      # MADDDDD -> MAD, noooo -> no
+    t = re.sub(r"\b(gta ?(6|vi)|#?gta6)\b", "GTA 6", t, flags=re.I)
+    t = re.sub(r"\s*\|.*$", "", t).strip(" -!?.")              # stream-title junk after a pipe
+    words = t.split()
+    if len(words) >= 3 and len(t) >= 14 and not JUNK_TITLE.match(t) and not re.search(r"live|24/7|!sub|!comm", t, re.I):
+        if t.isupper() and len(words) > 3:
+            t = t.capitalize()
+        hook = t[0].upper() + t[1:]
+        if name.lower().split()[0] not in hook.lower() and not re.search(r"\b(he|she|they|his|her)\b", hook, re.I):
             hook = f"{name}: {hook}"
-    else:
-        hook = f"{name} can't believe this in GTA 6"
-    if "gta" not in hook.lower():
-        hook += " in GTA 6"
-    return hook[:110]
+        if "gta" not in hook.lower():
+            hook += " in GTA 6"
+        return hook[:100], "title"
+    return f"{name} can't believe this in GTA 6", "placeholder"
 
 
 def mix_order(ready: list) -> list:
@@ -449,8 +457,9 @@ def main() -> None:
             if not (VID / f"{cid}.jpg").exists():
                 render_preview(raw, cid)
             if not c.get("hook"):
-                c["hook"] = auto_hook(c)
+                c["hook"], kind = auto_hook(c)
                 c["hook_auto"] = True
+                c["hook_kind"] = kind
                 log(f"auto hook {cid}: {c['hook']}")
             if c.get("hook"):
                 hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V).encode()).hexdigest()[:10]

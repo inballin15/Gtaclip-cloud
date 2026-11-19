@@ -218,7 +218,8 @@ function queueList() {
   const now = new Set(((L && L.postnow) || []).map((p) => p.id));
   const list = (Q.ready || []).filter((r) => !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
-  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || (!!a.hook_auto - !!b.hook_auto));
+  const tier = (r) => { const fresh = Date.now() - new Date(r.found || r.created || 0) < 14 * 3600e3; const real = !r.hook_auto || r.hook_kind === 'title'; return fresh && real ? 0 : real ? 1 : fresh ? 2 : 3; };
+  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || (tier(a) - tier(b)));
 }
 function postList() {
   const out = Object.values(posts()).map((p) => ({ ...p, _new: true }));
