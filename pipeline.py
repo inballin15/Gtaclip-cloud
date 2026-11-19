@@ -43,6 +43,7 @@ SITE = Path(os.environ.get("SITE_OUT", ROOT / "_site"))
 VID = SITE / "v"
 RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (actions cache)
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
+KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
 KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
@@ -447,16 +448,22 @@ def render_preview(raw: Path, cid: str) -> None:
     ff("-ss", "2", "-i", str(raw), "-frames:v", "1", "-vf", "scale=640:-2", "-q:v", "4", str(VID / f"{cid}.jpg"))
 
 
-def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final") -> None:
-    """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box."""
+def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
+                 layout: str = "split") -> None:
+    """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
+    layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     x, y, w, h = [float(v) for v in cam.split(",")]
-    base = (
-        f"[0:v]split=2[a][b];"
-        f"[a]crop=iw*{w}:ih*{h}:iw*{x}:ih*{y},scale=1080:960:force_original_aspect_ratio=increase,"
-        f"crop=1080:960,setsar=1[top];"
-        f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:960,crop=1080:960,setsar=1[bot];"
-        f"[top][bot]vstack=inputs=2"
-    )
+    if layout == "full":
+        base = ("[0:v]split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+                "boxblur=20:2,setsar=1[bg];[b]scale=1080:-2,setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
+    else:
+        base = (
+            f"[0:v]split=2[a][b];"
+            f"[a]crop=iw*{w}:ih*{h}:iw*{x}:ih*{y},scale=1080:960:force_original_aspect_ratio=increase,"
+            f"crop=1080:960,setsar=1[top];"
+            f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:960,crop=1080:960,setsar=1[bot];"
+            f"[top][bot]vstack=inputs=2"
+        )
     if hook:
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"))
         inputs = ["-i", str(raw), "-i", png]
@@ -467,6 +474,76 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
        "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-maxrate", "3500k", "-bufsize", "7M", "-r", "30",
        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
+
+
+# ---------------------------------------------------------------- your own uploads -> clips
+def process_uploads(st: dict, tmp: Path) -> None:
+    """Dashboard upload: the video arrives in pieces on a branch 'upload-<id>' + an issue 'upload: <id>'.
+    Find the viral moments, cut them, and put them in the queue like any other clip."""
+    if not GH_TOKEN:
+        return
+    owner = REPO.split("/")[0]
+    code, items = _gh("GET", f"/repos/{REPO}/issues?state=open&creator={owner}&per_page=50")
+    if code != 200 or not isinstance(items, list):
+        return
+    for it in [i for i in items if i["title"].lower().startswith("upload:")]:
+        num = it["number"]
+        try:
+            job = json.loads(it.get("body") or "{}")
+            ref, parts = job["ref"], job["parts"]
+        except Exception:  # noqa: BLE001
+            _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Couldn't read this upload — please try again."})
+            _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
+            continue
+        _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Got your video — finding the best moments now (usually 5–20 min)."})
+        src = tmp / f"upload_{job.get('id', num)}.mp4"
+        try:
+            subprocess.run(["git", "fetch", "-q", "--depth=1", "origin", f"{ref}:refs/remotes/origin/{ref}"], check=True)
+            with open(src, "wb") as fh:
+                for part in parts:
+                    fh.write(subprocess.run(["git", "show", f"origin/{ref}:{part}"], capture_output=True, check=True).stdout)
+            import viral
+            moments = viral.find_moments(src, log=log)
+        except Exception as e:  # noqa: BLE001
+            log(f"upload {num} failed: {e}")
+            _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": f"Sorry — that video couldn't be processed ({str(e)[:150]}). Try a shorter video or another format (MP4)."})
+            _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
+            continue
+        login = (job.get("login") or "").lower()
+        s_cfg = CFG["streamers"].get(login, {})
+        name = s_cfg.get("name") or job.get("streamer") or "Nicholas"
+        made = []
+        for i, m in enumerate(moments):
+            cid = f"up{job.get('id', num)}_{i + 1}"
+            raw = RAW / f"{cid}.mp4"
+            try:
+                import viral
+                viral.cut(src, m["start"], m["end"], raw)
+                dur = duration_of(raw)
+                cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(login))
+                rec = {"status": "new", "source": "upload", "streamer": name, "login": login,
+                       "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name)), "campaign": s_cfg.get("campaign", ""),
+                       "title": f"{job.get('name', 'Your video')} @ {int(m['start'] // 60)}:{int(m['start'] % 60):02d}",
+                       "created": iso(NOW), "found": iso(NOW), "twitch": "", "transcript": m["text"],
+                       "seconds": round(dur), "moment": {k: m[k] for k in ("start", "end", "score", "reasons")},
+                       "cam_v": CAM_V}
+                if m.get("hook"):
+                    rec.update(hook=m["hook"], hook_auto=True, hook_kind="transcript")
+                if cam and q in ("edge", "learned"):
+                    rec.update(cam=cam, cam_q=q, layout="split")
+                else:
+                    rec.update(cam="0,0,1,1", cam_q="none", layout="full")
+                st["clips"][cid] = rec
+                made.append(f"- {int(m['start'] // 60)}:{int(m['start'] % 60):02d}–{int(m['end'] // 60)}:{int(m['end'] % 60):02d} "
+                            f"({', '.join(m['reasons']) or 'good moment'}) — {m.get('hook') or ''}")
+            except Exception as e:  # noqa: BLE001
+                log(f"cutting clip {cid} failed: {e}")
+        msg = (f"Made {len(made)} clips from **{job.get('name', 'your video')}** — they're in the Queue (tagged 'Your video'):\n"
+               + "\n".join(made)) if made else "No strong moments found in this video."
+        _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": msg})
+        _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
+        _gh("DELETE", f"/repos/{REPO}/git/refs/heads/{ref}")
+        log(f"upload {num}: {len(made)} clips")
 
 
 # ---------------------------------------------------------------- main
@@ -519,6 +596,8 @@ def main() -> None:
                 c.update(status="new", cam=cam)
                 c.pop("skip_reason", None)
                 log(f"webcam found on retry: {c['streamer']} '{c['title']}' {cam}")
+
+    process_uploads(st, tmp)
 
     # re-check every queued clip's webcam box with the current detector (edge-traced boxes)
     for cid, c in clips.items():
@@ -591,7 +670,7 @@ def main() -> None:
     fresh = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new"]
     keep = {r["id"] for r in mix_order(fresh)[:QUEUE_MAX]}
     for r in fresh:
-        if r["id"] not in keep and not r.get("post_now") and not r.get("hook_by_user"):
+        if r["id"] not in keep and not r.get("post_now") and not r.get("hook_by_user") and r.get("source") != "upload":
             clips[r["id"]].update(status="expired", skip_reason="queue full")
     if len(fresh) > QUEUE_MAX:
         log(f"queue full: kept {QUEUE_MAX} of {len(fresh)} clips")
@@ -601,7 +680,8 @@ def main() -> None:
         age_ref = c.get("posted_at") or c.get("found") or iso(NOW)
         age_h = (NOW - parse(age_ref)).total_seconds() / 3600
         clip_age_h = (NOW - parse(c.get("created") or c.get("found") or iso(NOW))).total_seconds() / 3600
-        if (c["status"] == "new" and clip_age_h > KEEP_NEW_HOURS) or (c["status"] != "new" and age_h > KEEP_POSTED_HOURS):
+        keep_h = KEEP_UPLOAD_HOURS if c.get("source") == "upload" else KEEP_NEW_HOURS
+        if (c["status"] == "new" and clip_age_h > keep_h) or (c["status"] != "new" and age_h > KEEP_POSTED_HOURS):
             c["status"] = "expired" if c["status"] == "new" else c["status"]
         if c["status"] == "used" and age_h < 24:
             continue  # keep the posted video online a day (Buffer downloads it from here)
@@ -630,15 +710,15 @@ def main() -> None:
                 c["hook_kind"] = kind
                 log(f"auto hook {cid}: {c['hook']}")
             if c.get("hook"):
-                hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V).encode()).hexdigest()[:10]
+                hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
                 if c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists():
-                    render_final(raw, cid, c["cam"], c["hook"], tmp)
+                    render_final(raw, cid, c["cam"], c["hook"], tmp, layout=c.get("layout", "split"))
                     c["final_hash"] = hh
                     c["final_v"] = hh
                     log(f"rendered final {cid}")
-            ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean").encode()).hexdigest()[:10]
+            ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + c.get("layout", "")).encode()).hexdigest()[:10]
             if c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists():
-                render_final(raw, cid, c["cam"], None, tmp, out="_clean")
+                render_final(raw, cid, c["cam"], None, tmp, out="_clean", layout=c.get("layout", "split"))
                 c["clean_v"] = ch
         except Exception as e:  # noqa: BLE001
             log(f"render failed {cid}: {e}")

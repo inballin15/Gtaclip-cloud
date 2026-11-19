@@ -270,6 +270,8 @@ MAX_AGE_HOURS = 9  # never post a clip clipped more than 9 hours ago
 
 
 def too_old(r: dict) -> bool:
+    if r.get("source") == "upload":   # clips from your own videos aren't time-sensitive
+        return False
     try:
         return (NOW - parse(r.get("created") or r.get("found") or iso(NOW))) > timedelta(hours=MAX_AGE_HOURS)
     except Exception:  # noqa: BLE001

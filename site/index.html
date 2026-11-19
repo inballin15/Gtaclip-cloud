@@ -32,6 +32,9 @@
   .strip { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
   .strip a { flex:none; text-decoration:none; background:var(--panel2); border-radius:12px; padding:8px 10px; min-width:110px; }
   .strip .nm { font-weight:700; font-size:14px; } .strip .v { color:var(--muted); font-size:12px; }
+  .upbtn { width:100%; background:var(--panel); color:var(--fg); border:1px dashed #ffffff40; margin-bottom:10px; font-size:15px; padding:12px; }
+  .bar2 { height:10px; border-radius:6px; background:var(--panel2); overflow:hidden; } .bar2 > div { height:100%; background:linear-gradient(90deg,var(--pink),var(--cyan)); width:0; transition:width .3s; }
+  .upitem { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:10px 12px; margin-bottom:8px; display:flex; flex-direction:column; gap:6px; }
   .btns.more { display:none; } .btns.more.open { display:flex; }
   .wrap { padding:12px 12px calc(84px + env(safe-area-inset-bottom)); max-width:1200px; margin:0 auto; }
   section[hidden], [hidden] { display:none !important; }
@@ -131,6 +134,8 @@
     <details class="box" id="slots-box"><summary id="slots-sum">Today's slots</summary><div class="slots" id="slots"></div></details>
   </section>
   <section id="tab-queue" hidden>
+    <button class="bigbtn upbtn" id="upbtn">＋ Make clips from my video</button>
+    <div id="uploads"></div>
     <div class="seg" id="variant">
       <button data-v="final">With caption</button><button data-v="clean">No caption</button>
     </div>
@@ -247,7 +252,7 @@ const isPending = (prefix) => Object.keys(pend).some((k) => k.startsWith(prefix)
 function queueList() {
   const P = posts(); const blocked = new Set((L && L.blocked) || []);
   const now = new Set(((L && L.postnow) || []).map((p) => p.id));
-  const list = (Q.ready || []).filter((r) => (Date.now() - new Date(r.created || r.found || Date.now())) < 9 * 3600e3 && !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
+  const list = (Q.ready || []).filter((r) => (r.source === 'upload' || (Date.now() - new Date(r.created || r.found || Date.now())) < 9 * 3600e3) && !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
   const tier = (r) => { const fresh = Date.now() - new Date(r.created || r.found || 0) < 5 * 3600e3; const real = !r.hook_auto || r.hook_kind === 'title'; return fresh && real ? 0 : real ? 1 : fresh ? 2 : 3; };
   return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || (tier(a) - tier(b)));
@@ -285,7 +290,7 @@ function render() {
   const toSubmit = postList().filter((p) => CR[p.campaign] && (p.tiktok || p.youtube) && !submitted[p.tiktok || p.youtube]);
   $('pcount').textContent = toSubmit.length || '';
   if (tab === 'home') { renderSetup(); renderRun(); renderNow(); renderLiveStrip(); renderSubmitCard(toSubmit); renderSlots(); }
-  if (tab === 'queue') renderQueue();
+  if (tab === 'queue') { renderUploads(); renderQueue(); }
   if (tab === 'posted') renderPosted(toSubmit);
   if (tab === 'stats') { renderKpis(); renderFinder(); renderLive(); renderStats(); }
 }
@@ -514,8 +519,9 @@ function clipCard(r, st) {
   const b = el('div', 'body');
   const top = el('div', 'row'); top.append(badge(st)); b.append(top);
   const tags = el('div', 'row'); tags.append(el('span', 'pill', r.streamer));
+  if (r.source === 'upload') tags.append(el('span', 'pill', 'Your video'));
   if (CR[r.campaign]) tags.append(el('span', 'pill paid', 'Paid · ' + r.campaign));
-  tags.append(el('span', 'meta', `${r.seconds || '?'}s · clipped ${r.created ? ago(r.created) : ''} · leaves the queue at 9 h`));
+  tags.append(el('span', 'meta', r.source === 'upload' ? `${r.seconds || '?'}s · ${(r.moment && r.moment.reasons || []).join(', ')}` : `${r.seconds || '?'}s · clipped ${r.created ? ago(r.created) : ''} · leaves the queue at 9 h`));
   b.append(tags, el('div', 'title', r.hook || ''));
   const btns = el('div', 'btns');
   if (!r.nowing) {
@@ -533,7 +539,7 @@ function clipCard(r, st) {
   const ed = el('button', 'btn', 'Edit hook'); ed.onclick = () => { editing = editing === r.id ? null : r.id; $('queuelist').dataset.sig = ''; renderQueue(); };
   const ip = el('button', 'btn', 'I posted it');
   ip.onclick = async () => { if (ip.dataset.arm) { ip.disabled = true; if (await ghTap('manual: ' + r.id)) toast('Marked as posted — the bot will skip it'); render(); } else { ip.dataset.arm = 1; ip.textContent = 'Tap again to confirm'; setTimeout(() => { delete ip.dataset.arm; ip.textContent = 'I posted it'; }, 3000); } };
-  const tw = el('a', 'btn', 'Twitch'); tw.href = r.twitch; tw.target = '_blank'; tw.rel = 'noopener';
+  const tw = el('a', 'btn', 'Twitch'); tw.href = r.twitch || '#'; tw.target = '_blank'; tw.rel = 'noopener'; if (!r.twitch) tw.hidden = true;
   const sk = el('button', 'btn del', "Don't post");
   sk.onclick = async () => { if (sk.dataset.arm) { sk.disabled = true; if (await ghTap('skip: ' + r.id)) toast('Removed from the queue'); render(); } else { sk.dataset.arm = 1; sk.textContent = 'Tap again to remove'; setTimeout(() => { delete sk.dataset.arm; sk.textContent = "Don't post"; }, 3000); } };
   more.append(cc, ed, ip, tw, sk); b.append(more);
@@ -572,6 +578,99 @@ async function saveVideo(r, btn) {
   }
   btn.disabled = false; btn.textContent = label;
 }
+// ------------------------------------------------------------ your own videos -> clips
+let uploads = ls.get('gc-uploads', []);   // [{id, name, at, state, pct, issue, msg}]
+const saveUploads = () => ls.set('gc-uploads', uploads.slice(0, 10));
+const STREAMERS = [['', 'Me / someone else'], ['clix', 'Clix'], ['lacy', 'Lacy'], ['kaicenat', 'Kai Cenat'], ['yourragegaming', 'YourRAGE'],
+  ['jynxzi', 'Jynxzi'], ['xqc', 'xQc'], ['ishowspeed', 'IShowSpeed'], ['jasontheween', 'JasonTheWeen'], ['stableronaldo', 'Stable Ronaldo'],
+  ['nickmercs', 'NICKMERCS'], ['marlon', 'Marlon'], ['adapt', 'Adapt']];
+function openUpload() {
+  if (!ghKey()) { openSettings('Connect GitHub first — uploads go to your GitHub.'); return; }
+  const f = el('input'); f.type = 'file'; f.accept = 'video/*'; f.className = 'setin';
+  const who = el('select', 'setin'); for (const [v, n] of STREAMERS) { const o = el('option', null, n); o.value = v; who.append(o); }
+  const other = el('input', 'setin'); other.placeholder = 'Name for the credit (if not on the list)';
+  const go = el('button', 'btn pink', 'Make clips');
+  const note = el('div', 'meta', 'Pick a stream VOD or gameplay video (MP4/MOV, up to ~1.5 GB). It finds the best moments — big reactions, hype, action — and makes 15–60 s clips with hooks. Takes about 5–20 min after upload.');
+  go.onclick = () => {
+    const file = f.files && f.files[0]; if (!file) { toast('Pick a video first'); return; }
+    if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB) — trim it first'); return; }
+    $('sheet').hidden = true;
+    const n = STREAMERS.find((x) => x[0] === who.value);
+    uploadVideo(file, who.value, who.value ? n[1] : (other.value.trim() || 'Nicholas'));
+  };
+  sheet('Make clips from my video', [note, el('label', 'meta', 'Video'), f, el('label', 'meta', 'Whose stream is it?'), who, other, go]);
+}
+function b64(blob) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
+}
+async function gh(method, path, body) {
+  const r = await fetch(`https://api.github.com/repos/${REPO}${path}`, { method,
+    headers: { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined });
+  if (!r.ok) { const e = new Error(`GitHub ${r.status}`); e.status = r.status; throw e; }
+  return r.json();
+}
+async function uploadVideo(file, login, streamer) {
+  const id = Date.now().toString(36);
+  const u = { id, name: file.name.replace(/\.[^.]+$/, '').slice(0, 60), at: Date.now(), state: 'uploading', pct: 0 };
+  uploads.unshift(u); saveUploads(); switchTab('queue'); renderUploads();
+  const CH = 20 * 1024 * 1024; const parts = []; const tree = [];
+  try {
+    for (let i = 0, off = 0; off < file.size; i++, off += CH) {
+      const data = await b64(file.slice(off, off + CH));
+      let sha = null;
+      for (let t = 0; t < 3 && !sha; t++) {
+        try { sha = (await gh('POST', '/git/blobs', { content: data, encoding: 'base64' })).sha; }
+        catch (e) { if (e.status === 403 || e.status === 404) throw e; await new Promise((r) => setTimeout(r, 2000)); }
+      }
+      if (!sha) throw new Error('upload kept failing — check your connection');
+      const path = `uploads/${id}/part${String(i).padStart(3, '0')}`;
+      parts.push(path); tree.push({ path, mode: '100644', type: 'blob', sha });
+      u.pct = Math.min(99, Math.round(((off + CH) / file.size) * 100)); saveUploads(); renderUploads();
+    }
+    const t = await gh('POST', '/git/trees', { tree });
+    const c = await gh('POST', '/git/commits', { message: `upload ${u.name}`, tree: t.sha, parents: [] });
+    await gh('POST', '/git/refs', { ref: `refs/heads/upload-${id}`, sha: c.sha });
+    const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, ref: `upload-${id}`, parts, name: u.name, login, streamer, size: file.size }) });
+    Object.assign(u, { state: 'processing', pct: 100, issue: iss.number }); saveUploads(); renderUploads();
+    toast('Uploaded — finding the best moments now');
+  } catch (e) {
+    u.state = 'failed';
+    u.msg = (e.status === 403 || e.status === 404)
+      ? 'Your GitHub key needs one more permission: Contents → Read and write (Settings → Make a key → edit your key).'
+      : `Upload failed: ${e.message}`;
+    saveUploads(); renderUploads();
+  }
+}
+async function checkUploads() {
+  let changed = false;
+  for (const u of uploads.filter((x) => x.state === 'processing' && x.issue)) {
+    try {
+      const iss = await gh('GET', `/issues/${u.issue}`);
+      const cm = await gh('GET', `/issues/${u.issue}/comments?per_page=10`);
+      const last = cm.length ? cm[cm.length - 1].body : '';
+      if (iss.state === 'closed') { u.state = /^Made \d+ clips/.test(last) ? 'done' : 'failed'; u.msg = last; changed = true; }
+      else if (last && last !== u.msg) { u.msg = last; changed = true; }
+    } catch (e) { /* try later */ }
+  }
+  if (changed) { saveUploads(); renderUploads(); refreshQueue().then(render); }
+}
+function renderUploads() {
+  const box = $('uploads'); if (!box) return; box.replaceChildren();
+  for (const u of uploads.filter((x) => Date.now() - x.at < 2 * 86400e3).slice(0, 4)) {
+    const d = el('div', 'upitem');
+    const top = el('div', 'row'); top.append(el('b', null, u.name));
+    const lbl = { uploading: `Uploading ${u.pct}%`, processing: 'Finding the best moments…', done: 'Clips ready ✓', failed: 'Problem' }[u.state];
+    top.append(badge({ cls: u.state === 'done' ? 's-live' : u.state === 'failed' ? 's-err' : 's-busy', txt: lbl, spin: u.state === 'uploading' || u.state === 'processing' }));
+    d.append(top);
+    if (u.state === 'uploading') { const b = el('div', 'bar2'); const f = el('div'); f.style.width = u.pct + '%'; b.append(f); d.append(b, el('div', 'meta', 'Keep this page open until it reaches 100%.')); }
+    if (u.state === 'processing') d.append(el('div', 'meta', 'Usually 5–20 minutes. The clips show up in the queue below, tagged "Your video". You can close the site.'));
+    if (u.msg && u.state !== 'uploading') d.append(el('div', 'meta', u.msg.split('\n')[0]));
+    if (u.state === 'done' || u.state === 'failed') { const x = el('button', 'btn', 'Dismiss'); x.onclick = () => { uploads = uploads.filter((y) => y !== u); saveUploads(); renderUploads(); }; d.append(x); }
+    box.append(d);
+  }
+}
+
 function renderStats() {
   const box = $('statsbox'); box.replaceChildren();
   const S = ((L && L.stats) || []).slice(); const t = totals();
@@ -622,7 +721,7 @@ function openSettings(why) {
   nodes.push(el('div', 'meta', ghKey() ? 'GitHub is connected on this phone ✓' : 'GitHub is not connected on this phone.'));
   nodes.push(el('div', 'steps', ['GitHub key (one time, 2 minutes):', '1. Tap "Make a key" (opens GitHub).', '2. Name: gtaclip site · Expiration: 1 year.',
     '3. Repository access: Only select repositories → Gtaclip-cloud.', '4. Repository permissions → Issues: Read and write.',
-    '5. Generate, copy, paste below, Save.', 'The key stays only on this phone.'].join('\n')));
+    '   For uploading your own videos also: Contents → Read and write.', '5. Generate, copy, paste below, Save.', 'The key stays only on this phone.'].join('\n')));
   const mk = el('a', 'btn cyan', 'Make a key'); mk.href = 'https://github.com/settings/personal-access-tokens/new'; mk.target = '_blank'; nodes.push(mk);
   const inp = el('input', 'setin'); inp.type = 'password'; inp.placeholder = 'Paste key (github_pat_…)'; inp.autocomplete = 'off';
   const sv = el('button', 'btn pink', 'Save'); sv.onclick = async () => {
@@ -667,6 +766,8 @@ async function rebootSite() {
   location.replace(location.pathname + '?v=' + Date.now());
 }
 $('reboot').onclick = rebootSite;
+$('upbtn').onclick = openUpload;
+setInterval(checkUploads, 30000);
 document.querySelectorAll('#variant button').forEach((b) => b.onclick = () => { variant = b.dataset.v; ls.set('gc-variant', variant); renderQueue(); });
 $('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
 (async () => {
