@@ -249,3 +249,64 @@ def cut(src: Path, start: float, end: float, out: Path) -> None:
     subprocess.run([FF, "-y", "-loglevel", "error", "-ss", f"{start:.2f}", "-i", str(src), "-t", f"{end - start:.2f}",
                     "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-c:a", "aac", "-b:a", "160k",
                     "-movflags", "+faststart", str(out)], check=True)
+
+
+def ai_score_clips(items: list[dict], log=print) -> tuple[dict, str]:
+    """Viral score (0-100) for clips, like OpusClip's 'virality score'. One Gemini request per batch.
+    items: [{id, streamer, title, transcript, seconds}]  ->  ({id: {score, verdict, why, hook}}, status)"""
+    import json as _json
+    import os
+    import urllib.request
+    import urllib.error
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not key:
+        return {}, "no key"
+    out, status = {}, "ok"
+    for i in range(0, len(items), 20):
+        batch = [{"id": it["id"], "streamer": it.get("streamer", ""), "twitch_title": it.get("title", "")[:120],
+                  "transcript": (it.get("transcript") or "")[:700], "seconds": it.get("seconds")} for it in items[i:i + 20]]
+        prompt = (
+            "You rate short GTA 6 livestream clips for TikTok/YouTube Shorts like OpusClip's virality score.\n"
+            "Score each 0-100 for how likely it is to go viral: a strong hook in the first seconds, a funny/shocking/"
+            "dramatic or relatable moment, a clear payoff, makes sense without context, big-name streamer appeal.\n"
+            "Give 0-10 for anything sexual, hateful, about strippers/clubs, harming animals, or where nothing happens.\n"
+            "Also write the on-screen hook: max 65 characters, plain words, no emojis, no swearing, no quotes, one or two "
+            "CAPS words, true to what happens, names the streamer, ends with 'in GTA 6' when natural.\n"
+            "Return JSON list: [{\"id\": \"...\", \"score\": 0-100, \"why\": \"max 12 words\", \"hook\": \"...\"}]\n\n"
+            "Clips:\n" + _json.dumps(batch))
+        body = {"contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"responseMimeType": "application/json", "temperature": 0.3}}
+        done = False
+        for model in ("gemini-2.5-flash", "gemini-2.5-flash-lite"):
+            try:
+                req = urllib.request.Request(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                    data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=120) as r:
+                    res = _json.loads(r.read())
+                rows = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
+                if isinstance(rows, dict):
+                    rows = next((v for v in rows.values() if isinstance(v, list)), [])
+                for row in rows:
+                    sc = max(0, min(100, int(float(row.get("score", 0)))))
+                    out[str(row.get("id"))] = {
+                        "score": sc, "why": clean_line(str(row.get("why", "")))[:90],
+                        "verdict": "post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
+                        "hook": clean_line(str(row.get("hook", "")))[:70], "model": model}
+                done = True
+                break
+            except urllib.error.HTTPError as e:
+                msg = e.read().decode(errors="replace")[:160]
+                status = f"{model}: HTTP {e.code} {msg}"
+                log(f"AI scoring: {status}")
+                if e.code in (400, 401, 403):
+                    return out, status    # bad key: no point trying again
+            except Exception as e:  # noqa: BLE001
+                status = f"{model}: {str(e)[:120]}"
+                log(f"AI scoring: {status}")
+        if not done:
+            break
+    if out:
+        status = "ok"
+    log(f"AI scoring: {len(out)} clips rated ({status})")
+    return out, status

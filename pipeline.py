@@ -602,6 +602,9 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     rec.update(hook=m["hook"], hook_auto=True, hook_kind="transcript")
                 if m.get("ai_score") is not None:
                     rec["moment"]["ai_score"] = m["ai_score"]
+                    sc = int(m["ai_score"] * 10)
+                    rec.update(viral=sc, viral_verdict="post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
+                               viral_why=", ".join(m.get("reasons", []))[:90])
                 if cam and q in ("edge", "learned"):
                     rec.update(cam=cam, cam_q=q, layout="split")
                 else:
@@ -753,6 +756,30 @@ def main() -> None:
     if len(fresh) > QUEUE_MAX:
         log(f"queue full: kept {QUEUE_MAX} of {len(fresh)} clips")
 
+    # 3b. viral score for every queued clip (Gemini, like OpusClip) + a better hook; throttled to save the free quota
+    ai_status = st.get("ai_status", "")
+    try:
+        import viral
+        todo = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new" and "viral" not in v and v.get("transcript")]
+        backoff = st.get("ai_backoff", "")
+        oldest = min((parse(r.get("found") or iso(NOW)) for r in todo), default=NOW)
+        if todo and (not backoff or parse(backoff) < NOW) and (len(todo) >= 3 or NOW - oldest > timedelta(minutes=25)):
+            res, ai_status = viral.ai_score_clips(todo[:40], log)
+            for cid, r in res.items():
+                c = clips.get(cid)
+                if not c:
+                    continue
+                c.update(viral=r["score"], viral_why=r["why"], viral_verdict=r["verdict"])
+                if r["hook"] and len(r["hook"]) >= 12 and c.get("hook_auto") and not c.get("hook_by_user"):
+                    c.update(hook=r["hook"], hook_kind="ai")
+                    c.pop("hook_auto", None)
+            if not res and ai_status != "no key":
+                st["ai_backoff"] = iso(NOW + timedelta(minutes=60))   # quota/limit: try again in an hour
+            st["ai_status"] = ai_status
+            st["ai_checked"] = iso(NOW)
+    except Exception as e:  # noqa: BLE001
+        log(f"AI scoring failed: {e}")
+
     # 4. drop old stuff, render what's queued
     for cid, c in list(clips.items()):
         age_ref = c.get("posted_at") or c.get("found") or iso(NOW)
@@ -853,6 +880,8 @@ def main() -> None:
                                     and c["status"] in ("new", "used")),
                     "every_min": 10},
         "live": LIVE,
+        "ai": {"status": st.get("ai_status", "no key"), "checked": st.get("ai_checked", ""),
+               "rated": sum(1 for c in clips.values() if c["status"] == "new" and "viral" in c)},
     }, indent=1, ensure_ascii=False))
     save_state(st)
     log(f"queue: {len(ready)} ready ({sum(1 for r in ready if r['final'])} with final video)")

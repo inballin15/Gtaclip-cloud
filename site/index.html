@@ -39,6 +39,9 @@
   .chip { border:1px solid var(--line); background:var(--panel); color:var(--fg); font:inherit; font-size:12px; font-weight:700; padding:6px 10px; border-radius:999px; }
   .chip.warn { border-color:#f5b54466; color:var(--amber); } .chip.bad { border-color:#ff6b6b66; color:#ff9a9a; }
   .chip::before { content:"●"; margin-right:5px; font-size:9px; vertical-align:2px; }
+  .viral { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:12px; background:var(--panel2); font-size:13px; }
+  .viral b { font-size:20px; min-width:30px; } .viral span { font-weight:800; } .viral em { color:var(--muted); font-style:normal; font-size:12px; }
+  .viral.post b, .viral.post span { color:var(--green); } .viral.maybe b, .viral.maybe span { color:var(--amber); } .viral.skip b, .viral.skip span { color:var(--red); }
   .btns.more { display:none; } .btns.more.open { display:flex; }
   .wrap { padding:12px 12px calc(84px + env(safe-area-inset-bottom)); max-width:1200px; margin:0 auto; }
   section[hidden], [hidden] { display:none !important; }
@@ -260,7 +263,7 @@ function queueList() {
   const list = (Q.ready || []).filter((r) => (r.source === 'upload' || (Date.now() - new Date(r.created || r.found || Date.now())) < 9 * 3600e3) && !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
   const tier = (r) => { const fresh = Date.now() - new Date(r.created || r.found || 0) < 5 * 3600e3; const real = !r.hook_auto || r.hook_kind === 'title'; return fresh && real ? 0 : real ? 1 : fresh ? 2 : 3; };
-  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || (tier(a) - tier(b)));
+  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || ((a.viral_verdict === 'skip') - (b.viral_verdict === 'skip')) || (tier(a) - tier(b)) || ((b.viral ?? 50) - (a.viral ?? 50)));
 }
 function postList() {
   const out = Object.values(posts()).map((p) => ({ ...p, _new: true }));
@@ -320,6 +323,9 @@ function renderSetup() {
   if (cc && cc.tiktok && cc.tiktok !== 'ok') chips.push({ cls: 'warn', txt: 'TikTok check limited', act: () => sheet('Spotting your own posts', [
     el('div', 'meta', `YouTube: ${cc.youtube || '—'}`), el('div', 'meta', `TikTok: ${cc.tiktok}`),
     el('div', 'meta', 'The bot looks at your channels every 15 minutes to spot clips you posted yourself. TikTok sometimes hides videos from automated checks.')]) });
+  const ai = Q.ai || {};
+  if (ai.status && ai.status !== 'ok' && ai.status !== 'no key') chips.push({ cls: 'warn', txt: 'AI scoring paused', act: () => sheet('AI viral scores', [
+    el('div', 'note warn', `Gemini didn't answer: ${ai.status}`), el('div', 'meta', 'Clips still post. Scores come back by themselves (it retries every hour). If it says the key is invalid, make a new key at aistudio.google.com and replace the GEMINI_API_KEY secret in GitHub.')]) });
   if (!chips.length) return;
   const row = el('div', 'chips');
   for (const c of chips) { const b = el('button', 'chip ' + c.cls, c.txt); b.onclick = c.act; row.append(b); }
@@ -414,6 +420,8 @@ function renderFinder() {
   add(ready, 'videos ready');
   box.append(stat);
   const last = f.last_run ? ago(f.last_run) : '—';
+  const ai = Q.ai || {};
+  box.append(el('div', 'meta', ai.status === 'ok' ? `AI viral scores: ON · ${ai.rated || 0} clips rated` : ai.status === 'no key' || !ai.status ? 'AI viral scores: off (no Gemini key yet)' : `AI viral scores: paused (${String(ai.status).slice(0, 60)})`));
   box.append(el('div', 'meta', `Last check ${last} · checks every ${f.every_min || 10} min · ${all.length - ready ? (all.length - ready) + ' being made' : 'nothing waiting to be made'}`));
   const by = Object.entries(f.fresh_by_streamer || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
   const row = el('div', 'row'); row.style.marginTop = '8px';
@@ -534,7 +542,14 @@ function clipCard(r, st) {
   if (r.source === 'upload') tags.append(el('span', 'pill', 'Your video'));
   if (CR[r.campaign]) tags.append(el('span', 'pill paid', 'Paid · ' + r.campaign));
   tags.append(el('span', 'meta', r.source === 'upload' ? `${r.seconds || '?'}s · ${(r.moment && r.moment.reasons || []).join(', ')}` : `${r.seconds || '?'}s · clipped ${r.created ? ago(r.created) : ''} · leaves the queue at 9 h`));
-  b.append(tags, el('div', 'title', r.hook || ''));
+  b.append(tags);
+  if (r.viral != null) {
+    const v = el('div', 'viral ' + (r.viral_verdict || ''));
+    v.append(el('b', null, String(r.viral)), el('span', null, { post: 'Post it', maybe: 'Maybe', skip: 'Skip' }[r.viral_verdict] || ''));
+    if (r.viral_why) v.append(el('em', null, r.viral_why));
+    b.append(v);
+  }
+  b.append(el('div', 'title', r.hook || ''));
   const btns = el('div', 'btns');
   if (!r.nowing) {
     const pn = el('button', 'btn pink', 'Post now');

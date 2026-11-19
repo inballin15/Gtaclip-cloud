@@ -479,8 +479,9 @@ def main() -> None:
               and not too_old(r) and not already_on_buffer(r)]
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
-        ok = sorted(ok, key=tier)  # newest clips with a real hook first (stable: keeps the streamer mix)
-        pick = (next((r for r in ok if tier(r) == tier(ok[0]) and r.get("streamer") != last_streamer), None)
+        # newest clips with a real hook first, then the AI viral score (clips rated "skip" go last)
+        ok = sorted(ok, key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -(r.get("viral") or 50)))
+        pick = (next((r for r in ok[:4] if r.get("streamer") != last_streamer), None)
                 or (ok[0] if ok else None)) if ok else None
         if pick:
             to_post.append((pick, f"{slot.astimezone(ET):%-I:%M %p} slot"))
@@ -623,7 +624,8 @@ def main() -> None:
     up_next = None
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
-        ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now], key=tier)
+        ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now],
+                    key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -(r.get("viral") or 50)))
         up = ok[0] if ok else None
         up_next = up["id"] if up else None
     old = rj(P / "live.json", {})
