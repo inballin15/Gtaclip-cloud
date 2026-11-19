@@ -192,6 +192,41 @@ def find_moments(path: Path, max_clips: int | None = None, log=print) -> list[di
     return clips[:want]
 
 
+_MODELS: list[str] | None = None
+
+
+def gemini_models(key: str, log=print) -> list[str]:
+    """Ask Google which models this key can use; best fast 'flash' models first (names change over time)."""
+    global _MODELS
+    if _MODELS is not None:
+        return _MODELS
+    import json as _json
+    import urllib.request
+    names = []
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models?key={key}&pageSize=200"
+        with urllib.request.urlopen(url, timeout=30) as r:
+            for m in _json.loads(r.read()).get("models", []):
+                n = m.get("name", "").split("/")[-1]
+                if "generateContent" not in (m.get("supportedGenerationMethods") or []):
+                    continue
+                if not n.startswith("gemini") or any(x in n for x in ("image", "tts", "audio", "live", "embedding", "vision", "computer", "robotics")):
+                    continue
+                names.append(n)
+    except Exception as e:  # noqa: BLE001
+        log(f"AI: couldn't list models ({str(e)[:80]})")
+
+    def rank(n: str):
+        v = re.findall(r"(\d+(?:\.\d+)?)", n)
+        ver = float(v[0]) if v else 0.0
+        kind = 0 if "flash" in n and "lite" not in n else 1 if "flash" in n else 2 if "pro" in n else 3
+        return (kind, "preview" in n or "exp" in n, -ver, len(n))
+    names.sort(key=rank)
+    _MODELS = (names[:3] or ["gemini-flash-latest", "gemini-2.5-flash"])
+    log(f"AI models: {', '.join(_MODELS)}")
+    return _MODELS
+
+
 def ai_rank(clips: list[dict], log=print) -> list[dict]:
     """Ask Gemini (one request for all candidates) which moments would actually go viral, and for a better hook.
     No key / quota used up / any error -> keep the signal-based ranking."""
@@ -213,7 +248,7 @@ def ai_rank(clips: list[dict], log=print) -> list[dict]:
         "harming animals.\n\nCandidates:\n" + _json.dumps(items))
     body = {"contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4}}
-    for model in ("gemini-2.5-flash", "gemini-2.5-flash-lite"):
+    for model in gemini_models(key, log):
         try:
             req = urllib.request.Request(
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
@@ -277,7 +312,7 @@ def ai_score_clips(items: list[dict], log=print) -> tuple[dict, str]:
         body = {"contents": [{"parts": [{"text": prompt}]}],
                 "generationConfig": {"responseMimeType": "application/json", "temperature": 0.3}}
         done = False
-        for model in ("gemini-2.5-flash", "gemini-2.5-flash-lite"):
+        for model in gemini_models(key, log):
             try:
                 req = urllib.request.Request(
                     f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",

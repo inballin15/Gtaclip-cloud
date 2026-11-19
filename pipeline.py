@@ -828,9 +828,10 @@ def main() -> None:
     try:
         import viral
         todo = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new" and "viral" not in v and v.get("transcript")]
-        backoff = st.get("ai_backoff", "")
+        backoff = st.get("ai_backoff2", "")
         oldest = min((parse(r.get("found") or iso(NOW)) for r in todo), default=NOW)
-        if todo and (not backoff or parse(backoff) < NOW) and (len(todo) >= 3 or NOW - oldest > timedelta(minutes=25)):
+        if todo and (not backoff or parse(backoff) < NOW) and (len(todo) >= 3 or NOW - oldest > timedelta(minutes=25)
+                                                             or st.get("ai_status", "ok") != "ok"):
             res, ai_status = viral.ai_score_clips(todo[:40], log)
             for cid, r in res.items():
                 c = clips.get(cid)
@@ -840,8 +841,8 @@ def main() -> None:
                 if r["hook"] and len(r["hook"]) >= 12 and c.get("hook_auto") and not c.get("hook_by_user"):
                     c.update(hook=r["hook"], hook_kind="ai")
                     c.pop("hook_auto", None)
-            if not res and ai_status != "no key":
-                st["ai_backoff"] = iso(NOW + timedelta(minutes=60))   # quota/limit: try again in an hour
+            if not res and re.search(r"429|quota|exhaust|rate", ai_status, re.I):
+                st["ai_backoff2"] = iso(NOW + timedelta(minutes=60))   # free daily/minute limit: try again in an hour
             st["ai_status"] = ai_status
             st["ai_checked"] = iso(NOW)
     except Exception as e:  # noqa: BLE001
