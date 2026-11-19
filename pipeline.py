@@ -905,7 +905,9 @@ def main() -> None:
         for r in ready:
             r["video"] = f"v/{r['id']}_final.mp4"
             r["poster"] = f"v/{r['id']}.jpg"
-            r["final"] = f"v/{r['id']}_final.mp4?v={r['final_v']}" if r.get("final_v") and r.get("hook") else ""
+            _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + LAYOUT_V + r.get("layout", "")).encode()).hexdigest()[:10]
+        r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"
+                      if r.get("final_v") and r.get("hook") and r.get("final_hash", r.get("final_v")) == _hh else "")
             r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
             r["clean"] = f"v/{r['id']}_clean.mp4?v={r['clean_v']}" if r.get("clean_v") else ""
             r["clipped"] = r.get("created")
@@ -1100,6 +1102,25 @@ def main() -> None:
             st["ai_checked"] = iso(NOW)
     except Exception as e:  # noqa: BLE001
         log(f"AI scoring failed: {e}")
+
+    # 4d. AI wrote new hooks -> re-make those videos now, in this same run
+    redo = []
+    for cid, c in clips.items():
+        if c["status"] != "new" or not c.get("hook") or not c.get("cam"):
+            continue
+        hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+        raw = RAW / f"{cid}.mp4"
+        if c.get("final_hash") and c["final_hash"] != hh and raw.exists():
+            redo.append((cid, raw, hh, c.get("clean_v"), True, False))
+    if redo:
+        log(f"re-making {len(redo[:8])} videos with the AI hooks")
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            for fut in as_completed([pool.submit(make, j) for j in redo[:8]]):
+                try:
+                    cid, raw, hh, ch, need_f, need_c = fut.result()
+                    clips[cid]["final_hash"] = clips[cid]["final_v"] = hh
+                except Exception as e:  # noqa: BLE001
+                    log(f"re-make failed: {e}")
 
     # 5. queue.json
     write_queue()
