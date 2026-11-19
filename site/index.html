@@ -117,6 +117,7 @@
     <div class="logo">GC</div>
     <div><h1>GTA Clip</h1><div class="sub" id="livetxt">loading…</div></div>
     <span class="dot" id="dot" style="margin-left:auto"></span>
+    <button class="gear" id="reboot" aria-label="Get newest version" title="Get newest version">↻</button>
     <button class="gear" id="gear" aria-label="Settings">⚙︎</button>
   </div>
 </header>
@@ -616,6 +617,8 @@ function sheet(title, nodes) {
 function openSettings(why) {
   const nodes = [];
   if (why) nodes.push(el('div', 'note warn', why));
+  const rb = el('button', 'btn cyan', '↻ Get newest version'); rb.onclick = rebootSite;
+  nodes.push(el('div', 'meta', `Site version ${BUILD === '__BUILD__' ? 'dev' : BUILD}${Q.site_build && Q.site_build !== BUILD ? ' · a newer version is out — tap below' : ' · up to date'}`), rb);
   nodes.push(el('div', 'meta', ghKey() ? 'GitHub is connected on this phone ✓' : 'GitHub is not connected on this phone.'));
   nodes.push(el('div', 'steps', ['GitHub key (one time, 2 minutes):', '1. Tap "Make a key" (opens GitHub).', '2. Name: gtaclip site · Expiration: 1 year.',
     '3. Repository access: Only select repositories → Gtaclip-cloud.', '4. Repository permissions → Issues: Read and write.',
@@ -655,6 +658,15 @@ function switchTab(t) {
 document.querySelectorAll('.tab').forEach((b) => b.onclick = () => switchTab(b.dataset.tab));
 document.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => switchTab(b.dataset.go));
 $('gear').onclick = () => openSettings();
+async function rebootSite() {
+  toast('Getting the newest version…');
+  try { if (window.caches) for (const k of await caches.keys()) await caches.delete(k); } catch (e) { /* */ }
+  try { if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch (e) { /* */ }
+  try { sessionStorage.clear(); } catch (e) { /* */ }
+  try { await fetch(location.pathname + '?v=' + Date.now(), { cache: 'reload' }); } catch (e) { /* */ }
+  location.replace(location.pathname + '?v=' + Date.now());
+}
+$('reboot').onclick = rebootSite;
 document.querySelectorAll('#variant button').forEach((b) => b.onclick = () => { variant = b.dataset.v; ls.set('gc-variant', variant); renderQueue(); });
 $('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
 (async () => {
