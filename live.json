@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-19T20:26:20Z",
+ "updated": "2026-11-19T20:31:32Z",
  "paused": true,
  "switched_at": "2026-11-19T17:54:15Z",
  "postnow": [],
@@ -13,7 +13,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-19T20:16:29Z",
+  "at": "2026-11-19T20:31:32Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -50,6 +50,17 @@
   "ToughYawningGooseMau5-2PnplpOOX4eow-YN"
  ],
  "posts": {
+  "FunnyTangibleEchidnaDatSheffy-kmHhZjjPULACfaIi": {
+   "id": "FunnyTangibleEchidnaDatSheffy-kmHhZjjPULACfaIi",
+   "hook": "Kai Cenat can't believe this in GTA 6",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "why": "posted by Nicholas (spotted on the channel)",
+   "manual": true,
+   "posted_at": "2026-11-19T20:31:32Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7709979000902257933",
+   "youtube": ""
+  },
   "BoringMoldyClipzStoneLightning-FZ7Ow0YtleieU2ol": {
    "id": "BoringMoldyClipzStoneLightning-FZ7Ow0YtleieU2ol",
    "hook": "Stable Ronaldo learns EVERYTHING from Snapmatic in GTA 6",
@@ -159,9 +170,10 @@
  "stats": [],
  "stats_updated": "2026-11-19T19:55:58Z",
  "log": [
-  "[20:26:21Z] post list query failed (full): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
-  "[20:26:21Z] post list query failed (lite): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
-  "[20:26:21Z] duplicate check skipped: couldn't read posts from Buffer",
-  "[20:26:21Z] Buffer didn't accept the API key: Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade"
+  "[20:31:35Z] spotted your tiktok post of FunnyTangibleEchidnaDatSheffy-kmHhZjjPULACfaIi: https://www.tiktok.com/@gtaclip96/video/7709979000902257933",
+  "[20:31:35Z] post list query failed (full): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
+  "[20:31:35Z] post list query failed (lite): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
+  "[20:31:35Z] duplicate check skipped: couldn't read posts from Buffer",
+  "[20:31:35Z] Buffer didn't accept the API key: Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade"
  ]
 }
