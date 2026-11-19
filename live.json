@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-19T21:11:38Z",
+ "updated": "2026-11-19T21:16:43Z",
  "paused": true,
  "switched_at": "2026-11-19T17:54:15Z",
  "postnow": [],
@@ -13,7 +13,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-19T21:01:40Z",
+  "at": "2026-11-19T21:16:43Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -170,9 +170,9 @@
  "stats": [],
  "stats_updated": "2026-11-19T19:55:58Z",
  "log": [
-  "[21:11:40Z] post list query failed (full): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
-  "[21:11:40Z] post list query failed (lite): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
-  "[21:11:40Z] duplicate check skipped: couldn't read posts from Buffer",
-  "[21:11:40Z] Buffer didn't accept the API key: Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade"
+  "[21:16:45Z] post list query failed (full): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
+  "[21:16:45Z] post list query failed (lite): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
+  "[21:16:45Z] duplicate check skipped: couldn't read posts from Buffer",
+  "[21:16:46Z] Buffer didn't accept the API key: Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade"
  ]
 }
