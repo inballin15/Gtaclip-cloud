@@ -1,9 +1,9 @@
 {
- "updated": "2026-11-19T12:04:34Z",
+ "updated": "2026-11-19T12:09:30Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
- "next_slot": "2026-11-19T12:07:00Z",
+ "next_slot": "2026-11-19T13:37:00Z",
  "up_next": "SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde",
  "buffer_ok": true,
  "buffer_error": "",
@@ -12,6 +12,11 @@
   "tiktok": "2026-11-19T22:49:33Z"
  },
  "errors": [
+  {
+   "at": "2026-11-19T12:09:30Z",
+   "id": "SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde",
+   "error": "The daily posting limit for this channel has been reached! Please try reducing the amount of times per day in your schedule and try again later.; skipped — waiting out the platform limit"
+  },
   {
    "at": "2026-11-18T22:49:33Z",
    "id": "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD",
@@ -499,6 +504,11 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-19T12:04:34Z",
- "log": []
+ "stats_updated": "2026-11-19T12:09:30Z",
+ "log": [
+  "[12:09:31Z] posting SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde (7:07 AM slot) to youtube: Clix swears he looks JUST like Jason in GTA 6",
+  "[12:09:33Z]   youtube: uploading ",
+  "[12:09:33Z]   tiktok: error skipped — waiting out the platform limit",
+  "[12:09:33Z] SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde failed everywhere — back in the queue"
+ ]
 }
