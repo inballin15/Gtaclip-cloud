@@ -166,6 +166,7 @@
 <div class="sheet" id="sheet" hidden><div class="in" id="sheet-in"></div></div>
 <script>
 const BUILD = '__BUILD__';
+const DEV = !/^[0-9a-f]{10}$/.test(BUILD);   // true only when not published
 const REPO = 'inballin15/Gtaclip-cloud';
 const SLOTS = [[7, 7], [8, 37], [10, 7], [11, 37], [13, 7], [14, 37], [16, 7], [17, 37], [19, 7], [20, 37], [22, 7]];
 const PAGES = 'https://inballin15.github.io/Gtaclip-cloud/';
@@ -220,7 +221,7 @@ async function getJSON(url, headers) {
 async function refreshQueue() {
   try {
     Q = await getJSON(PAGES + 'queue.json?t=' + Date.now());
-    if (Q.site_build && BUILD !== '__BUILD__' && Q.site_build !== BUILD && !sessionStorage.getItem('rl-' + Q.site_build)) {
+    if (Q.site_build && !DEV && Q.site_build !== BUILD && !sessionStorage.getItem('rl-' + Q.site_build)) {
       sessionStorage.setItem('rl-' + Q.site_build, '1'); location.reload(); return;
     }
   } catch (e) { /* keep last */ }
@@ -726,7 +727,7 @@ function openSettings(why) {
   const nodes = [];
   if (why) nodes.push(el('div', 'note warn', why));
   const rb = el('button', 'btn cyan', '↻ Get newest version'); rb.onclick = rebootSite;
-  nodes.push(el('div', 'meta', `Site version ${BUILD === '__BUILD__' ? 'dev' : BUILD}${Q.site_build && Q.site_build !== BUILD ? ' · a newer version is out — tap below' : ' · up to date'}`), rb);
+  nodes.push(el('div', 'meta', `Site version ${DEV ? 'dev' : BUILD}${Q.site_build && Q.site_build !== BUILD ? ' · a newer version is out — tap below' : ' · up to date'}`), rb);
   nodes.push(el('div', 'meta', ghKey() ? 'GitHub is connected on this phone ✓' : 'GitHub is not connected on this phone.'));
   nodes.push(el('div', 'steps', ['GitHub key (one time, 2 minutes):', '1. Tap "Make a key" (opens GitHub).', '2. Name: gtaclip site · Expiration: 1 year.',
     '3. Repository access: Only select repositories → Gtaclip-cloud.', '4. Repository permissions → Issues: Read and write.',
@@ -772,6 +773,7 @@ async function rebootSite() {
   try { if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch (e) { /* */ }
   try { sessionStorage.clear(); } catch (e) { /* */ }
   try { await fetch(location.pathname + '?v=' + Date.now(), { cache: 'reload' }); } catch (e) { /* */ }
+  try { sessionStorage.setItem('gc-rebooted', '1'); } catch (e) { /* */ }
   location.replace(location.pathname + '?v=' + Date.now());
 }
 $('reboot').onclick = rebootSite;
@@ -781,6 +783,7 @@ document.querySelectorAll('#variant button').forEach((b) => b.onclick = () => { 
 $('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
 (async () => {
   await Promise.all([refreshQueue(), refreshLive()]);
+  try { if (sessionStorage.getItem('gc-rebooted')) { sessionStorage.removeItem('gc-rebooted'); toast(Q.site_build === BUILD || DEV ? 'You have the newest version ✓' : 'Newest version is still publishing — try again in a minute'); } } catch (e) { /* */ }
   render();
   setInterval(refreshQueue, 45000);
   setInterval(() => { const busy = Object.keys(pend).length > 0; if (busy || Date.now() % 30000 < 10000) refreshLive(); }, 10000);
