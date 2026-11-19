@@ -871,6 +871,23 @@ def main() -> None:
             except Exception as e:  # noqa: BLE001
                 log(f"failed {c['url']}: {e}")
 
+    # 3c. every clip-finder run replaces the queue with its fresh finds (if it found any).
+    #     Kept: your uploads, Post-now picks, clips you edited, and VOD moments from the last hour.
+    if picks:
+        fresh_ids = {p["id"] for p in picks if clips.get(p["id"], {}).get("status") == "new"}
+        if fresh_ids:
+            n_old = 0
+            for cid, c in clips.items():
+                if c["status"] != "new" or cid in fresh_ids:
+                    continue
+                if c.get("source") == "upload" or c.get("post_now") or c.get("hook_by_user"):
+                    continue
+                if c.get("source") == "vod" and NOW - parse(c.get("found") or iso(NOW)) < timedelta(hours=1):
+                    continue
+                c.update(status="expired", skip_reason="replaced by newer clips")
+                n_old += 1
+            log(f"queue refreshed: {len(fresh_ids)} new clips replace {n_old} older ones")
+
     # 4a. keep the queue to the best QUEUE_MAX clips (about 3 days of posts) so the site stays small
     fresh = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new"]
     keep = {r["id"] for r in mix_order(fresh)[:QUEUE_MAX]}
