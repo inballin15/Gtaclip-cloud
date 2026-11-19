@@ -219,7 +219,7 @@ def texts(c: dict) -> tuple[str, str, str]:
     return tt, yt, title
 
 
-COOLDOWN_RE = re.compile(r"24 hours|daily video upload limit|large number of posts|rate limit|too many", re.I)
+COOLDOWN_RE = re.compile(r"24 hours|daily video upload limit|daily posting limit|large number of posts|rate limit|too many", re.I)
 
 
 def create(service: str, c: dict) -> dict:
@@ -448,6 +448,8 @@ def main() -> None:
                     changed = True
                     if "24 hours" in st["error"]:
                         until = iso(NOW + timedelta(hours=24))
+                    elif "daily posting limit" in st["error"]:  # Buffer's rolling 24 h limit: try again in 3 h
+                        until = iso(NOW + timedelta(hours=3))
                     elif "daily" in st["error"]:  # YouTube's daily limit resets at midnight Pacific
                         nxt = (NOW + timedelta(hours=16)).replace(hour=8, minute=5, second=0, microsecond=0)
                         until = iso(nxt if nxt > NOW else nxt + timedelta(days=1))
