@@ -220,8 +220,7 @@ def gemini_models(key: str, log=print) -> list[str]:
     except Exception as e:  # noqa: BLE001
         log(f"AI: couldn't list models ({str(e)[:80]})")
     names = sorted(set(names), key=lambda n: (-float((re.findall(r"(\d+(?:\.\d+)?)", n) or ["0"])[0]), "lite" in n))
-    good = []
-    for n in names[:8]:
+    def probe(n):
         body = {"contents": [{"parts": [{"text": 'Return JSON [{"ok": 1}]'}]}],
                 "generationConfig": {"responseMimeType": "application/json", "thinkingConfig": {"thinkingBudget": 0}}}
         t = time.time()
@@ -230,12 +229,14 @@ def gemini_models(key: str, log=print) -> list[str]:
                                          data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=8) as r:
                 r.read()
-            good.append((time.time() - t, n))
+            return (time.time() - t, n)
         except Exception:  # noqa: BLE001
-            continue
-        if len(good) >= 3:
-            break
-    _MODELS = [n for _, n in sorted(good)] or ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview"]
+            return None
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=8) as pool:   # test them all at once: ~8 s max instead of 8 s each
+        good = [g for g in pool.map(probe, names[:8]) if g]
+    _MODELS = [n for _, n in sorted(good)][:3] or ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview"]
     log(f"AI models answering now: {', '.join(_MODELS)}")
     return _MODELS
 
@@ -323,6 +324,7 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
     if not key:
         return {}, "no key"
     import time
+    gemini_models(key, log)   # find working models first; this doesn't count against the rating time
     t0 = time.time()
     out, status = {}, "ok"
     for i in range(0, len(items), 10):
