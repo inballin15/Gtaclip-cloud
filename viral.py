@@ -287,7 +287,7 @@ def cut(src: Path, start: float, end: float, out: Path) -> None:
                     "-movflags", "+faststart", str(out)], check=True)
 
 
-def ai_score_clips(items: list[dict], log=print) -> tuple[dict, str]:
+def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[dict, str]:
     """Viral score (0-100) for clips, like OpusClip's 'virality score'. One Gemini request per batch.
     items: [{id, streamer, title, transcript, seconds}]  ->  ({id: {score, verdict, why, hook}}, status)"""
     import json as _json
@@ -297,8 +297,13 @@ def ai_score_clips(items: list[dict], log=print) -> tuple[dict, str]:
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key:
         return {}, "no key"
+    import time
+    t0 = time.time()
     out, status = {}, "ok"
     for i in range(0, len(items), 10):
+        if time.time() - t0 > budget_s:
+            log("AI scoring: time budget used, the rest next run")
+            break
         batch = [{"id": it["id"], "streamer": it.get("streamer", ""), "twitch_title": it.get("title", "")[:120],
                   "transcript": (it.get("transcript") or "")[:600], "seconds": it.get("seconds")} for it in items[i:i + 10]]
         prompt = (
@@ -315,11 +320,14 @@ def ai_score_clips(items: list[dict], log=print) -> tuple[dict, str]:
                                      "thinkingConfig": {"thinkingBudget": 0}}}
         done = False
         for model in gemini_models(key, log):
+            left = budget_s - (time.time() - t0)
+            if left < 8:
+                break
             try:
                 req = urllib.request.Request(
                     f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
                     data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
-                with urllib.request.urlopen(req, timeout=75) as r:
+                with urllib.request.urlopen(req, timeout=min(45, left)) as r:
                     res = _json.loads(r.read())
                 rows = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
                 if isinstance(rows, dict):

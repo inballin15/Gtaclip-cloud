@@ -975,35 +975,6 @@ def main() -> None:
     if len(fresh) > QUEUE_MAX:
         log(f"queue full: kept {QUEUE_MAX} of {len(fresh)} clips")
 
-    # 3b. viral score for every queued clip (Gemini, like OpusClip) + a better hook; throttled to save the free quota
-    ai_status = st.get("ai_status", "")
-    try:
-        import viral
-        todo = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new" and "viral" not in v and v.get("transcript")]
-        backoff = st.get("ai_backoff2", "")
-        oldest = min((parse(r.get("found") or iso(NOW)) for r in todo), default=NOW)
-        if todo and (not backoff or parse(backoff) < NOW) and (len(todo) >= 3 or NOW - oldest > timedelta(minutes=25)
-                                                             or st.get("ai_status", "ok") != "ok"):
-            res, ai_status = viral.ai_score_clips(todo[:40], log)
-            for cid, r in res.items():
-                c = clips.get(cid)
-                if not c:
-                    continue
-                c.update(viral=r["score"], viral_why=r["why"], viral_verdict=r["verdict"])
-                if r["score"] <= 10 and not c.get("hook_by_user") and not c.get("post_now"):
-                    c.update(status="skip", skip_reason=f"AI: {r['why'] or 'not postable'}")
-                    log(f"AI removed {cid}: {r['why']}")
-                    continue
-                if r["hook"] and len(r["hook"]) >= 12 and c.get("hook_auto") and not c.get("hook_by_user"):
-                    c.update(hook=r["hook"], hook_kind="ai")
-                    c.pop("hook_auto", None)
-            if not res and re.search(r"429|quota|exhaust|rate", ai_status, re.I):
-                st["ai_backoff2"] = iso(NOW + timedelta(minutes=60))   # free daily/minute limit: try again in an hour
-            st["ai_status"] = ai_status
-            st["ai_checked"] = iso(NOW)
-    except Exception as e:  # noqa: BLE001
-        log(f"AI scoring failed: {e}")
-
     # 4. drop old stuff, get queued clips ready (thumbnail, hook); videos are made in 4b
     jobs = []
     for cid, c in list(clips.items()):
@@ -1095,6 +1066,35 @@ def main() -> None:
                    if c["status"] == "new" and c.get("cam") and (RAW / f"{cid}.mp4").exists()], SITE / "camsheet.jpg")
     except Exception as e:  # noqa: BLE001
         log(f"cam sheet failed: {e}")
+
+    # 4c. viral score for every queued clip (AFTER the videos, so Gemini can never hold them up) (Gemini, like OpusClip) + a better hook; throttled to save the free quota
+    ai_status = st.get("ai_status", "")
+    try:
+        import viral
+        todo = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new" and "viral" not in v and v.get("transcript")]
+        backoff = st.get("ai_backoff2", "")
+        oldest = min((parse(r.get("found") or iso(NOW)) for r in todo), default=NOW)
+        if todo and (not backoff or parse(backoff) < NOW) and (len(todo) >= 3 or NOW - oldest > timedelta(minutes=25)
+                                                             or st.get("ai_status", "ok") != "ok"):
+            res, ai_status = viral.ai_score_clips(todo[:20], log, budget_s=60)
+            for cid, r in res.items():
+                c = clips.get(cid)
+                if not c:
+                    continue
+                c.update(viral=r["score"], viral_why=r["why"], viral_verdict=r["verdict"])
+                if r["score"] <= 10 and not c.get("hook_by_user") and not c.get("post_now"):
+                    c.update(status="skip", skip_reason=f"AI: {r['why'] or 'not postable'}")
+                    log(f"AI removed {cid}: {r['why']}")
+                    continue
+                if r["hook"] and len(r["hook"]) >= 12 and c.get("hook_auto") and not c.get("hook_by_user"):
+                    c.update(hook=r["hook"], hook_kind="ai")
+                    c.pop("hook_auto", None)
+            if not res and re.search(r"429|quota|exhaust|rate", ai_status, re.I):
+                st["ai_backoff2"] = iso(NOW + timedelta(minutes=60))   # free daily/minute limit: try again in an hour
+            st["ai_status"] = ai_status
+            st["ai_checked"] = iso(NOW)
+    except Exception as e:  # noqa: BLE001
+        log(f"AI scoring failed: {e}")
 
     # 5. queue.json
     write_queue()
