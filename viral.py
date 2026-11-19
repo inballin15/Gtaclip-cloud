@@ -196,34 +196,47 @@ _MODELS: list[str] | None = None
 
 
 def gemini_models(key: str, log=print) -> list[str]:
-    """Ask Google which models this key can use; best fast 'flash' models first (names change over time)."""
+    """Which Gemini models actually answer right now, fastest first. Google retires / overloads model names
+    often, so: list the models this key can use, send each flash model a tiny test (8 s max) and keep the ones
+    that answer."""
     global _MODELS
     if _MODELS is not None:
         return _MODELS
     import json as _json
+    import time
     import urllib.request
     names = []
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models?key={key}&pageSize=200"
-        with urllib.request.urlopen(url, timeout=30) as r:
+        with urllib.request.urlopen(url, timeout=20) as r:
             for m in _json.loads(r.read()).get("models", []):
                 n = m.get("name", "").split("/")[-1]
                 if "generateContent" not in (m.get("supportedGenerationMethods") or []):
                     continue
-                if not n.startswith("gemini") or any(x in n for x in ("image", "tts", "audio", "live", "embedding", "vision", "computer", "robotics")):
+                if not n.startswith("gemini") or "flash" not in n or any(
+                        x in n for x in ("image", "tts", "audio", "live", "embedding", "vision", "computer", "robotics")):
                     continue
                 names.append(n)
     except Exception as e:  # noqa: BLE001
         log(f"AI: couldn't list models ({str(e)[:80]})")
-
-    def rank(n: str):
-        v = re.findall(r"(\d+(?:\.\d+)?)", n)
-        ver = float(v[0]) if v else 0.0
-        kind = 0 if "flash" in n and "lite" not in n else 1 if "flash" in n else 2 if "pro" in n else 3
-        return ("preview" in n or "exp" in n, kind, -ver, len(n))
-    names.sort(key=rank)
-    _MODELS = (names[:3] or ["gemini-flash-latest", "gemini-2.5-flash"])
-    log(f"AI models: {', '.join(_MODELS)}")
+    names = sorted(set(names), key=lambda n: (-float((re.findall(r"(\d+(?:\.\d+)?)", n) or ["0"])[0]), "lite" in n))
+    good = []
+    for n in names[:8]:
+        body = {"contents": [{"parts": [{"text": 'Return JSON [{"ok": 1}]'}]}],
+                "generationConfig": {"responseMimeType": "application/json", "thinkingConfig": {"thinkingBudget": 0}}}
+        t = time.time()
+        try:
+            req = urllib.request.Request(f"https://generativelanguage.googleapis.com/v1beta/models/{n}:generateContent?key={key}",
+                                         data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                r.read()
+            good.append((time.time() - t, n))
+        except Exception:  # noqa: BLE001
+            continue
+        if len(good) >= 3:
+            break
+    _MODELS = [n for _, n in sorted(good)] or ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview"]
+    log(f"AI models answering now: {', '.join(_MODELS)}")
     return _MODELS
 
 
