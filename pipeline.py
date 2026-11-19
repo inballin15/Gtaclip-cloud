@@ -623,6 +623,72 @@ def process_uploads(st: dict, tmp: Path) -> None:
         log(f"upload {num}: {len(made)} clips")
 
 
+def import_vod_clips(st: dict) -> None:
+    """Moments the VOD miner found (branches 'vodclip-*') -> queue clips."""
+    try:
+        refs = subprocess.run(["git", "ls-remote", "origin", "refs/heads/vodclip-*"], capture_output=True, text=True,
+                              check=True).stdout.split()
+    except Exception as e:  # noqa: BLE001
+        log(f"vod import: {e}")
+        return
+    bad_words = ("penis", "dick", "pussy", "nigg", "fag", "retard", " cock", "strip club", "stripper", "lap dance",
+                 "titties", "booty", "thong", "bikini")
+    title_bad = [w.lower() for w in CFG["discovery"]["skip_title_words"]]
+    for ref in [r for r in refs if r.startswith("refs/heads/vodclip-")]:
+        name = ref.split("/", 2)[2]
+        d = Path(tempfile.mkdtemp())
+        try:
+            subprocess.run(["git", "fetch", "-q", "--depth=1", "origin", f"{ref}:refs/remotes/origin/{name}"], check=True)
+            tar = subprocess.run(["git", "archive", f"origin/{name}"], capture_output=True, check=True).stdout
+            subprocess.run(["tar", "-x", "-C", str(d)], input=tar, check=True)
+        except Exception as e:  # noqa: BLE001
+            log(f"vod import {name} failed: {e}")
+            continue
+        n = 0
+        for mf in sorted(d.glob("*.json")):
+            try:
+                m = json.loads(mf.read_text())
+                cid = m["id"]
+                if cid in st["clips"] or not (d / f"{cid}.mp4").exists():
+                    continue
+                raw = RAW / f"{cid}.mp4"
+                shutil.move(str(d / f"{cid}.mp4"), raw)
+                dur = duration_of(raw)
+                rec = {"status": "new", "source": "vod", "streamer": m["streamer"], "login": m["login"], "tag": m["tag"],
+                       "campaign": m.get("campaign", ""), "title": m["title"], "views": 0, "created": m["created"],
+                       "found": iso(NOW), "twitch": m["twitch"], "transcript": m.get("transcript", ""),
+                       "seconds": round(dur), "moment": m.get("moment", {}), "cam_v": CAM_V}
+                txt = (m.get("transcript") or "").lower()
+                if any(w in txt for w in bad_words) or any(w in m["title"].lower() for w in title_bad):
+                    rec.update(status="skip", skip_reason="content filter")
+                else:
+                    cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(m["login"]))
+                    usual = ",".join(str(v) for v in (CFG["streamers"].get(m["login"], {}).get("facecam") or []))
+                    if not cam and usual and box_has_face(raw, dur, usual):
+                        cam, q = usual, "learned"
+                    if not cam:
+                        rec.update(status="skip", skip_reason="no webcam found")
+                    else:
+                        rec.update(cam=cam, cam_q=q)
+                        if q == "edge" and frac:
+                            learn_cam(st, m["login"], frac)
+                    if m.get("hook_ai") and m.get("hook"):
+                        rec.update(hook=m["hook"], hook_kind="ai")
+                    ai = (m.get("moment") or {}).get("ai_score")
+                    if ai is not None:
+                        sc = int(ai * 10)
+                        rec.update(viral=sc, viral_verdict="post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
+                                   viral_why=", ".join((m.get("moment") or {}).get("reasons") or [])[:90])
+                st["clips"][cid] = rec
+                n += 1
+                log(f"VOD moment {m['streamer']} -> {rec['status']} {rec.get('cam', rec.get('skip_reason', ''))}")
+            except Exception as e:  # noqa: BLE001
+                log(f"vod clip import failed: {e}")
+        _gh("DELETE", f"/repos/{REPO}/git/refs/heads/{name}")
+        shutil.rmtree(d, ignore_errors=True)
+        log(f"vod import {name}: {n} clips")
+
+
 # ---------------------------------------------------------------- main
 def main() -> None:
     st = load_state()
@@ -675,6 +741,7 @@ def main() -> None:
                 log(f"webcam found on retry: {c['streamer']} '{c['title']}' {cam}")
 
     process_uploads(st, tmp)
+    import_vod_clips(st)
 
     # re-check every queued clip's webcam box with the current detector (edge-traced boxes)
     for cid, c in clips.items():

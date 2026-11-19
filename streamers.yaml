@@ -16,6 +16,9 @@ discovery:
                      "dog", "slur", "nsfw", "spoiler", "ending", "loading", "ban",
                      "stripper", "mandy", "club", "twerk", "thirst", "booty", "lap dance", "hooker", "pole", "gyatt", "gyat", "stepbro", "stepsis", "step bro", "step sis", "onlyfans", "gyaa", "disabled", "retard", "kills cat", "kill cat", "killed cat", "kills dog", "kill dog", "killed dog", "kills a cat", "kills a dog", "animal abuse", "kills horse", "kills deer", "shoots dog", "shoots cat", "run over dog", "runs over dog"]
 
+# VOD miner: whose broadcasts get checked for moments (campaign streamers you have clipping rights for)
+vod_streamers: [clix, lacy, kaicenat, yourragegaming]
+
 streamers:
   clix:        {name: "Clix",          tag: "#Clix",     campaign: "Clix", facecam: [0, 0, 0.248, 0.248]}
   lacy:        {name: "Lacy",          tag: "#Lacy",     campaign: "Lacy", facecam: [0, 0, 0.256, 0.255]}

@@ -549,6 +549,7 @@ function clipCard(r, st) {
   const top = el('div', 'row'); top.append(badge(st)); b.append(top);
   const tags = el('div', 'row'); tags.append(el('span', 'pill', r.streamer));
   if (r.source === 'upload') tags.append(el('span', 'pill', 'Your video'));
+  if (r.source === 'vod') tags.append(el('span', 'pill', 'From VOD'));
   if (CR[r.campaign]) tags.append(el('span', 'pill paid', 'Paid · ' + r.campaign));
   tags.append(el('span', 'meta', r.source === 'upload' ? `${r.seconds || '?'}s · ${(r.moment && r.moment.reasons || []).join(', ')}` : `${r.seconds || '?'}s · clipped ${r.created ? ago(r.created) : ''} · leaves the queue at 9 h`));
   b.append(tags);

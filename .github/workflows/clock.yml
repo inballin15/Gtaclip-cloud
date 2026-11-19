@@ -1,4 +1,4 @@
-name: gtaclip clock (starts the poster every 5 min, the clip finder every 10 min)
+name: gtaclip clock (starts the poster every 5 min, the clip finder every 10 min, the VOD miner every 30 min)
 
 # GitHub's own cron is often late or skipped, so this keeps time itself:
 # one long run (~5h50m) that kicks the other workflows, then restarts itself.
@@ -32,6 +32,7 @@ jobs:
           for i in $(seq 0 69); do
             gh workflow run poster.yml --repo "$R" --ref main || echo "poster kick failed"
             if [ $((i % 2)) -eq 0 ]; then gh workflow run pipeline.yml --repo "$R" --ref main || echo "pipeline kick failed"; fi
+            if [ $((i % 6)) -eq 3 ]; then gh workflow run vods.yml --repo "$R" --ref main || echo "vods kick failed"; fi
             sleep 300
           done
       - name: restart the clock
