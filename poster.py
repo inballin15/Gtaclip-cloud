@@ -130,6 +130,8 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             kind = "post"
         elif tl.startswith("manual:"):
             kind = "manual"
+        elif tl.startswith("ai:"):
+            kind = "ai"
         if not kind:
             continue  # skip:/edit: belong to the render pipeline
         if age_min > REQUEST_MAX_AGE_MIN:
@@ -144,6 +146,11 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
                    else "Automatic posting is STOPPED. Nothing posts on the schedule until you press Start.")
             close_issue(it["number"], msg)
             log(msg)
+            continue
+        if kind == "ai":
+            ctl["ai_off"] = "off" in tl
+            close_issue(it["number"], "AI viral scores turned OFF." if ctl["ai_off"] else "AI viral scores turned ON.")
+            log(f"AI scoring {'off' if ctl['ai_off'] else 'on'}")
             continue
         if kind == "manual":
             m = re.match(r"^manual:\s*" + ID_RE + r"\s*$", t, re.I)
@@ -633,6 +640,7 @@ def main() -> None:
         "updated": iso(NOW), "paused": bool(ctl.get("paused")), "switched_at": ctl.get("switched_at", ""),
         "postnow": ctl["postnow"], "next_slot": iso(nxt) if nxt else "", "up_next": up_next,
         "buffer_ok": buffer_ok, "buffer_error": buffer_err, "cooldown": ctl.get("cooldown", {}),
+        "ai_off": bool(ctl.get("ai_off")),
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
         "posts": dict(sorted(recs.items(), key=lambda kv: kv[1].get("posted_at", ""), reverse=True)[:120]),

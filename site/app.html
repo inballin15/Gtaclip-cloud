@@ -846,6 +846,10 @@ function openSettings(why) {
   };
   const rm = el('button', 'btn', 'Disconnect'); rm.onclick = () => { ls.set('gc-gh2', ''); try { localStorage.removeItem('gc-gh'); } catch (e) { /* */ } openSettings(); };
   const row = el('div', 'btns'); row.append(sv); if (ghKey()) row.append(rm); nodes.push(inp, row);
+  const aiOn = !(L && L.ai_off);
+  const ab = el('button', 'btn ' + (aiOn ? '' : 'cyan'), aiOn ? 'AI viral scores: ON — tap to turn off' : 'AI viral scores: OFF — tap to turn on');
+  ab.onclick = async () => { ab.disabled = true; if (await ghTap(aiOn ? 'ai: off' : 'ai: on')) toast(aiOn ? 'Turning AI scores off…' : 'Turning AI scores on…'); $('sheet').hidden = true; };
+  nodes.push(el('hr'), el('div', 'meta', 'AI viral scores (Gemini) rate every clip 0–100 and write hooks. Leave on unless Google is having problems.'), ab);
   const bh = el('button', 'btn', 'Buffer connection help'); bh.onclick = openBufferHelp; nodes.push(el('hr'), bh);
   sheet('Settings', nodes);
 }

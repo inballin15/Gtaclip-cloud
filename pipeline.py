@@ -265,6 +265,8 @@ def _frames(path: Path, secs):
         cap.set(cv2.CAP_PROP_POS_MSEC, s * 1000)
         ok, fr = cap.read()
         if ok:
+            if fr.shape[1] > 1280:   # work on a 1280-wide copy: same boxes (they're fractions), ~2-3x faster
+                fr = cv2.resize(fr, (1280, int(fr.shape[0] * 1280 / fr.shape[1])), interpolation=cv2.INTER_AREA)
             out.append(fr)
     cap.release()
     return out
@@ -360,7 +362,7 @@ def _fit(rect, face, W, H):
 def _guess_box(face, W, H):
     x, y, w, h = face
     aspect = 1080 / 960
-    bw = min(W, max(w * 2.8, 260.0))   # cut-out webcams (no border): head and shoulders, less game
+    bw = min(W, max(w * 2.8, 0.135 * W))   # cut-out webcams (no border): head and shoulders, less game
     bh = bw / aspect
     if bh > H:
         bh, bw = float(H), H * aspect
@@ -1074,6 +1076,9 @@ def main() -> None:
         todo = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new" and "viral" not in v and v.get("transcript")]
         backoff = st.get("ai_backoff2", "")
         oldest = min((parse(r.get("found") or iso(NOW)) for r in todo), default=NOW)
+        if control.get("ai_off"):
+            todo = []
+            st["ai_status"] = "turned off in Settings"
         if todo and (not backoff or parse(backoff) < NOW) and (len(todo) >= 3 or NOW - oldest > timedelta(minutes=25)
                                                              or st.get("ai_status", "ok") != "ok"):
             res, ai_status = viral.ai_score_clips(todo[:20], log, budget_s=60)
