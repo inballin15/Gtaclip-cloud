@@ -1031,7 +1031,13 @@ def main() -> None:
     ai_status = st.get("ai_status", "")
     try:
         import viral
-        todo = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new" and "viral" not in v and v.get("transcript")]
+        if st.get("rehook_v", 0) < 1:   # one time: clips that kept a plain auto hook get rated again for a proper hook
+            st["rehook_v"] = 1
+            for v in clips.values():
+                if v["status"] == "new" and v.get("hook_kind") not in ("ai", "user") and not v.get("hook_by_user"):
+                    v.pop("viral", None)
+        todo = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new" and "viral" not in v
+                and (v.get("transcript") or v.get("title"))]
         backoff = st.get("ai_backoff2", "")
         oldest = min((parse(r.get("found") or iso(NOW)) for r in todo), default=NOW)
         if control.get("ai_off"):
@@ -1049,7 +1055,7 @@ def main() -> None:
                     c.update(status="skip", skip_reason=f"AI: {r['why'] or 'not postable'}")
                     log(f"AI removed {cid}: {r['why']}")
                     continue
-                if r["hook"] and len(r["hook"]) >= 12 and c.get("hook_auto") and not c.get("hook_by_user"):
+                if r["hook"] and len(r["hook"]) >= 12 and (c.get("hook_auto") or not c.get("hook")) and not c.get("hook_by_user"):
                     c.update(hook=r["hook"], hook_kind="ai")
                     c.pop("hook_auto", None)
             if not res and re.search(r"429|quota|exhaust|rate", ai_status, re.I):
