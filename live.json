@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-19T16:36:17Z",
+ "updated": "2026-11-19T16:41:20Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
@@ -12,7 +12,7 @@
   "tiktok": "2026-11-19T22:49:33Z"
  },
  "channel_check": {
-  "at": "2026-11-19T16:26:56Z",
+  "at": "2026-11-19T16:41:20Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -521,6 +521,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-19T16:36:17Z",
- "log": []
+ "stats_updated": "2026-11-19T16:41:20Z",
+ "log": [
+  "[16:41:23Z] 11:37 AM slot: TikTok and YouTube are both waiting out an upload limit — holding IcyObliviousPuddingVoteYea-f8ljei357HqBkcvI"
+ ]
 }
