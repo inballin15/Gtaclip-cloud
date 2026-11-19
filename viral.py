@@ -178,6 +178,15 @@ def find_moments(path: Path, max_clips: int | None = None, log=print) -> list[di
         clips.append({"start": round(start, 2), "end": round(end, 2), "peak": int(p), "score": round(val, 2),
                       "reasons": reasons, "hook": hook,
                       "text": " ".join(s["text"] for s in lines)[:900]})
+    if not clips and secs >= 15:   # short video / nothing stands out: still give the best part
+        p = int(np.argmax(score)) if len(score) else 0
+        start = max(0.0, min(p - 8.0, secs - 15.0)) if secs > 60 else 0.0
+        end = min(float(secs), start + 60)
+        lines = [s_ for s_ in segs if s_["start"] >= start - 0.5 and s_["end"] <= end + 0.5]
+        best = max(lines, key=lambda s_: hype[int(s_["start"]):int(s_["end"]) + 1].sum(), default=None)
+        clips.append({"start": round(start, 2), "end": round(end, 2), "peak": p, "score": 0.5,
+                      "reasons": ["best part"], "hook": clean_line(best["text"])[:70] if best else "",
+                      "text": " ".join(s_["text"] for s_ in lines)[:900]})
     clips = ai_rank(clips, log)   # smarter picks + hooks when a Gemini key is set (free tier); otherwise unchanged
     clips.sort(key=lambda c: -c["score"])
     return clips[:want]
