@@ -46,7 +46,7 @@ PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
 KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
 REPLACE_QUEUE_EACH_RUN = False   # off: clips stay until they're 9 h old (max 30 in the queue)
-MAX_RENDERS = 10         # videos made per run (2 at a time); the rest next run
+MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
 LAYOUT_V = "v3-textonly-capcut"
@@ -951,6 +951,18 @@ def main() -> None:
                    "rated": sum(1 for c in clips.values() if c["status"] == "new" and "viral" in c)},
         }, indent=1, ensure_ascii=False))
 
+
+    # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("restored_v", 0) < 1:
+        st["restored_v"] = 1
+        n_back = 0
+        for cid, c in clips.items():
+            if c["status"] == "expired" and c.get("skip_reason") in ("replaced by newer clips", "queue full") \
+                    and c.get("cam") and NOW - parse(c.get("created") or iso(NOW)) < timedelta(hours=KEEP_NEW_HOURS):
+                c["status"] = "new"
+                c.pop("skip_reason", None)
+                n_back += 1
+        log(f"brought back {n_back} fresh clips")
 
     # 3c. every clip-finder run replaces the queue with its fresh finds (if it found any).
     #     Kept: your uploads, Post-now picks, clips you edited, and VOD moments from the last hour.
