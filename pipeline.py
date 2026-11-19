@@ -28,6 +28,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import cv2
+import numpy as np
 import imageio_ffmpeg
 
 from fetch_clips import CFG, LIVE, download, log, pick_clips, transcript, twitch_headers
@@ -267,13 +268,11 @@ def _frames(path: Path, secs):
     return out
 
 
-def find_cam(path: Path, duration: float) -> str:
-    """A face that stays in the same place across frames = the webcam. Returns x,y,w,h fractions
-    of a 1080:960 box around it (shoulders included), or '' if none."""
-    secs = [max(0.5, duration * p) for p in (0.08, 0.22, 0.36, 0.5, 0.64, 0.78, 0.92)]
-    frames = _frames(path, secs)
-    if not frames:
-        return ""
+CAM_V = 3   # bump to re-check every queued clip with a newer webcam detector
+
+
+def _best_face(frames):
+    """A face that stays in the same place across frames (= the streamer's webcam), or None."""
     H, W = frames[0].shape[:2]
     per = [_faces(f) for f in frames]
     best, best_hits = None, 0
@@ -283,13 +282,81 @@ def find_cam(path: Path, duration: float) -> str:
             hits = sum(1 for j, o in enumerate(per) if j != i and any(
                 abs(ox + ow / 2 - cx) < 0.5 * w and abs(oy + oh / 2 - cy) < 0.5 * h and 0.6 < ow / w < 1.6
                 for (ox, oy, ow, oh) in o))
-            fx, fy = (x + w / 2) / W, (y + h / 2) / H
+            fx, fy = cx / W, cy / H
             in_middle = 0.28 < fx < 0.72 and 0.25 < fy < 0.75   # webcams sit at the edges, not mid-screen
             if hits >= 3 and not in_middle and (hits > best_hits or (hits == best_hits and w * h > best[2] * best[3])):
                 best, best_hits = (x, y, w, h), hits
-    if not best:
-        return ""
-    x, y, w, h = best
+    return best
+
+
+def _static_edges(frames):
+    """Edges that stay put while the game moves = the webcam overlay's border."""
+    gx, gy = [], []
+    for f in frames:
+        g = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).astype(np.float32)
+        gx.append(np.abs(cv2.Sobel(g, cv2.CV_32F, 1, 0, ksize=3)))
+        gy.append(np.abs(cv2.Sobel(g, cv2.CV_32F, 0, 1, ksize=3)))
+    # 30th percentile across frames: strong in (almost) every frame
+    return np.percentile(np.stack(gx), 30, axis=0), np.percentile(np.stack(gy), 30, axis=0)
+
+
+def _overlay_rect(frames, face):
+    """Trace the webcam overlay's real border around the face. Returns (x, y, w, h) in pixels or None."""
+    H, W = frames[0].shape[:2]
+    x, y, w, h = face
+    vx, hy = _static_edges(frames)
+    thr = 60.0
+    r0, r1 = int(max(0, y - 0.6 * h)), int(min(H, y + 1.8 * h))       # rows the side borders must cross
+    c0, c1 = int(max(0, x - 0.8 * w)), int(min(W, x + 1.8 * w))       # cols the top/bottom borders must cross
+
+    def col_hit(cx):
+        cx0, cx1 = max(0, cx - 1), min(W, cx + 2)
+        return float(np.mean(np.max(vx[r0:r1, cx0:cx1], axis=1) > thr)) if r1 > r0 else 0.0
+
+    def row_hit(ry):
+        ry0, ry1 = max(0, ry - 1), min(H, ry + 2)
+        return float(np.mean(np.max(hy[ry0:ry1, c0:c1], axis=0) > thr)) if c1 > c0 else 0.0
+
+    def scan(rng, fn, edge):
+        for v in rng:
+            if fn(v) > 0.75:
+                return v, True
+        return edge, False
+
+    left, fl = scan(range(int(x - 0.25 * w), int(max(-1, x - 5 * w)), -1), col_hit, 0)
+    right, fr = scan(range(int(x + 1.25 * w), int(min(W, x + 6 * w))), col_hit, W)
+    top, ft = scan(range(int(y - 0.35 * h), int(max(-1, y - 3 * h)), -1), row_hit, 0)
+    bottom, fb = scan(range(int(y + 1.6 * h), int(min(H, y + 6 * h))), row_hit, H)
+    # sides not found must be the screen edge (webcam pushed into a corner)
+    if not fl and x - 5 * w > 0: return None
+    if not fr and x + 6 * w < W: return None
+    if not ft and y - 3 * h > 0: return None
+    if not fb and y + 6 * h < H: return None
+    rw, rh = right - left, bottom - top
+    if rw < 1.8 * w or rh < 1.8 * h or rw > 0.6 * W or rh > 0.75 * H:
+        return None
+    pad = 3  # stay inside the border line
+    return (left + pad, top + pad, rw - 2 * pad, rh - 2 * pad)
+
+
+def _fit(rect, face, W, H):
+    """Largest 1080:960 window inside the overlay, centred on the face (face ~40% from the top)."""
+    rx, ry, rw, rh = rect
+    fx, fy = face[0] + face[2] / 2, face[1] + face[3] / 2
+    A = 1080 / 960
+    if rw / rh > A:
+        bh, bw = rh, rh * A
+        bx = min(max(rx, fx - bw / 2), rx + rw - bw)
+        by = ry
+    else:
+        bw, bh = rw, rw / A
+        bx = rx
+        by = min(max(ry, fy - 0.4 * bh), ry + rh - bh)
+    return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
+
+
+def _guess_box(face, W, H):
+    x, y, w, h = face
     aspect = 1080 / 960
     bw = min(W, max(w * 3.6, 300.0))
     bh = bw / aspect
@@ -299,6 +366,68 @@ def find_cam(path: Path, duration: float) -> str:
     bx = min(max(0.0, cx - bw / 2), W - bw)
     by = min(max(0.0, cy - bh / 2), H - bh)
     return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
+
+
+def find_cam_info(path: Path, duration: float, learned: list | None = None) -> tuple[str, str, list | None]:
+    """Returns (cam box, quality, overlay rect as fractions). quality: 'edge' = traced the webcam border,
+    'learned' = this streamer's known webcam spot, 'guess' = box around the face."""
+    secs = [max(0.5, duration * p) for p in (0.08, 0.22, 0.36, 0.5, 0.64, 0.78, 0.92)]
+    frames = _frames(path, secs)
+    if not frames:
+        return "", "", None
+    H, W = frames[0].shape[:2]
+    face = _best_face(frames)
+    if not face:
+        return "", "", None
+    rect = _overlay_rect(frames, face)
+    if rect:
+        frac = [rect[0] / W, rect[1] / H, rect[2] / W, rect[3] / H]
+        return _fit(rect, face, W, H), "edge", frac
+    fx, fy = (face[0] + face[2] / 2) / W, (face[1] + face[3] / 2) / H
+    for lr in learned or []:   # the streamer's webcam spot from earlier clips
+        if lr[0] < fx < lr[0] + lr[2] and lr[1] < fy < lr[1] + lr[3]:
+            px = (lr[0] * W, lr[1] * H, lr[2] * W, lr[3] * H)
+            return _fit(px, face, W, H), "learned", lr
+    return _guess_box(face, W, H), "guess", None
+
+
+def find_cam(path: Path, duration: float) -> str:
+    return find_cam_info(path, duration)[0]
+
+
+def learn_cam(st: dict, login: str, frac: list) -> None:
+    """Remember where this streamer's webcam sits (up to 4 layouts)."""
+    L = st.setdefault("learned_cams", {}).setdefault(login, [])
+    for i, o in enumerate(L):
+        if all(abs(a - b) < 0.03 for a, b in zip(o, frac)):
+            L[i] = [round((a + b) / 2, 4) for a, b in zip(o, frac)]
+            return
+    L.insert(0, [round(v, 4) for v in frac])
+    del L[4:]
+
+
+def cam_sheet(items: list, out: Path) -> None:
+    """Contact sheet: every queued clip's frame with its webcam box drawn on (for checking by eye)."""
+    tiles = []
+    for cid, c, raw in items:
+        fr = _frames(raw, [2.0])
+        if not fr:
+            continue
+        im = cv2.resize(fr[0], (480, 270))
+        x, y, w, h = [float(v) for v in c["cam"].split(",")]
+        col = {"edge": (80, 220, 80), "learned": (220, 200, 40), "guess": (60, 60, 255)}.get(c.get("cam_q"), (60, 60, 255))
+        cv2.rectangle(im, (int(x * 480), int(y * 270)), (int((x + w) * 480), int((y + h) * 270)), col, 3)
+        cv2.rectangle(im, (0, 0), (480, 20), (0, 0, 0), -1)
+        cv2.putText(im, f"{len(tiles)} {c['streamer']} {c.get('cam_q', '?')} {cid[:16]}", (4, 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
+        tiles.append(im)
+    if not tiles:
+        return
+    cols = 4
+    while len(tiles) % cols:
+        tiles.append(np.zeros_like(tiles[0]))
+    rows = [np.hstack(tiles[i:i + cols]) for i in range(0, len(tiles), cols)]
+    cv2.imwrite(str(out), np.vstack(rows), [cv2.IMWRITE_JPEG_QUALITY, 70])
 
 
 def duration_of(path: Path) -> float:
@@ -391,6 +520,29 @@ def main() -> None:
                 c.pop("skip_reason", None)
                 log(f"webcam found on retry: {c['streamer']} '{c['title']}' {cam}")
 
+    # re-check every queued clip's webcam box with the current detector (edge-traced boxes)
+    for cid, c in clips.items():
+        if c.get("status") != "new" or c.get("cam_v", 1) >= CAM_V:
+            continue
+        raw = RAW / f"{cid}.mp4"
+        if not raw.exists():
+            continue
+        c["cam_v"] = CAM_V
+        try:
+            cam, q, frac = find_cam_info(raw, duration_of(raw), st.get("learned_cams", {}).get(c.get("login", "")))
+        except Exception as e:  # noqa: BLE001
+            log(f"cam re-check failed {cid}: {e}")
+            continue
+        if not cam:
+            c.update(status="skip", skip_reason="no webcam found (re-check)")
+            log(f"re-check: no webcam -> skip {c['streamer']} {cid}")
+            continue
+        if q == "edge" and frac:
+            learn_cam(st, c.get("login", ""), frac)
+        if cam != c.get("cam"):
+            log(f"re-check: new webcam box {c['streamer']} {cid} {q} {cam}")
+        c.update(cam=cam, cam_q=q)
+
     # 3. new clips (not on issue-triggered runs, to keep those fast)
     picks = []
     if os.environ.get("FETCH", "1") == "1":
@@ -420,14 +572,16 @@ def main() -> None:
                 elif any(w in c["title"].lower() for w in bad):
                     rec.update(status="skip", skip_reason="title filter")
                 else:
-                    cam = find_cam(raw, dur)
+                    cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(c["login"]))
                     usual = ",".join(str(v) for v in (s.get("facecam") or []))
                     if not cam and usual and box_has_face(raw, dur, usual):
-                        cam = usual
+                        cam, q = usual, "learned"
                     if not cam:
                         rec.update(status="skip", skip_reason="no webcam found")
                     else:
-                        rec["cam"] = cam
+                        rec.update(cam=cam, cam_q=q, cam_v=CAM_V)
+                        if q == "edge" and frac:
+                            learn_cam(st, c["login"], frac)
                 clips[cid] = rec
                 log(f"{c['name']} '{c['title']}' -> {rec['status']} {rec.get('cam', rec.get('skip_reason', ''))}")
             except Exception as e:  # noqa: BLE001
@@ -488,6 +642,12 @@ def main() -> None:
                 c["clean_v"] = ch
         except Exception as e:  # noqa: BLE001
             log(f"render failed {cid}: {e}")
+
+    try:
+        cam_sheet([(cid, c, RAW / f"{cid}.mp4") for cid, c in clips.items()
+                   if c["status"] == "new" and c.get("cam") and (RAW / f"{cid}.mp4").exists()], SITE / "camsheet.jpg")
+    except Exception as e:  # noqa: BLE001
+        log(f"cam sheet failed: {e}")
 
     # 5. queue.json
     ready = [dict(id=cid, **{k: v for k, v in c.items() if k not in ("final_hash",)})
