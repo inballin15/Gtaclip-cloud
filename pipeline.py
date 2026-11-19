@@ -508,6 +508,37 @@ def render_preview(raw: Path, cid: str) -> None:
     ff("-ss", "2", "-i", str(raw), "-frames:v", "1", "-vf", "scale=640:-2", "-q:v", "4", str(VID / f"{cid}.jpg"))
 
 
+CLIP_MAX_S = 22    # the top GTA 6 clip pages post 10-20 s videos (median 16 s); longer clips get trimmed
+CLIP_KEEP_S = 18   # length of the trimmed part
+
+
+def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
+    """Long clip -> the ~18 s around its biggest moment (loudest few seconds, with a short set-up before it)."""
+    import viral
+    try:
+        a = viral._audio(raw)
+        secs = len(a) // 16000
+        if secs <= CLIP_MAX_S:
+            return raw
+        rms = np.array([np.sqrt(np.mean(a[i * 16000:(i + 1) * 16000] ** 2) + 1e-9) for i in range(secs)])
+        db = 20 * np.log10(rms + 1e-9)
+        sm = np.convolve(db, np.ones(3) / 3, mode="same")
+        p = int(np.argmax(sm[1:-1])) + 1
+        start = float(max(0, min(p - 7, secs - CLIP_KEEP_S)))
+        end = float(min(secs, start + CLIP_KEEP_S))
+        if secs - end < 3:          # don't leave a tiny leftover at the end
+            end = float(secs)
+        out = tmp / f"{cid}_best.mp4"
+        if not out.exists():
+            viral.cut(raw, start, end, out)
+        c["trim"] = [start, end]
+        log(f"trimmed {cid}: {secs}s -> {start:.0f}-{end:.0f}s")
+        return out
+    except Exception as e:  # noqa: BLE001
+        log(f"trim skipped {cid}: {e}")
+        return raw
+
+
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
                  layout: str = "split") -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
@@ -1088,6 +1119,7 @@ def main() -> None:
         cid, raw, hh, ch, need_f, need_c = job
         c = clips[cid]
         lay = c.get("layout", "split")
+        raw = best_part(raw, cid, tmp, c)
         if need_f:
             render_final(raw, cid, c["cam"], c["hook"], tmp, layout=lay)
         if need_c:

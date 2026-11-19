@@ -7,7 +7,7 @@ How it scores every second of the video (what highlight tools look at):
   * on-screen action - big changes between frames (crashes, explosions, chases)
 Then it builds clips around the best peaks:
   * starts at the beginning of a sentence a few seconds BEFORE the peak (the set-up = the hook)
-  * ends at the end of a sentence once the reaction calms down (15-60 s)
+  * ends at the end of a sentence once the reaction calms down (10-25 s)
   * never cuts mid-word, never overlaps another clip
 Each clip gets a hook line: the most exciting sentence in it (clean, no swearing).
 """
@@ -148,16 +148,16 @@ def find_moments(path: Path, max_clips: int | None = None, log=print) -> list[di
         if any(c["start"] - 5 <= p <= c["end"] + 5 for c in clips):
             continue
         # start: a sentence beginning 4-14 s before the peak (the set-up)
-        starts = [t for t in sent_starts if p - 14 <= t <= p - 3]
-        start = min(starts) if starts else max(0.0, p - 8)
-        # end: first sentence end after the reaction calms down (score back near normal), 15-60 s total
-        calm = next((t for t in range(int(p) + 4, min(secs, int(start) + 60)) if score[t] < 0.4), int(min(secs, start + 35)))
-        ends = [t for t in sent_ends if calm <= t <= start + 60]
-        end = min(ends) + 0.4 if ends else min(float(secs), max(start + 15, calm + 1.5))
-        if end - start < 15:
-            end = min(float(secs), start + 15)
-        if end - start > 60:
-            end = start + 60
+        starts = [t for t in sent_starts if p - 9 <= t <= p - 2]
+        start = min(starts) if starts else max(0.0, p - 6)
+        # end: first sentence end after the reaction calms down, 10-25 s total (top clip pages: median 16 s)
+        calm = next((t for t in range(int(p) + 3, min(secs, int(start) + 25)) if score[t] < 0.4), int(min(secs, start + 18)))
+        ends = [t for t in sent_ends if calm <= t <= start + 25]
+        end = min(ends) + 0.4 if ends else min(float(secs), max(start + 10, calm + 1.5))
+        if end - start < 10:
+            end = min(float(secs), start + 10)
+        if end - start > 25:
+            end = start + 25
         if any(not (end + 3 < c["start"] or start - 3 > c["end"]) for c in clips):
             continue
         a, b = int(start), int(end)
@@ -181,7 +181,7 @@ def find_moments(path: Path, max_clips: int | None = None, log=print) -> list[di
     if not clips and secs >= 15:   # short video / nothing stands out: still give the best part
         p = int(np.argmax(score)) if len(score) else 0
         start = max(0.0, min(p - 8.0, secs - 15.0)) if secs > 60 else 0.0
-        end = min(float(secs), start + 60)
+        end = min(float(secs), start + 20)
         lines = [s_ for s_ in segs if s_["start"] >= start - 0.5 and s_["end"] <= end + 0.5]
         best = max(lines, key=lambda s_: hype[int(s_["start"]):int(s_["end"]) + 1].sum(), default=None)
         clips.append({"start": round(start, 2), "end": round(end, 2), "peak": p, "score": 0.5,
@@ -240,6 +240,20 @@ def gemini_models(key: str, log=print) -> list[str]:
     return _MODELS
 
 
+HOOK_STYLE = (
+    "The on-screen hook copies the formula of the biggest GTA 6 clip pages (1-7M views each): "
+    "[streamer's well-known name] [CAPS emotion: SHOCKED / LOSES IT / DEVASTATED / DISAPPOINTED / CRYING / FURIOUS] "
+    "after [finding out / realizing / seeing / discovering] [one specific GTA 6 detail]. Or a 'FIRST' / 'just now' "
+    "news angle. Real examples: 'Kai Cenat LOSES IT after finding out Rakai is STILL stuck on the FIRST mission in "
+    "GTA 6 after 5 HOURS' / 'IShowSpeed was SHOCKED seeing the HULK in GTA 6' / 'Kai was DISAPPOINTED he wasn't ABLE "
+    "to walk into EVERY building inside GTA 6 DESPITE waiting 13 YEARS' / 'Kai Cenat was SHOCKED that NPCS he FOUGHT "
+    "earlier REMEMBERED him and tried to JUMP him in GTA 6' / 'Lacy realises you can't just steal cars anymore'.\n"
+    "Rules: 45-110 characters (2-3 lines); 3-6 CAPS words on the emotion and the key facts; a specific detail (Lucia, "
+    "Jason, Vice City, a number, a dollar amount, hours played, a first); exaggerate the reaction, but the event must "
+    "come from the transcript, title or the streamer's real story (never invent fake records or crimes); no emojis, "
+    "no swearing, no quotes, no hashtags.\n")
+
+
 def ai_rank(clips: list[dict], log=print) -> list[dict]:
     """Ask Gemini (one request for all candidates) which moments would actually go viral, and for a better hook.
     No key / quota used up / any error -> keep the signal-based ranking."""
@@ -255,10 +269,8 @@ def ai_rank(clips: list[dict], log=print) -> list[dict]:
         "You pick viral short-form clips (TikTok/YouTube Shorts) from GTA 6 livestreams, like OpusClip does.\n"
         "For each candidate, judge from the transcript: is it funny, surprising, dramatic or relatable? Does it have a "
         "clear setup and payoff? Does it make sense without context? Would the first 3 seconds stop the scroll?\n"
-        "Return JSON: a list of {\"i\": number, \"score\": 0-10, \"hook\": \"...\"}. The hook is on-screen text: "
-        "max 65 characters, plain words, no emojis, no swearing, no quotes, one or two CAPS words for emphasis, true to "
-        "what happens, ends with 'in GTA 6' when natural. Score 0 for anything sexual, hateful, about strippers, or "
-        "harming animals.\n\nCandidates:\n" + _json.dumps(items))
+        "Return JSON: a list of {\"i\": number, \"score\": 0-10, \"hook\": \"...\"}. " + HOOK_STYLE +
+        "Score 0 for anything sexual, hateful, about strippers, or harming animals.\n\nCandidates:\n" + _json.dumps(items))
     body = {"contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4,
                                  "thinkingConfig": {"thinkingBudget": 0}}}
@@ -281,7 +293,7 @@ def ai_rank(clips: list[dict], log=print) -> list[dict]:
                     ai = max(0.0, min(10.0, float(r.get("score", 5))))
                     c["ai_score"] = ai
                     c["score"] = round(0.4 * (c["score"] / top) * 10 + 0.6 * ai, 2)
-                    h = clean_line(str(r.get("hook", "")))[:70]
+                    h = clean_line(str(r.get("hook", "")))[:120]
                     if len(h) >= 12:
                         c["hook"], c["hook_ai"] = h, True
                     if ai <= 1:
@@ -324,15 +336,7 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
             "Score each 0-100 for how likely it is to go viral: a strong hook in the first seconds, a funny/shocking/"
             "dramatic or relatable moment, a clear payoff, makes sense without context, big-name streamer appeal.\n"
             "Give 0-10 for anything sexual, hateful, about strippers/clubs, harming animals, or where nothing happens.\n"
-            "Also write the on-screen hook in the style of the top GTA 6 clip pages (hundreds of thousands of views). "
-            "Examples of that style: 'IShowSpeed was SHOCKED seeing the HULK in GTA 6' / 'No way they CHARGED Kai $100 REAL "
-            "life dollars to ENTER the ONE CLUB in all of VICE CITY' / 'n3on called CPS because Lucia wouldn't respond to him' "
-            "/ 'IShowSpeed just now BECAME the FIRST streamer to FINISH GTA 6 Story MODE in UNDER 25H'.\n"
-            "Rules: 45-110 characters (2-3 lines); starts with the streamer's well-known name; 3-6 CAPS words on the key "
-            "action/emotion/thing; a specific detail (a character like Lucia or Jason, a place like Vice City, a number or "
-            "dollar amount, a first/record); feels like breaking news or 'no way this happened'; exaggerate the reaction, "
-            "but the event itself must come from the transcript, title or streamer's real story (never invent fake records "
-            "or crimes); no emojis, no swearing, no quotes, no hashtags.\n"
+            "Also write the on-screen hook. " + HOOK_STYLE +
             "Return JSON list: [{\"id\": \"...\", \"score\": 0-100, \"why\": \"max 12 words\", \"hook\": \"...\"}]\n\n"
             "Clips:\n" + _json.dumps(batch))
         body = {"contents": [{"parts": [{"text": prompt}]}],
