@@ -269,7 +269,7 @@ def _frames(path: Path, secs):
     return out
 
 
-CAM_V = 3   # bump to re-check every queued clip with a newer webcam detector
+CAM_V = 4   # bump to re-check every queued clip with a newer webcam detector
 
 
 def _best_face(frames):
@@ -359,11 +359,11 @@ def _fit(rect, face, W, H):
 def _guess_box(face, W, H):
     x, y, w, h = face
     aspect = 1080 / 960
-    bw = min(W, max(w * 3.6, 300.0))
+    bw = min(W, max(w * 2.8, 260.0))   # cut-out webcams (no border): head and shoulders, less game
     bh = bw / aspect
     if bh > H:
         bh, bw = float(H), H * aspect
-    cx, cy = x + w / 2, y + h * 0.75
+    cx, cy = x + w / 2, y + h * 0.85
     bx = min(max(0.0, cx - bw / 2), W - bw)
     by = min(max(0.0, cy - bh / 2), H - bh)
     return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
@@ -601,7 +601,10 @@ def main() -> None:
 
     # re-check every queued clip's webcam box with the current detector (edge-traced boxes)
     for cid, c in clips.items():
-        if c.get("status") != "new" or c.get("cam_v", 1) >= CAM_V:
+        if c.get("status") != "new" or c.get("cam_v", 1) >= CAM_V or c.get("layout") == "full":
+            continue
+        if c.get("cam_v", 1) == 3 and c.get("cam_q") in ("edge", "learned"):  # v4 only changes guessed boxes
+            c["cam_v"] = CAM_V
             continue
         raw = RAW / f"{cid}.mp4"
         if not raw.exists():
@@ -646,7 +649,8 @@ def main() -> None:
                     "seconds": round(dur),
                 }
                 bad = [w.lower() for w in CFG["discovery"]["skip_title_words"]]
-                if any(w in text.lower() for w in ("penis", "dick", "pussy", "nigg", "fag", "retard", " cock")):
+                if any(w in text.lower() for w in ("penis", "dick", "pussy", "nigg", "fag", "retard", " cock", "strip club",
+                                                   "stripper", "lap dance", "titties", "booty", "thong", "bikini")):
                     rec.update(status="skip", skip_reason="sexual remark or slur in audio")
                 elif any(w in c["title"].lower() for w in bad):
                     rec.update(status="skip", skip_reason="title filter")
