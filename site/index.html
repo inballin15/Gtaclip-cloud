@@ -216,7 +216,7 @@ const isPending = (prefix) => Object.keys(pend).some((k) => k.startsWith(prefix)
 function queueList() {
   const P = posts(); const blocked = new Set((L && L.blocked) || []);
   const now = new Set(((L && L.postnow) || []).map((p) => p.id));
-  const list = (Q.ready || []).filter((r) => !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id));
+  const list = (Q.ready || []).filter((r) => !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
   const tier = (r) => { const fresh = Date.now() - new Date(r.found || r.created || 0) < 14 * 3600e3; const real = !r.hook_auto || r.hook_kind === 'title'; return fresh && real ? 0 : real ? 1 : fresh ? 2 : 3; };
   return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || (tier(a) - tier(b)));
@@ -439,6 +439,14 @@ function clipCard(r, st) {
   const sk = el('button', 'btn del', "Don't post");
   sk.onclick = async () => { if (sk.dataset.arm) { sk.disabled = true; if (await ghTap('skip: ' + r.id)) toast('Removed from the queue'); render(); } else { sk.dataset.arm = 1; sk.textContent = 'Tap again to remove'; setTimeout(() => { delete sk.dataset.arm; sk.textContent = "Don't post"; }, 3000); } };
   btns.append(ed, tw, sk); b.append(btns);
+  // post it yourself: save to phone, copy caption, mark as posted
+  const mine = el('div', 'btns');
+  const dl = el('button', 'btn cyan', '⬇ Save video');
+  dl.onclick = () => saveVideo(r, dl);
+  const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
+  const ip = el('button', 'btn', 'I posted it');
+  ip.onclick = async () => { if (ip.dataset.arm) { ip.disabled = true; if (await ghTap('manual: ' + r.id)) toast('Marked as posted — the bot will skip it'); render(); } else { ip.dataset.arm = 1; ip.textContent = 'Tap again to confirm'; setTimeout(() => { delete ip.dataset.arm; ip.textContent = 'I posted it'; }, 3000); } };
+  mine.append(dl, cc, ip); b.append(mine);
   if (isPending('edit: ' + r.id)) b.append(el('div', 'note warn', 'Re-making the video with your new hook… (2–4 min)'));
   if (editing === r.id) {
     const f = el('div', 'edit');
@@ -450,6 +458,29 @@ function clipCard(r, st) {
     b.append(f);
   }
   c.append(b); return c;
+}
+function captionFor(r) {
+  return (r.caption || `${r.hook}\n\n🎥 @${r.login}\n\n${r.tag || ''} #GTA6 #GTAVI #gaming #fyp`).trim();
+}
+async function saveVideo(r, btn) {
+  const url = PAGES + r.final;
+  const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}.mp4`;
+  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Getting video…';
+  try {
+    const blob = await (await fetch(url)).blob();
+    const file = new File([blob], name, { type: 'video/mp4' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      copy(captionFor(r), 'Caption');
+      await navigator.share({ files: [file] });   // iPhone: tap "Save Video" (or pick TikTok)
+    } else {
+      const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+      copy(captionFor(r), 'Caption');
+    }
+  } catch (e) {
+    if (e && e.name !== 'AbortError') window.open(url, '_blank');   // fallback: open the video, long-press to save
+  }
+  btn.disabled = false; btn.textContent = label;
 }
 function renderStats() {
   const box = $('statsbox'); box.replaceChildren();

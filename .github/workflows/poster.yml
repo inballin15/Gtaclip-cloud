@@ -19,7 +19,7 @@ permissions:
 jobs:
   post:
     # dashboard taps: only the owner's Start/Stop and Post-now requests
-    if: github.event_name != 'issues' || ((startsWith(github.event.issue.title, 'post:') || startsWith(github.event.issue.title, 'postnow:') || startsWith(github.event.issue.title, 'pause:') || startsWith(github.event.issue.title, 'resume:')) && github.event.issue.user.login == github.repository_owner)
+    if: github.event_name != 'issues' || ((startsWith(github.event.issue.title, 'post:') || startsWith(github.event.issue.title, 'postnow:') || startsWith(github.event.issue.title, 'pause:') || startsWith(github.event.issue.title, 'resume:') || startsWith(github.event.issue.title, 'manual:')) && github.event.issue.user.login == github.repository_owner)
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:

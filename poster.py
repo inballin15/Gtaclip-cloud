@@ -38,6 +38,7 @@ DRY_RUN = os.environ.get("DRY_RUN") == "1"   # test mode: never calls Buffer or 
 SLOT_GRACE_MIN = 25          # a slot can still go out up to 25 min late (GitHub's timer can run late)
 REQUEST_MAX_AGE_MIN = 45     # Start/Stop/Post-now taps older than this are ignored (stale)
 LOG: list[str] = []
+QUEUE_BY_ID: dict = {}
 
 
 def log(msg: str) -> None:
@@ -127,6 +128,8 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             kind = "switch"
         elif re.match(r"^(post|postnow):", tl):
             kind = "post"
+        elif tl.startswith("manual:"):
+            kind = "manual"
         if not kind:
             continue  # skip:/edit: belong to the render pipeline
         if age_min > REQUEST_MAX_AGE_MIN:
@@ -141,6 +144,22 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
                    else "Automatic posting is STOPPED. Nothing posts on the schedule until you press Start.")
             close_issue(it["number"], msg)
             log(msg)
+            continue
+        if kind == "manual":
+            m = re.match(r"^manual:\s*" + ID_RE + r"\s*$", t, re.I)
+            cid = m.group(1) if m else ""
+            cid = next((k for k in ready_ids if k == cid or k.startswith(cid) or cid.startswith(k)), cid)
+            if cid in ready_ids and cid not in posted_ids:
+                c = QUEUE_BY_ID.get(cid, {})
+                wj(P / "posted" / f"{cid}.json", {"id": cid, "hook": c.get("hook", ""), "streamer": c.get("streamer", ""),
+                                                  "campaign": c.get("campaign", ""), "why": "posted by Nicholas", "manual": True,
+                                                  "posted_at": iso(NOW), "tiktok": "", "youtube": ""})
+                posted_ids.add(cid)
+                ctl["postnow"] = [p for p in ctl["postnow"] if p["id"] != cid]
+                close_issue(it["number"], "Got it — marked as posted by you. The bot won't post this clip.")
+                log(f"marked as posted manually: {cid}")
+            else:
+                close_issue(it["number"], "That clip isn't in the queue anymore.")
             continue
         m = re.match(r"^(?:post|postnow):\s*" + ID_RE + r"\s*$", t, re.I)
         cid = m.group(1) if m else ""
@@ -293,6 +312,7 @@ def main() -> None:
     queue = rj(QUEUE, {"ready": []})
     ready = [r for r in queue.get("ready", []) if r.get("final_abs")]
     by_id = {r["id"]: r for r in queue.get("ready", [])}
+    QUEUE_BY_ID.update(by_id)
     ctl = rj(P / "control.json", None)
     if ctl is None:  # first run: carry over the old Start/Stop setting
         ctl = {"paused": True, "postnow": [], "last_slot": ""}
@@ -303,6 +323,7 @@ def main() -> None:
 
     if GH_TOKEN and not DRY_RUN:
         handle_requests(ctl, set(by_id), posted_ids)
+        recs.update({f.stem: rj(f, {}) for f in (P / "posted").glob("*.json") if f.stem not in recs})
         blocked = blocked_ids()
     else:
         blocked = set()
