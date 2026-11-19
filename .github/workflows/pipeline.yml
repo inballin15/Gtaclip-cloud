@@ -60,8 +60,11 @@ jobs:
         shell: bash
         run: |
           git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          # always publish the NEWEST site code (it may have changed while this run was busy)
+          git fetch -q origin main && git show origin/main:site/index.html > site/index.html || true
           cp -r site/. _site/ && touch _site/.nojekyll
           b=$(sha1sum site/index.html | cut -c1-10); sed -i "s/__BUILD__/$b/" _site/index.html
+          python3 -c "import json,sys;p='_site/queue.json';d=json.load(open(p));d['site_build']=sys.argv[1];json.dump(d,open(p,'w'),indent=1,ensure_ascii=False)" "$b" || true
           publish () {  # dir branch  (fresh commit; unchanged videos aren't uploaded again)
             export GIT_INDEX_FILE=/tmp/idx-$2; rm -f "$GIT_INDEX_FILE"
             git --work-tree="$1" add -A

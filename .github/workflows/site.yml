@@ -1,0 +1,38 @@
+name: gtaclip site (publish dashboard changes right away)
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**"]
+  workflow_dispatch: {}
+
+concurrency:
+  group: site
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: put the new dashboard on the live site
+        shell: bash
+        run: |
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          b=$(sha1sum site/index.html | cut -c1-10)
+          for i in 1 2 3; do
+            git fetch -q --depth=1 origin gh-pages:refs/remotes/origin/gh-pages
+            rm -rf /tmp/gp && git worktree add -q -f /tmp/gp origin/gh-pages
+            cp site/index.html /tmp/gp/index.html && sed -i "s/__BUILD__/$b/" /tmp/gp/index.html
+            python3 -c "import json,sys;p='/tmp/gp/queue.json';d=json.load(open(p));d['site_build']=sys.argv[1];json.dump(d,open(p,'w'),indent=1,ensure_ascii=False)" "$b" || true
+            cd /tmp/gp && git add index.html queue.json && git commit -qm "site $b" || exit 0
+            git push -q origin HEAD:gh-pages && exit 0
+            cd - >/dev/null; git worktree remove -f /tmp/gp; sleep 5
+          done
+          exit 1
