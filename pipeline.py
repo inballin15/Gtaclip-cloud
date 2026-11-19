@@ -498,7 +498,7 @@ def fetch_link_audio(url: str, section, tmp: Path) -> tuple[Path, float, str]:
         parts = re.split(r"\s*[-–to]+\s*", str(section).strip())
         a, b = _secs(parts[0]), _secs(parts[1]) if len(parts) > 1 else None
     opts = {"format": "bestaudio/best", "outtmpl": str(tmp / "linkaudio.%(ext)s"), "quiet": True,
-            "noprogress": True, "noplaylist": True}
+            "noprogress": True, "noplaylist": True, "ffmpeg_location": FF}
     if a is not None:
         opts["download_ranges"] = download_range_func(None, [(a, b if b else a + 4 * 3600)])
     with yt_dlp.YoutubeDL(opts) as y:
@@ -519,7 +519,7 @@ def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path)
     opts = {"format": "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best", "outtmpl": str(out) + ".%(ext)s",
             "quiet": True, "noprogress": True, "noplaylist": True, "merge_output_format": "mp4",
             "download_ranges": download_range_func(None, [(max(0.0, start - 1), end + 1)]),
-            "force_keyframes_at_cuts": True}
+            "force_keyframes_at_cuts": True, "ffmpeg_location": FF}
     with yt_dlp.YoutubeDL(opts) as y:
         y.download([url])
     f = next(tmp.glob(f"sec_{int(start)}.*"))
