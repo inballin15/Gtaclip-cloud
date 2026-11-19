@@ -43,7 +43,7 @@ VID = SITE / "v"
 RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (actions cache)
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_NEW_HOURS = 24      # a clip not posted within a day is old news
-QUEUE_MAX = 36           # finished videos kept ready (11 posts a day)
+QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
 LAYOUT_V = "v3-textonly-capcut"
 KEEP_POSTED_HOURS = 72
@@ -316,20 +316,26 @@ def render_preview(raw: Path, cid: str) -> None:
     ff("-ss", "2", "-i", str(raw), "-frames:v", "1", "-vf", "scale=640:-2", "-q:v", "4", str(VID / f"{cid}.jpg"))
 
 
-def render_final(raw: Path, cid: str, cam: str, hook: str, tmp: Path) -> None:
+def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final") -> None:
+    """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box."""
     x, y, w, h = [float(v) for v in cam.split(",")]
-    png = render_hook(hook, str(tmp / f"{cid}_hook.png"))
-    flt = (
+    base = (
         f"[0:v]split=2[a][b];"
         f"[a]crop=iw*{w}:ih*{h}:iw*{x}:ih*{y},scale=1080:960:force_original_aspect_ratio=increase,"
         f"crop=1080:960,setsar=1[top];"
         f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:960,crop=1080:960,setsar=1[bot];"
-        f"[top][bot]vstack=inputs=2[st];"
-        f"[st][1:v]overlay=(W-w)/2:(H-h)/2,format=yuv420p[out]"
+        f"[top][bot]vstack=inputs=2"
     )
-    ff("-i", str(raw), "-i", png, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
-       "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-maxrate", "4M", "-bufsize", "8M", "-r", "30",
-       "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}_final.mp4"))
+    if hook:
+        png = render_hook(hook, str(tmp / f"{cid}_hook.png"))
+        inputs = ["-i", str(raw), "-i", png]
+        flt = base + "[st];[st][1:v]overlay=(W-w)/2:(H-h)/2,format=yuv420p[out]"
+    else:
+        inputs = ["-i", str(raw)]
+        flt = base + ",format=yuv420p[out]"
+    ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
+       "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-maxrate", "3500k", "-bufsize", "7M", "-r", "30",
+       "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
 
 
 # ---------------------------------------------------------------- main
@@ -438,7 +444,7 @@ def main() -> None:
         if c["status"] == "used" and age_h < 24:
             continue  # keep the posted video online a day (Buffer downloads it from here)
         if c["status"] != "new":
-            for suf in (".mp4", "_final.mp4", ".jpg"):
+            for suf in (".mp4", "_final.mp4", "_clean.mp4", ".jpg"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
             (RAW / f"{cid}.mp4").unlink(missing_ok=True)
             continue
@@ -468,6 +474,10 @@ def main() -> None:
                     c["final_hash"] = hh
                     c["final_v"] = hh
                     log(f"rendered final {cid}")
+            ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean").encode()).hexdigest()[:10]
+            if c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists():
+                render_final(raw, cid, c["cam"], None, tmp, out="_clean")
+                c["clean_v"] = ch
         except Exception as e:  # noqa: BLE001
             log(f"render failed {cid}: {e}")
 
@@ -479,6 +489,7 @@ def main() -> None:
         r["poster"] = f"v/{r['id']}.jpg"
         r["final"] = f"v/{r['id']}_final.mp4?v={r['final_v']}" if r.get("final_v") and r.get("hook") else ""
         r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
+        r["clean"] = f"v/{r['id']}_clean.mp4?v={r['clean_v']}" if r.get("clean_v") else ""
         r["clipped"] = r.get("created")
     ready = mix_order(ready)
     for r in ready:

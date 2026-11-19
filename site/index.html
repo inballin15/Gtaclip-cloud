@@ -91,6 +91,9 @@
   .sheet .head { display:flex; align-items:center; } .sheet .head .btn { margin-left:auto; }
   .steps { white-space:pre-line; font-size:14px; }
   .scroll { overflow-x:auto; }
+  .seg { display:flex; background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px; margin-bottom:8px; }
+  .seg button { flex:1; border:0; background:transparent; color:var(--fg); font:inherit; font-weight:700; padding:9px; border-radius:999px; }
+  .seg button[aria-pressed="true"] { background:var(--cyan); color:#000; }
 </style>
 </head>
 <body>
@@ -119,6 +122,10 @@
     <div class="box"><h2>Latest posts</h2><div class="plist" id="latest"></div></div>
   </section>
   <section id="tab-queue" hidden>
+    <div class="seg" id="variant">
+      <button data-v="final">With caption</button><button data-v="clean">No caption</button>
+    </div>
+    <div class="meta" id="vnote" style="margin-bottom:6px"></div>
     <div class="meta" id="queuemeta" style="margin-bottom:10px"></div>
     <div class="grid" id="queuelist"></div>
   </section>
@@ -400,12 +407,18 @@ function renderPosted() {
 }
 
 let editing = null;
+let variant = ls.get('gc-variant', 'final');
+const vidOf = (r) => (variant === 'clean' && r.clean) ? r.clean : r.final;
 function renderQueue() {
+  document.querySelectorAll('#variant button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === variant));
+  $('vnote').textContent = variant === 'clean'
+    ? 'No caption: same split screen without the text box. Add your own text in the TikTok editor. The bot still posts the captioned version.'
+    : 'With caption: exactly what the bot posts.';
   const all = queueList(); const ready = all.filter((r) => r.final); const prep = all.length - ready.length;
-  $('queuemeta').textContent = `${ready.length} finished videos, in posting order${prep ? ` · ${prep} more being made` : ''} · each video is exactly what gets posted. Clip finder last ran ${Q.updated ? ago(Q.updated) : '—'}.`;
+  $('queuemeta').textContent = `${ready.length} finished videos, in posting order${prep ? ` · ${prep} more being made` : ''}. Clip finder last ran ${Q.updated ? ago(Q.updated) : '—'}.`;
   const box = $('queuelist');
   // keep playing videos alive: rebuild only when the list changed
-  const sig = JSON.stringify(ready.map((r) => [r.id, r.final, r.nowing, r.hook])) + (L && L.paused) + (L && L.next_slot) + editing;
+  const sig = JSON.stringify(ready.map((r) => [r.id, r.final, r.nowing, r.hook])) + (L && L.paused) + (L && L.next_slot) + editing + variant;
   if (box.dataset.sig === sig) return; box.dataset.sig = sig; box.replaceChildren();
   if (!ready.length) { box.append(el('div', 'empty', 'Queue is empty — new clips are found every 20 minutes.')); return; }
   const plan = slotPlan().filter((s) => +s > Date.now() - 60000); let qi = 0;
@@ -421,7 +434,7 @@ function renderQueue() {
 function clipCard(r, st) {
   const c = el('div', 'card' + (r.nowing ? ' now' : ''));
   const vw = el('div', 'vwrap'); const v = el('video'); v.controls = true; v.playsInline = true; v.preload = 'none';
-  v.poster = PAGES + r.poster; v.src = PAGES + r.final; vw.append(v); c.append(vw);
+  v.poster = PAGES + r.poster; v.src = PAGES + vidOf(r); vw.append(v); c.append(vw);
   const b = el('div', 'body');
   const top = el('div', 'row'); top.append(badge(st)); b.append(top);
   const tags = el('div', 'row'); tags.append(el('span', 'pill', r.streamer));
@@ -463,8 +476,8 @@ function captionFor(r) {
   return (r.caption || `${r.hook}\n\n🎥 @${r.login}\n\n${r.tag || ''} #GTA6 #GTAVI #gaming #fyp`).trim();
 }
 async function saveVideo(r, btn) {
-  const url = PAGES + r.final;
-  const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}.mp4`;
+  const url = PAGES + vidOf(r);
+  const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${variant === 'clean' && r.clean ? '-nocaption' : ''}.mp4`;
   const label = btn.textContent; btn.disabled = true; btn.textContent = 'Getting video…';
   try {
     const blob = await (await fetch(url)).blob();
@@ -564,6 +577,7 @@ document.querySelectorAll('.tab').forEach((b) => b.onclick = () => {
   render(); window.scrollTo(0, 0);
 });
 $('gear').onclick = () => openSettings();
+document.querySelectorAll('#variant button').forEach((b) => b.onclick = () => { variant = b.dataset.v; ls.set('gc-variant', variant); renderQueue(); });
 $('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
 (async () => {
   await Promise.all([refreshQueue(), refreshLive()]);
