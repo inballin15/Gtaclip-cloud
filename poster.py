@@ -327,16 +327,25 @@ def channel_videos(ctl: dict) -> list[dict]:
         ctl["yt_check"] = "ok"
     except Exception as e:  # noqa: BLE001
         ctl["yt_check"] = f"failed: {str(e)[:80]}"
-    try:
-        page = _get(f"https://www.tiktok.com/@{TIKTOK_USER}")
-        n = 0
-        for vid, desc in re.findall(r'"id":"(\d{15,22})","desc":"((?:[^"\\]|\\.)*)"', page):
-            out.append({"service": "tiktok", "link": f"https://www.tiktok.com/@{TIKTOK_USER}/video/{vid}",
-                        "text": json.loads(f'"{desc}"')})
+    n, errs = 0, []
+    for url in (f"https://www.tiktok.com/@{TIKTOK_USER}", f"https://www.tiktok.com/embed/@{TIKTOK_USER}"):
+        try:
+            page = _get(url)
+        except Exception as e:  # noqa: BLE001
+            errs.append(str(e)[:60])
+            continue
+        found = re.findall(r'"id":"(\d{15,22})","desc":"((?:[^"\\]|\\.)*)"', page)
+        found += [(a, b) for b, a in re.findall(r'"desc":"((?:[^"\\]|\\.)*)"[^{}]{0,400}?"id":"(\d{15,22})"', page)]
+        for vid, desc in found:
+            try:
+                text = json.loads(f'"{desc}"')
+            except Exception:  # noqa: BLE001
+                text = desc
+            out.append({"service": "tiktok", "link": f"https://www.tiktok.com/@{TIKTOK_USER}/video/{vid}", "text": text})
             n += 1
-        ctl["tt_check"] = "ok" if n else "no videos visible (TikTok hides them from automated checks)"
-    except Exception as e:  # noqa: BLE001
-        ctl["tt_check"] = f"failed: {str(e)[:80]}"
+        if n:
+            break
+    ctl["tt_check"] = "ok" if n else ("no videos visible (TikTok hides them from automated checks)" if not errs else f"failed: {errs[0]}")
     return out
 
 
