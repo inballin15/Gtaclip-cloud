@@ -1,8 +1,8 @@
 {
- "paused": false,
+ "paused": true,
  "postnow": [],
  "last_slot": "2026-11-19T15:07:00Z",
- "switched_at": "2026-11-18T22:03:12Z",
+ "switched_at": "2026-11-19T17:54:15Z",
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
