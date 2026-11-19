@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-19T16:56:24Z",
+ "updated": "2026-11-19T17:01:53Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
  "next_slot": "2026-11-19T19:37:00Z",
- "up_next": "IcyObliviousPuddingVoteYea-f8ljei357HqBkcvI",
+ "up_next": "PiliableDeafDonutKlappa-OHSX2rY_MZswXM4_",
  "buffer_ok": true,
  "buffer_error": "",
  "cooldown": {
@@ -521,8 +521,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-19T16:56:24Z",
+ "stats_updated": "2026-11-19T17:01:53Z",
  "log": [
-  "[16:56:27Z] 11:37 AM slot: TikTok and YouTube are both waiting out an upload limit — holding IcyObliviousPuddingVoteYea-f8ljei357HqBkcvI"
+  "[17:01:55Z] 11:37 AM slot: TikTok and YouTube are both waiting out an upload limit — holding PiliableDeafDonutKlappa-OHSX2rY_MZswXM4_"
  ]
 }
