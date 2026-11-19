@@ -269,7 +269,7 @@ def _frames(path: Path, secs):
     return out
 
 
-CAM_V = 4   # bump to re-check every queued clip with a newer webcam detector
+CAM_V = 5   # bump to re-check every queued clip with a newer webcam detector
 
 
 def _best_face(frames):
@@ -369,7 +369,64 @@ def _guess_box(face, W, H):
     return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
 
 
+def _trim_black(frames, box: str) -> str:
+    """Cut off black bars inside a webcam box (letterboxing / empty overlay space)."""
+    H, W = frames[0].shape[:2]
+    x, y, w, h = [float(v) for v in box.split(",")]
+    X0, Y0, X1, Y1 = int(x * W), int(y * H), int((x + w) * W), int((y + h) * H)
+    g = np.max(np.stack([cv2.cvtColor(f[Y0:Y1, X0:X1], cv2.COLOR_BGR2GRAY) for f in frames]), axis=0)  # bright in ANY frame
+    rows = np.where(g.mean(axis=1) > 14)[0]
+    cols = np.where(g.mean(axis=0) > 14)[0]
+    if len(rows) < 10 or len(cols) < 10:
+        return box
+    ny0, ny1, nx0, nx1 = Y0 + rows[0], Y0 + rows[-1], X0 + cols[0], X0 + cols[-1]
+    if (ny1 - ny0) > 0.92 * (Y1 - Y0) and (nx1 - nx0) > 0.92 * (X1 - X0):
+        return box
+    nw, nh = nx1 - nx0, ny1 - ny0
+    A = 1080 / 960
+    if nw / nh > A:
+        bw, bh = nh * A, nh
+        cx = nx0 + nw / 2
+        for f in frames:   # centre on the face, not the middle of the box
+            fs = _faces(f[ny0:ny1, nx0:nx1])
+            if len(fs):
+                fx, fy, fw, fh = max(fs, key=lambda r: r[2] * r[3])
+                cx = nx0 + fx + fw / 2
+                break
+        bx = min(max(nx0, cx - bw / 2), nx1 - bw)
+        by = ny0
+    else:
+        bw, bh = nw, nw / A
+        bx = nx0
+        by = ny0
+    return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
+
+
+def _face_in_box(frames, box: str, need: int = 3) -> bool:
+    """A guessed box only counts if a face really shows inside it in most frames."""
+    x, y, w, h = [float(v) for v in box.split(",")]
+    hits = 0
+    for fr in frames:
+        H, W = fr.shape[:2]
+        crop = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+        if crop.size and _faces(cv2.resize(crop, None, fx=2, fy=2), neighbors=5):
+            hits += 1
+    return hits >= need
+
+
 def find_cam_info(path: Path, duration: float, learned: list | None = None) -> tuple[str, str, list | None]:
+    cam, q, frac = _find_cam_info(path, duration, learned)
+    if not cam:
+        return cam, q, frac
+    frames = _frames(path, [max(0.5, duration * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)])
+    if frames:
+        cam = _trim_black(frames, cam)
+        if q == "guess" and not _face_in_box(frames, cam, need=3):
+            return "", "", None   # no reliable webcam -> the clip is skipped instead of looking bad
+    return cam, q, frac
+
+
+def _find_cam_info(path: Path, duration: float, learned: list | None = None) -> tuple[str, str, list | None]:
     """Returns (cam box, quality, overlay rect as fractions). quality: 'edge' = traced the webcam border,
     'learned' = this streamer's known webcam spot, 'guess' = box around the face."""
     secs = [max(0.5, duration * p) for p in (0.08, 0.22, 0.36, 0.5, 0.64, 0.78, 0.92)]
@@ -747,7 +804,7 @@ def main() -> None:
     for cid, c in clips.items():
         if c.get("status") != "new" or c.get("cam_v", 1) >= CAM_V or c.get("layout") == "full":
             continue
-        if c.get("cam_v", 1) == 3 and c.get("cam_q") in ("edge", "learned"):  # v4 only changes guessed boxes
+        if c.get("cam_v", 1) in (3, 4) and c.get("cam_q") in ("edge", "learned"):  # v5 only changes guessed boxes
             c["cam_v"] = CAM_V
             continue
         raw = RAW / f"{cid}.mp4"
@@ -838,6 +895,10 @@ def main() -> None:
                 if not c:
                     continue
                 c.update(viral=r["score"], viral_why=r["why"], viral_verdict=r["verdict"])
+                if r["score"] <= 10 and not c.get("hook_by_user") and not c.get("post_now"):
+                    c.update(status="skip", skip_reason=f"AI: {r['why'] or 'not postable'}")
+                    log(f"AI removed {cid}: {r['why']}")
+                    continue
                 if r["hook"] and len(r["hook"]) >= 12 and c.get("hook_auto") and not c.get("hook_by_user"):
                     c.update(hook=r["hook"], hook_kind="ai")
                     c.pop("hook_auto", None)
