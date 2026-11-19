@@ -1,19 +1,19 @@
 {
- "updated": "2026-11-19T19:55:58Z",
+ "updated": "2026-11-19T20:01:10Z",
  "paused": true,
  "switched_at": "2026-11-19T17:54:15Z",
  "postnow": [],
  "next_slot": "2026-11-19T21:07:00Z",
  "up_next": null,
- "buffer_ok": true,
- "buffer_error": "couldn't read posts from Buffer",
+ "buffer_ok": false,
+ "buffer_error": "Buffer didn't accept the API key: Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-19T19:45:47Z",
+  "at": "2026-11-19T20:01:10Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -159,7 +159,9 @@
  "stats": [],
  "stats_updated": "2026-11-19T19:55:58Z",
  "log": [
-  "[19:56:00Z] post list query failed (full): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
-  "[19:56:00Z] post list query failed (lite): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade"
+  "[20:01:12Z] post list query failed (full): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
+  "[20:01:12Z] post list query failed (lite): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
+  "[20:01:12Z] duplicate check skipped: couldn't read posts from Buffer",
+  "[20:01:13Z] Buffer didn't accept the API key: Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade"
  ]
 }
