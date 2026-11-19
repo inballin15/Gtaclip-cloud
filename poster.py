@@ -312,6 +312,7 @@ def main() -> None:
     queue = rj(QUEUE, {"ready": []})
     ready = [r for r in queue.get("ready", []) if r.get("final_abs")]
     by_id = {r["id"]: r for r in queue.get("ready", [])}
+    blocked_extra: set[str] = set()
     QUEUE_BY_ID.update(by_id)
     ctl = rj(P / "control.json", None)
     if ctl is None:  # first run: carry over the old Start/Stop setting
@@ -321,12 +322,21 @@ def main() -> None:
     recs: dict[str, dict] = {f.stem: rj(f, {}) for f in sorted((P / "posted").glob("*.json"))}
     posted_ids = set(recs)
 
+    # a new hook was written but the video isn't re-made yet: wait for it (never post an old caption)
+    for f in (P / "hooks").glob("*.json"):
+        c = by_id.get(f.stem)
+        if c and not c.get("hook_by_user") and rj(f, {}).get("hook", "").strip() != (c.get("hook") or "").strip():
+            blocked_extra.add(f.stem)
+    for f in (P / "skips").glob("*.json"):
+        if f.stem in by_id:
+            blocked_extra.add(f.stem)
     if GH_TOKEN and not DRY_RUN:
         handle_requests(ctl, set(by_id), posted_ids)
         recs.update({f.stem: rj(f, {}) for f in (P / "posted").glob("*.json") if f.stem not in recs})
         blocked = blocked_ids()
     else:
         blocked = set()
+    blocked |= blocked_extra
     ctl["postnow"] = [p for p in ctl["postnow"] if p["id"] not in posted_ids and p["id"] in by_id]
 
     buffer_ok, buffer_err = False, ""
