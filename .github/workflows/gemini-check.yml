@@ -1,0 +1,35 @@
+name: gtaclip Gemini check (which models answer, how fast)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: check
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        shell: python
+        run: |
+          import json, os, time, urllib.request, urllib.error
+          key = os.environ.get("GEMINI_API_KEY", "").strip()
+          print("key present:", bool(key), "length:", len(key))
+          ms = json.loads(urllib.request.urlopen(f"https://generativelanguage.googleapis.com/v1beta/models?key={key}&pageSize=200", timeout=30).read())["models"]
+          names = [m["name"].split("/")[-1] for m in ms if "generateContent" in (m.get("supportedGenerationMethods") or [])]
+          print("models:", ", ".join(n for n in names if n.startswith("gemini")))
+          for n in [x for x in names if x.startswith("gemini") and "flash" in x][:8]:
+              body = {"contents": [{"parts": [{"text": 'Return JSON [{"score": 50}]'}]}],
+                      "generationConfig": {"responseMimeType": "application/json", "thinkingConfig": {"thinkingBudget": 0}}}
+              t = time.time()
+              try:
+                  r = urllib.request.urlopen(urllib.request.Request(
+                      f"https://generativelanguage.googleapis.com/v1beta/models/{n}:generateContent?key={key}",
+                      data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}), timeout=40)
+                  out = json.loads(r.read())["candidates"][0]["content"]["parts"][0]["text"]
+                  print(f"OK   {n:40s} {time.time()-t:5.1f}s  {out[:40]!r}")
+              except urllib.error.HTTPError as e:
+                  print(f"FAIL {n:40s} {time.time()-t:5.1f}s  HTTP {e.code} {e.read().decode()[:120]!r}")
+              except Exception as e:
+                  print(f"FAIL {n:40s} {time.time()-t:5.1f}s  {e}")
