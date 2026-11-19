@@ -91,6 +91,12 @@
   .sheet .head { display:flex; align-items:center; } .sheet .head .btn { margin-left:auto; }
   .steps { white-space:pre-line; font-size:14px; }
   .scroll { overflow-x:auto; }
+  .lrow { display:flex; gap:10px; align-items:center; text-decoration:none; background:var(--panel2); border-radius:14px; padding:8px; }
+  .lrow img { width:96px; height:54px; object-fit:cover; border-radius:8px; background:#000; flex:none; }
+  .lrow .nm { font-weight:700; } .lrow .t { color:var(--muted); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .redpill { background:var(--red); color:#000; padding:2px 7px; border-radius:999px; font-size:11px; font-weight:800; }
+  .fstat { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin-bottom:8px; }
+  .fstat div { background:var(--panel2); border-radius:12px; padding:8px 10px; } .fstat b { display:block; font-size:20px; }
   .seg { display:flex; background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px; margin-bottom:8px; }
   .seg button { flex:1; border:0; background:transparent; color:var(--fg); font:inherit; font-weight:700; padding:9px; border-radius:999px; }
   .seg button[aria-pressed="true"] { background:var(--cyan); color:#000; }
@@ -117,6 +123,8 @@
     <div class="box run" id="run"></div>
     <div id="nowbox"></div>
     <div class="kpis" id="kpis"></div>
+    <div class="box"><h2>Live now</h2><div class="meta" id="livemeta" style="margin-bottom:8px"></div><div class="plist" id="liveboard"></div></div>
+    <div class="box"><h2>Clip finder</h2><div id="finder"></div></div>
     <details class="box" id="slots-box"><summary id="slots-sum">Today's slots</summary><div class="slots" id="slots"></div></details>
     <div class="box"><h2>Submit to Content Rewards</h2><div class="meta" style="margin-bottom:8px">Clix and Lacy posts that are live. Copy the links, paste them on the campaign page, then tap "Submitted".</div><div class="plist" id="submitlist"></div></div>
     <div class="box"><h2>Latest posts</h2><div class="plist" id="latest"></div></div>
@@ -258,7 +266,7 @@ function render() {
   const age = L ? (Date.now() - new Date(L.updated)) / 60000 : 99;
   $('dot').className = 'dot' + (!L ? ' bad' : age > 15 ? ' warn' : '');
   $('livetxt').textContent = L ? `checked ${ago(L.updated)}` : 'connecting…';
-  renderSetup(); renderRun(); renderNow(); renderKpis(); renderSlots(); renderSubmit(); renderLatest();
+  renderSetup(); renderRun(); renderNow(); renderKpis(); renderLive(); renderFinder(); renderSlots(); renderSubmit(); renderLatest();
   if (tab === 'queue') renderQueue();
   if (tab === 'posted') renderPosted();
   if (tab === 'stats') renderStats();
@@ -339,6 +347,45 @@ function renderKpis() {
   k('Likes', fmt(t.likes), `${fmt(t.comments)} comments`);
   k('Shares + reposts', fmt(t.shares + t.reposts), `${fmt(t.shares)} shares · ${fmt(t.reposts)} reposts`);
   k('Posted today', String(today), `${queueList().filter((r) => r.final).length} ready in queue`);
+}
+function renderLive() {
+  const box = $('liveboard'); box.replaceChildren();
+  const live = Q.live || [];
+  const gta = live.filter((x) => x.gta);
+  $('livemeta').textContent = Q.fetcher && Q.fetcher.last_run
+    ? `${gta.length} streaming GTA 6 · ${live.length - gta.length} live on something else · updated ${ago(Q.fetcher.last_run)}`
+    : 'Updates with every clip finder run.';
+  if (!live.length) { box.append(el('div', 'meta', 'Nobody from your list is live right now.')); return; }
+  for (const x of live.slice(0, 12)) {
+    const a = el('a', 'lrow'); a.href = 'https://www.twitch.tv/' + x.login; a.target = '_blank'; a.rel = 'noopener';
+    const img = el('img'); img.src = x.thumb; img.loading = 'lazy'; img.onerror = () => { img.style.visibility = 'hidden'; }; a.append(img);
+    const info = el('div'); info.style.minWidth = '0';
+    const top = el('div', 'row'); top.append(el('span', 'redpill', 'LIVE'), el('span', 'nm', x.name));
+    if (!x.approved) top.append(el('span', 'pill', 'big GTA 6 stream'));
+    info.append(top);
+    const hrs = x.since ? Math.max(0, (Date.now() - new Date(x.since)) / 3600e3) : 0;
+    info.append(el('div', 't', `${fmt(x.viewers)} watching · ${x.gta ? 'GTA 6' : (x.game || '?')} · ${hrs >= 1 ? Math.floor(hrs) + 'h' : Math.round(hrs * 60) + 'm'}`));
+    info.append(el('div', 't', x.title || ''));
+    a.append(info); box.append(a);
+  }
+}
+function renderFinder() {
+  const box = $('finder'); box.replaceChildren(); const f = Q.fetcher || {};
+  const all = queueList(); const ready = all.filter((r) => r.final).length;
+  const stat = el('div', 'fstat');
+  const add = (n, l) => { const d = el('div'); d.append(el('b', null, String(n)), el('span', 'meta', l)); stat.append(d); };
+  add(f.added ?? '—', 'new clips last run');
+  add(f.found_24h ?? '—', 'clips checked (24h)');
+  add(f.kept_24h ?? '—', 'kept (24h)');
+  add(ready, 'videos ready');
+  box.append(stat);
+  const last = f.last_run ? ago(f.last_run) : '—';
+  box.append(el('div', 'meta', `Last check ${last} · checks every ${f.every_min || 10} min · ${all.length - ready ? (all.length - ready) + ' being made' : 'nothing waiting to be made'}`));
+  const by = Object.entries(f.fresh_by_streamer || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  const row = el('div', 'row'); row.style.marginTop = '8px';
+  if (by.length) for (const [n, k] of by) row.append(el('span', 'pill', `${n} ${k}`));
+  else row.append(el('span', 'meta', 'No new GTA 6 clips on Twitch in the last check.'));
+  box.append(row);
 }
 function renderSlots() {
   const box = $('slots'); box.replaceChildren();
@@ -582,7 +629,7 @@ $('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = t
 (async () => {
   await Promise.all([refreshQueue(), refreshLive()]);
   render();
-  setInterval(refreshQueue, 60000);
+  setInterval(refreshQueue, 45000);
   setInterval(() => { const busy = Object.keys(pend).length > 0; if (busy || Date.now() % 30000 < 10000) refreshLive(); }, 10000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshQueue(); refreshLive(); } });
 })();

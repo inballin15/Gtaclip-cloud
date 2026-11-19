@@ -74,21 +74,66 @@ def already_have() -> set[str]:
     return seen
 
 
+LIVE: list[dict] = []   # who's live right now (for the dashboard)
+
+
+def live_now(h: dict) -> tuple[list[dict], dict]:
+    """Approved streamers live now + big English GTA 6 streams (extra clip sources)."""
+    d = CFG["discovery"]
+    out, extra = [], {}
+    logins = list(CFG["streamers"])
+    try:
+        mine = helix(h, "streams", user_login=logins, first=100).get("data") or []
+    except Exception as e:  # noqa: BLE001
+        log(f"live check failed: {e}")
+        mine = []
+    try:
+        top = helix(h, "streams", game_id=CFG["game_id"], first=40, language="en").get("data") or []
+    except Exception as e:  # noqa: BLE001
+        log(f"top GTA 6 streams failed: {e}")
+        top = []
+    for st in mine + top:
+        login = st["user_login"].lower()
+        if any(x["login"] == login for x in out):
+            continue
+        approved = login in CFG["streamers"]
+        big = st["viewer_count"] >= d.get("min_live_viewers", 10000)
+        if not approved and not big:
+            continue
+        out.append({"login": login, "name": st["user_name"], "viewers": st["viewer_count"],
+                    "game": st.get("game_name", ""), "gta": st.get("game_id") == CFG["game_id"],
+                    "title": st.get("title", "")[:120], "since": st.get("started_at", ""),
+                    "approved": approved,
+                    "thumb": st.get("thumbnail_url", "").replace("{width}", "320").replace("{height}", "180")})
+        if not approved and st.get("game_id") == CFG["game_id"] and d.get("discover_live", True):
+            extra[login] = {"name": st["user_name"], "tag": "#" + "".join(ch for ch in st["user_name"] if ch.isalnum()),
+                            "id": st["user_id"], "discovered": True}
+    out.sort(key=lambda x: (not x["gta"], -x["viewers"]))
+    LIVE[:] = out
+    return out, extra
+
+
 def pick_clips(h: dict, seen: set[str]) -> list[dict]:
     d = CFG["discovery"]
     since = datetime.now(timezone.utc) - timedelta(hours=d["lookback_hours"])
     bad = [w.lower() for w in d["skip_title_words"]]
     picks = []
-    for login, s in CFG["streamers"].items():
+    _, extra = live_now(h)
+    sources = {**CFG["streamers"], **extra}
+    for login, s in sources.items():
         try:
-            users = helix(h, "users", login=login).get("data") or []
+            uid = s.get("id") or ((helix(h, "users", login=login).get("data") or [{}])[0]).get("id")
         except Exception as e:  # noqa: BLE001
             log(f"{login}: lookup failed {e}")
             continue
-        if not users:
+        if not uid:
             continue
-        clips = helix(h, "clips", broadcaster_id=users[0]["id"], first=50,
-                      started_at=since.strftime("%Y-%m-%dT%H:%M:%SZ")).get("data") or []
+        try:
+            clips = helix(h, "clips", broadcaster_id=uid, first=50,
+                          started_at=since.strftime("%Y-%m-%dT%H:%M:%SZ")).get("data") or []
+        except Exception as e:  # noqa: BLE001
+            log(f"{login}: clips failed {e}")
+            continue
         good = [c for c in clips
                 if c.get("game_id") == CFG["game_id"]
                 and c["id"] not in seen
@@ -97,11 +142,13 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
                 and not any(w in c["title"].lower() for w in bad)]
         good.sort(key=lambda c: c["view_count"], reverse=True)
         for c in good[: d["max_per_streamer"]]:
-            c["login"], c["name"] = login, s["name"]
+            c["login"], c["name"], c["tag"] = login, s["name"], s.get("tag", "")
             c["paid"] = bool(s.get("campaign"))
+            c["discovered"] = bool(s.get("discovered"))
             picks.append(c)
-        log(f"{s['name']}: {len(good)} fresh GTA 6 clips")
-    picks.sort(key=lambda c: (c["paid"], c["view_count"]), reverse=True)
+        log(f"{s['name']}: {len(good)} fresh GTA 6 clips" + (" (live GTA 6 streamer)" if s.get("discovered") else ""))
+    # paid first, then newest-and-most-viewed; discovered streamers can't crowd out your list
+    picks.sort(key=lambda c: (c["paid"], not c["discovered"], c["view_count"]), reverse=True)
     return picks[: d["max_total"]]
 
 

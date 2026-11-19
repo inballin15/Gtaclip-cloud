@@ -30,7 +30,7 @@ from pathlib import Path
 import cv2
 import imageio_ffmpeg
 
-from fetch_clips import CFG, download, log, pick_clips, transcript, twitch_headers
+from fetch_clips import CFG, LIVE, download, log, pick_clips, transcript, twitch_headers
 from render_hook import render as render_hook
 from render_hook import strip_emoji
 
@@ -386,6 +386,7 @@ def main() -> None:
                 log(f"webcam found on retry: {c['streamer']} '{c['title']}' {cam}")
 
     # 3. new clips (not on issue-triggered runs, to keep those fast)
+    picks = []
     if os.environ.get("FETCH", "1") == "1":
         try:
             picks = pick_clips(twitch_headers(), set(clips))
@@ -400,7 +401,7 @@ def main() -> None:
                 shutil.move(str(f), raw)
                 dur = duration_of(raw)
                 text = transcript(raw)
-                s = CFG["streamers"][c["login"]]
+                s = CFG["streamers"].get(c["login"]) or {"name": c["name"], "tag": c.get("tag", "")}
                 rec = {
                     "status": "new", "streamer": c["name"], "login": c["login"], "tag": s.get("tag", ""),
                     "campaign": s.get("campaign", "") or "", "title": c["title"], "views": c["view_count"],
@@ -519,7 +520,14 @@ def main() -> None:
         # 'paused' stays true for the old Claude posting tasks (they must not post anymore);
         # the real Start/Stop lives in live.json on the 'posted' branch, run by poster.py
         "paused": True, "posting_on": not control.get("paused", True), "ready": ready, "posted": posted[:40],
-        "fetcher": {"last_run_utc": NOW.strftime("%H:%M:%S"), "fresh_by_streamer": status},
+        "fetcher": {"last_run_utc": NOW.strftime("%H:%M:%S"), "last_run": iso(NOW), "fresh_by_streamer": status,
+                    "picked": len(picks),
+                    "added": sum(1 for p in picks if clips.get(p["id"], {}).get("status") == "new"),
+                    "found_24h": sum(1 for c in clips.values() if c.get("found", "") >= iso(NOW - timedelta(hours=24))),
+                    "kept_24h": sum(1 for c in clips.values() if c.get("found", "") >= iso(NOW - timedelta(hours=24))
+                                    and c["status"] in ("new", "used")),
+                    "every_min": 10},
+        "live": LIVE,
     }, indent=1, ensure_ascii=False))
     save_state(st)
     log(f"queue: {len(ready)} ready ({sum(1 for r in ready if r['final'])} with final video)")

@@ -4,12 +4,14 @@
 game_id: "1867279146"   # Grand Theft Auto VI
 
 discovery:
-  lookback_hours: 3        # only fresh clips
+  lookback_hours: 6        # only fresh clips
   min_views: 15
   min_seconds: 8
   max_seconds: 60
-  max_per_streamer: 3
-  max_total: 10            # per run (runs hourly)
+  max_per_streamer: 4
+  max_total: 15            # per run (runs every 10 min)
+  min_live_viewers: 10000  # also clip big English GTA 6 streams that are live right now
+  discover_live: true
   skip_title_words: ["abuse", "abusing", "lady", "women", "girl", "freaky", "strip", "horny",
                      "dog", "slur", "nsfw", "spoiler", "ending", "loading", "ban",
                      "stripper", "mandy", "club", "twerk", "thirst", "booty", "lap dance", "hooker", "pole", "gyatt", "gyat", "stepbro", "stepsis", "step bro", "step sis", "onlyfans", "gyaa", "disabled", "retard"]
