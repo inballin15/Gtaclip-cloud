@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-19T03:45:49Z",
+ "updated": "2026-11-19T03:51:16Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
  "next_slot": "2026-11-19T12:07:00Z",
- "up_next": "SaltyObservantJaguarKappa-8Z-bOZ54YnDciaqS",
+ "up_next": "BoldPopularLegMrDestructoid-zkq_hgoilPQdO3R2",
  "buffer_ok": true,
  "buffer_error": "",
  "cooldown": {
@@ -478,6 +478,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-19T03:45:49Z",
+ "stats_updated": "2026-11-19T03:51:16Z",
  "log": []
 }
