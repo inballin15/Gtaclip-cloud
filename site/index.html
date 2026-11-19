@@ -42,6 +42,13 @@
   .viral { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:12px; background:var(--panel2); font-size:13px; }
   .viral b { font-size:20px; min-width:30px; } .viral span { font-weight:800; } .viral em { color:var(--muted); font-style:normal; font-size:12px; }
   .viral.post b, .viral.post span { color:var(--green); } .viral.maybe b, .viral.maybe span { color:var(--amber); } .viral.skip b, .viral.skip span { color:var(--red); }
+  .sysline { width:100%; text-align:left; font:inherit; color:inherit; display:flex; align-items:center; gap:10px; padding:12px 14px; }
+  .sysline .t { font-weight:700; } .sysline .m { color:var(--muted); font-size:12px; margin-left:auto; text-align:right; }
+  .pulse { width:10px; height:10px; border-radius:50%; background:var(--muted); flex:none; }
+  .pulse.run { background:var(--cyan); box-shadow:0 0 0 0 #29e3ff88; animation:pl 1.6s infinite; } .pulse.ok { background:var(--green); } .pulse.bad { background:var(--red); } .pulse.wait { background:var(--amber); }
+  @keyframes pl { 0% { box-shadow:0 0 0 0 #29e3ff88; } 70% { box-shadow:0 0 0 10px #29e3ff00; } 100% { box-shadow:0 0 0 0 #29e3ff00; } }
+  .sysrow { display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); } .sysrow:last-child { border:0; }
+  .sysrow .pulse { margin-top:5px; } .sysrow b { display:block; } .sysrow .meta { margin-top:2px; }
   .btns.more { display:none; } .btns.more.open { display:flex; }
   .wrap { padding:12px 12px calc(84px + env(safe-area-inset-bottom)); max-width:1200px; margin:0 auto; }
   section[hidden], [hidden] { display:none !important; }
@@ -136,6 +143,7 @@
     <div id="setup"></div>
     <div class="box run" id="run"></div>
     <div id="nowbox"></div>
+    <button class="box sysline" id="sysline" data-go="stats"></button>
     <div class="box"><div class="hrow"><h2>Live now</h2><button class="link" data-go="stats">See all</button></div><div class="strip" id="livestrip"></div></div>
     <div id="submitcard"></div>
     <details class="box" id="slots-box"><summary id="slots-sum">Today's slots</summary><div class="slots" id="slots"></div></details>
@@ -154,6 +162,7 @@
     <div class="plist" id="postedlist"></div>
   </section>
   <section id="tab-stats" hidden>
+    <div class="box"><h2>System status</h2><div id="sysbox"></div></div>
     <div class="kpis" id="kpis"></div>
     <div class="box"><h2>Clip finder</h2><div id="finder"></div></div>
     <div class="box"><h2>Live now</h2><div class="meta" id="livemeta" style="margin-bottom:8px"></div><div class="plist" id="liveboard"></div></div>
@@ -297,10 +306,10 @@ function render() {
   $('livetxt').textContent = L ? `updated ${ago(L.updated)}` : 'connecting…';
   const toSubmit = postList().filter((p) => CR[p.campaign] && (p.tiktok || p.youtube) && !submitted[p.tiktok || p.youtube]);
   $('pcount').textContent = toSubmit.length || '';
-  if (tab === 'home') { renderSetup(); renderRun(); renderNow(); renderLiveStrip(); renderSubmitCard(toSubmit); renderSlots(); }
+  if (tab === 'home') { renderSetup(); renderRun(); renderNow(); renderSysline(); renderLiveStrip(); renderSubmitCard(toSubmit); renderSlots(); }
   if (tab === 'queue') { renderUploads(); renderQueue(); }
   if (tab === 'posted') renderPosted(toSubmit);
-  if (tab === 'stats') { renderKpis(); renderFinder(); renderLive(); renderStats(); }
+  if (tab === 'stats') { renderSys(); renderKpis(); renderFinder(); renderLive(); renderStats(); }
 }
 function renderSetup() {
   // every alert is a small bubble; tap one to see the details
@@ -603,6 +612,66 @@ async function saveVideo(r, btn) {
   }
   btn.disabled = false; btn.textContent = label;
 }
+// ------------------------------------------------------------ system status (what GitHub is doing right now)
+let RUNS = []; let RUNSTEP = {}; let runsAt = 0;
+const STEPNAME = { 'Set up job': 'starting up', 'Run actions/checkout@v4': 'starting up', 'Run actions/setup-python@v5': 'starting up',
+  'Run pip install -r requirements.txt': 'starting up', 'cache raw clips + speech model': 'loading saved clips',
+  'load state, posted reports and the current site': 'loading the queue', 'pipeline': 'finding clips & making videos',
+  'publish site + save state': 'publishing to the site', 'save log (so Claude can read it)': 'finishing up' };
+const dur = (a, b) => { const m = Math.max(0, Math.round(((b ? new Date(b) : Date.now()) - new Date(a)) / 60000)); return m < 1 ? '<1 min' : m + ' min'; };
+async function refreshRuns() {
+  if (Date.now() - runsAt < (ghKey() ? 15000 : 90000)) return; runsAt = Date.now();
+  const h = ghKey() ? { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github+json' } : { Accept: 'application/vnd.github+json' };
+  try {
+    RUNS = (await getJSON(`https://api.github.com/repos/${REPO}/actions/runs?per_page=30&t=${Date.now()}`, h)).workflow_runs || [];
+    const cur = RUNS.find((r) => r.name.startsWith('gtaclip pipeline') && r.status === 'in_progress');
+    if (cur) {
+      const jobs = (await getJSON(`https://api.github.com/repos/${REPO}/actions/runs/${cur.id}/jobs?t=${Date.now()}`, h)).jobs || [];
+      const st = (jobs[0] && jobs[0].steps) || [];
+      const now = st.find((x) => x.status === 'in_progress') || st.filter((x) => x.status === 'completed').pop();
+      RUNSTEP[cur.id] = now ? (STEPNAME[now.name] || now.name.toLowerCase()) : 'starting up';
+    }
+  } catch (e) { /* keep last */ }
+  if (tab === 'home') renderSysline(); if (tab === 'stats') renderSys();
+}
+function sysState() {
+  const pipes = RUNS.filter((r) => r.name.startsWith('gtaclip pipeline'));
+  const running = pipes.find((r) => r.status === 'in_progress');
+  const waiting = pipes.filter((r) => r.status === 'queued' || r.status === 'pending' || r.status === 'waiting').length;
+  const lastDone = pipes.find((r) => r.status === 'completed' && r.conclusion !== 'cancelled' && r.conclusion !== 'skipped');
+  const poster = RUNS.find((r) => r.name.startsWith('gtaclip poster') && r.status === 'completed' && r.conclusion !== 'skipped');
+  const clock = RUNS.find((r) => r.name.startsWith('gtaclip clock'));
+  const procUploads = uploads.filter((u) => u.state === 'processing' || u.state === 'uploading').length;
+  return { running, waiting, lastDone, poster, clock, procUploads };
+}
+function renderSysline() {
+  const b = $('sysline'); if (!b) return; b.replaceChildren();
+  if (!RUNS.length) { b.hidden = true; return; } b.hidden = false;
+  const s = sysState(); const p = el('span', 'pulse');
+  let t, m;
+  if (s.running) { p.classList.add('run'); t = `Clip maker: ${RUNSTEP[s.running.id] || 'working'}`; m = `${dur(s.running.run_started_at)}${s.waiting ? ` · ${s.waiting} waiting` : ''}`; }
+  else if (s.waiting) { p.classList.add('wait'); t = 'Clip maker: starting soon'; m = `${s.waiting} run${s.waiting > 1 ? 's' : ''} waiting`; }
+  else if (s.lastDone) { p.classList.add(s.lastDone.conclusion === 'success' ? 'ok' : 'bad'); t = `Clip maker: idle`; m = `last run ${ago(s.lastDone.updated_at)} · ${s.lastDone.conclusion === 'success' ? 'OK' : 'had a problem'}`; }
+  else { t = 'Clip maker'; m = '—'; }
+  const tt = el('span', 't', t); const mm = el('span', 'm', m); b.append(p, tt, mm);
+}
+function renderSys() {
+  const box = $('sysbox'); if (!box) return; box.replaceChildren();
+  if (!RUNS.length) { box.append(el('div', 'meta', 'Loading…')); return; }
+  const s = sysState();
+  const row = (cls, title, sub) => { const r = el('div', 'sysrow'); r.append(el('span', 'pulse ' + cls)); const d = el('div'); d.append(el('b', null, title), el('div', 'meta', sub)); r.append(d); box.append(r); };
+  if (s.running) row('run', `Clip maker is running — ${RUNSTEP[s.running.id] || 'working'}`, `Started ${dur(s.running.run_started_at)} ago${s.waiting ? ` · ${s.waiting} more waiting in line` : ''}. It finds new clips, checks webcams, writes hooks, rates them and makes the videos.`);
+  else if (s.waiting) row('wait', 'Clip maker is about to start', `${s.waiting} run${s.waiting > 1 ? 's' : ''} waiting in line`);
+  else row(s.lastDone && s.lastDone.conclusion === 'success' ? 'ok' : 'bad', 'Clip maker is idle', s.lastDone ? `Last run finished ${ago(s.lastDone.updated_at)} (${s.lastDone.conclusion === 'success' ? 'OK' : s.lastDone.conclusion}) and took ${dur(s.lastDone.run_started_at, s.lastDone.updated_at)}. Runs every 10 min.` : 'No runs yet.');
+  if (s.procUploads) row('run', `Your videos: ${s.procUploads} being processed`, 'Clips appear in the Queue tagged "Your video".');
+  const f = Q.fetcher || {};
+  row('ok', `Clip finder: ${f.added ?? 0} new clips last run`, `${f.found_24h ?? '—'} checked in 24 h · ${(Q.ready || []).length} in the queue`);
+  const ai = Q.ai || {};
+  row(ai.status === 'ok' ? 'ok' : ai.status && ai.status !== 'no key' ? 'wait' : '', `AI viral scores: ${ai.status === 'ok' ? 'ON' : ai.status === 'no key' || !ai.status ? 'off' : 'paused'}`, ai.status === 'ok' ? `${ai.rated || 0} clips rated · checked ${ai.checked ? ago(ai.checked) : '—'}` : String(ai.status || 'Add a Gemini key to turn it on'));
+  row(s.poster && s.poster.conclusion === 'success' ? 'ok' : 'bad', `Poster: ${L && L.paused ? 'stopped' : 'on'}`, s.poster ? `Last check ${ago(s.poster.updated_at)} · runs every 5 min · next post ${L && L.next_slot ? tET(L.next_slot) : '—'}` : '—');
+  row(s.clock && s.clock.status === 'in_progress' ? 'ok' : 'bad', `Timer: ${s.clock && s.clock.status === 'in_progress' ? 'running' : 'restarting'}`, 'Starts the poster every 5 min and the clip maker every 10 min.');
+}
+
 // ------------------------------------------------------------ your own videos -> clips
 let uploads = ls.get('gc-uploads', []);   // [{id, name, at, state, pct, issue, msg}]
 const saveUploads = () => ls.set('gc-uploads', uploads.slice(0, 10));
@@ -813,6 +882,7 @@ async function rebootSite() {
 $('reboot').onclick = rebootSite;
 $('upbtn').onclick = openUpload;
 setInterval(checkUploads, 30000);
+refreshRuns(); setInterval(refreshRuns, 20000);
 document.querySelectorAll('#variant button').forEach((b) => b.onclick = () => { variant = b.dataset.v; ls.set('gc-variant', variant); renderQueue(); });
 $('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
 (async () => {
