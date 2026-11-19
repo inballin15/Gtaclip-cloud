@@ -906,8 +906,8 @@ def main() -> None:
             r["video"] = f"v/{r['id']}_final.mp4"
             r["poster"] = f"v/{r['id']}.jpg"
             _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + LAYOUT_V + r.get("layout", "")).encode()).hexdigest()[:10]
-        r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"
-                      if r.get("final_v") and r.get("hook") and r.get("final_hash", r.get("final_v")) == _hh else "")
+            r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"
+                          if r.get("final_v") and r.get("hook") and r.get("final_v") == _hh else "")
             r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
             r["clean"] = f"v/{r['id']}_clean.mp4?v={r['clean_v']}" if r.get("clean_v") else ""
             r["clipped"] = r.get("created")
