@@ -932,7 +932,8 @@ def main() -> None:
             status[m.group(1)] = int(m.group(2))
     except Exception:  # noqa: BLE001
         pass
-    build = hashlib.sha1((ROOT / "site" / "index.html").read_bytes()).hexdigest()[:10]
+    _app = (ROOT / "site" / "app.html").read_bytes()
+    build = hashlib.sha1(b"blob %d\0" % len(_app) + _app).hexdigest()[:10]   # same id as `git hash-object`
     (SITE / "queue.json").write_text(json.dumps({
         "site_build": build,
         "updated": iso(NOW),
