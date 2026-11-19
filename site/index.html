@@ -35,6 +35,10 @@
   .upbtn { width:100%; background:var(--panel); color:var(--fg); border:1px dashed #ffffff40; margin-bottom:10px; font-size:15px; padding:12px; }
   .bar2 { height:10px; border-radius:6px; background:var(--panel2); overflow:hidden; } .bar2 > div { height:100%; background:linear-gradient(90deg,var(--pink),var(--cyan)); width:0; transition:width .3s; }
   .upitem { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:10px 12px; margin-bottom:8px; display:flex; flex-direction:column; gap:6px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .chip { border:1px solid var(--line); background:var(--panel); color:var(--fg); font:inherit; font-size:12px; font-weight:700; padding:6px 10px; border-radius:999px; }
+  .chip.warn { border-color:#f5b54466; color:var(--amber); } .chip.bad { border-color:#ff6b6b66; color:#ff9a9a; }
+  .chip::before { content:"●"; margin-right:5px; font-size:9px; vertical-align:2px; }
   .btns.more { display:none; } .btns.more.open { display:flex; }
   .wrap { padding:12px 12px calc(84px + env(safe-area-inset-bottom)); max-width:1200px; margin:0 auto; }
   section[hidden], [hidden] { display:none !important; }
@@ -295,23 +299,30 @@ function render() {
   if (tab === 'stats') { renderKpis(); renderFinder(); renderLive(); renderStats(); }
 }
 function renderSetup() {
+  // every alert is a small bubble; tap one to see the details
   const box = $('setup'); box.replaceChildren();
-  if (!ghKey()) {
-    const n = el('div', 'box note warn'); n.append(el('div', null, 'Connect GitHub on this phone so Start/Stop, Post now and Edit work. '));
-    const b = el('button', 'btn cyan', 'Connect GitHub'); b.onclick = () => openSettings(); n.append(b); box.append(n);
-  }
-  if (L && !L.buffer_ok) {
-    const n = el('div', 'box note bad');
-    n.append(el('div', null, L.buffer_error || 'Buffer is not connected.'));
-    const b = el('button', 'btn pink', 'How to connect Buffer'); b.style.marginTop = '8px'; b.onclick = openBufferHelp; n.append(b); box.append(n);
-  }
+  const chips = [];
+  if (!ghKey()) chips.push({ cls: 'warn', txt: 'Connect GitHub', act: () => openSettings() });
+  if (L && !L.buffer_ok) chips.push({ cls: 'bad', txt: 'Buffer not connected', act: openBufferHelp });
   for (const [sv, until] of Object.entries((L && L.cooldown) || {})) {
-    if (new Date(until) > Date.now()) box.append(el('div', 'box note warn', `${sv === 'tiktok' ? 'TikTok' : 'YouTube'} hit its upload limit — uploads there pause until ${dET(until)}, then start again by themselves. No clips are lost.`));
+    if (new Date(until) <= Date.now()) continue;
+    const name = sv === 'tiktok' ? 'TikTok' : 'YouTube';
+    chips.push({ cls: 'warn', txt: `${name} paused · back ${tET(until)}`, act: () => sheet(`${name} is paused`, [
+      el('div', 'note warn', `${name} hit its upload limit. Uploads there start again by themselves at ${dET(until)}. No clips are lost — they stay in the queue.`),
+      el('div', 'meta', sv === 'youtube' ? 'Buffer allows 10 YouTube Shorts a day for unverified accounts. Verify the channel at youtube.com/verify, then refresh it in Buffer (Manage Channels) to remove the limit.' : 'TikTok limits how many posts go out through apps per day. The bot posts at most 11 a day to stay under it.')]) });
   }
-  for (const e of ((L && L.errors) || []).slice(0, 2)) {
-    if (Date.now() - new Date(e.at) > 6 * 3600e3) continue;
-    box.append(el('div', 'box note bad', `Post failed ${ago(e.at)}: ${e.error}`));
-  }
+  const errs = ((L && L.errors) || []).filter((e) => Date.now() - new Date(e.at) < 6 * 3600e3);
+  if (errs.length) chips.push({ cls: 'bad', txt: `${errs.length} failed post${errs.length > 1 ? 's' : ''}`, act: () => sheet('Failed posts', [
+    el('div', 'meta', 'These clips went back into the queue and will be tried again later.'),
+    ...errs.map((e) => el('div', 'note bad', `${ago(e.at)} — ${e.error.replace(/; skipped — waiting out the platform limit/, '')}`))]) });
+  const cc = L && L.channel_check;
+  if (cc && cc.tiktok && cc.tiktok !== 'ok') chips.push({ cls: 'warn', txt: 'TikTok check limited', act: () => sheet('Spotting your own posts', [
+    el('div', 'meta', `YouTube: ${cc.youtube || '—'}`), el('div', 'meta', `TikTok: ${cc.tiktok}`),
+    el('div', 'meta', 'The bot looks at your channels every 15 minutes to spot clips you posted yourself. TikTok sometimes hides videos from automated checks.')]) });
+  if (!chips.length) return;
+  const row = el('div', 'chips');
+  for (const c of chips) { const b = el('button', 'chip ' + c.cls, c.txt); b.onclick = c.act; row.append(b); }
+  box.append(row);
 }
 function renderRun() {
   const box = $('run'); box.replaceChildren();
