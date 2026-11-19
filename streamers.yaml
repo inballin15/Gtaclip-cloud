@@ -9,7 +9,7 @@ discovery:
   min_seconds: 8
   max_seconds: 60
   max_per_streamer: 4
-  max_total: 15            # per run (runs every 10 min)
+  max_total: 8             # per run (runs every 10 min) - keeps each run short
   min_live_viewers: 10000  # also clip big English GTA 6 streams that are live right now
   discover_live: true
   skip_title_words: ["abuse", "abusing", "lady", "women", "girl", "freaky", "strip", "horny",

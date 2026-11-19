@@ -45,6 +45,7 @@ RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (ac
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
 KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
+MAX_RENDERS = 10         # videos made per run (2 at a time); the rest next run
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
 LAYOUT_V = "v3-textonly-capcut"
@@ -746,6 +747,31 @@ def import_vod_clips(st: dict) -> None:
         log(f"vod import {name}: {n} clips")
 
 
+def publish_site() -> None:
+    """Put the current site folder live now (mid-run), same way the workflow does at the end."""
+    if not os.environ.get("GITHUB_ACTIONS"):
+        return
+    sh = r"""
+set -e
+git fetch -q origin main || true
+git show origin/main:site/index.html > /tmp/_idx.html && cp /tmp/_idx.html "$SITE/index.html" || true
+git show origin/main:site/app.html > /tmp/_app.html && cp /tmp/_app.html "$SITE/app.html" || true
+b=$(git hash-object "$SITE/app.html" | cut -c1-10); sed -i "s/__BUILD__/$b/" "$SITE/app.html"
+python3 -c "import json,sys;p=sys.argv[2]+'/queue.json';d=json.load(open(p));d['site_build']=sys.argv[1];json.dump(d,open(p,'w'),indent=1,ensure_ascii=False)" "$b" "$SITE"
+touch "$SITE/.nojekyll"
+export GIT_INDEX_FILE=/tmp/idx-mid; rm -f "$GIT_INDEX_FILE"
+git --work-tree="$SITE" add -A
+tree=$(git write-tree); unset GIT_INDEX_FILE
+c=$(git -c user.name=gtaclip-bot -c user.email=gtaclip-bot@users.noreply.github.com commit-tree "$tree" -m "gh-pages (mid-run)")
+git push -qf origin "$c:refs/heads/gh-pages"
+"""
+    try:
+        subprocess.run(["bash", "-c", sh], check=True, cwd=str(ROOT), env={**os.environ, "SITE": str(SITE)}, timeout=240)
+        log("site updated (mid-run)")
+    except Exception as e:  # noqa: BLE001
+        log(f"mid-run publish skipped: {e}")
+
+
 # ---------------------------------------------------------------- main
 def main() -> None:
     st = load_state()
@@ -871,6 +897,58 @@ def main() -> None:
             except Exception as e:  # noqa: BLE001
                 log(f"failed {c['url']}: {e}")
 
+    def write_queue() -> None:
+        ready = [dict(id=cid, **{k: v for k, v in c.items() if k not in ("final_hash",)})
+                 for cid, c in clips.items() if c["status"] == "new"]
+        for r in ready:
+            r["video"] = f"v/{r['id']}_final.mp4"
+            r["poster"] = f"v/{r['id']}.jpg"
+            r["final"] = f"v/{r['id']}_final.mp4?v={r['final_v']}" if r.get("final_v") and r.get("hook") else ""
+            r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
+            r["clean"] = f"v/{r['id']}_clean.mp4?v={r['clean_v']}" if r.get("clean_v") else ""
+            r["clipped"] = r.get("created")
+        ready = mix_order(ready)
+        for r in ready:
+            r["approved"] = bool(r.get("approved"))
+            r["post_now"] = bool(r.get("post_now"))
+        posted = []
+        try:
+            posted = json.loads((ROOT / "posts_history.json").read_text())
+        except Exception:  # noqa: BLE001
+            pass
+        for cid, c in clips.items():
+            if c["status"] == "used" and (c.get("tiktok") or c.get("youtube")):
+                posted.append({"hook": c.get("hook", ""), "streamer": c["streamer"], "campaign": c.get("campaign", ""),
+                               "posted": c.get("posted_at"), "tiktok": c.get("tiktok", ""), "youtube": c.get("youtube", "")})
+        posted.sort(key=lambda p: p.get("posted") or "", reverse=True)
+        status = {}
+        try:
+            log_text = Path("/tmp/pipeline.log").read_text() if Path("/tmp/pipeline.log").exists() else ""
+            for m in re.finditer(r"\] (.+?): (\d+) fresh GTA 6 clips", log_text):
+                status[m.group(1)] = int(m.group(2))
+        except Exception:  # noqa: BLE001
+            pass
+        _app = (ROOT / "site" / "app.html").read_bytes()
+        build = hashlib.sha1(b"blob %d\0" % len(_app) + _app).hexdigest()[:10]   # same id as `git hash-object`
+        (SITE / "queue.json").write_text(json.dumps({
+            "site_build": build,
+            "updated": iso(NOW),
+            # 'paused' stays true for the old Claude posting tasks (they must not post anymore);
+            # the real Start/Stop lives in live.json on the 'posted' branch, run by poster.py
+            "paused": True, "posting_on": not control.get("paused", True), "ready": ready, "posted": posted[:40],
+            "fetcher": {"last_run_utc": NOW.strftime("%H:%M:%S"), "last_run": iso(NOW), "fresh_by_streamer": status,
+                        "picked": len(picks),
+                        "added": sum(1 for p in picks if clips.get(p["id"], {}).get("status") == "new"),
+                        "found_24h": sum(1 for c in clips.values() if c.get("found", "") >= iso(NOW - timedelta(hours=24))),
+                        "kept_24h": sum(1 for c in clips.values() if c.get("found", "") >= iso(NOW - timedelta(hours=24))
+                                        and c["status"] in ("new", "used")),
+                        "every_min": 10},
+            "live": LIVE,
+            "ai": {"status": st.get("ai_status", "no key"), "checked": st.get("ai_checked", ""),
+                   "rated": sum(1 for c in clips.values() if c["status"] == "new" and "viral" in c)},
+        }, indent=1, ensure_ascii=False))
+
+
     # 3c. every clip-finder run replaces the queue with its fresh finds (if it found any).
     #     Kept: your uploads, Post-now picks, clips you edited, and VOD moments from the last hour.
     if picks:
@@ -926,7 +1004,8 @@ def main() -> None:
     except Exception as e:  # noqa: BLE001
         log(f"AI scoring failed: {e}")
 
-    # 4. drop old stuff, render what's queued
+    # 4. drop old stuff, get queued clips ready (thumbnail, hook); videos are made in 4b
+    jobs = []
     for cid, c in list(clips.items()):
         age_ref = c.get("posted_at") or c.get("found") or iso(NOW)
         age_h = (NOW - parse(age_ref)).total_seconds() / 3600
@@ -962,17 +1041,54 @@ def main() -> None:
                 log(f"auto hook {cid}: {c['hook']}")
             if c.get("hook"):
                 hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
-                if c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists():
-                    render_final(raw, cid, c["cam"], c["hook"], tmp, layout=c.get("layout", "split"))
-                    c["final_hash"] = hh
-                    c["final_v"] = hh
-                    log(f"rendered final {cid}")
-            ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + c.get("layout", "")).encode()).hexdigest()[:10]
-            if c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists():
-                render_final(raw, cid, c["cam"], None, tmp, out="_clean", layout=c.get("layout", "split"))
-                c["clean_v"] = ch
+                ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + c.get("layout", "")).encode()).hexdigest()[:10]
+                need_f = c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists()
+                need_c = c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists()
+                if need_f or need_c:
+                    jobs.append((cid, raw, hh, ch, need_f, need_c))
         except Exception as e:  # noqa: BLE001
-            log(f"render failed {cid}: {e}")
+            log(f"prep failed {cid}: {e}")
+
+    write_queue()          # the queue (with thumbnails) shows up right away; videos follow
+    publish_site()
+
+    # 4b. make the videos: best clips first, 2 at a time, at most MAX_RENDERS per run (the rest next run),
+    #     and put finished ones on the site every few videos so nothing waits for the whole run
+    order = {r["id"]: i for i, r in enumerate(mix_order([dict(id=k, **v) for k, v in clips.items() if v["status"] == "new"]))}
+    jobs.sort(key=lambda j: (not clips[j[0]].get("post_now"), order.get(j[0], 999)))
+    if len(jobs) > MAX_RENDERS:
+        log(f"making {MAX_RENDERS} of {len(jobs)} videos now; the rest next run")
+    jobs = jobs[:MAX_RENDERS]
+
+    def make(job):
+        cid, raw, hh, ch, need_f, need_c = job
+        c = clips[cid]
+        lay = c.get("layout", "split")
+        if need_f:
+            render_final(raw, cid, c["cam"], c["hook"], tmp, layout=lay)
+        if need_c:
+            render_final(raw, cid, c["cam"], None, tmp, out="_clean", layout=lay)
+        return job
+
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    done = 0
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futs = [pool.submit(make, j) for j in jobs]
+        for fut in as_completed(futs):
+            try:
+                cid, raw, hh, ch, need_f, need_c = fut.result()
+                c = clips[cid]
+                if need_f:
+                    c["final_hash"] = c["final_v"] = hh
+                if need_c:
+                    c["clean_v"] = ch
+                done += 1
+                log(f"made video {done}/{len(jobs)}: {c['streamer']} {cid}")
+                if done % 4 == 0 and done < len(jobs):
+                    write_queue()
+                    publish_site()
+            except Exception as e:  # noqa: BLE001
+                log(f"render failed: {e}")
 
     try:
         cam_sheet([(cid, c, RAW / f"{cid}.mp4") for cid, c in clips.items()
@@ -981,57 +1097,10 @@ def main() -> None:
         log(f"cam sheet failed: {e}")
 
     # 5. queue.json
-    ready = [dict(id=cid, **{k: v for k, v in c.items() if k not in ("final_hash",)})
-             for cid, c in clips.items() if c["status"] == "new"]
-    for r in ready:
-        r["video"] = f"v/{r['id']}_final.mp4"
-        r["poster"] = f"v/{r['id']}.jpg"
-        r["final"] = f"v/{r['id']}_final.mp4?v={r['final_v']}" if r.get("final_v") and r.get("hook") else ""
-        r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
-        r["clean"] = f"v/{r['id']}_clean.mp4?v={r['clean_v']}" if r.get("clean_v") else ""
-        r["clipped"] = r.get("created")
-    ready = mix_order(ready)
-    for r in ready:
-        r["approved"] = bool(r.get("approved"))
-        r["post_now"] = bool(r.get("post_now"))
-    posted = []
-    try:
-        posted = json.loads((ROOT / "posts_history.json").read_text())
-    except Exception:  # noqa: BLE001
-        pass
-    for cid, c in clips.items():
-        if c["status"] == "used" and (c.get("tiktok") or c.get("youtube")):
-            posted.append({"hook": c.get("hook", ""), "streamer": c["streamer"], "campaign": c.get("campaign", ""),
-                           "posted": c.get("posted_at"), "tiktok": c.get("tiktok", ""), "youtube": c.get("youtube", "")})
-    posted.sort(key=lambda p: p.get("posted") or "", reverse=True)
-    status = {}
-    try:
-        log_text = Path("/tmp/pipeline.log").read_text() if Path("/tmp/pipeline.log").exists() else ""
-        for m in re.finditer(r"\] (.+?): (\d+) fresh GTA 6 clips", log_text):
-            status[m.group(1)] = int(m.group(2))
-    except Exception:  # noqa: BLE001
-        pass
-    _app = (ROOT / "site" / "app.html").read_bytes()
-    build = hashlib.sha1(b"blob %d\0" % len(_app) + _app).hexdigest()[:10]   # same id as `git hash-object`
-    (SITE / "queue.json").write_text(json.dumps({
-        "site_build": build,
-        "updated": iso(NOW),
-        # 'paused' stays true for the old Claude posting tasks (they must not post anymore);
-        # the real Start/Stop lives in live.json on the 'posted' branch, run by poster.py
-        "paused": True, "posting_on": not control.get("paused", True), "ready": ready, "posted": posted[:40],
-        "fetcher": {"last_run_utc": NOW.strftime("%H:%M:%S"), "last_run": iso(NOW), "fresh_by_streamer": status,
-                    "picked": len(picks),
-                    "added": sum(1 for p in picks if clips.get(p["id"], {}).get("status") == "new"),
-                    "found_24h": sum(1 for c in clips.values() if c.get("found", "") >= iso(NOW - timedelta(hours=24))),
-                    "kept_24h": sum(1 for c in clips.values() if c.get("found", "") >= iso(NOW - timedelta(hours=24))
-                                    and c["status"] in ("new", "used")),
-                    "every_min": 10},
-        "live": LIVE,
-        "ai": {"status": st.get("ai_status", "no key"), "checked": st.get("ai_checked", ""),
-               "rated": sum(1 for c in clips.values() if c["status"] == "new" and "viral" in c)},
-    }, indent=1, ensure_ascii=False))
+    write_queue()
     save_state(st)
-    log(f"queue: {len(ready)} ready ({sum(1 for r in ready if r['final'])} with final video)")
+    _q = json.loads((SITE / "queue.json").read_text())
+    log(f"queue: {len(_q['ready'])} ready ({sum(1 for r in _q['ready'] if r['final'])} with final video)")
 
 
 if __name__ == "__main__":

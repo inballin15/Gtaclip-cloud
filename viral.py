@@ -220,7 +220,7 @@ def gemini_models(key: str, log=print) -> list[str]:
         v = re.findall(r"(\d+(?:\.\d+)?)", n)
         ver = float(v[0]) if v else 0.0
         kind = 0 if "flash" in n and "lite" not in n else 1 if "flash" in n else 2 if "pro" in n else 3
-        return (kind, "preview" in n or "exp" in n, -ver, len(n))
+        return ("preview" in n or "exp" in n, kind, -ver, len(n))
     names.sort(key=rank)
     _MODELS = (names[:3] or ["gemini-flash-latest", "gemini-2.5-flash"])
     log(f"AI models: {', '.join(_MODELS)}")
@@ -247,13 +247,14 @@ def ai_rank(clips: list[dict], log=print) -> list[dict]:
         "what happens, ends with 'in GTA 6' when natural. Score 0 for anything sexual, hateful, about strippers, or "
         "harming animals.\n\nCandidates:\n" + _json.dumps(items))
     body = {"contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4}}
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4,
+                                 "thinkingConfig": {"thinkingBudget": 0}}}
     for model in gemini_models(key, log):
         try:
             req = urllib.request.Request(
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
                 data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=90) as r:
+            with urllib.request.urlopen(req, timeout=75) as r:
                 out = _json.loads(r.read())
             text = out["candidates"][0]["content"]["parts"][0]["text"]
             ranked = _json.loads(text)
@@ -297,9 +298,9 @@ def ai_score_clips(items: list[dict], log=print) -> tuple[dict, str]:
     if not key:
         return {}, "no key"
     out, status = {}, "ok"
-    for i in range(0, len(items), 20):
+    for i in range(0, len(items), 10):
         batch = [{"id": it["id"], "streamer": it.get("streamer", ""), "twitch_title": it.get("title", "")[:120],
-                  "transcript": (it.get("transcript") or "")[:700], "seconds": it.get("seconds")} for it in items[i:i + 20]]
+                  "transcript": (it.get("transcript") or "")[:600], "seconds": it.get("seconds")} for it in items[i:i + 10]]
         prompt = (
             "You rate short GTA 6 livestream clips for TikTok/YouTube Shorts like OpusClip's virality score.\n"
             "Score each 0-100 for how likely it is to go viral: a strong hook in the first seconds, a funny/shocking/"
@@ -310,14 +311,15 @@ def ai_score_clips(items: list[dict], log=print) -> tuple[dict, str]:
             "Return JSON list: [{\"id\": \"...\", \"score\": 0-100, \"why\": \"max 12 words\", \"hook\": \"...\"}]\n\n"
             "Clips:\n" + _json.dumps(batch))
         body = {"contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"responseMimeType": "application/json", "temperature": 0.3}}
+                "generationConfig": {"responseMimeType": "application/json", "temperature": 0.3,
+                                     "thinkingConfig": {"thinkingBudget": 0}}}
         done = False
         for model in gemini_models(key, log):
             try:
                 req = urllib.request.Request(
                     f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
                     data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
-                with urllib.request.urlopen(req, timeout=120) as r:
+                with urllib.request.urlopen(req, timeout=75) as r:
                     res = _json.loads(r.read())
                 rows = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
                 if isinstance(rows, dict):
@@ -334,7 +336,9 @@ def ai_score_clips(items: list[dict], log=print) -> tuple[dict, str]:
                 msg = e.read().decode(errors="replace")[:160]
                 status = f"{model}: HTTP {e.code} {msg}"
                 log(f"AI scoring: {status}")
-                if e.code in (400, 401, 403):
+                if e.code == 400 and "thinking" in msg.lower():
+                    body["generationConfig"].pop("thinkingConfig", None)   # model doesn't take that setting
+                if e.code in (401, 403):
                     return out, status    # bad key: no point trying again
             except Exception as e:  # noqa: BLE001
                 status = f"{model}: {str(e)[:120]}"
