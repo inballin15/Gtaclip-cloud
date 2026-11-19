@@ -530,7 +530,7 @@ function renderQueue() {
   // keep playing videos alive: rebuild only when the list changed
   const sig = JSON.stringify(ready.map((r) => [r.id, r.final, r.nowing, r.hook])) + (L && L.paused) + (L && L.next_slot) + editing + variant;
   if (box.dataset.sig === sig) return; box.dataset.sig = sig; box.replaceChildren();
-  if (!ready.length) { box.append(el('div', 'empty', 'Queue is empty — new clips are found every 20 minutes.')); return; }
+  if (!ready.length) { box.append(el('div', 'empty', 'Queue is empty — new clips arrive with the next clip-maker run (every 10 min).')); return; }
   const plan = slotPlan().filter((s) => +s > Date.now() - 60000); let qi = 0;
   for (const r of ready) {
     let st;
