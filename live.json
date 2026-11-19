@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-19T15:10:59Z",
+ "updated": "2026-11-19T15:15:57Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
@@ -502,12 +502,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-19T15:10:59Z",
- "log": [
-  "[15:11:01Z] posting PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL (10:07 AM slot) to youtube: ohnePixel: IPad Kid max brainrot in GTA 6",
-  "[15:11:03Z]   youtube: uploading ",
-  "[15:11:03Z]   tiktok: error skipped — waiting out the platform limit",
-  "[15:11:03Z] youtube limit hit — pausing youtube uploads until 2026-11-19T18:10:59Z",
-  "[15:11:03Z] PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL failed everywhere — back in the queue"
- ]
+ "stats_updated": "2026-11-19T15:15:57Z",
+ "log": []
 }
