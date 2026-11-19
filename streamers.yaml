@@ -14,7 +14,7 @@ discovery:
   discover_live: true
   skip_title_words: ["abuse", "abusing", "lady", "women", "girl", "freaky", "strip", "horny",
                      "dog", "slur", "nsfw", "spoiler", "ending", "loading", "ban",
-                     "stripper", "mandy", "club", "twerk", "thirst", "booty", "lap dance", "hooker", "pole", "gyatt", "gyat", "stepbro", "stepsis", "step bro", "step sis", "onlyfans", "gyaa", "disabled", "retard"]
+                     "stripper", "mandy", "club", "twerk", "thirst", "booty", "lap dance", "hooker", "pole", "gyatt", "gyat", "stepbro", "stepsis", "step bro", "step sis", "onlyfans", "gyaa", "disabled", "retard", "kills cat", "kill cat", "killed cat", "kills dog", "kill dog", "killed dog", "kills a cat", "kills a dog", "animal abuse", "kills horse", "kills deer", "shoots dog", "shoots cat", "run over dog", "runs over dog"]
 
 streamers:
   clix:        {name: "Clix",          tag: "#Clix",     campaign: "Clix", facecam: [0, 0, 0.248, 0.248]}
