@@ -268,7 +268,7 @@ function statFor(link) { return ((L && L.stats) || []).find((s) => s.link && lin
 function platState(p, s) {
   const st = (p.status || {})[s];
   if (p[s]) return { cls: 's-live', txt: 'Live', link: p[s] };
-  if (p.manual) return { cls: 's-wait', txt: 'You post this one' };
+  if (p.manual) return { cls: 's-wait', txt: 'Not spotted yet' };
   if (!st) return (p._new && Date.now() - new Date(p.posted_at) < 3600e3) ? { cls: 's-busy', txt: 'Uploading', spin: true } : { cls: 's-wait', txt: 'Not posted' };
   if (st.state === 'error') return { cls: 's-err', txt: 'Failed: ' + (st.error || 'unknown error') };
   if (st.state === 'live') return { cls: 's-live', txt: 'Live' };
@@ -537,12 +537,10 @@ function clipCard(r, st) {
   mb.onclick = () => { more.classList.toggle('open'); mb.textContent = more.classList.contains('open') ? '× Less' : '⋯ More'; };
   const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
   const ed = el('button', 'btn', 'Edit hook'); ed.onclick = () => { editing = editing === r.id ? null : r.id; $('queuelist').dataset.sig = ''; renderQueue(); };
-  const ip = el('button', 'btn', 'I posted it');
-  ip.onclick = async () => { if (ip.dataset.arm) { ip.disabled = true; if (await ghTap('manual: ' + r.id)) toast('Marked as posted — the bot will skip it'); render(); } else { ip.dataset.arm = 1; ip.textContent = 'Tap again to confirm'; setTimeout(() => { delete ip.dataset.arm; ip.textContent = 'I posted it'; }, 3000); } };
   const tw = el('a', 'btn', 'Twitch'); tw.href = r.twitch || '#'; tw.target = '_blank'; tw.rel = 'noopener'; if (!r.twitch) tw.hidden = true;
   const sk = el('button', 'btn del', "Don't post");
   sk.onclick = async () => { if (sk.dataset.arm) { sk.disabled = true; if (await ghTap('skip: ' + r.id)) toast('Removed from the queue'); render(); } else { sk.dataset.arm = 1; sk.textContent = 'Tap again to remove'; setTimeout(() => { delete sk.dataset.arm; sk.textContent = "Don't post"; }, 3000); } };
-  more.append(cc, ed, ip, tw, sk); b.append(more);
+  more.append(cc, ed, tw, sk); b.append(more);
   if (isPending('edit: ' + r.id)) b.append(el('div', 'note warn', 'Re-making the video with your new hook… (2–4 min)'));
   if (editing === r.id) {
     const f = el('div', 'edit');

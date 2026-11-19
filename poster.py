@@ -289,6 +289,82 @@ def tier(r: dict) -> int:
     return 0 if (fresh and real) else 1 if real else 2 if fresh else 3
 
 
+# ------------------------------------------------------------------ your own uploads, spotted on the channels
+UA = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+      "Accept-Language": "en-US,en;q=0.9"}
+YT_SAMPLE = "https://www.youtube.com/shorts/YuteHoOwHUA"   # one of our Shorts, to find the channel id
+TIKTOK_USER = "gtaclip96"
+
+
+def _get(url: str, timeout: int = 25) -> str:
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode("utf-8", "replace")
+
+
+def norm(t: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", (t or "").lower())
+
+
+def channel_videos(ctl: dict) -> list[dict]:
+    """Recent videos on YouTube (public feed) and TikTok (public profile, best effort): [{service, link, text}]."""
+    out = []
+    try:
+        cid = ctl.get("yt_channel")
+        if not cid:
+            m = re.search(r'"(?:channelId|externalId)":"(UC[\w-]{22})"', _get(YT_SAMPLE))
+            cid = m.group(1) if m else ""
+            ctl["yt_channel"] = cid
+        if cid:
+            xml = _get(f"https://www.youtube.com/feeds/videos.xml?channel_id={cid}")
+            for e in re.findall(r"<entry>(.*?)</entry>", xml, re.S):
+                vid = re.search(r"<yt:videoId>([^<]+)", e)
+                title = re.search(r"<title>([^<]*)", e)
+                desc = re.search(r"<media:description>([^<]*)", e)
+                if vid:
+                    out.append({"service": "youtube", "link": f"https://youtube.com/shorts/{vid.group(1)}",
+                                "text": __import__("html").unescape((title.group(1) if title else "") + " " + (desc.group(1) if desc else ""))})
+        ctl["yt_check"] = "ok"
+    except Exception as e:  # noqa: BLE001
+        ctl["yt_check"] = f"failed: {str(e)[:80]}"
+    try:
+        page = _get(f"https://www.tiktok.com/@{TIKTOK_USER}")
+        n = 0
+        for vid, desc in re.findall(r'"id":"(\d{15,22})","desc":"((?:[^"\\]|\\.)*)"', page):
+            out.append({"service": "tiktok", "link": f"https://www.tiktok.com/@{TIKTOK_USER}/video/{vid}",
+                        "text": json.loads(f'"{desc}"')})
+            n += 1
+        ctl["tt_check"] = "ok" if n else "no videos visible (TikTok hides them from automated checks)"
+    except Exception as e:  # noqa: BLE001
+        ctl["tt_check"] = f"failed: {str(e)[:80]}"
+    return out
+
+
+def detect_manual_posts(ctl: dict, by_id: dict, recs: dict) -> None:
+    """A queued clip whose hook shows up on our TikTok/YouTube = you posted it yourself. Mark it posted."""
+    if DRY_RUN or (ctl.get("manual_check") and NOW - parse(ctl["manual_check"]) < timedelta(minutes=14)):
+        return
+    ctl["manual_check"] = iso(NOW)
+    vids = channel_videos(ctl)
+    known = {r.get(s) for r in recs.values() for s in ("tiktok", "youtube") if r.get(s)}
+    for v in vids:
+        if v["link"] in known:
+            continue
+        t = norm(v["text"])
+        for cid, c in by_id.items():
+            h = norm(c.get("hook"))
+            if len(h) >= 12 and h[:40] in t:
+                r = recs.get(cid) or {"id": cid, "hook": c.get("hook", ""), "streamer": c.get("streamer", ""),
+                                      "campaign": c.get("campaign", ""), "why": "posted by Nicholas (spotted on the channel)",
+                                      "manual": True, "posted_at": iso(NOW), "tiktok": "", "youtube": ""}
+                if not r.get(v["service"]):
+                    r[v["service"]] = v["link"]
+                    recs[cid] = r
+                    wj(P / "posted" / f"{cid}.json", r)
+                    log(f"spotted your {v['service']} post of {cid}: {v['link']}")
+                break
+
+
 # ------------------------------------------------------------------ schedule
 # TikTok blocks accounts that publish too much through the API, so: every 90 minutes (11 a day)
 SLOTS = [(7, 7), (8, 37), (10, 7), (11, 37), (13, 7), (14, 37), (16, 7), (17, 37), (19, 7), (20, 37), (22, 7)]
@@ -347,6 +423,11 @@ def main() -> None:
     else:
         blocked = set()
     blocked |= blocked_extra
+    try:
+        detect_manual_posts(ctl, by_id, recs)
+        posted_ids = set(recs)
+    except Exception as e:  # noqa: BLE001
+        log(f"channel check failed: {e}")
     ctl["postnow"] = [p for p in ctl["postnow"] if p["id"] not in posted_ids and p["id"] in by_id]
 
     buffer_ok, buffer_err = False, ""
@@ -523,7 +604,8 @@ def main() -> None:
     live = {
         "updated": iso(NOW), "paused": bool(ctl.get("paused")), "switched_at": ctl.get("switched_at", ""),
         "postnow": ctl["postnow"], "next_slot": iso(nxt) if nxt else "", "up_next": up_next,
-        "buffer_ok": buffer_ok, "buffer_error": buffer_err, "cooldown": ctl.get("cooldown", {}), "errors": ctl.get("errors", []),
+        "buffer_ok": buffer_ok, "buffer_error": buffer_err, "cooldown": ctl.get("cooldown", {}),
+        "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
         "posts": dict(sorted(recs.items(), key=lambda kv: kv[1].get("posted_at", ""), reverse=True)[:120]),
         "stats": stats_posts if buffer_ok else old.get("stats", []),
