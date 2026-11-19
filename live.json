@@ -1,14 +1,14 @@
 {
- "updated": "2026-11-19T12:09:30Z",
+ "updated": "2026-11-19T12:14:27Z",
  "paused": false,
  "switched_at": "2026-11-18T22:03:12Z",
  "postnow": [],
- "next_slot": "2026-11-19T13:37:00Z",
- "up_next": "SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde",
+ "next_slot": "2026-11-19T16:37:00Z",
+ "up_next": "ThoughtfulSmokyJackalANELE-WbMhFvUtSpLf87Zw",
  "buffer_ok": true,
  "buffer_error": "",
  "cooldown": {
-  "youtube": "2026-11-19T08:05:00Z",
+  "youtube": "2026-11-19T15:10:00Z",
   "tiktok": "2026-11-19T22:49:33Z"
  },
  "errors": [
@@ -25,38 +25,17 @@
  ],
  "blocked": [
   "AffluentAuspiciousShieldArgieB8-mFf3ThrEyPR80JRX",
-  "AlertFrigidButterflyBCWarrior-FKf0LD7Rx5dFBvIv",
-  "AliveImportantAirGuitarDerp-wENS7ukvYYoqtIQv",
-  "ApatheticTacitSquirrelMcaT-9D41rxUt0bbH73WT",
-  "AssiduousAbstemiousRabbitDansGame-mtN3TdSyaWpdf-Dv",
-  "AstutePatientMangoKappa-XYmVR9ICujnRf8I0",
-  "ColorfulTangentialLyrebirdEagleEye-QYnir5NfuQmv48-u",
-  "CrypticCrazyDiscJKanStyle-M-oh5ixRnwgFqIgy",
-  "EagerBovineVelociraptorTwitchRaid-j2H8aK-F-0bObWVL",
   "EasyThirstyBottlePeanutButterJellyTime-naAgu52jJiR9uPnF",
-  "ExuberantAntsyBaconSoonerLater-rLeWZtUNw0h1vjvs",
   "FlaccidTubularGerbilMoreCowbell-ZnsEqpqa-F1GYqrF",
   "FreezingSavagePheasantVoHiYo-EBaAN9gMaae0kLrb",
   "FurryOutstandingEndiveWow-vQ1V-slRhqE_Btw9",
   "HelplessSneakyPizzaDatSheffy-m_mjee7JqSU",
-  "InquisitiveJollyVanillaDxCat-vctI-tQHron3Wd5I",
   "JazzyPrettiestDogeDendiFace-61fOM3hM6Y_cOt1g",
-  "MildMoistJayKreygasm-v2wmJCyO8k9hd65Z",
-  "MiniatureLivelyCakeCclamChamp-OfqRushuXK7A_SJG",
   "MoistSmilingPlumberNotATK-jloy4snFc_Q3Qj",
   "PoliteVastVultureDAESuppy-mS6bXiic5sZiRI4t",
-  "ProtectiveNurturingGrassDBstyle-4H5CLKiA7Y2qYYxA",
-  "RealPluckyWaterTooSpicy-uqqOeB14SIB8CRX7",
-  "RockyGlutenFreeRadishDBstyle-YAtDvLyliysA3g7f",
-  "SavageDarkTireDatSheffy-K7UssK9Dq-KT6QWb",
-  "SecretiveCarelessDinosaurShazBotstix-5jEErSd6_Rseo1lT",
   "SillySwissBeefHoneyBadger-zyoWv8KtrlrAm62o",
   "SmallBlightedMacaroniCharlieBitMe-F3O-LH",
-  "SnappyProductiveSandpiperPeteZaroll-IFwA9KNv1amapYP3",
-  "StylishResourcefulStorkOpieOP-U6qZibJHWFY6Iib_",
-  "SuperSlickStrawberryAMPEnergy-iLijF7374bmMsbtk",
   "ThankfulSpookyWoodpeckerWow-Gs7udfXVH_yXstNU",
-  "ThoughtfulSmokyJackalANELE-WbMhFvUtSpLf87Zw",
   "ToughYawningGooseMau5-2PnplpOOX4eow-YN"
  ],
  "posts": {
@@ -504,11 +483,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-19T12:09:30Z",
- "log": [
-  "[12:09:31Z] posting SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde (7:07 AM slot) to youtube: Clix swears he looks JUST like Jason in GTA 6",
-  "[12:09:33Z]   youtube: uploading ",
-  "[12:09:33Z]   tiktok: error skipped — waiting out the platform limit",
-  "[12:09:33Z] SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde failed everywhere — back in the queue"
- ]
+ "stats_updated": "2026-11-19T12:14:27Z",
+ "log": []
 }
