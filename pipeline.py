@@ -553,8 +553,11 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             # webcam: a wide strip, ~1/3 of the screen (cam boxes taller than that lose a little top/bottom,
             # cut so the face stays in the upper-middle)
             f"[a]crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{TOP_H}/1080)':x=iw*{x}:y='ih*{y}+(ih*{h}-oh)*0.3',"
-            f"scale=1080:{TOP_H}:force_original_aspect_ratio=increase,crop=1080:{TOP_H},setsar=1[top];"
-            f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:{1920 - TOP_H},crop=1080:{1920 - TOP_H},setsar=1[bot];"
+            # small webcams get blown up ~4-5x: light denoise first, sharp (lanczos) scaling, then sharpen
+            f"hqdn3d=1.5:1.5:3:3,scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
+            f"crop=1080:{TOP_H},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
+            f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H},"
+            f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
     if hook:
@@ -566,7 +569,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         inputs = ["-i", str(raw)]
         flt = base + ",format=yuv420p[out]"
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
-       "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-maxrate", "3500k", "-bufsize", "7M", "-r", "30",
+       "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-maxrate", "5000k", "-bufsize", "10M", "-r", "30",
        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
 
 
