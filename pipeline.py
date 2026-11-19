@@ -476,6 +476,57 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
 
 
+# ---------------------------------------------------------------- links (YouTube / Twitch VOD)
+def _secs(t) -> float | None:
+    if t in (None, ""):
+        return None
+    if isinstance(t, (int, float)):
+        return float(t)
+    p = [float(x) for x in str(t).strip().split(":")]
+    v = 0.0
+    for x in p:
+        v = v * 60 + x
+    return v
+
+
+def fetch_link_audio(url: str, section, tmp: Path) -> tuple[Path, float, str]:
+    """Download just the audio of a link (small + fast) to find the moments. Returns (file, offset, title)."""
+    import yt_dlp
+    from yt_dlp.utils import download_range_func
+    a = b = None
+    if section:
+        parts = re.split(r"\s*[-–to]+\s*", str(section).strip())
+        a, b = _secs(parts[0]), _secs(parts[1]) if len(parts) > 1 else None
+    opts = {"format": "bestaudio/best", "outtmpl": str(tmp / "linkaudio.%(ext)s"), "quiet": True,
+            "noprogress": True, "noplaylist": True}
+    if a is not None:
+        opts["download_ranges"] = download_range_func(None, [(a, b if b else a + 4 * 3600)])
+    with yt_dlp.YoutubeDL(opts) as y:
+        info = y.extract_info(url, download=True)
+        f = Path(y.prepare_filename(info))
+    if not f.exists():
+        f = next(tmp.glob("linkaudio.*"))
+    log(f"link audio: {info.get('title')} ({int(info.get('duration') or 0) // 60} min){f' section {section}' if section else ''}")
+    return f, float(a or 0), (info.get("title") or "Link")[:60]
+
+
+def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path) -> None:
+    """Download only the video section of a chosen moment, then normalise it to MP4."""
+    import yt_dlp
+    from yt_dlp.utils import download_range_func
+    import viral
+    out = tmp / f"sec_{int(start)}"
+    opts = {"format": "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best", "outtmpl": str(out) + ".%(ext)s",
+            "quiet": True, "noprogress": True, "noplaylist": True, "merge_output_format": "mp4",
+            "download_ranges": download_range_func(None, [(max(0.0, start - 1), end + 1)]),
+            "force_keyframes_at_cuts": True}
+    with yt_dlp.YoutubeDL(opts) as y:
+        y.download([url])
+    f = next(tmp.glob(f"sec_{int(start)}.*"))
+    viral.cut(f, 0, (end - start) + 2, raw)
+    f.unlink(missing_ok=True)
+
+
 # ---------------------------------------------------------------- your own uploads -> clips
 def process_uploads(st: dict, tmp: Path) -> None:
     """Dashboard upload: the video arrives in pieces on a branch 'upload-<id>' + an issue 'upload: <id>'.
@@ -491,23 +542,37 @@ def process_uploads(st: dict, tmp: Path) -> None:
         try:
             body = (it.get("body") or "{}").strip()
             job = json.JSONDecoder().raw_decode(body[body.index("{"):])[0]   # ignore anything after the JSON
-            ref, parts = job["ref"], job["parts"]
+            ref, parts = job.get("ref", ""), job.get("parts", [])
+            if not job.get("url") and not (ref and parts):
+                raise ValueError("no video")
         except Exception:  # noqa: BLE001
             _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Couldn't read this upload — please try again."})
             _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
             continue
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Got your video — finding the best moments now (usually 5–20 min)."})
         src = tmp / f"upload_{job.get('id', num)}.mp4"
+        link = job.get("url") or ""
+        offset = 0.0
         try:
-            subprocess.run(["git", "fetch", "-q", "--depth=1", "origin", f"{ref}:refs/remotes/origin/{ref}"], check=True)
-            with open(src, "wb") as fh:
-                for part in parts:
-                    fh.write(subprocess.run(["git", "show", f"origin/{ref}:{part}"], capture_output=True, check=True).stdout)
             import viral
+            if link:
+                src, offset, title = fetch_link_audio(link, job.get("section"), tmp)
+                job.setdefault("name", title)
+                if not job.get("name") or job["name"] == "Link":
+                    job["name"] = title
+            else:
+                subprocess.run(["git", "fetch", "-q", "--depth=1", "origin", f"{ref}:refs/remotes/origin/{ref}"], check=True)
+                with open(src, "wb") as fh:
+                    for part in parts:
+                        fh.write(subprocess.run(["git", "show", f"origin/{ref}:{part}"], capture_output=True, check=True).stdout)
             moments = viral.find_moments(src, log=log)
         except Exception as e:  # noqa: BLE001
             log(f"upload {num} failed: {e}")
-            _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": f"Sorry — that video couldn't be processed ({str(e)[:150]}). Try a shorter video or another format (MP4)."})
+            hint = ("YouTube blocked the download from GitHub's servers — save the video and use Upload instead."
+                    if "youtu" in link and re.search(r"sign in|bot|confirm|403|429", str(e), re.I)
+                    else "Try a shorter part (add a time range) or upload the file instead." if link
+                    else "Try a shorter video or another format (MP4).")
+            _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": f"Sorry — that video couldn't be processed ({str(e)[:150]}). {hint}"})
             _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
             continue
         login = (job.get("login") or "").lower()
@@ -519,17 +584,24 @@ def process_uploads(st: dict, tmp: Path) -> None:
             raw = RAW / f"{cid}.mp4"
             try:
                 import viral
-                viral.cut(src, m["start"], m["end"], raw)
+                if link:
+                    fetch_link_section(link, offset + m["start"], offset + m["end"], raw, tmp)
+                else:
+                    viral.cut(src, m["start"], m["end"], raw)
                 dur = duration_of(raw)
                 cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(login))
                 rec = {"status": "new", "source": "upload", "streamer": name, "login": login,
                        "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name)), "campaign": s_cfg.get("campaign", ""),
                        "title": f"{job.get('name', 'Your video')} @ {int(m['start'] // 60)}:{int(m['start'] % 60):02d}",
-                       "created": iso(NOW), "found": iso(NOW), "twitch": "", "transcript": m["text"],
+                       "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
                        "seconds": round(dur), "moment": {k: m[k] for k in ("start", "end", "score", "reasons")},
                        "cam_v": CAM_V}
-                if m.get("hook"):
+                if m.get("hook_ai"):
+                    rec.update(hook=m["hook"], hook_kind="ai")
+                elif m.get("hook"):
                     rec.update(hook=m["hook"], hook_auto=True, hook_kind="transcript")
+                if m.get("ai_score") is not None:
+                    rec["moment"]["ai_score"] = m["ai_score"]
                 if cam and q in ("edge", "learned"):
                     rec.update(cam=cam, cam_q=q, layout="split")
                 else:
@@ -543,7 +615,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
                + "\n".join(made)) if made else "No strong moments found in this video."
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": msg})
         _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
-        _gh("DELETE", f"/repos/{REPO}/git/refs/heads/{ref}")
+        if ref:
+            _gh("DELETE", f"/repos/{REPO}/git/refs/heads/{ref}")
         log(f"upload {num}: {len(made)} clips")
 
 

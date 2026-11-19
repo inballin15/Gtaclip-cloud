@@ -138,7 +138,7 @@
     <details class="box" id="slots-box"><summary id="slots-sum">Today's slots</summary><div class="slots" id="slots"></div></details>
   </section>
   <section id="tab-queue" hidden>
-    <button class="bigbtn upbtn" id="upbtn">＋ Make clips from my video</button>
+    <button class="bigbtn upbtn" id="upbtn">＋ Make clips (upload or link)</button>
     <div id="uploads"></div>
     <div class="seg" id="variant">
       <button data-v="final">With caption</button><button data-v="clean">No caption</button>
@@ -600,15 +600,24 @@ function openUpload() {
   const who = el('select', 'setin'); for (const [v, n] of STREAMERS) { const o = el('option', null, n); o.value = v; who.append(o); }
   const other = el('input', 'setin'); other.placeholder = 'Name for the credit (if not on the list)';
   const go = el('button', 'btn pink', 'Make clips');
-  const note = el('div', 'meta', 'Pick a stream VOD or gameplay video (MP4/MOV, up to ~1.5 GB). It finds the best moments — big reactions, hype, action — and makes 15–60 s clips with hooks. Takes about 5–20 min after upload.');
+  const note = el('div', 'meta', 'Upload a video OR paste a YouTube / Twitch link. It finds the best moments — big reactions, hype, action — and makes 15–60 s clips with hooks. Takes about 5–20 min.');
+  const link = el('input', 'setin'); link.type = 'url'; link.placeholder = 'https://www.twitch.tv/videos/… or youtube.com/…';
+  const sec = el('input', 'setin'); sec.placeholder = 'Optional part, e.g. 1:20:00-2:00:00 (long VODs)';
   go.onclick = () => {
-    const file = f.files && f.files[0]; if (!file) { toast('Pick a video first'); return; }
+    const n0 = STREAMERS.find((x) => x[0] === who.value);
+    const credit = who.value ? n0[1] : (other.value.trim() || 'Nicholas');
+    if (link.value.trim()) {
+      if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be|twitch\.tv)\//i.test(link.value.trim())) { toast('Paste a YouTube or Twitch link'); return; }
+      $('sheet').hidden = true; clipLink(link.value.trim(), sec.value.trim(), who.value, credit); return;
+    }
+    const file = f.files && f.files[0]; if (!file) { toast('Pick a video or paste a link'); return; }
     if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB) — trim it first'); return; }
     $('sheet').hidden = true;
     const n = STREAMERS.find((x) => x[0] === who.value);
     uploadVideo(file, who.value, who.value ? n[1] : (other.value.trim() || 'Nicholas'));
   };
-  sheet('Make clips from my video', [note, el('label', 'meta', 'Video'), f, el('label', 'meta', 'Whose stream is it?'), who, other, go]);
+  sheet('Make clips', [note, el('label', 'meta', 'Paste a link'), link, sec, el('label', 'meta', '— or upload a video —'), f,
+    el('label', 'meta', 'Whose stream is it?'), who, other, go]);
 }
 function b64(blob) {
   return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
@@ -651,6 +660,16 @@ async function uploadVideo(file, login, streamer) {
       : `Upload failed: ${e.message}`;
     saveUploads(); renderUploads();
   }
+}
+async function clipLink(url, section, login, streamer) {
+  const id = Date.now().toString(36);
+  const name = url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40);
+  const u = { id, name, at: Date.now(), state: 'processing', pct: 100 };
+  uploads.unshift(u); saveUploads(); switchTab('queue'); renderUploads();
+  try {
+    const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, url, section, name: '', login, streamer }) });
+    u.issue = iss.number; saveUploads(); renderUploads(); toast('Got it — finding the best moments');
+  } catch (e) { u.state = 'failed'; u.msg = `Couldn't send the link (GitHub ${e.status || e.message})`; saveUploads(); renderUploads(); }
 }
 async function checkUploads() {
   let changed = false;

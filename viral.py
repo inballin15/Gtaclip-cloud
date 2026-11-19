@@ -95,8 +95,27 @@ def find_moments(path: Path, max_clips: int | None = None, log=print) -> list[di
     # 1) loudness per second (dB)
     rms = np.array([np.sqrt(np.mean(audio[i * 16000:(i + 1) * 16000] ** 2) + 1e-9) for i in range(secs)])
     loud = _z(20 * np.log10(rms + 1e-9))
-    # 2) what's said, with word times
-    segs = transcribe(audio)
+    # 2) what's said, with word times. Long videos: only transcribe the ~30 loudest stretches (fast on 6-hour VODs)
+    if secs > 1200:
+        sm = _smooth(np.clip(loud, 0, None), 15)
+        picks, taken = [], np.zeros(secs, bool)
+        for p0 in np.argsort(-sm):
+            if len(picks) >= 30 or sm[p0] <= 0:
+                break
+            a0, b0 = max(0, int(p0) - 45), min(secs, int(p0) + 45)
+            if taken[a0:b0].any():
+                continue
+            taken[a0:b0] = True
+            picks.append((a0, b0))
+        log(f"long video: listening closely to {len(picks)} promising stretches")
+        segs = []
+        for a0, b0 in sorted(picks):
+            for sg in transcribe(audio[a0 * 16000:b0 * 16000]):
+                sg["start"] += a0; sg["end"] += a0
+                sg["words"] = [(x + a0, y + a0, w) for (x, y, w) in sg["words"]]
+                segs.append(sg)
+    else:
+        segs = transcribe(audio)
     rate = np.zeros(secs)
     hype = np.zeros(secs)
     for s in segs:
@@ -159,8 +178,62 @@ def find_moments(path: Path, max_clips: int | None = None, log=print) -> list[di
         clips.append({"start": round(start, 2), "end": round(end, 2), "peak": int(p), "score": round(val, 2),
                       "reasons": reasons, "hook": hook,
                       "text": " ".join(s["text"] for s in lines)[:900]})
+    clips = ai_rank(clips, log)   # smarter picks + hooks when a Gemini key is set (free tier); otherwise unchanged
     clips.sort(key=lambda c: -c["score"])
     return clips[:want]
+
+
+def ai_rank(clips: list[dict], log=print) -> list[dict]:
+    """Ask Gemini (one request for all candidates) which moments would actually go viral, and for a better hook.
+    No key / quota used up / any error -> keep the signal-based ranking."""
+    import json as _json
+    import os
+    import urllib.request
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not key or not clips:
+        return clips
+    items = [{"i": i, "transcript": c["text"][:700], "signals": c["reasons"], "seconds": round(c["end"] - c["start"])}
+             for i, c in enumerate(clips)]
+    prompt = (
+        "You pick viral short-form clips (TikTok/YouTube Shorts) from GTA 6 livestreams, like OpusClip does.\n"
+        "For each candidate, judge from the transcript: is it funny, surprising, dramatic or relatable? Does it have a "
+        "clear setup and payoff? Does it make sense without context? Would the first 3 seconds stop the scroll?\n"
+        "Return JSON: a list of {\"i\": number, \"score\": 0-10, \"hook\": \"...\"}. The hook is on-screen text: "
+        "max 65 characters, plain words, no emojis, no swearing, no quotes, one or two CAPS words for emphasis, true to "
+        "what happens, ends with 'in GTA 6' when natural. Score 0 for anything sexual, hateful, about strippers, or "
+        "harming animals.\n\nCandidates:\n" + _json.dumps(items))
+    body = {"contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4}}
+    for model in ("gemini-2.5-flash", "gemini-2.5-flash-lite"):
+        try:
+            req = urllib.request.Request(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=90) as r:
+                out = _json.loads(r.read())
+            text = out["candidates"][0]["content"]["parts"][0]["text"]
+            ranked = _json.loads(text)
+            if isinstance(ranked, dict):
+                ranked = next((v for v in ranked.values() if isinstance(v, list)), [])
+            top = max((c["score"] for c in clips), default=1) or 1
+            for r in ranked:
+                i = int(r.get("i", -1))
+                if 0 <= i < len(clips):
+                    c = clips[i]
+                    ai = max(0.0, min(10.0, float(r.get("score", 5))))
+                    c["ai_score"] = ai
+                    c["score"] = round(0.4 * (c["score"] / top) * 10 + 0.6 * ai, 2)
+                    h = clean_line(str(r.get("hook", "")))[:70]
+                    if len(h) >= 12:
+                        c["hook"], c["hook_ai"] = h, True
+                    if ai <= 1:
+                        c["score"] = -1   # AI says not safe / not good
+            clips = [c for c in clips if c["score"] >= 0]
+            log(f"AI picked the best moments ({model})")
+            return clips
+        except Exception as e:  # noqa: BLE001
+            log(f"AI ranking skipped ({model}): {str(e)[:120]}")
+    return clips
 
 
 def cut(src: Path, start: float, end: float, out: Path) -> None:
