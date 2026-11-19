@@ -39,6 +39,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
         run: python poster.py 2>&1 | tee /tmp/poster.log; exit ${PIPESTATUS[0]}
+      - name: keep the clock running
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          busy=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow clock.yml --limit 5 --json status -q '[.[]|select(.status!="completed")]|length')
+          if [ "$busy" = "0" ]; then echo "clock was stopped — restarting it"; gh workflow run clock.yml --repo "$GITHUB_REPOSITORY" --ref main; fi
       - name: save
         if: always()
         shell: bash
