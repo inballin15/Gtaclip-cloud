@@ -265,12 +265,20 @@ def metrics(node: dict) -> dict:
             "saves": int(out.get("saves", 0) or 0)}
 
 
-FRESH_HOURS = 14   # "new" = clipped in the last 14 hours (last night's / today's streams)
+FRESH_HOURS = 5    # "newest" = clipped in the last 5 hours
+MAX_AGE_HOURS = 9  # never post a clip clipped more than 9 hours ago
+
+
+def too_old(r: dict) -> bool:
+    try:
+        return (NOW - parse(r.get("created") or r.get("found") or iso(NOW))) > timedelta(hours=MAX_AGE_HOURS)
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def tier(r: dict) -> int:
     """0 = new clip with a real hook, 1 = older clip with a real hook, 2 = new clip still waiting for a hook, 3 = rest."""
-    found = r.get("found") or r.get("created") or ""
+    found = r.get("created") or r.get("found") or ""
     try:
         fresh = (NOW - parse(found)) < timedelta(hours=FRESH_HOURS)
     except Exception:  # noqa: BLE001
@@ -359,7 +367,8 @@ def main() -> None:
         ctl["last_slot"] = slot_key
     if not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key:
         pending_now = {p["id"] for p in ctl["postnow"]}
-        ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now]
+        ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now
+              and not too_old(r)]
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
         ok = sorted(ok, key=tier)  # newest clips with a real hook first (stable: keeps the streamer mix)

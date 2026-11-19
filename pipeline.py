@@ -42,7 +42,7 @@ SITE = Path(os.environ.get("SITE_OUT", ROOT / "_site"))
 VID = SITE / "v"
 RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (actions cache)
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
-KEEP_NEW_HOURS = 24      # a clip not posted within a day is old news
+KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
 LAYOUT_V = "v3-textonly-capcut"
@@ -362,6 +362,10 @@ def main() -> None:
     RAW.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp())
 
+    for c in clips.values():  # campaigns can be added later (Kai, YourRAGE): keep clips in step
+        camp = (CFG["streamers"].get(c.get("login", ""), {}) or {}).get("campaign", "")
+        if camp and c.get("status") == "new" and c.get("campaign") != camp:
+            c["campaign"] = camp
     for c in clips.values():
         if c.get("hook") and strip_emoji(c["hook"]) != c["hook"]:
             c["hook"] = strip_emoji(c["hook"])
@@ -442,7 +446,8 @@ def main() -> None:
     for cid, c in list(clips.items()):
         age_ref = c.get("posted_at") or c.get("found") or iso(NOW)
         age_h = (NOW - parse(age_ref)).total_seconds() / 3600
-        if (c["status"] == "new" and age_h > KEEP_NEW_HOURS) or (c["status"] != "new" and age_h > KEEP_POSTED_HOURS):
+        clip_age_h = (NOW - parse(c.get("created") or c.get("found") or iso(NOW))).total_seconds() / 3600
+        if (c["status"] == "new" and clip_age_h > KEEP_NEW_HOURS) or (c["status"] != "new" and age_h > KEEP_POSTED_HOURS):
             c["status"] = "expired" if c["status"] == "new" else c["status"]
         if c["status"] == "used" and age_h < 24:
             continue  # keep the posted video online a day (Buffer downloads it from here)
