@@ -43,6 +43,7 @@ VID = SITE / "v"
 RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (actions cache)
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_NEW_HOURS = 30
+QUEUE_MAX = 36           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.22   # cut the bottom 22% of the gameplay (streamers' burned-in auto captions live there)
 LAYOUT_V = "v3-textonly-capcut"
 KEEP_POSTED_HOURS = 72
@@ -303,8 +304,7 @@ def ff(*args) -> None:
 
 
 def render_preview(raw: Path, cid: str) -> None:
-    ff("-i", str(raw), "-vf", "scale=-2:540", "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
-       "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", str(VID / f"{cid}.mp4"))
+    """Just the thumbnail; the site plays the final video (no second copy = half the storage)."""
     ff("-ss", "2", "-i", str(raw), "-frames:v", "1", "-vf", "scale=640:-2", "-q:v", "4", str(VID / f"{cid}.jpg"))
 
 
@@ -320,8 +320,8 @@ def render_final(raw: Path, cid: str, cam: str, hook: str, tmp: Path) -> None:
         f"[st][1:v]overlay=(W-w)/2:(H-h)/2,format=yuv420p[out]"
     )
     ff("-i", str(raw), "-i", png, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
-       "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-r", "30",
-       "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(VID / f"{cid}_final.mp4"))
+       "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-maxrate", "4M", "-bufsize", "8M", "-r", "30",
+       "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}_final.mp4"))
 
 
 # ---------------------------------------------------------------- main
@@ -412,6 +412,15 @@ def main() -> None:
             except Exception as e:  # noqa: BLE001
                 log(f"failed {c['url']}: {e}")
 
+    # 4a. keep the queue to the best QUEUE_MAX clips (about 3 days of posts) so the site stays small
+    fresh = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new"]
+    keep = {r["id"] for r in mix_order(fresh)[:QUEUE_MAX]}
+    for r in fresh:
+        if r["id"] not in keep and not r.get("post_now") and not r.get("hook_by_user"):
+            clips[r["id"]].update(status="expired", skip_reason="queue full")
+    if len(fresh) > QUEUE_MAX:
+        log(f"queue full: kept {QUEUE_MAX} of {len(fresh)} clips")
+
     # 4. drop old stuff, render what's queued
     for cid, c in list(clips.items()):
         age_ref = c.get("posted_at") or c.get("found") or iso(NOW)
@@ -436,7 +445,8 @@ def main() -> None:
                 c["status"] = "expired"
                 continue
         try:
-            if not (VID / f"{cid}.mp4").exists():
+            (VID / f"{cid}.mp4").unlink(missing_ok=True)  # old preview copies
+            if not (VID / f"{cid}.jpg").exists():
                 render_preview(raw, cid)
             if not c.get("hook"):
                 c["hook"] = auto_hook(c)
@@ -456,7 +466,7 @@ def main() -> None:
     ready = [dict(id=cid, **{k: v for k, v in c.items() if k not in ("final_hash",)})
              for cid, c in clips.items() if c["status"] == "new"]
     for r in ready:
-        r["video"] = f"v/{r['id']}.mp4"
+        r["video"] = f"v/{r['id']}_final.mp4"
         r["poster"] = f"v/{r['id']}.jpg"
         r["final"] = f"v/{r['id']}_final.mp4?v={r['final_v']}" if r.get("final_v") and r.get("hook") else ""
         r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""

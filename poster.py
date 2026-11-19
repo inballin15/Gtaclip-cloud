@@ -33,7 +33,8 @@ ORG = os.environ.get("BUFFER_ORG", "6afd2f02dfdc69bf665498b2")
 CH = {"tiktok": os.environ.get("BUFFER_TIKTOK", "6afd3005ece6dfde5f04d0f4"),
       "youtube": os.environ.get("BUFFER_YOUTUBE", "6afd3fceece6dfde5f06164d")}
 ET = ZoneInfo("America/New_York")
-NOW = datetime.now(timezone.utc)
+NOW = parse_now = datetime.fromisoformat(os.environ["FAKE_NOW"]) if os.environ.get("FAKE_NOW") else datetime.now(timezone.utc)
+DRY_RUN = os.environ.get("DRY_RUN") == "1"   # test mode: never calls Buffer or GitHub
 SLOT_GRACE_MIN = 25          # a slot can still go out up to 25 min late (GitHub's timer can run late)
 REQUEST_MAX_AGE_MIN = 45     # Start/Stop/Post-now taps older than this are ignored (stale)
 LOG: list[str] = []
@@ -204,6 +205,8 @@ COOLDOWN_RE = re.compile(r"24 hours|daily video upload limit|large number of pos
 
 def create(service: str, c: dict) -> dict:
     tt, yt, title = texts(c)
+    if DRY_RUN:
+        return {"state": "uploading", "buffer_id": f"dry-{service}-{c['id'][:8]}", "error": ""}
     inp = {"channelId": CH[service], "schedulingType": "automatic", "mode": "shareNow",
            "text": tt if service == "tiktok" else yt,
            "assets": [{"video": {"url": c["final_abs"]}}]}
@@ -284,7 +287,7 @@ def main() -> None:
     recs: dict[str, dict] = {f.stem: rj(f, {}) for f in sorted((P / "posted").glob("*.json"))}
     posted_ids = set(recs)
 
-    if GH_TOKEN:
+    if GH_TOKEN and not DRY_RUN:
         handle_requests(ctl, set(by_id), posted_ids)
         blocked = blocked_ids()
     else:
@@ -313,7 +316,11 @@ def main() -> None:
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now]
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
-        pick = next((r for r in ok if not r.get("hook_auto")), None) or (ok[0] if ok else None)
+        last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
+        pick = (next((r for r in ok if not r.get("hook_auto") and r.get("streamer") != last_streamer), None)
+                or next((r for r in ok if not r.get("hook_auto")), None)
+                or next((r for r in ok if r.get("streamer") != last_streamer), None)
+                or (ok[0] if ok else None))
         if pick:
             to_post.append((pick, f"{slot.astimezone(ET):%-I:%M %p} slot"))
         else:
@@ -321,7 +328,9 @@ def main() -> None:
             ctl["last_slot"] = slot_key
 
     # 2) post it
-    if BUFFER_KEY:
+    if DRY_RUN:
+        buffer_ok = True
+    elif BUFFER_KEY:
         try:
             buffer("query { account { id } }")
             buffer_ok = True
@@ -331,12 +340,12 @@ def main() -> None:
     if buffer_ok:
         for c, why in to_post:
             cid = c["id"]
-            log(f"posting {cid} ({why}): {c.get('hook')}")
             cool = ctl.get("cooldown", {})
             live_svcs = [s for s in ("tiktok", "youtube") if not cool.get(s) or parse(cool[s]) <= NOW]
             if not live_svcs:
-                log("both TikTok and YouTube are in a cooldown — not posting")
+                log(f"{why}: TikTok and YouTube are both waiting out an upload limit — holding {cid}")
                 break
+            log(f"posting {cid} ({why}) to {', '.join(live_svcs)}: {c.get('hook')}")
             res = {s: create(s, c) for s in live_svcs}
             res.update({s: {"state": "error", "error": "skipped — waiting out the platform limit", "tries": 3}
                         for s in ("tiktok", "youtube") if s not in live_svcs})
@@ -367,7 +376,7 @@ def main() -> None:
     stats_posts = []
     if buffer_ok:
         try:
-            nodes = recent_buffer_posts()
+            nodes = [] if DRY_RUN else recent_buffer_posts()
         except Exception as e:  # noqa: BLE001
             nodes = []
             buffer_err = str(e)[:300]
@@ -389,7 +398,10 @@ def main() -> None:
                         r[s] = link
                     changed = True
             for s, st in (r.get("status") or {}).items():
-                if st.get("state") == "error" and COOLDOWN_RE.search(st.get("error", "")):
+                fresh = (NOW - parse(st.get("last_try") or r.get("posted_at") or iso(NOW))) < timedelta(hours=2)
+                if st.get("state") == "error" and COOLDOWN_RE.search(st.get("error", "")) and fresh and not st.get("cooldown_set"):
+                    st["cooldown_set"] = True
+                    changed = True
                     if "24 hours" in st["error"]:
                         until = iso(NOW + timedelta(hours=24))
                     elif "daily" in st["error"]:  # YouTube's daily limit resets at midnight Pacific

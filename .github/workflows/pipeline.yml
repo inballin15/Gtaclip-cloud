@@ -72,6 +72,7 @@ jobs:
           publish _site gh-pages
           publish _state state
       - name: save log (so Claude can read it)
+        continue-on-error: true
         if: always()
         shell: bash
         run: |
