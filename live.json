@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-20T18:29:37Z",
+ "updated": "2026-11-20T18:34:55Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
  "next_slot": "2026-11-20T19:37:00Z",
- "up_next": "AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO",
+ "up_next": "vod2934866208_14787",
  "buffer_ok": false,
  "buffer_error": "Buffer's request limit was hit — posting resumes after 2026-11-20T19:05:01Z",
  "cooldown": {
@@ -13,7 +13,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-20T18:19:37Z",
+  "at": "2026-11-20T18:34:55Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -51,6 +51,17 @@
   "ToughYawningGooseMau5-2PnplpOOX4eow-YN"
  ],
  "posts": {
+  "AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO": {
+   "id": "AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO",
+   "hook": "IShowSpeed is SHOCKED seeing a LEGENDARY GTA IV CHARACTER appear in GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "why": "posted by Nicholas (spotted on the channel)",
+   "manual": true,
+   "posted_at": "2026-11-20T18:34:55Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710320847264746765",
+   "youtube": ""
+  },
   "FunnyTangibleEchidnaDatSheffy-kmHhZjjPULACfaIi": {
    "id": "FunnyTangibleEchidnaDatSheffy-kmHhZjjPULACfaIi",
    "hook": "Kai Cenat can't believe this in GTA 6",
@@ -536,9 +547,7 @@
  ],
  "stats_updated": "2026-11-20T18:04:59Z",
  "log": [
-  "[18:29:38Z] post list query failed (full): Buffer: waiting out its rate limit until 2026-11-20T19:05:01Z (no request sent)",
-  "[18:29:38Z] post list query failed (lite): Buffer: waiting out its rate limit until 2026-11-20T19:05:01Z (no request sent)",
-  "[18:29:38Z] duplicate check skipped: couldn't read posts from Buffer",
-  "[18:29:38Z] Buffer rate limit: no Buffer requests until 2026-11-20T19:05:01Z"
+  "[18:34:57Z] spotted your tiktok post of AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO: https://www.tiktok.com/@gtaclip96/video/7710320847264746765",
+  "[18:34:57Z] Buffer rate limit: no Buffer requests until 2026-11-20T19:05:01Z"
  ]
 }
