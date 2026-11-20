@@ -72,7 +72,9 @@ def strip_emoji(text):
     return " ".join(EMOJI_RE.sub("", text).replace("\uFE0F", "").split())
 
 
-def render(text, out_path):
+def render(text, out_path, style="white", scale=1.0):
+    """style: white (white box, black text) · black (black box, white text) · outline (no box, white text, black edge).
+    scale: overall size (the editor's pinch)."""
     lines = _wrap(strip_emoji(text))
     asc, desc = _font.getmetrics()
     lh = asc + desc + LINE_GAP
@@ -82,18 +84,27 @@ def render(text, out_path):
     W, H = bw + 8, bh + 8
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle([4, 4, 4 + bw, 4 + bh], radius=RADIUS, fill=(255, 255, 255, 255))
+    if style != "outline":
+        d.rounded_rectangle([4, 4, 4 + bw, 4 + bh], radius=RADIUS,
+                            fill=(255, 255, 255, 255) if style != "black" else (12, 12, 16, 235))
+    ink = (0, 0, 0, 255) if style == "white" else (255, 255, 255, 255)
     for i, line in enumerate(lines):
         x = (W - widths[i]) / 2
         y = 4 + PAD_Y + i * lh
         for kind, s in _pieces(line):
             if kind == "t":
-                d.text((x, y), s, font=_font, fill=(0, 0, 0, 255))
+                if style == "outline":
+                    d.text((x, y), s, font=_font, fill=ink, stroke_width=5, stroke_fill=(0, 0, 0, 255))
+                else:
+                    d.text((x, y), s, font=_font, fill=ink)
                 x += _font.getlength(s)
             else:
                 e = _emoji_img(s)
                 img.alpha_composite(e, (int(x) + 1, int(y + (asc + desc - e.height) / 2)))
                 x += e.width + 2
+    if abs(scale - 1.0) > 0.01:
+        scale = max(0.6, min(1.6, scale))
+        img = img.resize((max(1, int(W * scale)), max(1, int(H * scale))), Image.LANCZOS)
     img.save(out_path)
     return out_path
 

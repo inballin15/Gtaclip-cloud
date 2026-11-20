@@ -234,9 +234,20 @@ def apply_issues(st: dict) -> None:
                     keep["mode"] = ul["mode"]
                 if isinstance(ul.get("cam"), str) and re.match(r"^[\d.]+,[\d.]+,[\d.]+,[\d.]+$", ul["cam"]):
                     keep["cam"] = ul["cam"]
-                for k, lo, hi in (("hook_y", 0.05, 0.95), ("zoom", 1.0, 2.5), ("pan", -1.0, 1.0), ("irl_x", 0.0, 1.0)):
+                for k, lo, hi in (("hook_y", 0.05, 0.95), ("zoom", 1.0, 2.5), ("pan", -1.0, 1.0), ("irl_x", 0.0, 1.0),
+                                  ("hook_scale", 0.6, 1.6), ("speed", 1.0, 2.0), ("top_h", 420, 1100)):
                     if isinstance(ul.get(k), (int, float)):
                         keep[k] = max(lo, min(hi, float(ul[k])))
+                if ul.get("hook_style") in ("white", "black", "outline"):
+                    keep["hook_style"] = ul["hook_style"]
+                tr = ul.get("trim")
+                if isinstance(tr, list) and len(tr) == 2 and all(isinstance(v, (int, float)) for v in tr) and tr[1] - tr[0] >= 3:
+                    keep["trim"] = [max(0.0, float(tr[0])), float(tr[1])]
+                if isinstance(ul.get("hook"), str) and ul["hook"].strip():
+                    c["hook"] = strip_emoji(ul["hook"])[:140]
+                    c["hook_by_user"] = True
+                if isinstance(ul.get("caption"), str):
+                    c["caption"] = ul["caption"].strip()[:2000]
                 c["user_layout"] = keep
                 c.pop("final_hash", None); c.pop("clean_v", None)
                 msg = "Done — the video is being re-made with your layout (next run, a few minutes)."
@@ -828,9 +839,11 @@ def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
 
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
                  layout: str = "split", cut: float = 0.0, cam_video: Path | None = None,
-                 hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0) -> None:
+                 hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0,
+                 hook_style: str = "white", hook_scale: float = 1.0, top_h: int | None = None) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
+    T = int(top_h or TOP_H)   # webcam strip height (editor can make the webcam bigger or smaller)
     x, y, w, h = [float(v) for v in cam.split(",")]
     if layout.startswith("irl"):
         fx = float(layout.split(":")[1]) if ":" in layout else 0.5
@@ -844,15 +857,15 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             f"[0:v]split=2[a][b];"
             # webcam: a wide strip, ~1/3 of the screen (cam boxes taller than that lose a little top/bottom,
             # cut so the face stays in the upper-middle)
-            f"[a]crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{TOP_H}/1080)':x=iw*{x}:y='ih*{y}+(ih*{h}-oh)*0.1',"
+            f"[a]crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{T}/1080)':x=iw*{x}:y='ih*{y}+(ih*{h}-oh)*0.1',"
             # small webcams get blown up ~4-5x: light denoise first, sharp (lanczos) scaling, then sharpen
-            f"hqdn3d=1.5:1.5:3:3,scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
-            f"crop=1080:{TOP_H},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
+            f"hqdn3d=1.5:1.5:3:3,scale=1080:{T}:force_original_aspect_ratio=increase:flags=lanczos,"
+            f"crop=1080:{T},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
             + (f"[b]split=2[b1][b2];[b2]crop=iw:ih*0.15:0:ih*{-cut},boxblur=luma_radius=40:luma_power=3:chroma_radius=18:chroma_power=3[bl];"
                f"[b1][bl]overlay=0:main_h*{-cut}[bb];" if cut < 0 else "") +
             f"[{'bb' if cut < 0 else 'b'}]crop=iw*{1 - max(CAPTION_CUT, cut, 0)}:ih*{1 - max(CAPTION_CUT, cut, 0)}:(iw-ow)/2:0,"
             + (f"crop=iw/{zoom:.3f}:ih/{zoom:.3f}:(iw-ow)/2*(1+{pan:.3f}):(ih-oh)/2," if zoom > 1.001 else "") +
-            f"scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H}:x='(iw-ow)/2*(1+{pan:.3f})':y=0,"
+            f"scale=-2:{1920 - T}:flags=lanczos,crop=1080:{1920 - T}:x='(iw-ow)/2*(1+{pan:.3f})':y=0,"
             f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
@@ -860,15 +873,15 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     if cam_video and layout == "split":   # AI-upscaled webcam strip (made on its own server) replaces the stretched one
         ci = 2 if hook else 1
         a_end = base.index("[top];") + len("[top];")
-        base = (f"[0:v]copy[b];[{ci}:v]scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
-                f"crop=1080:{TOP_H},setsar=1[top];" + base[a_end:])
+        base = (f"[0:v]copy[b];[{ci}:v]scale=1080:{T}:force_original_aspect_ratio=increase:flags=lanczos,"
+                f"crop=1080:{T},setsar=1[top];" + base[a_end:])
         extra = ["-i", str(cam_video)]
     if hook:
-        png = render_hook(hook, str(tmp / f"{cid}_hook.png"))
+        png = render_hook(hook, str(tmp / f"{cid}_hook.png"), hook_style, hook_scale)
         inputs = ["-i", str(raw), "-i", png] + extra
         oy = (f"H*{hook_y:.3f}-h/2" if hook_y is not None                              # your own spot (editor)
               else "(H-h)/2" if layout == "full" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
-              else f"{TOP_H}-h*0.2")                                                   # split: on the line
+              else f"{T}-h*0.2")                                                   # split: on the line
         flt = base + f"[st];[st][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]"
     else:
         inputs = ["-i", str(raw)] + extra
@@ -951,7 +964,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
             _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Couldn't read this upload — please try again."})
             _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
             continue
-        _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Got your video — finding the best moments now (usually 5–20 min)."})
+        _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Got your clip — adding it to the queue (a few minutes)." if job.get("asis")
+                                                              else "Got your video — finding the best moments now (usually 5–20 min)."})
         src = tmp / f"upload_{job.get('id', num)}.mp4"
         link = job.get("url") or ""
         offset = 0.0
@@ -967,7 +981,14 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 with open(src, "wb") as fh:
                     for part in parts:
                         fh.write(subprocess.run(["git", "show", f"origin/{ref}:{part}"], capture_output=True, check=True).stdout)
-            moments = viral.find_moments(src, log=log)
+            if job.get("asis"):   # a finished clip (e.g. from Higgsfield's YouTube clipper): use the whole thing
+                d0 = duration_of(src)
+                moments = [{"start": 0.0, "end": d0, "score": 1.0, "reasons": ["finished clip"],
+                            "text": transcript(src) if d0 < 180 else "", "hook": (job.get("hook") or "").strip()}]
+                if moments[0]["hook"]:
+                    moments[0]["hook_ai"] = True
+            else:
+                moments = viral.find_moments(src, log=log)
         except Exception as e:  # noqa: BLE001
             log(f"upload {num} failed: {e}")
             hint = ("YouTube blocked the download from GitHub's servers — save the video and use Upload instead."
@@ -1007,7 +1028,11 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     sc = int(m["ai_score"] * 10)
                     rec.update(viral=sc, viral_verdict="post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
                                viral_why=", ".join(m.get("reasons", []))[:90])
-                if cam and q in ("edge", "learned"):
+                if job.get("asis"):
+                    rec.update(cam="0,0,1,1", cam_q="none", layout="full", asis=True, title=job.get("name") or "Your clip")
+                    if job.get("hook"):
+                        rec["hook_by_user"] = True
+                elif cam and q in ("edge", "learned"):
                     rec.update(cam=cam, cam_q=q, layout="split")
                 else:
                     rec.update(cam="0,0,1,1", cam_q="none", layout="full")
@@ -1016,7 +1041,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                             f"({', '.join(m['reasons']) or 'good moment'}) — {m.get('hook') or ''}")
             except Exception as e:  # noqa: BLE001
                 log(f"cutting clip {cid} failed: {e}")
-        msg = (f"Made {len(made)} clips from **{job.get('name', 'your video')}** — they're in the Queue (tagged 'Your video'):\n"
+        msg = (f"Made {len(made)} clip{'s' if len(made) != 1 else ''} from **{job.get('name', 'your video')}** — they're in the Queue (tagged 'Your video'):\n"
                + "\n".join(made)) if made else "No strong moments found in this video."
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": msg})
         _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
@@ -1504,7 +1529,21 @@ def main() -> None:
         cid, raw, hh, ch, need_f, need_c = job
         c = clips[cid]
         lay = c.get("layout", "split")
-        raw = best_part(raw, cid, tmp, c)
+        if not c.get("asis"):
+            raw = best_part(raw, cid, tmp, c)
+        _ul = c.get("user_layout") or {}
+        if _ul.get("trim") or (_ul.get("speed") or 1) > 1.01:   # your trim / speed from the editor
+            try:
+                a0, b0 = (_ul.get("trim") or [0, 9999])
+                sp = float(_ul.get("speed") or 1)
+                out_t = tmp / f"{cid}_edit.mp4"
+                vf = f"trim=start={a0}:end={b0},setpts=(PTS-STARTPTS)/{sp:.3f}"
+                af = f"atrim=start={a0}:end={b0},asetpts=PTS-STARTPTS,atempo={sp:.3f}"
+                ff("-i", str(raw), "-filter_complex", f"[0:v]{vf}[v];[0:a]{af}[a]", "-map", "[v]", "-map", "[a]",
+                   "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-c:a", "aac", "-b:a", "160k", str(out_t))
+                raw = out_t
+            except Exception as e:  # noqa: BLE001
+                log(f"trim/speed skipped {cid}: {e}")
         if c.get("pic_ok") is None and not control.get("ai_off"):   # look at the picture: no nudity / gore
             try:
                 import viral
@@ -1592,8 +1631,11 @@ def main() -> None:
                                                        else f"blurred a strip at {-cut:.0%} height"))
             c["cap_cut"] = cut
         c["cam_used"], c["layout_used"] = cam, lay
+        if ul.get("trim") or (ul.get("speed") or 1) > 1.01:
+            cam_video = None    # the sharp webcam was made for the untrimmed clip
         opts = dict(layout=lay, cut=cut, cam_video=cam_video, hook_y=ul.get("hook_y"), zoom=ul.get("zoom", 1.0),
-                    pan=ul.get("pan", 0.0))
+                    pan=ul.get("pan", 0.0), hook_style=ul.get("hook_style", "white"), hook_scale=ul.get("hook_scale", 1.0),
+                    top_h=int(ul["top_h"]) if ul.get("top_h") else None)
         if need_f:
             render_final(raw, cid, cam, c["hook"], tmp, **opts)
             try:   # vertical thumbnail of the finished video for the site

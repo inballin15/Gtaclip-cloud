@@ -775,7 +775,7 @@ async function checkUploads() {
       const iss = await gh('GET', `/issues/${u.issue}`);
       const cm = await gh('GET', `/issues/${u.issue}/comments?per_page=10`);
       const last = cm.length ? cm[cm.length - 1].body : '';
-      if (iss.state === 'closed') { u.state = /^Made \d+ clips/.test(last) ? 'done' : 'failed'; u.msg = last; changed = true; }
+      if (iss.state === 'closed') { u.state = /^Made \d+ clips?/.test(last) ? 'done' : 'failed'; u.msg = last; changed = true; }
       else if (last && last !== u.msg) { u.msg = last; changed = true; }
     } catch (e) { /* try later */ }
   }
