@@ -1,0 +1,9 @@
+name: dl-check
+on: workflow_dispatch
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install -q yt-dlp
+      - run: yt-dlp -F "https://www.twitch.tv/ishowspeed/clip/CrowdedEsteemedPigeonDatBoi-GJD-l8MPsVSh4KXI"
+      - run: yt-dlp -q -f "bestvideo*[width>height]+bestaudio/best[width>height]/best" -S res,fps,tbr -o c.mp4 "https://www.twitch.tv/ishowspeed/clip/CrowdedEsteemedPigeonDatBoi-GJD-l8MPsVSh4KXI" && ffprobe -v error -show_entries stream=width,height,r_frame_rate,bit_rate -of csv=p=0 c.mp4
