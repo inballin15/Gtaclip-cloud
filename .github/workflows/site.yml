@@ -29,9 +29,9 @@ jobs:
           for i in 1 2 3; do
             git fetch -q --depth=1 origin gh-pages:refs/remotes/origin/gh-pages
             rm -rf /tmp/gp && git worktree add -q -f /tmp/gp origin/gh-pages
-            cp site/index.html /tmp/gp/index.html && cp site/app.html /tmp/gp/app.html && sed -i "s/__BUILD__/$b/" /tmp/gp/app.html
+            cp site/*.html /tmp/gp/ && sed -i "s/__BUILD__/$b/" /tmp/gp/app.html
             python3 -c "import json,sys;p='/tmp/gp/queue.json';d=json.load(open(p));d['site_build']=sys.argv[1];json.dump(d,open(p,'w'),indent=1,ensure_ascii=False)" "$b" || true
-            cd /tmp/gp && git add index.html app.html queue.json && git commit -qm "site $b" || exit 0
+            cd /tmp/gp && git add *.html queue.json && git commit -qm "site $b" || exit 0
             git push -q origin HEAD:gh-pages && exit 0
             cd - >/dev/null; git worktree remove -f /tmp/gp; sleep 5
           done
