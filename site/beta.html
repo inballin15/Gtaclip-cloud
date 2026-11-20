@@ -154,6 +154,27 @@ nav button b:empty{display:none}
 .tg{border:0;background:var(--p2);border-radius:12px;padding:0 0 6px;overflow:hidden;text-align:center;font-size:11px;font-weight:600;transition:transform .12s}
 .tg:active{transform:scale(.95)}.tg img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;margin-bottom:4px;background:var(--p3)}
 .tg.on{outline:2px solid var(--cyan)}
+.edx{position:fixed;inset:0;z-index:70;background:#000;display:flex;flex-direction:column;opacity:0;transform:scale(.98);transition:opacity .25s var(--ease),transform .25s var(--ease);padding-top:env(safe-area-inset-top)}
+.edx.in{opacity:1;transform:none}.edx.out{opacity:0;transform:scale(.98)}
+.edx-top{display:flex;align-items:center;gap:6px;padding:8px 10px}
+.edx-ic{width:40px;height:40px;border-radius:50%;border:0;background:#ffffff14;color:#fff;font-size:18px;display:grid;place-items:center}.edx-ic:disabled{opacity:.3}
+.edx-sp{flex:1}.edx-save{border:0;background:var(--pink);color:#000;font-weight:800;padding:10px 20px;border-radius:999px;font-size:15px}.edx-save:disabled{opacity:.6}
+.edx-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.edx-stage canvas{border-radius:14px;touch-action:none;background:#111}
+.edx-vid{max-height:100%;max-width:100%;border-radius:14px;background:#111}
+.edx-panel{padding:10px 14px 4px;display:flex;flex-direction:column;gap:10px;max-height:38vh;overflow:auto;background:#0d0d14;border-top:1px solid var(--line)}
+.edx-panel:empty{display:none}
+.edx-panel textarea{width:100%;font:inherit;font-size:16px;color:var(--fg);background:var(--p2);border:1px solid var(--line);border-radius:12px;padding:10px}
+.edx-panel summary{font-size:13px;color:var(--mut);cursor:pointer}
+.edx-chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.edx-chip{flex:none;border:1px solid var(--line);background:var(--p2);color:var(--fg);border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;transition:transform .12s}
+.edx-chip:active{transform:scale(.95)}.edx-chip.on{background:#fff;color:#000}
+.edx-tools{display:flex;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:#0d0d14}
+.edx-tool{border:0;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:12px}
+.edx-tool .i{font-size:20px;line-height:1.1;color:#fff}.edx-tool.on{color:#fff;background:#ffffff14}
+.edx-trim{position:relative;height:44px;border-radius:10px;background:var(--p2);margin:4px 10px}
+.edx-trim .sel{position:absolute;top:0;bottom:0;background:#29e3ff33;border-top:3px solid var(--cyan);border-bottom:3px solid var(--cyan)}
+.edx-trim .h{position:absolute;top:-4px;bottom:-4px;width:22px;margin-left:-11px;border-radius:7px;background:var(--cyan);touch-action:none}
 @media (min-width:760px){.ed{grid-template-columns:220px 1fr}.edprev{position:sticky;top:0;align-self:start}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -457,7 +478,7 @@ function platState(p, s) {
 // ---------------------------------------------------------------- QUEUE
 function renderQueue(v, ql) {
   v.append(topicCard());
-  const up = el('button', 'big alt', '＋ Make clips — upload or paste a link'); up.style.marginBottom = '10px'; up.onclick = openUpload; v.append(up);
+  const up = el('button', 'big alt', '＋ Make clips — link, upload or YouTube'); up.style.marginBottom = '10px'; up.onclick = () => openUpload(); v.append(up);
   for (const u of uploads.filter((x) => Date.now() - x.at < 2 * 86400e3).slice(0, 4)) v.append(uploadItem(u));
   const seg = el('div', 'seg');
   for (const [k, t] of [['final', 'With caption'], ['clean', 'No caption']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', variant === k); b.onclick = () => { variant = k; ls.set('gc-variant', k); lastSig = ''; render(); }; seg.append(b); }
@@ -532,121 +553,196 @@ function openHookEdit(r) {
 
 // ---------------------------------------------------------------- EDITOR (drag the webcam, move the caption, frame the gameplay)
 function openEditor(r) {
-  if (!r.src) { sheet('Edit layout', [el('div', 'note warn', 'This clip was made before the editor existed. Its still frame appears after its next re-make (a few minutes) — try again soon.')]); return; }
-  const ul = r.user_layout || {};
-  const used = r.layout_used || 'split';
-  const S = { mode: ul.mode || (used.startsWith('irl') ? 'irl' : used === 'full' ? 'full' : 'split'), zoom: ul.zoom || 1, pan: ul.pan || 0,
-              irl_x: ul.irl_x ?? (used.startsWith('irl') ? parseFloat(used.split(':')[1]) : 0.5), hook_y: ul.hook_y ?? null, cam: null };
+  if (!r.src) { sheet('Edit', [el('div', 'note warn', 'This clip was made before the editor existed. Its still frame appears after its next re-make (a few minutes) — try again soon.')]); return; }
+  const ul = r.user_layout || {}; const used = r.layout_used || 'split';
+  const base = { mode: ul.mode || (used.startsWith('irl') ? 'irl' : used === 'full' ? 'full' : 'split'), zoom: ul.zoom || 1, pan: ul.pan || 0,
+    irl_x: ul.irl_x ?? (used.startsWith('irl') ? parseFloat(used.split(':')[1]) : 0.5), hook_y: ul.hook_y ?? null, cam: null,
+    hook: r.hook || '', caption: r.caption || '', hook_style: ul.hook_style || 'white', hook_scale: ul.hook_scale || 1,
+    top_h: ul.top_h || TOP, speed: ul.speed || 1, trim: ul.trim || null };
+  const draftKey = 'gc-draft-' + r.id; const draft = ls.get(draftKey, null);
+  let S = draft && draft.S ? { ...base, ...draft.S } : { ...base };
+  const hist = [JSON.stringify(S)]; let hi = 0;
+  const commit = () => { const j = JSON.stringify(S); if (j === hist[hi]) return; hist.splice(hi + 1); hist.push(j); hi = hist.length - 1; ls.set(draftKey, { S, at: Date.now() }); updBar(); };
+  // ---- layout of the editor (full screen, TikTok-like)
+  const ov = el('div', 'edx'); document.body.append(ov); document.body.style.overflow = 'hidden';
+  const top = el('div', 'edx-top');
+  const xb = el('button', 'edx-ic', '✕'); xb.setAttribute('aria-label', 'Close (your draft is kept)');
+  const ub = el('button', 'edx-ic', '↶'), rb = el('button', 'edx-ic', '↷'); ub.setAttribute('aria-label', 'Undo'); rb.setAttribute('aria-label', 'Redo');
+  const sv = el('button', 'edx-save', 'Save');
+  top.append(xb, ub, rb, el('span', 'edx-sp'), sv);
+  const stage = el('div', 'edx-stage'); const cv = el('canvas'); stage.append(cv);
+  const panel = el('div', 'edx-panel'); const tools = el('div', 'edx-tools');
+  ov.append(top, stage, panel, tools);
+  const updBar = () => { ub.disabled = hi <= 0; rb.disabled = hi >= hist.length - 1; };
+  const restore = () => { S = JSON.parse(hist[hi]); ls.set(draftKey, { S, at: Date.now() }); updBar(); refreshPanel(); draw(); };
+  ub.onclick = () => { if (hi > 0) { hi--; restore(); haptic(); } };
+  rb.onclick = () => { if (hi < hist.length - 1) { hi++; restore(); haptic(); } };
+  const close = () => { ov.classList.add('out'); document.body.style.overflow = ''; setTimeout(() => ov.remove(), 250); };
+  xb.onclick = () => { if (hist.length > 1) toast('Draft kept — open Edit to continue'); close(); };
+  // ---- canvas size (sharp on retina)
   const img = new Image(); img.crossOrigin = 'anonymous'; img.src = PAGES + r.src;
-  const cv = el('canvas'); cv.width = 270; cv.height = 480; const ctx = cv.getContext('2d');
-  const prev = el('div', 'edprev'); prev.style.flexDirection = 'column'; prev.style.alignItems = 'center'; prev.style.gap = '6px';
-  const hint = el('div', 'mut'); hint.style.cssText = 'text-align:center;max-width:260px';
-  prev.append(cv, hint);
-  // webcam box on the full frame
+  const dpr = Math.min(2, window.devicePixelRatio || 1); let CW = 270, CH = 480;
+  function sizeCanvas() {
+    const h = Math.max(300, Math.min(stage.clientHeight - 12, (stage.clientWidth - 24) * 16 / 9)); CH = h; CW = h * 9 / 16;
+    cv.style.width = CW + 'px'; cv.style.height = CH + 'px'; cv.width = CW * dpr; cv.height = CH * dpr; draw();
+  }
+  const ctx = cv.getContext('2d'); const A = () => 1080 / S.top_h;
+  // ---- webcam box (Webcam tool)
   const srcBox = el('div', 'src'); const im2 = el('img'); im2.src = img.src; srcBox.append(im2);
   const box = el('div', 'camb'); box.append(el('div', 'hd')); srcBox.append(box);
-  const A = 1080 / TOP;   // strip shape
   function startCam() {
+    if (S.cam) return;
     const W = img.naturalWidth || 960, H = img.naturalHeight || 540;
     let [x, y, w, h] = (ul.cam || r.cam_used || r.cam || '0,0,0.25,0.25').split(',').map(Number);
-    // show what the clip maker actually crops: full width, a strip-shaped height
-    const ch = Math.min(h, w * W / H / A); y = y + (h - ch) * 0.1; h = ch;
-    S.cam = [x, y, w, w * W / H / A];
+    const ch = Math.min(h, w * W / H / A()); y = y + (h - ch) * 0.1; S.cam = [x, y, w, w * W / H / A()];
+    hist[0] = JSON.stringify(S); if (hi === 0) hist[hi] = hist[0];
   }
-  function drawBox() { if (!S.cam) return; const [x, y, w, h] = S.cam; Object.assign(box.style, { left: x * 100 + '%', top: y * 100 + '%', width: w * 100 + '%', height: h * 100 + '%' }); }
-  // drag + resize (touch and mouse)
-  let drag = null;
-  box.addEventListener('pointerdown', (e) => {
-    e.preventDefault(); try { box.setPointerCapture(e.pointerId); } catch (x) { /* */ }
-    const rc = srcBox.getBoundingClientRect(); drag = { mode: e.target.classList.contains('hd') ? 'size' : 'move', x0: e.clientX, y0: e.clientY, c0: S.cam.slice(), rw: rc.width, rh: rc.height };
-  });
+  const drawBox = () => { if (!S.cam) return; const [x, y, w, h] = S.cam; Object.assign(box.style, { left: x * 100 + '%', top: y * 100 + '%', width: w * 100 + '%', height: h * 100 + '%' }); };
+  let bdrag = null;
+  box.addEventListener('pointerdown', (e) => { e.preventDefault(); try { box.setPointerCapture(e.pointerId); } catch (x) { /* */ } const rc = srcBox.getBoundingClientRect(); bdrag = { mode: e.target.classList.contains('hd') ? 'size' : 'move', x0: e.clientX, y0: e.clientY, c0: S.cam.slice(), rw: rc.width, rh: rc.height }; });
   box.addEventListener('pointermove', (e) => {
-    if (!drag) return; const W = img.naturalWidth || 960, H = img.naturalHeight || 540;
-    const dx = (e.clientX - drag.x0) / drag.rw, dy = (e.clientY - drag.y0) / drag.rh; let [x, y, w, h] = drag.c0;
-    if (drag.mode === 'move') { x = Math.min(Math.max(0, x + dx), 1 - w); y = Math.min(Math.max(0, y + dy), 1 - h); }
-    else { w = Math.min(Math.max(0.06, w + dx), 1 - x); h = w * W / H / A; if (y + h > 1) { h = 1 - y; w = h * A * H / W; } }
+    if (!bdrag) return; const W = img.naturalWidth || 960, H = img.naturalHeight || 540;
+    const dx = (e.clientX - bdrag.x0) / bdrag.rw, dy = (e.clientY - bdrag.y0) / bdrag.rh; let [x, y, w, h] = bdrag.c0;
+    if (bdrag.mode === 'move') { x = Math.min(Math.max(0, x + dx), 1 - w); y = Math.min(Math.max(0, y + dy), 1 - h); }
+    else { w = Math.min(Math.max(0.06, w + dx), 1 - x); h = w * W / H / A(); if (y + h > 1) { h = 1 - y; w = h * A() * H / W; } }
     S.cam = [x, y, w, h]; drawBox(); draw();
   });
-  const end = () => { drag = null; }; box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
-  // controls
-  const seg = el('div', 'seg');
-  const modes = [['split', 'Webcam + game'], ['irl', 'Full screen'], ['full', 'Whole frame']];
-  const segBtns = modes.map(([k, t]) => { const b = el('button', null, t); b.onclick = () => { S.mode = k; sync(); }; seg.append(b); return [k, b]; });
-  const camHelp = el('div', 'mut', 'Webcam: drag the blue box onto the face, drag the round handle to resize.');
-  function sync() {
-    segBtns.forEach(([k, b]) => b.setAttribute('aria-pressed', S.mode === k));
-    srcBox.hidden = camHelp.hidden = S.mode !== 'split';
-    hint.textContent = S.mode === 'full' ? 'Drag the caption to move it.' : 'Drag the caption to move it · drag the picture left/right · pinch to zoom.';
-    draw();
-  }
-  function hookLines() { ctx.font = '800 12.5px -apple-system,BlinkMacSystemFont,sans-serif'; const words = (r.hook || '').split(/\s+/); const lines = []; let cur = ''; for (const w of words) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > 180 && cur) { lines.push(cur); cur = w; } else cur = t; } if (cur) lines.push(cur); return lines; }
-  function defHookY() { const n = Math.max(1, hookLines().length); const hh = (n * 15 + 8) / 480; return S.mode === 'split' ? TOP / 1920 + 0.3 * hh : S.mode === 'irl' ? 0.6 + hh / 2 : 0.5; }
+  const bend = () => { if (bdrag) commit(); bdrag = null; }; box.addEventListener('pointerup', bend); box.addEventListener('pointercancel', bend);
+  // ---- caption measure (same wrap as the video: 720 of 1080 wide)
+  function hookLines(fs) { ctx.font = `800 ${fs}px -apple-system,BlinkMacSystemFont,sans-serif`; const maxw = CW * dpr * 720 / 1080; const words = (S.hook || '').split(/\s+/).filter(Boolean); const out = []; let cur = '';
+    for (const w of words) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxw && cur) { out.push(cur); cur = w; } else cur = t; } if (cur) out.push(cur); return out; }
+  const topFrac = () => S.top_h / 1920;
+  function defHookY(bhFrac) { return S.mode === 'split' ? topFrac() + 0.3 * bhFrac : S.mode === 'irl' ? 0.6 + bhFrac / 2 : 0.5; }
+  let capBox = null;
   function draw() {
-    if (!img.complete || !img.naturalWidth) return; const W = img.naturalWidth, H = img.naturalHeight; const cw = 270, chh = 480, top = TOP / 1920 * chh;
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cw, chh);
+    if (!img.complete || !img.naturalWidth || !CW) return;
+    const W = img.naturalWidth, H = img.naturalHeight; const cw = CW * dpr, ch = CH * dpr, tp = topFrac() * ch;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cw, ch);
     if (S.mode === 'split') {
-      const [x, y, w, h] = S.cam; ctx.drawImage(img, x * W, y * H, w * W, h * H, 0, 0, cw, top);
+      if (S.cam) { const [x, y, w, h] = S.cam; const sw = w * W, sh = Math.min(h * H, sw / A()); ctx.drawImage(img, x * W, y * H, sw, sh, 0, 0, cw, tp); }
       const sw = W / S.zoom, sh = H / S.zoom, sx = (W - sw) / 2 * (1 + S.pan), sy = (H - sh) / 2;
-      const scale = (chh - top) / sh; const vis = cw / scale; const extra = sw - vis; const vx = sx + extra / 2 * (1 + S.pan);
-      ctx.drawImage(img, Math.max(0, vx), sy, vis, sh, 0, top, cw, chh - top);
+      const scale = (ch - tp) / sh; const vis = Math.min(sw, cw / scale); const vx = sx + (sw - vis) / 2 * (1 + S.pan);
+      ctx.drawImage(img, Math.max(0, vx), sy, vis, sh, 0, tp, cw, ch - tp);
     } else if (S.mode === 'irl') {
       const h = H / S.zoom, w = h * 9 / 16; const x = Math.min(Math.max(W * S.irl_x - w / 2, 0), W - w);
-      ctx.drawImage(img, x, (H - h) / 2, w, h, 0, 0, cw, chh);
+      ctx.drawImage(img, x, (H - h) / 2, w, h, 0, 0, cw, ch);
     } else {
-      ctx.filter = 'blur(10px)'; const s = chh / H; ctx.drawImage(img, (cw - W * s) / 2, 0, W * s, chh); ctx.filter = 'none';
-      const fh = H * cw / W; ctx.drawImage(img, 0, (chh - fh) / 2, cw, fh);
+      ctx.filter = `blur(${12 * dpr}px)`; const s = ch / H; ctx.drawImage(img, (cw - W * s) / 2, 0, W * s, ch); ctx.filter = 'none';
+      const fh = H * cw / W; ctx.drawImage(img, 0, (ch - fh) / 2, cw, fh);
     }
-    // caption box
-    const lines = hookLines(); if (!lines.length) return;
-    ctx.font = '800 12.5px -apple-system,BlinkMacSystemFont,sans-serif';
-    const bw = Math.max(...lines.map((l) => ctx.measureText(l).width)) + 12, bh = lines.length * 15 + 8;
-    const cy = (S.hook_y ?? defHookY()) * chh; const bx = (cw - bw) / 2, by = cy - bh / 2;
-    capBox = [bx / cw, by / chh, (bx + bw) / cw, (by + bh) / chh];
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, bw, bh, 5) : ctx.rect(bx, by, bw, bh); ctx.fill();
-    ctx.fillStyle = '#000'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; lines.forEach((l, i) => ctx.fillText(l, cw / 2, by + 4 + i * 15));
+    // caption (same look as the video)
+    const fs = 50 / 1080 * cw * S.hook_scale; const lines = hookLines(fs); if (!lines.length) { capBox = null; return; }
+    ctx.font = `800 ${fs}px -apple-system,BlinkMacSystemFont,sans-serif`;
+    const lh = fs * 1.2, padx = 22 / 1080 * cw * S.hook_scale, pady = 14 / 1080 * cw * S.hook_scale;
+    const bw = Math.max(...lines.map((l) => ctx.measureText(l).width)) + padx * 2, bh = lines.length * lh + pady * 2;
+    const cy = (S.hook_y ?? defHookY(bh / ch)) * ch; const bx = (cw - bw) / 2, by = cy - bh / 2;
+    if (S.hook_style !== 'outline') { ctx.fillStyle = S.hook_style === 'black' ? 'rgba(12,12,16,.92)' : '#fff'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, bw, bh, 16 / 1080 * cw) : ctx.rect(bx, by, bw, bh); ctx.fill(); }
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    lines.forEach((l, i) => { const yy = by + pady + i * lh;
+      if (S.hook_style === 'outline') { ctx.lineWidth = fs * 0.2; ctx.strokeStyle = '#000'; ctx.lineJoin = 'round'; ctx.strokeText(l, cw / 2, yy); }
+      ctx.fillStyle = S.hook_style === 'white' ? '#000' : '#fff'; ctx.fillText(l, cw / 2, yy); });
+    capBox = [bx / cw, by / ch, (bx + bw) / cw, (by + bh) / ch];
+    // seam handle (drag to resize the webcam)
+    if (S.mode === 'split' && tool === 'layout') { ctx.fillStyle = '#29e3ff'; ctx.fillRect(cw / 2 - 30 * dpr, tp - 3 * dpr, 60 * dpr, 6 * dpr); }
   }
-  // finger control on the preview: drag the caption · drag the game left/right · pinch to zoom
-  let capBox = null; const ptrs = new Map(); let gesture = null;
+  // ---- finger control on the video: caption (drag + pinch size) · seam (webcam size) · picture (drag + pinch zoom)
+  const ptrs = new Map(); let g = null;
   const rel = (e) => { const rc = cv.getBoundingClientRect(); return [(e.clientX - rc.left) / rc.width, (e.clientY - rc.top) / rc.height, rc]; };
+  const onCap = (fx, fy) => capBox && fx >= capBox[0] - 0.06 && fx <= capBox[2] + 0.06 && fy >= capBox[1] - 0.03 && fy <= capBox[3] + 0.03;
   cv.addEventListener('pointerdown', (e) => {
     e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (x) { /* */ }
     ptrs.set(e.pointerId, [e.clientX, e.clientY]); const [fx, fy] = rel(e);
-    if (ptrs.size === 2) { const [p1, p2] = [...ptrs.values()]; gesture = { kind: 'pinch', d0: Math.hypot(p1[0] - p2[0], p1[1] - p2[1]), z0: S.zoom }; return; }
-    const onCap = capBox && fx >= capBox[0] - 0.08 && fx <= capBox[2] + 0.08 && fy >= capBox[1] - 0.04 && fy <= capBox[3] + 0.04;
-    gesture = onCap ? { kind: 'cap' } : { kind: 'pan', x0: e.clientX, pan0: S.pan, irl0: S.irl_x }; haptic();
+    if (ptrs.size === 2) { const [p1, p2] = [...ptrs.values()]; const d0 = Math.hypot(p1[0] - p2[0], p1[1] - p2[1]);
+      g = (g && g.kind === 'cap') ? { kind: 'capsize', d0, s0: S.hook_scale } : { kind: 'zoom', d0, z0: S.zoom }; return; }
+    if (onCap(fx, fy)) g = { kind: 'cap', dy: fy - (capBox[1] + capBox[3]) / 2 };
+    else if (S.mode === 'split' && Math.abs(fy - topFrac()) < 0.035) g = { kind: 'seam' };
+    else g = { kind: 'pan', x0: e.clientX, pan0: S.pan, irl0: S.irl_x };
+    haptic();
   });
   cv.addEventListener('pointermove', (e) => {
-    if (!ptrs.has(e.pointerId) || !gesture) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); const [, fy, rc] = rel(e);
-    if (gesture.kind === 'pinch' && ptrs.size >= 2 && S.mode !== 'full') {
-      const [p1, p2] = [...ptrs.values()]; S.zoom = Math.min(2.5, Math.max(1, gesture.z0 * Math.hypot(p1[0] - p2[0], p1[1] - p2[1]) / gesture.d0));
-    } else if (gesture.kind === 'cap') S.hook_y = Math.min(0.95, Math.max(0.05, fy));
-    else if (gesture.kind === 'pan') {
-      const dx = (e.clientX - gesture.x0) / rc.width;
-      if (S.mode === 'split') S.pan = Math.min(1, Math.max(-1, gesture.pan0 - dx * 2.2));
-      if (S.mode === 'irl') S.irl_x = Math.min(1, Math.max(0, gesture.irl0 - dx * 0.35 / S.zoom));
-    }
+    if (!ptrs.has(e.pointerId) || !g) return; ptrs.set(e.pointerId, [e.clientX, e.clientY]); const [, fy, rc] = rel(e);
+    if ((g.kind === 'zoom' || g.kind === 'capsize') && ptrs.size >= 2) {
+      const [p1, p2] = [...ptrs.values()]; const k = Math.hypot(p1[0] - p2[0], p1[1] - p2[1]) / g.d0;
+      if (g.kind === 'capsize') S.hook_scale = Math.min(1.6, Math.max(0.6, g.s0 * k)); else if (S.mode !== 'full') S.zoom = Math.min(2.5, Math.max(1, g.z0 * k));
+    } else if (g.kind === 'cap') S.hook_y = Math.min(0.95, Math.max(0.05, fy - g.dy));
+    else if (g.kind === 'seam') S.top_h = Math.round(Math.min(1100, Math.max(420, fy * 1920)));
+    else if (g.kind === 'pan') { const dx = (e.clientX - g.x0) / rc.width;
+      if (S.mode === 'split') S.pan = Math.min(1, Math.max(-1, g.pan0 - dx * 2.2));
+      if (S.mode === 'irl') S.irl_x = Math.min(1, Math.max(0, g.irl0 - dx * 0.35 / S.zoom)); }
     draw();
   });
-  const endG = (e) => { ptrs.delete(e.pointerId); if (!ptrs.size) gesture = null; else if (gesture && gesture.kind === 'pinch') gesture = null; };
-  cv.addEventListener('pointerup', endG); cv.addEventListener('pointercancel', endG);
-  img.onload = () => { startCam(); drawBox(); sync(); };
-  const save = el('button', 'big go', 'Save & re-make video');
-  save.onclick = async () => {
-    save.disabled = true;
-    const out = { mode: S.mode };
-    if (S.mode === 'split') { out.cam = S.cam.map((n) => (+n).toFixed(4)).join(','); out.pan = +S.pan.toFixed(3); }
+  const gEnd = (e) => { ptrs.delete(e.pointerId); if (!ptrs.size) { if (g) commit(); g = null; } else if (g && (g.kind === 'zoom' || g.kind === 'capsize')) g = { kind: 'none' }; };
+  cv.addEventListener('pointerup', gEnd); cv.addEventListener('pointercancel', gEnd);
+  // ---- tools (bottom bar, like TikTok)
+  let tool = 'text';
+  const TOOLS = [['text', 'Aa', 'Text'], ['layout', '▦', 'Layout'], ['cam', '◉', 'Webcam'], ['trim', '✂', 'Trim'], ['speed', '⏩', 'Speed'], ['reset', '↺', 'Auto']];
+  const tbtn = {};
+  for (const [k, ic, lb] of TOOLS) { const b = el('button', 'edx-tool'); b.append(el('span', 'i', ic), el('span', null, lb)); b.onclick = () => { tool = k; refreshPanel(); draw(); haptic(); }; tools.append(b); tbtn[k] = b; }
+  const chips = (opts, cur, set) => { const row = el('div', 'edx-chips'); for (const [v, t] of opts) { const b = el('button', 'edx-chip' + (cur === v ? ' on' : ''), t); b.onclick = () => { set(v); commit(); refreshPanel(); draw(); }; row.append(b); } return row; };
+  let vid = null;
+  function refreshPanel() {
+    for (const k in tbtn) tbtn[k].classList.toggle('on', k === tool);
+    panel.replaceChildren(); if (vid) { vid.pause(); vid = null; }
+    stage.querySelectorAll('video').forEach((v) => v.remove()); cv.hidden = false;
+    if (tool === 'text') {
+      const t = el('textarea'); t.value = S.hook; t.rows = 2; t.maxLength = 140; t.placeholder = 'Text on the video';
+      t.oninput = () => { S.hook = t.value; draw(); }; t.onchange = commit;
+      panel.append(t, chips([['white', 'White box'], ['black', 'Black box'], ['outline', 'Outline']], S.hook_style, (v) => { S.hook_style = v; }),
+        el('div', 'mut', 'Drag the text to move it · pinch it with two fingers to resize'));
+      const d = el('details'); const sm = el('summary', null, 'Post description'); const ta = el('textarea'); ta.rows = 3; ta.value = S.caption; ta.placeholder = 'Leave empty for the automatic description';
+      ta.oninput = () => { S.caption = ta.value; }; ta.onchange = commit; d.append(sm, ta); panel.append(d);
+    } else if (tool === 'layout') {
+      panel.append(chips([['split', 'Webcam + game'], ['irl', 'Full screen'], ['full', 'Whole frame']], S.mode, (v) => { S.mode = v; }));
+      if (S.mode === 'split') panel.append(chips([[540, 'Small cam'], [672, 'Medium'], [860, 'Large cam']], [540, 672, 860].includes(S.top_h) ? S.top_h : 0, (v) => { S.top_h = v; }),
+        el('div', 'mut', 'Or drag the blue line on the video · drag the game to reframe · pinch to zoom'));
+      else panel.append(el('div', 'mut', S.mode === 'irl' ? 'Drag the picture left/right · pinch to zoom' : 'The whole stream frame on a blurred background'));
+    } else if (tool === 'cam') {
+      if (S.mode !== 'split') { panel.append(el('div', 'mut', 'Switch Layout to "Webcam + game" to place the webcam.')); return; }
+      panel.append(srcBox, el('div', 'mut', 'Drag the blue box onto the face · drag the round handle to resize')); requestAnimationFrame(drawBox);
+    } else if (tool === 'trim') {
+      cv.hidden = true; vid = el('video'); vid.src = PAGES + (r.clean || r.final); vid.playsInline = true; vid.muted = false; vid.className = 'edx-vid'; stage.append(vid);
+      const old = (r.user_layout || {}).trim; const off = old ? old[0] : 0;
+      const bar = el('div', 'edx-trim'); const sel = el('div', 'sel'); const h1 = el('div', 'h'), h2 = el('div', 'h'); bar.append(sel, h1, h2);
+      const lbl = el('div', 'mut'); const play = el('button', 'btn', '▶ Play selection');
+      let D = (r.seconds || 18) + off;
+      const set = () => { const [a, b] = S.trim || [0, D]; sel.style.left = (a / D * 100) + '%'; sel.style.width = ((b - a) / D * 100) + '%'; h1.style.left = (a / D * 100) + '%'; h2.style.left = (b / D * 100) + '%'; lbl.textContent = `${a.toFixed(1)}s → ${b.toFixed(1)}s · ${(b - a).toFixed(1)}s long${(b - a) > 25 ? ' (shorter clips do better)' : ''}`; };
+      vid.onloadedmetadata = () => { if (!old) D = vid.duration || D; set(); };
+      let hd = null;
+      for (const [h, i] of [[h1, 0], [h2, 1]]) {
+        h.addEventListener('pointerdown', (e) => { e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (x) { /* */ } hd = i; });
+        h.addEventListener('pointermove', (e) => { if (hd !== i) return; const rc = bar.getBoundingClientRect(); const t = Math.min(D, Math.max(0, (e.clientX - rc.left) / rc.width * D)); const tr = (S.trim || [0, D]).slice();
+          if (i === 0) tr[0] = Math.min(t, tr[1] - 3); else tr[1] = Math.max(t, tr[0] + 3); S.trim = tr.map((v) => Math.round(v * 10) / 10); set(); try { vid.currentTime = Math.max(0, S.trim[i] - off); } catch (x) { /* */ } });
+        const up = () => { if (hd === i) { hd = null; commit(); } }; h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+      }
+      play.onclick = () => { const [a, b] = S.trim || [0, D]; vid.currentTime = Math.max(0, a - off); vid.play(); const stop = () => { if (vid && vid.currentTime >= b - off) { vid.pause(); vid.removeEventListener('timeupdate', stop); } }; vid.addEventListener('timeupdate', stop); };
+      panel.append(bar, lbl, play); set();
+    } else if (tool === 'speed') {
+      panel.append(chips([[1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']], S.speed, (v) => { S.speed = v; }), el('div', 'mut', 'Speeds up the video and the voice together. 1.25× keeps viewers watching without sounding off.'));
+    } else if (tool === 'reset') {
+      const b = el('button', 'big stop', 'Go back to the automatic edit');
+      b.onclick = async () => { if (await ghTap('layout: ' + r.id, '{}')) { ls.set(draftKey, null); toast('Back to automatic — re-making'); close(); } };
+      panel.append(el('div', 'mut', 'Removes your edits. The clip maker frames it again on its own.'), b);
+    }
+  }
+  sv.onclick = async () => {
+    sv.disabled = true; sv.textContent = 'Saving…';
+    const out = { mode: S.mode, hook_style: S.hook_style };
+    if (S.mode === 'split') { out.cam = S.cam.map((n) => (+n).toFixed(4)).join(','); out.pan = +S.pan.toFixed(3); if (S.top_h !== TOP) out.top_h = S.top_h; }
     if (S.mode === 'irl') out.irl_x = +S.irl_x.toFixed(3);
     if (S.mode !== 'full' && S.zoom > 1.001) out.zoom = +S.zoom.toFixed(3);
     if (S.hook_y != null) out.hook_y = +S.hook_y.toFixed(3);
-    if (await ghTap('layout: ' + r.id, JSON.stringify(out))) { toast('Saved — re-making the video (a few minutes)'); closeSheet(); }
-    save.disabled = false;
+    if (Math.abs(S.hook_scale - 1) > 0.01) out.hook_scale = +S.hook_scale.toFixed(2);
+    if (S.speed > 1.01) out.speed = S.speed;
+    if (S.trim) out.trim = S.trim;
+    if (S.hook.trim() && S.hook.trim() !== (r.hook || '').trim()) out.hook = S.hook.trim();
+    if (S.caption.trim() !== (r.caption || '').trim()) out.caption = S.caption.trim();
+    if (await ghTap('layout: ' + r.id, JSON.stringify(out))) { ls.set(draftKey, null); toast('Saved — re-making the video (a few minutes). It auto-posts with your edits.'); close(); lastSig = ''; render(); }
+    else { sv.disabled = false; sv.textContent = 'Save'; }
   };
-  const reset = el('button', 'btn ghost', 'Back to automatic');
-  reset.onclick = async () => { if (await ghTap('layout: ' + r.id, '{}')) { toast('Back to automatic — re-making'); closeSheet(); } };
-  const ctr = el('div'); ctr.style.cssText = 'display:flex;flex-direction:column;gap:12px';
-  ctr.append(seg, srcBox, camHelp, save, reset);
-  const ed = el('div', 'ed'); ed.append(prev, ctr);
-  sheet('Edit layout', [ed]);
+  img.onload = () => { startCam(); drawBox(); sizeCanvas(); };
+  window.addEventListener('resize', sizeCanvas, { once: true });
+  refreshPanel(); updBar(); requestAnimationFrame(() => { ov.classList.add('in'); sizeCanvas(); });
+  if (draft && draft.S) toast('Your unsaved edit was restored');
 }
 
 // ---------------------------------------------------------------- uploads / links
@@ -661,28 +757,42 @@ function uploadItem(u) {
   if (u.state === 'done' || u.state === 'failed') { const x = el('button', 'btn ghost', 'Dismiss'); x.onclick = () => { uploads = uploads.filter((y) => y !== u); saveUploads(); lastSig = ''; render(); }; d.append(x); }
   return d;
 }
-function openUpload() {
+function openUpload(which) {
   if (!ghKey()) { openSettings('Connect GitHub first — uploads go to your GitHub.'); return; }
-  const link = el('input'); link.type = 'url'; link.placeholder = 'Paste a YouTube, Twitch or Kick link';
-  const sec = el('input'); sec.placeholder = 'Optional part, e.g. 1:20:00-2:00:00 (long videos)';
-  const f = el('input'); f.type = 'file'; f.accept = 'video/*';
+  const mode = which || ls.get('gc-upmode', 'find');
+  const seg = el('div', 'seg');
+  for (const [k, t] of [['find', 'Find viral moments'], ['yt', 'YouTube (Higgsfield)']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', mode === k); b.onclick = () => { ls.set('gc-upmode', k); openUpload(k); }; seg.append(b); }
   const who = el('select'); for (const [v, n] of STREAMERS) { const o = el('option', null, n); o.value = v; who.append(o); }
   const other = el('input'); other.placeholder = 'Name for the credit (if not on the list)';
-  const go = el('button', 'big go', 'Make clips');
+  const credit = () => { const n0 = STREAMERS.find((x) => x[0] === who.value); return who.value ? n0[1] : (other.value.trim() || 'Nicholas'); };
+  const f = el('input'); f.type = 'file'; f.accept = 'video/*';
+  if (mode === 'yt') {
+    const open = el('a', 'big go', '1 · Open Higgsfield YouTube clipper ↗'); open.href = 'https://higgsfield.ai/ai-short-video-generator'; open.target = '_blank'; open.rel = 'noopener';
+    open.style.cssText = 'text-align:center;text-decoration:none;display:block';
+    const hook = el('input'); hook.placeholder = 'Hook text (leave empty and the AI writes one)'; hook.maxLength = 140;
+    const go = el('button', 'big go', '3 · Add to my queue');
+    go.onclick = () => { const file = f.files && f.files[0]; if (!file) { toast('Pick the clip you saved from Higgsfield'); return; } if (file.size > 1.9e9) { toast('That video is too big'); return; } closeSheet(); uploadVideo(file, who.value, credit(), { asis: true, hook: hook.value.trim() }); };
+    sheet('Make clips', [seg, el('div', 'mut', 'Clip a YouTube video with Higgsfield, save the clip to your phone, then upload it here. It gets our hook box, goes in the queue and auto-posts like any other clip.'),
+      open, el('label', null, '2 · Upload the finished clip'), f, el('label', null, 'Hook'), hook, el('label', null, 'Whose video is it? (for the credit)'), who, other, go]);
+    return;
+  }
+  const link = el('input'); link.type = 'url'; link.placeholder = 'Paste a Twitch or Kick link';
+  const sec = el('input'); sec.placeholder = 'Optional part, e.g. 1:20:00-2:00:00 (long videos)';
+  const go = el('button', 'big go', 'Find viral moments');
   go.onclick = () => {
-    const n0 = STREAMERS.find((x) => x[0] === who.value); const credit = who.value ? n0[1] : (other.value.trim() || 'Nicholas');
     if (link.value.trim()) {
-      if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be|twitch\.tv|kick\.com)\//i.test(link.value.trim())) { toast('Paste a YouTube, Twitch or Kick link'); return; }
-      closeSheet(); clipLink(link.value.trim(), sec.value.trim(), who.value, credit); return;
+      if (/youtu\.?be/i.test(link.value)) { toast('For YouTube use the YouTube (Higgsfield) tab'); return; }
+      if (!/^https?:\/\/(www\.|m\.)?(twitch\.tv|kick\.com)\//i.test(link.value.trim())) { toast('Paste a Twitch or Kick link'); return; }
+      closeSheet(); clipLink(link.value.trim(), sec.value.trim(), who.value, credit()); return;
     }
     const file = f.files && f.files[0]; if (!file) { toast('Pick a video or paste a link'); return; }
     if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB)'); return; }
-    closeSheet(); uploadVideo(file, who.value, credit);
+    closeSheet(); uploadVideo(file, who.value, credit());
   };
-  sheet('Make clips', [el('div', 'mut', 'Paste a link OR upload a video. It finds the best moments and makes 10–25 s clips with hooks. Takes about 5–20 min.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
+  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch/Kick link OR upload a long video. It finds the best moments and makes 10–25 s clips with hooks (5–20 min).'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
 }
 function b64(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }); }
-async function uploadVideo(file, login, streamer) {
+async function uploadVideo(file, login, streamer, extra = {}) {
   const id = Date.now().toString(36);
   const u = { id, name: file.name.replace(/\.[^.]+$/, '').slice(0, 60), at: Date.now(), state: 'uploading', pct: 0 };
   uploads.unshift(u); saveUploads(); switchTab('queue');
@@ -697,8 +807,8 @@ async function uploadVideo(file, login, streamer) {
     }
     const t = await gh('POST', '/git/trees', { tree }); const c = await gh('POST', '/git/commits', { message: `upload ${u.name}`, tree: t.sha, parents: [] });
     await gh('POST', '/git/refs', { ref: `refs/heads/upload-${id}`, sha: c.sha });
-    const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, ref: `upload-${id}`, parts, name: u.name, login, streamer, size: file.size }) });
-    Object.assign(u, { state: 'processing', pct: 100, issue: iss.number }); toast('Uploaded — finding the best moments');
+    const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, ref: `upload-${id}`, parts, name: u.name, login, streamer, size: file.size, ...extra }) });
+    Object.assign(u, { state: 'processing', pct: 100, issue: iss.number }); toast(extra.asis ? 'Uploaded — adding it to the queue' : 'Uploaded — finding the best moments');
   } catch (e) { u.state = 'failed'; u.msg = (e.status === 403 || e.status === 404) ? 'Your GitHub key needs Contents → Read and write.' : `Upload failed: ${e.message}`; }
   saveUploads(); lastSig = ''; render();
 }
