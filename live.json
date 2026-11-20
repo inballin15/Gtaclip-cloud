@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-20T18:40:12Z",
+ "updated": "2026-11-20T18:44:36Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
@@ -548,7 +548,5 @@
   }
  ],
  "stats_updated": "2026-11-20T18:04:59Z",
- "log": [
-  "[18:40:14Z] Buffer is OFF — no posting and no requests to Buffer until you turn it back on."
- ]
+ "log": []
 }
