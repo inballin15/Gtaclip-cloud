@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-20T19:45:33Z",
+ "updated": "2026-11-20T19:51:40Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
  "next_slot": "2026-11-20T21:07:00Z",
- "up_next": "AgitatedVictoriousApeOneHand-M24sGAJo8rQNTSHx",
+ "up_next": "vod2934996320_12368",
  "buffer_ok": false,
  "buffer_error": "Buffer is turned off on the dashboard — nothing is posted or sent to Buffer.",
  "buffer_off": true,
@@ -15,7 +15,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-20T19:35:33Z",
+  "at": "2026-11-20T19:51:40Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
