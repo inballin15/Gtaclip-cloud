@@ -718,10 +718,12 @@ def face_cam(path: Path, box: str) -> str | None:
             bx0, by0, bx1, by1 = x * W, y * H, (x + w) * W, (y + h) * H
     except Exception:  # noqa: BLE001
         pass
-    ww = min(fw * 4.4, bx1 - bx0, (by1 - by0) * A)     # face ~23% of the strip width: head, shoulders, some room
-    ww = min(ww, (fy - by0) / 0.36 * A)               # face sits low in the webcam -> zoom in a bit so it stays high
-    ww = min(ww, (by1 - fy) / 0.64 * A)               # ...and keep room under the face (the hook box sits there)
-    ww = max(ww, min(fw * 2.4, bx1 - bx0))
+    if (bx1 - bx0) < W * 0.95:                         # webcam overlay known: show ALL of it (least zoom = sharpest)
+        ww = min(bx1 - bx0, (by1 - by0) * A)
+        ww = max(ww, min(fw * 3.0, bx1 - bx0))
+    else:                                              # no overlay found: head, shoulders and some room
+        ww = fw * 5.0
+    ww = min(ww, W)
     hh = ww / A
     x0 = min(max(fx - ww / 2, bx0), bx1 - ww)
     y0 = min(max(fy - hh * 0.36, by0), by1 - hh)       # face high enough that the hook box never covers it
@@ -1320,6 +1322,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_wholecam_v", 0) < 1:   # one time: re-frame queued clips with the whole webcam (less zoom = sharper)
+        st["redo_wholecam_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new" and not c.get("user_layout"):
+                c.pop("final_hash", None); c.pop("clean_v", None); c.pop("hd", None)
     if st.get("redo_hd_v", 0) < 1:   # one time: re-make queued clips so their webcams go to the AI upscaler
         st["redo_hd_v"] = 1
         for c in clips.values():
