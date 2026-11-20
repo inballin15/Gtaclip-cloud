@@ -548,6 +548,36 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
         return raw
 
 
+def cam_without_chat(path: Path, cam: str) -> str:
+    """Some streamers (Kai) have chat scrolling over the bottom of their webcam. Find where that text band starts
+    and end the webcam box above it, so no chat shows between the face and the gameplay."""
+    try:
+        x, y, w, h = [float(v) for v in cam.split(",")]
+        cap = cv2.VideoCapture(str(path))
+        dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+        cap.release()
+        dens = []
+        for fr in _frames(path, [max(0.5, dur * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)]):
+            H, W = fr.shape[:2]
+            c = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+            if c.size:
+                e = cv2.Canny(cv2.cvtColor(c, cv2.COLOR_BGR2GRAY), 80, 200)
+                dens.append(e.mean(axis=1) / 255)
+        if len(dens) < 3:
+            return cam
+        n = min(len(d) for d in dens)
+        d = np.convolve(np.mean([d[:n] for d in dens], axis=0), np.ones(5) / 5, mode="same")
+        base = float(np.median(d[int(n * 0.3):int(n * 0.55)]))
+        k = max(3, int(n * 0.04))
+        for r in range(int(n * 0.55), n - k):
+            if d[r:r + k].mean() > max(2.2 * base, 0.06):
+                frac = max(0.55, (r - n * 0.02) / n)
+                return f"{x:.4f},{y:.4f},{w:.4f},{h * frac:.4f}"
+        return cam
+    except Exception:  # noqa: BLE001
+        return cam
+
+
 def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
     """Streamers like Lacy/Kai run a live caption overlay (white words, purple highlight) near the bottom.
     If it's there, return how much to zoom off the bottom (0.08-0.14) to push it out; otherwise 0."""
@@ -1035,6 +1065,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_kai_lacy_v", 0) < 1:   # one time: re-make queued Kai/Lacy clips (chat over webcam, purple captions)
+        st["redo_kai_lacy_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new" and c.get("login") in ("kaicenat", "lacy"):
+                c.pop("final_v", None); c.pop("clean_v", None)
     if st.get("restored_v", 0) < 1:
         st["restored_v"] = 1
         n_back = 0
@@ -1172,15 +1207,21 @@ def main() -> None:
         lay = c.get("layout", "split")
         raw = best_part(raw, cid, tmp, c)
         cut = 0.0
+        cam = c.get("cam", "")
+        if lay == "split" and cam:
+            cam2 = cam_without_chat(raw, cam)
+            if cam2 != cam:
+                log(f"chat over the webcam in {cid}: webcam box ends above it")
+                cam = cam2
         if lay == "split":
             cut = purple_caption_cut(raw, 0, c.get("cam", ""))
             if cut:
                 log(f"purple captions in {cid}: zoomed gameplay {cut:.0%} off the bottom")
             c["cap_cut"] = cut
         if need_f:
-            render_final(raw, cid, c["cam"], c["hook"], tmp, layout=lay, cut=cut)
+            render_final(raw, cid, cam, c["hook"], tmp, layout=lay, cut=cut)
         if need_c:
-            render_final(raw, cid, c["cam"], None, tmp, out="_clean", layout=lay, cut=cut)
+            render_final(raw, cid, cam, None, tmp, out="_clean", layout=lay, cut=cut)
         return job
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
