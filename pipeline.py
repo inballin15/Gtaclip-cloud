@@ -633,7 +633,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             # small webcams get blown up ~4-5x: light denoise first, sharp (lanczos) scaling, then sharpen
             f"hqdn3d=1.5:1.5:3:3,scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
             f"crop=1080:{TOP_H},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
-            + (f"[b]split=2[b1][b2];[b2]crop=iw:ih*0.15:0:ih*{-cut},boxblur=50:4[bl];"
+            + (f"[b]split=2[b1][b2];[b2]crop=iw:ih*0.15:0:ih*{-cut},boxblur=luma_radius=40:luma_power=3:chroma_radius=18:chroma_power=3[bl];"
                f"[b1][bl]overlay=0:main_h*{-cut}[bb];" if cut < 0 else "") +
             f"[{'bb' if cut < 0 else 'b'}]crop=iw*{1 - max(CAPTION_CUT, cut, 0)}:ih*{1 - max(CAPTION_CUT, cut, 0)}:(iw-ow)/2:0,scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H},"
             f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
