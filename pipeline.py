@@ -1174,6 +1174,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_hd_v", 0) < 1:   # one time: re-make queued clips so their webcams go to the AI upscaler
+        st["redo_hd_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new" and not c.get("hd"):
+                c.pop("final_hash", None); c.pop("clean_v", None)
     if st.get("redo_face_v2", 0) < 1:   # one time: re-frame again with the fixed chat trim
         st["redo_face_v2"] = 1
         for c in clips.values():
