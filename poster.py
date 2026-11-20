@@ -90,13 +90,23 @@ def gh(method: str, path: str, body=None):
                 {"Authorization": f"Bearer {GH_TOKEN}", "Accept": "application/vnd.github+json"}, body)
 
 
+def _json_short(d) -> str:
+    import json as _j
+    return _j.dumps(d)[:160]
+
+
 def buffer(query: str, variables: dict | None = None):
     code, res = http("POST", "https://api.buffer.com", {"Authorization": f"Bearer {BUFFER_KEY}"},
                      {"query": query, "variables": variables or {}})
     if code >= 400 and not res.get("errors"):
         raise RuntimeError(f"Buffer HTTP {code}: {res.get('message') or res}")
     if res.get("errors"):
-        raise RuntimeError("Buffer: " + "; ".join(e.get("message", "?") for e in res["errors"])[:400])
+        msg = "; ".join(e.get("message", "?") for e in res["errors"])
+        ext = (res["errors"][0].get("extensions") or {})
+        if ext.get("code") == "RATE_LIMIT_EXCEEDED":   # say which Buffer limit and how long until it frees up
+            msg = (f"Buffer rate limit hit ({ext.get('limitType') or ext.get('window') or '?'}"
+                   f", retry in {int(ext.get('retryAfter') or 0) // 60} min) {_json_short(ext)}")
+        raise RuntimeError("Buffer: " + msg[:400])
     return res.get("data") or {}
 
 
@@ -455,11 +465,13 @@ def main() -> None:
     # uploading, or every 30 min for stats (this runs every 5 min)
     _slot = due_slot()
     post_due = bool(ctl["postnow"]) or bool(_slot and not ctl.get("paused") and ctl.get("last_slot") != iso(_slot))
-    in_flight = any(r.get("posted_at") and NOW - parse(r["posted_at"]) < timedelta(hours=2)
+    in_flight = any(r.get("posted_at") and NOW - parse(r["posted_at"]) < timedelta(minutes=45)
                     and any((st or {}).get("state") not in ("live", "error") for st in (r.get("status") or {}).values())
                     for r in recs.values())
-    stats_due = not ctl.get("stats_at") or NOW - parse(ctl["stats_at"]) >= timedelta(minutes=30)
-    follow_due = post_due or in_flight or stats_due
+    # Buffer free plan: ~2,000 requests / 30 days for 2 channels -> stay around 50-60 a day
+    since = NOW - parse(ctl["stats_at"]) if ctl.get("stats_at") else timedelta(days=1)
+    stats_due = since >= timedelta(hours=2)
+    follow_due = post_due or (in_flight and since >= timedelta(minutes=10)) or stats_due
 
     # 0) never post the same clip twice: look at everything Buffer sent / is sending (it retries failed posts itself)
     early_nodes: list[dict] = []
