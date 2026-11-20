@@ -153,11 +153,20 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
 
 
 def download(url: str, folder: Path) -> Path:
+    # highest resolution, then highest frame rate/bitrate; never Twitch's vertical "portrait" versions
     opts = {"outtmpl": str(folder / "%(id)s.%(ext)s"), "quiet": True, "noprogress": True, "noplaylist": True,
-            "format": "bestvideo*+bestaudio/best", "merge_output_format": "mp4"}
+            "format": "bestvideo*[width>height]+bestaudio/best[width>height]/best",
+            "format_sort": ["res", "fps", "tbr"], "merge_output_format": "mp4"}
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=True)
         p = Path(ydl.prepare_filename(info))
+    try:
+        fl = [f"{f.get('format_id')}:{f.get('width')}x{f.get('height')}@{f.get('fps')}"
+              for f in info.get("formats") or [] if f.get("height")]
+        print(f"[download] got {info.get('format_id')} {info.get('width')}x{info.get('height')}@{info.get('fps')} "
+              f"tbr={info.get('tbr')} | offered: {' '.join(fl)[:300]}", flush=True)
+    except Exception:  # noqa: BLE001
+        pass
     mp4 = p.with_suffix(".mp4")
     return mp4 if mp4.exists() else p
 
