@@ -24,6 +24,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -147,7 +148,7 @@ def apply_issues(st: dict) -> None:
     for it in sorted(items, key=lambda i: i["created_at"]):
         title = it["title"].strip()
         body = (it.get("body") or "").replace("\r\n", "\n")
-        m = re.match(r"^\s*(skip|edit|approve|unapprove):\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title, re.I)
+        m = re.match(r"^\s*(skip|edit|layout|approve|unapprove):\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title, re.I)
         if not m:
             continue
         action, key = m.group(1).lower(), m.group(2)
@@ -167,6 +168,23 @@ def apply_issues(st: dict) -> None:
             if cm:
                 c["caption"] = cm.group(1).strip()[:2000]
             msg = "Done — the video was re-made with your hook and caption."
+        elif action == "layout":
+            c = st["clips"][cid]
+            try:
+                ul = json.loads(body[body.index("{"):body.rindex("}") + 1])
+                keep = {}
+                if ul.get("mode") in ("split", "full", "irl"):
+                    keep["mode"] = ul["mode"]
+                if isinstance(ul.get("cam"), str) and re.match(r"^[\d.]+,[\d.]+,[\d.]+,[\d.]+$", ul["cam"]):
+                    keep["cam"] = ul["cam"]
+                for k, lo, hi in (("hook_y", 0.05, 0.95), ("zoom", 1.0, 2.5), ("pan", -1.0, 1.0), ("irl_x", 0.0, 1.0)):
+                    if isinstance(ul.get(k), (int, float)):
+                        keep[k] = max(lo, min(hi, float(ul[k])))
+                c["user_layout"] = keep
+                c.pop("final_hash", None); c.pop("clean_v", None)
+                msg = "Done — the video is being re-made with your layout (next run, a few minutes)."
+            except Exception as e:  # noqa: BLE001
+                msg = f"Couldn't read that layout ({e})."
         else:
             msg = "Not needed anymore — use Start/Stop on the dashboard."
         log(f"{action} {cid}: {msg}")
@@ -749,13 +767,14 @@ def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
 
 
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
-                 layout: str = "split", cut: float = 0.0, cam_video: Path | None = None) -> None:
+                 layout: str = "split", cut: float = 0.0, cam_video: Path | None = None,
+                 hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     x, y, w, h = [float(v) for v in cam.split(",")]
     if layout.startswith("irl"):
         fx = float(layout.split(":")[1]) if ":" in layout else 0.5
-        base = (f"[0:v]crop=w=ih*9/16:h=ih:x='min(max(iw*{fx}-ow/2,0),iw-ow)':y=0,"
+        base = (f"[0:v]crop=w=ih*9/16/{zoom:.3f}:h=ih/{zoom:.3f}:x='min(max(iw*{fx}-ow/2,0),iw-ow)':y='(ih-oh)/2',"
                 f"scale=1080:1920:flags=lanczos,unsharp=3:3:0.4:3:3:0.0,setsar=1")
     elif layout == "full":
         base = ("[0:v]split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
@@ -771,7 +790,9 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             f"crop=1080:{TOP_H},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
             + (f"[b]split=2[b1][b2];[b2]crop=iw:ih*0.15:0:ih*{-cut},boxblur=luma_radius=40:luma_power=3:chroma_radius=18:chroma_power=3[bl];"
                f"[b1][bl]overlay=0:main_h*{-cut}[bb];" if cut < 0 else "") +
-            f"[{'bb' if cut < 0 else 'b'}]crop=iw*{1 - max(CAPTION_CUT, cut, 0)}:ih*{1 - max(CAPTION_CUT, cut, 0)}:(iw-ow)/2:0,scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H},"
+            f"[{'bb' if cut < 0 else 'b'}]crop=iw*{1 - max(CAPTION_CUT, cut, 0)}:ih*{1 - max(CAPTION_CUT, cut, 0)}:(iw-ow)/2:0,"
+            + (f"crop=iw/{zoom:.3f}:ih/{zoom:.3f}:(iw-ow)/2*(1+{pan:.3f}):(ih-oh)/2," if zoom > 1.001 else "") +
+            f"scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H}:x='(iw-ow)/2*(1+{pan:.3f})':y=0,"
             f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
@@ -785,7 +806,8 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     if hook:
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"))
         inputs = ["-i", str(raw), "-i", png] + extra
-        oy = ("(H-h)/2" if layout == "full" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
+        oy = (f"H*{hook_y:.3f}-h/2" if hook_y is not None                              # your own spot (editor)
+              else "(H-h)/2" if layout == "full" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
               else f"{TOP_H}-h*0.2")                                                   # split: on the line
         flt = base + f"[st];[st][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]"
     else:
@@ -1172,6 +1194,12 @@ def main() -> None:
             r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
             r["clean"] = (f"v/{r['id']}_clean.mp4?v={r['clean_v']}"
                           if r.get("clean_v") and (VID / f"{r['id']}_clean.mp4").exists() else "")
+            if r["final"] and r.get("rendered"):     # re-made with a new layout: new address so phones don't show the old one
+                r["final"] += f"&r={r['rendered']}"
+                r["final_abs"] += f"&r={r['rendered']}"
+            if r["clean"] and r.get("rendered"):
+                r["clean"] += f"&r={r['rendered']}"
+            r["src"] = f"v/{r['id']}_src.jpg" if (VID / f"{r['id']}_src.jpg").exists() else ""
             r["clipped"] = r.get("created")
         ready = mix_order(ready)
         for r in ready:
@@ -1343,7 +1371,7 @@ def main() -> None:
         if c["status"] == "used" and age_h < 3:
             continue  # keep the posted video online a few hours (Buffer downloads it from here within minutes)
         if c["status"] != "new":
-            for suf in (".mp4", "_final.mp4", "_clean.mp4", ".jpg"):
+            for suf in (".mp4", "_final.mp4", "_clean.mp4", ".jpg", "_src.jpg"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
             (RAW / f"{cid}.mp4").unlink(missing_ok=True)
             continue
@@ -1417,17 +1445,34 @@ def main() -> None:
                 log(f"picture check skipped {cid}: {e}")
         cut = 0.0
         cam = c.get("cam", "")
-        if lay == "split" and cam and c.get("irl_x") is None:
+        ul = c.get("user_layout") or {}          # your own layout from the site's editor wins over the automatic one
+        try:   # full-frame still for the editor (you drag the webcam box on it)
+            sfr = _frames(raw, [3.0])
+            if sfr:
+                f0 = sfr[0]
+                cv2.imwrite(str(VID / f"{cid}_src.jpg"), cv2.resize(f0, (960, int(f0.shape[0] * 960 / f0.shape[1]))),
+                            [cv2.IMWRITE_JPEG_QUALITY, 72])
+        except Exception:  # noqa: BLE001
+            pass
+        if ul.get("mode") == "full":
+            lay = "full"
+        elif ul.get("mode") == "irl":
+            ix = ul.get("irl_x", c.get("irl_x") if (c.get("irl_x") or -1) >= 0 else 0.5)
+            lay = f"irl:{ix:.3f}"
+        if ul.get("cam"):
+            cam = ul["cam"]
+        auto = not ul                            # automatic webcam / no-gameplay decisions only without your layout
+        if auto and lay == "split" and cam and c.get("irl_x") is None:
             try:
                 ix = irl_focus(raw, cam)
             except Exception as e:  # noqa: BLE001
                 ix = None
                 log(f"no-gameplay check skipped {cid}: {e}")
             c["irl_x"] = ix if ix is not None else -1
-        if lay == "split" and (c.get("irl_x") or -1) >= 0:
+        if auto and lay == "split" and (c.get("irl_x") or -1) >= 0:
             lay = f"irl:{c['irl_x']:.3f}"
             log(f"no gameplay in {cid}: full-screen shot on the streamer")
-        if lay == "split" and cam:
+        if lay == "split" and cam and not ul.get("cam"):
             cam2 = cam_without_chat(raw, cam)
             if cam2 != cam:
                 log(f"chat over the webcam in {cid}: webcam box ends above it")
@@ -1437,7 +1482,7 @@ def main() -> None:
             except Exception as e:  # noqa: BLE001
                 fc = cam
                 log(f"face framing skipped {cid}: {e}")
-            if fc is None and not c.get("post_now") and c.get("source") != "upload":
+            if fc is None and auto and not c.get("post_now") and c.get("source") != "upload":
                 c.update(status="skip", skip_reason="no one steady in the webcam (away / camera off)")
                 log(f"skipped {cid}: no steady face on camera")
                 return job
@@ -1463,10 +1508,13 @@ def main() -> None:
                 log(f"purple captions in {cid}: " + (f"zoomed gameplay {cut:.0%} off the bottom" if cut > 0
                                                        else f"blurred a strip at {-cut:.0%} height"))
             c["cap_cut"] = cut
+        c["cam_used"], c["layout_used"] = cam, lay
+        opts = dict(layout=lay, cut=cut, cam_video=cam_video, hook_y=ul.get("hook_y"), zoom=ul.get("zoom", 1.0),
+                    pan=ul.get("pan", 0.0))
         if need_f:
-            render_final(raw, cid, cam, c["hook"], tmp, layout=lay, cut=cut, cam_video=cam_video)
+            render_final(raw, cid, cam, c["hook"], tmp, **opts)
         if need_c:
-            render_final(raw, cid, cam, None, tmp, out="_clean", layout=lay, cut=cut, cam_video=cam_video)
+            render_final(raw, cid, cam, None, tmp, out="_clean", **opts)
         return job
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -1481,6 +1529,8 @@ def main() -> None:
                     c["final_hash"] = c["final_v"] = hh
                 if need_c:
                     c["clean_v"] = ch
+                if need_f or need_c:
+                    c["rendered"] = int(time.time())
                 done += 1
                 log(f"made video {done}/{len(jobs)}: {c['streamer']} {cid}")
                 if done % 4 == 0 and done < len(jobs):
@@ -1532,7 +1582,7 @@ def main() -> None:
             if mb <= SITE_MAX_MB:
                 break
             clips[cid].update(status="expired", skip_reason="site space (lowest rated)")
-            for suf in ("_final.mp4", "_clean.mp4", ".mp4", ".jpg"):
+            for suf in ("_final.mp4", "_clean.mp4", ".mp4", ".jpg", "_src.jpg"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
             mb = site_mb()
         log(f"site size guard: now {mb:.0f} MB")
