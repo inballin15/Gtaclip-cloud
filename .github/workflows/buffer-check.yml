@@ -1,0 +1,15 @@
+name: buffer-check
+# One single request to Buffer: is the API accepting us again, and how many requests are left?
+on: workflow_dispatch
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          curl -s -D h.txt -o b.json https://api.buffer.com -H "Authorization: Bearer $BUFFER_API_KEY" \
+            -H "Content-Type: application/json" -d '{"query":"query { account { id } }"}'
+          echo "STATUS: $(head -1 h.txt)"
+          grep -i "^ratelimit" h.txt | sed 's/^/HEADER: /' || true
+          python3 -c "import json;d=json.load(open('b.json'));print('RESULT:', 'OK' if d.get('data') else json.dumps(d.get('errors'))[:300])"
