@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-20T15:07:35Z",
+ "updated": "2026-11-20T15:12:36Z",
  "paused": true,
  "switched_at": "2026-11-19T17:54:15Z",
  "postnow": [],
@@ -536,9 +536,9 @@
  ],
  "stats_updated": "2026-11-20T14:42:08Z",
  "log": [
-  "[15:07:36Z] post list query failed (full): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
-  "[15:07:36Z] post list query failed (lite): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
-  "[15:07:36Z] duplicate check skipped: couldn't read posts from Buffer",
-  "[15:07:36Z] Buffer didn't accept the API key: Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade"
+  "[15:12:37Z] post list query failed (full): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
+  "[15:12:37Z] post list query failed (lite): Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade",
+  "[15:12:37Z] duplicate check skipped: couldn't read posts from Buffer",
+  "[15:12:37Z] Buffer didn't accept the API key: Buffer: Too many requests from this client. Please try again later. You can raise your Buffer API limit: https://publish.buffer.com/settings/api?cta=publicApi-rateLimit-hint-upgrade-1&upgradePathName=apiRateLimit-upgrade"
  ]
 }
