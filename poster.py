@@ -451,11 +451,23 @@ def main() -> None:
         buffer_err = "Buffer API key missing — add the BUFFER_API_KEY secret in GitHub (see dashboard Settings)."
         log(buffer_err)
 
+    # Buffer limits how often we may ask it things: only talk to it when a post is due, while a post is still
+    # uploading, or every 30 min for stats (this runs every 5 min)
+    _slot = due_slot()
+    post_due = bool(ctl["postnow"]) or bool(_slot and not ctl.get("paused") and ctl.get("last_slot") != iso(_slot))
+    in_flight = any(r.get("posted_at") and NOW - parse(r["posted_at"]) < timedelta(hours=2)
+                    and any((st or {}).get("state") not in ("live", "error") for st in (r.get("status") or {}).values())
+                    for r in recs.values())
+    stats_due = not ctl.get("stats_at") or NOW - parse(ctl["stats_at"]) >= timedelta(minutes=30)
+    follow_due = post_due or in_flight or stats_due
+
     # 0) never post the same clip twice: look at everything Buffer sent / is sending (it retries failed posts itself)
     early_nodes: list[dict] = []
-    if BUFFER_KEY and not DRY_RUN:
+    early_ok = False
+    if BUFFER_KEY and not DRY_RUN and post_due:
         try:
             early_nodes = recent_buffer_posts()
+            early_ok = True
         except Exception as e:  # noqa: BLE001
             log(f"duplicate check skipped: {e}")
     buffer_texts = [norm(n.get("text", "")) for n in early_nodes if n.get("status") in ("sent", "sending", "scheduled", "draft", "error")]
@@ -500,12 +512,7 @@ def main() -> None:
     if DRY_RUN:
         buffer_ok = True
     elif BUFFER_KEY:
-        try:
-            buffer("query { account { id } }")
-            buffer_ok = True
-        except Exception as e:  # noqa: BLE001
-            buffer_err = f"Buffer didn't accept the API key: {e}"[:300]
-            log(buffer_err)
+        buffer_ok = True   # (no separate key check: it cost a request every 5 min; a bad key shows up as a post error)
     if buffer_ok:
         for c, why in to_post:
             cid = c["id"]
@@ -543,11 +550,15 @@ def main() -> None:
 
     # 3) follow every post until it's live, and collect stats
     stats_posts = []
-    if buffer_ok:
+    followed = False
+    if buffer_ok and (follow_due or to_post):
+        followed = True
         try:
-            nodes = [] if DRY_RUN else recent_buffer_posts()
+            nodes = [] if DRY_RUN else (early_nodes if early_ok and not to_post else recent_buffer_posts())
+            ctl["stats_at"] = iso(NOW)
         except Exception as e:  # noqa: BLE001
             nodes = []
+            followed = False
             buffer_err = str(e)[:300]
         by_buf = {n["id"]: n for n in nodes}
         gone: list[str] = []
@@ -586,7 +597,7 @@ def main() -> None:
             if changed:
                 wj(P / "posted" / f"{cid}.json", r)
             sts = list((r.get("status") or {}).values())
-            if sts and all(x.get("state") == "error" for x in sts) and not (r.get("tiktok") or r.get("youtube")) \
+            if followed and sts and all(x.get("state") == "error" for x in sts) and not (r.get("tiktok") or r.get("youtube")) \
                     and not any(by_buf.get(x.get("buffer_id", ""), {}).get("status") in ("sending", "scheduled", "sent") for x in sts):
                 (P / "posted" / f"{cid}.json").unlink(missing_ok=True)
                 ctl.setdefault("errors", []).insert(0, {"at": iso(NOW), "id": cid, "error": "; ".join(x.get("error", "") for x in sts)})
@@ -644,7 +655,7 @@ def main() -> None:
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
         "posts": dict(sorted(recs.items(), key=lambda kv: kv[1].get("posted_at", ""), reverse=True)[:120]),
-        "stats": stats_posts if buffer_ok else old.get("stats", []),
+        "stats": stats_posts if followed else old.get("stats", []),
         "stats_updated": iso(NOW) if buffer_ok else old.get("stats_updated", ""),
         "log": LOG[-30:],
     }
