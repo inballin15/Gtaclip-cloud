@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-20T19:00:00Z",
+ "updated": "2026-11-20T19:05:06Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
@@ -15,7 +15,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-20T18:49:45Z",
+  "at": "2026-11-20T19:05:06Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
