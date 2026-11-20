@@ -101,7 +101,7 @@ def main() -> None:
                         "twitch": f"{v['url']}?t={int(a // 3600)}h{int(a % 3600 // 60)}m{int(a % 60)}s",
                         "transcript": m["text"], "hook": m.get("hook", ""), "hook_ai": bool(m.get("hook_ai")),
                         "moment": {k: m.get(k) for k in ("score", "reasons", "ai_score")}}
-                (OUT / f"{cid}.json").write_text(json.dumps(meta))
+                (OUT / f"{cid}.json").write_text(json.dumps(meta, default=float))
                 made += 1
                 log(f"  moment {int(a // 60)}:{int(a % 60):02d} ({', '.join(m['reasons']) or 'good'}) {m.get('hook', '')}")
             prog[v["id"]] = end
