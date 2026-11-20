@@ -155,7 +155,7 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
 def download(url: str, folder: Path) -> Path:
     # highest resolution, then highest frame rate/bitrate; never Twitch's vertical "portrait" versions
     opts = {"outtmpl": str(folder / "%(id)s.%(ext)s"), "quiet": True, "noprogress": True, "noplaylist": True,
-            "format": "bestvideo*[width>height]+bestaudio/best[width>height]/best",
+            "format": "bestvideo*[aspect_ratio>1]+bestaudio/best[aspect_ratio>1]/best",
             "format_sort": ["res", "fps", "tbr"], "merge_output_format": "mp4"}
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=True)
