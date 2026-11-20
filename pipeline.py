@@ -1200,6 +1200,7 @@ def main() -> None:
             if r["clean"] and r.get("rendered"):
                 r["clean"] += f"&r={r['rendered']}"
             r["src"] = f"v/{r['id']}_src.jpg" if (VID / f"{r['id']}_src.jpg").exists() else ""
+            r["vposter"] = (f"v/{r['id']}_p.jpg?r={r.get('rendered', '')}" if (VID / f"{r['id']}_p.jpg").exists() else "")
             r["clipped"] = r.get("created")
         ready = mix_order(ready)
         for r in ready:
@@ -1371,7 +1372,7 @@ def main() -> None:
         if c["status"] == "used" and age_h < 3:
             continue  # keep the posted video online a few hours (Buffer downloads it from here within minutes)
         if c["status"] != "new":
-            for suf in (".mp4", "_final.mp4", "_clean.mp4", ".jpg", "_src.jpg"):
+            for suf in (".mp4", "_final.mp4", "_clean.mp4", ".jpg", "_src.jpg", "_p.jpg"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
             (RAW / f"{cid}.mp4").unlink(missing_ok=True)
             continue
@@ -1513,6 +1514,11 @@ def main() -> None:
                     pan=ul.get("pan", 0.0))
         if need_f:
             render_final(raw, cid, cam, c["hook"], tmp, **opts)
+            try:   # vertical thumbnail of the finished video for the site
+                ff("-ss", "1.2", "-i", str(VID / f"{cid}_final.mp4"), "-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "6",
+                   str(VID / f"{cid}_p.jpg"))
+            except Exception:  # noqa: BLE001
+                pass
         if need_c:
             render_final(raw, cid, cam, None, tmp, out="_clean", **opts)
         return job
@@ -1582,7 +1588,7 @@ def main() -> None:
             if mb <= SITE_MAX_MB:
                 break
             clips[cid].update(status="expired", skip_reason="site space (lowest rated)")
-            for suf in ("_final.mp4", "_clean.mp4", ".mp4", ".jpg", "_src.jpg"):
+            for suf in ("_final.mp4", "_clean.mp4", ".mp4", ".jpg", "_src.jpg", "_p.jpg"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
             mb = site_mb()
         log(f"site size guard: now {mb:.0f} MB")
