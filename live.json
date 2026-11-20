@@ -1,12 +1,14 @@
 {
- "updated": "2026-11-20T18:34:55Z",
+ "updated": "2026-11-20T18:40:12Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
  "next_slot": "2026-11-20T19:37:00Z",
  "up_next": "vod2934866208_14787",
  "buffer_ok": false,
- "buffer_error": "Buffer's request limit was hit — posting resumes after 2026-11-20T19:05:01Z",
+ "buffer_error": "Buffer is turned off on the dashboard — nothing is posted or sent to Buffer.",
+ "buffer_off": true,
+ "buffer_wait": "",
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
@@ -547,7 +549,6 @@
  ],
  "stats_updated": "2026-11-20T18:04:59Z",
  "log": [
-  "[18:34:57Z] spotted your tiktok post of AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO: https://www.tiktok.com/@gtaclip96/video/7710320847264746765",
-  "[18:34:57Z] Buffer rate limit: no Buffer requests until 2026-11-20T19:05:01Z"
+  "[18:40:14Z] Buffer is OFF — no posting and no requests to Buffer until you turn it back on."
  ]
 }
