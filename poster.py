@@ -99,6 +99,8 @@ BUFFER_WAIT: dict = {}   # filled from control.json: no Buffer calls before this
 
 
 def buffer(query: str, variables: dict | None = None):
+    if BUFFER_WAIT.get("off"):
+        raise RuntimeError("Buffer is turned off on the dashboard (no request sent)")
     if BUFFER_WAIT.get("until") and parse(BUFFER_WAIT["until"]) > datetime.now(timezone.utc):
         raise RuntimeError(f"Buffer: waiting out its rate limit until {BUFFER_WAIT['until']} (no request sent)")
     code, res = http("POST", "https://api.buffer.com", {"Authorization": f"Bearer {BUFFER_KEY}"},
@@ -148,6 +150,8 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             kind = "manual"
         elif tl.startswith("ai:"):
             kind = "ai"
+        elif tl.startswith("buffer:"):
+            kind = "buffer"
         if not kind:
             continue  # skip:/edit: belong to the render pipeline
         if age_min > REQUEST_MAX_AGE_MIN:
@@ -160,6 +164,14 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             ctl["switched_at"] = iso(NOW)
             msg = ("Automatic posting is ON — next post at the next :07 or :37 (7am–10:37pm)." if on
                    else "Automatic posting is STOPPED. Nothing posts on the schedule until you press Start.")
+            close_issue(it["number"], msg)
+            log(msg)
+            continue
+        if kind == "buffer":
+            ctl["buffer_off"] = "off" in tl
+            ctl["buffer_wait"] = ""
+            msg = ("Buffer is OFF — no posting and no requests to Buffer until you turn it back on." if ctl["buffer_off"]
+                   else "Buffer is back ON — scheduled posts go out again.")
             close_issue(it["number"], msg)
             log(msg)
             continue
@@ -468,6 +480,7 @@ def main() -> None:
         log(buffer_err)
 
     BUFFER_WAIT["until"] = ctl.get("buffer_wait", "")
+    BUFFER_WAIT["off"] = bool(ctl.get("buffer_off"))
     # Buffer limits how often we may ask it things: only talk to it when a post is due, while a post is still
     # uploading, or every 30 min for stats (this runs every 5 min)
     _slot = due_slot()
@@ -483,7 +496,7 @@ def main() -> None:
     # 0) never post the same clip twice: look at everything Buffer sent / is sending (it retries failed posts itself)
     early_nodes: list[dict] = []
     early_ok = False
-    if BUFFER_KEY and not DRY_RUN and post_due:
+    if BUFFER_KEY and not DRY_RUN and post_due and not ctl.get("buffer_off"):
         try:
             early_nodes = recent_buffer_posts()
             early_ok = True
@@ -530,6 +543,8 @@ def main() -> None:
     # 2) post it
     if DRY_RUN:
         buffer_ok = True
+    elif ctl.get("buffer_off"):
+        buffer_err = "Buffer is turned off on the dashboard — nothing is posted or sent to Buffer."
     elif BUFFER_KEY and BUFFER_WAIT.get("until") and parse(BUFFER_WAIT["until"]) > NOW:
         buffer_err = f"Buffer's request limit was hit — posting resumes after {BUFFER_WAIT['until']}"
     elif BUFFER_KEY:
@@ -675,7 +690,8 @@ def main() -> None:
     live = {
         "updated": iso(NOW), "paused": bool(ctl.get("paused")), "switched_at": ctl.get("switched_at", ""),
         "postnow": ctl["postnow"], "next_slot": iso(nxt) if nxt else "", "up_next": up_next,
-        "buffer_ok": buffer_ok, "buffer_error": buffer_err, "cooldown": ctl.get("cooldown", {}),
+        "buffer_ok": buffer_ok, "buffer_error": buffer_err, "buffer_off": bool(ctl.get("buffer_off")),
+        "buffer_wait": ctl.get("buffer_wait", ""), "cooldown": ctl.get("cooldown", {}),
         "ai_off": bool(ctl.get("ai_off")),
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),

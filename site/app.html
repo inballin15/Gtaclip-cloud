@@ -316,7 +316,9 @@ function renderSetup() {
   const box = $('setup'); box.replaceChildren();
   const chips = [];
   if (!ghKey()) chips.push({ cls: 'warn', txt: 'Connect GitHub', act: () => openSettings() });
-  if (L && !L.buffer_ok) chips.push({ cls: 'bad', txt: 'Buffer not connected', act: openBufferHelp });
+  if (L && L.buffer_off) chips.push({ cls: 'bad', txt: 'Buffer OFF · not posting', act: openBufferSwitch });
+  else if (L && L.buffer_wait && new Date(L.buffer_wait) > Date.now()) chips.push({ cls: 'bad', txt: 'Buffer limit hit · waiting', act: openBufferSwitch });
+  else if (L && !L.buffer_ok) chips.push({ cls: 'bad', txt: 'Buffer not connected', act: openBufferHelp });
   for (const [sv, until] of Object.entries((L && L.cooldown) || {})) {
     if (new Date(until) <= Date.now()) continue;
     const name = sv === 'tiktok' ? 'TikTok' : 'YouTube';
@@ -346,6 +348,16 @@ function renderRun() {
   const wantOn = isPending('resume:'), wantOff = isPending('pause:');
   const on = !L.paused;
   box.className = 'box run ' + (on ? 'on' : 'off');
+  if (L.buffer_off) {
+    box.className = 'box run off';
+    box.append(el('div', 'state', '■ Automatic posting is PAUSED — Buffer is off'));
+    box.append(el('div', 'meta', 'Buffer hit its request limit, so nothing is posted or sent to Buffer. Clips are still being made — download them below and post them yourself.'));
+    const bb = el('button', 'bigbtn start', isPending('buffer:') ? 'Turning Buffer on… (under 1 min)' : 'Turn Buffer back on');
+    bb.disabled = !!isPending('buffer:');
+    bb.onclick = openBufferSwitch;
+    box.append(bb);
+    return;
+  }
   box.append(el('div', 'state', on ? '● Automatic posting is ON' : '■ Automatic posting is STOPPED'));
   if (on) {
     const nxt = L.next_slot ? tET(L.next_slot) : '';
@@ -669,7 +681,7 @@ function renderSys() {
   row('ok', `Clip finder: ${f.added ?? 0} new clips last run`, `${f.found_24h ?? '—'} checked in 24 h · ${(Q.ready || []).length} in the queue`);
   const ai = Q.ai || {};
   row(ai.status === 'ok' ? 'ok' : ai.status && ai.status !== 'no key' ? 'wait' : '', `AI viral scores: ${ai.status === 'ok' ? 'ON' : ai.status === 'no key' || !ai.status ? 'off' : 'paused'}`, ai.status === 'ok' ? `${ai.rated || 0} clips rated · checked ${ai.checked ? ago(ai.checked) : '—'}` : String(ai.status || 'Add a Gemini key to turn it on'));
-  row(s.poster && s.poster.conclusion === 'success' ? 'ok' : 'bad', `Poster: ${L && L.paused ? 'stopped' : 'on'}`, s.poster ? `Last check ${ago(s.poster.updated_at)} · runs every 5 min · next post ${L && L.next_slot ? tET(L.next_slot) : '—'}` : '—');
+  row(s.poster && s.poster.conclusion === 'success' && !(L && L.buffer_off) ? 'ok' : 'bad', `Poster: ${L && L.buffer_off ? 'paused (Buffer off)' : L && L.paused ? 'stopped' : 'on'}`, s.poster ? `Last check ${ago(s.poster.updated_at)} · runs every 5 min · next post ${L && L.next_slot ? tET(L.next_slot) : '—'}` : '—');
   row(s.clock && s.clock.status === 'in_progress' ? 'ok' : 'bad', `Timer: ${s.clock && s.clock.status === 'in_progress' ? 'running' : 'restarting'}`, 'Starts the poster every 5 min and the clip maker every 10 min.');
 }
 
@@ -852,6 +864,19 @@ function openSettings(why) {
   nodes.push(el('hr'), el('div', 'meta', 'AI viral scores (Gemini) rate every clip 0–100 and write hooks. Leave on unless Google is having problems.'), ab);
   const bh = el('button', 'btn', 'Buffer connection help'); bh.onclick = openBufferHelp; nodes.push(el('hr'), bh);
   sheet('Settings', nodes);
+}
+function openBufferSwitch() {
+  const off = L && L.buffer_off;
+  const want = isPending('buffer:');
+  const b = el('button', 'bigbtn ' + (off ? 'start' : 'stop'), want ? 'Sending… (usually under 1 min)' : off ? 'Turn Buffer back ON' : 'Turn Buffer OFF');
+  b.disabled = !!want;
+  b.onclick = async () => { b.disabled = true; if (await ghTap(off ? 'buffer: on' : 'buffer: off')) toast(off ? 'Turning Buffer on…' : 'Turning Buffer off…'); $('sheet').hidden = true; };
+  sheet(off ? 'Buffer is OFF' : 'Buffer hit its request limit', [
+    el('div', 'note bad', off
+      ? 'Nothing is posted and no requests are sent to Buffer. Clips keep being made — download them from the Queue and post them yourself. Turn Buffer back on once its limit has reset.'
+      : `Buffer refused requests (too many in 24 h). The poster waits and tries once more after ${tET(L.buffer_wait)}.`),
+    el('div', 'meta', 'Buffer free plan: about 600 requests per day and ~2,000 per month for two channels. The poster now uses about 50–60 a day.'),
+    b]);
 }
 function openBufferHelp() {
   const ok = L && L.buffer_ok;
