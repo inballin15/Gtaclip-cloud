@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-20T19:30:14Z",
+ "updated": "2026-11-20T19:35:33Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
@@ -15,7 +15,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-20T19:20:33Z",
+  "at": "2026-11-20T19:35:33Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -53,6 +53,17 @@
   "ToughYawningGooseMau5-2PnplpOOX4eow-YN"
  ],
  "posts": {
+  "IgnorantBraveBananaNononoCat-znG5sU9yfduBEaMi": {
+   "id": "IgnorantBraveBananaNononoCat-znG5sU9yfduBEaMi",
+   "hook": "IShowSpeed LOSES IT after ACCIDENTALLY deleting his ENTIRE GTA 6 save file",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "why": "posted by Nicholas (spotted on the channel)",
+   "manual": true,
+   "posted_at": "2026-11-20T19:35:33Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710337274008980749",
+   "youtube": ""
+  },
   "AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO": {
    "id": "AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO",
    "hook": "IShowSpeed is SHOCKED seeing a LEGENDARY GTA IV CHARACTER appear in GTA 6",
@@ -548,5 +559,7 @@
   }
  ],
  "stats_updated": "2026-11-20T18:04:59Z",
- "log": []
+ "log": [
+  "[19:35:36Z] spotted your tiktok post of IgnorantBraveBananaNononoCat-znG5sU9yfduBEaMi: https://www.tiktok.com/@gtaclip96/video/7710337274008980749"
+ ]
 }
