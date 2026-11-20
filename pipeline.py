@@ -571,7 +571,9 @@ def cam_without_chat(path: Path, cam: str) -> str:
         k = max(3, int(n * 0.04))
         for r in range(int(n * 0.55), n - k):
             if d[r:r + k].mean() > max(2.2 * base, 0.06):
-                frac = max(0.55, (r - n * 0.02) / n)
+                while r > n * 0.5 and d[r - 1] > 1.4 * base:   # walk up to where the chat really starts
+                    r -= 1
+                frac = max(0.5, (r - n * 0.04) / n)
                 return f"{x:.4f},{y:.4f},{w:.4f},{h * frac:.4f}"
         return cam
     except Exception:  # noqa: BLE001
@@ -580,7 +582,8 @@ def cam_without_chat(path: Path, cam: str) -> str:
 
 def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
     """Streamers like Lacy/Kai run a live caption overlay (white words, purple highlight) near the bottom.
-    If it's there, return how much to zoom off the bottom (0.08-0.14) to push it out; otherwise 0."""
+    If it's there and low, return how much to zoom off the bottom (0.08-0.14) to push it out; if it sits higher,
+    return -top (a strip from 'top' down ~14% gets blurred instead of zooming more); otherwise 0."""
     try:
         if not duration:
             cap = cv2.VideoCapture(str(path))
@@ -606,7 +609,9 @@ def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
         if len(tops) < 2 or max(tops) - min(tops) > 0.06:
             return 0.0
         need = 1 - min(tops) + 0.05      # the white words sit just above the purple highlight
-        return round(min(0.14, max(0.08, need)), 3)
+        if need <= 0.14:
+            return round(max(0.08, need), 3)
+        return -round(min(tops) - 0.06, 3)   # captions sit high: negative = blur a strip starting at this height
     except Exception:  # noqa: BLE001
         return 0.0
 
@@ -628,7 +633,9 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             # small webcams get blown up ~4-5x: light denoise first, sharp (lanczos) scaling, then sharpen
             f"hqdn3d=1.5:1.5:3:3,scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
             f"crop=1080:{TOP_H},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
-            f"[b]crop=iw*{1 - max(CAPTION_CUT, cut)}:ih*{1 - max(CAPTION_CUT, cut)}:(iw-ow)/2:0,scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H},"
+            + (f"[b]split=2[b1][b2];[b2]crop=iw:ih*0.15:0:ih*{-cut},boxblur=50:4[bl];"
+               f"[b1][bl]overlay=0:main_h*{-cut}[bb];" if cut < 0 else "") +
+            f"[{'bb' if cut < 0 else 'b'}]crop=iw*{1 - max(CAPTION_CUT, cut, 0)}:ih*{1 - max(CAPTION_CUT, cut, 0)}:(iw-ow)/2:0,scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H},"
             f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
@@ -1065,6 +1072,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_all_v", 0) < 1:   # one time: re-make every queued clip (chat/purple fixes + picture check)
+        st["redo_all_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new":
+                c.pop("final_hash", None); c.pop("clean_v", None)
     if st.get("redo_kai_lacy_v", 0) < 1:   # one time: re-make queued Kai/Lacy clips (chat over webcam, purple captions)
         st["redo_kai_lacy_v"] = 1
         for c in clips.values():
@@ -1206,6 +1218,21 @@ def main() -> None:
         c = clips[cid]
         lay = c.get("layout", "split")
         raw = best_part(raw, cid, tmp, c)
+        if c.get("pic_ok") is None and not control.get("ai_off"):   # look at the picture: no nudity / gore
+            try:
+                import viral
+                fr = _frames(raw, [1.5, 6, 11, 16])
+                jp = [cv2.imencode(".jpg", cv2.resize(f, (768, int(f.shape[0] * 768 / f.shape[1]))),
+                                   [cv2.IMWRITE_JPEG_QUALITY, 80])[1].tobytes() for f in fr]
+                ok, why = viral.ai_visual_ok(jp, log)
+                if ok is not None:
+                    c["pic_ok"] = ok
+                if ok is False and not c.get("post_now"):
+                    c.update(status="skip", skip_reason=f"AI picture check: {why or 'nudity/sexual content'}")
+                    log(f"picture check removed {cid}: {why}")
+                    return job
+            except Exception as e:  # noqa: BLE001
+                log(f"picture check skipped {cid}: {e}")
         cut = 0.0
         cam = c.get("cam", "")
         if lay == "split" and cam:
@@ -1216,7 +1243,8 @@ def main() -> None:
         if lay == "split":
             cut = purple_caption_cut(raw, 0, c.get("cam", ""))
             if cut:
-                log(f"purple captions in {cid}: zoomed gameplay {cut:.0%} off the bottom")
+                log(f"purple captions in {cid}: " + (f"zoomed gameplay {cut:.0%} off the bottom" if cut > 0
+                                                       else f"blurred a strip at {-cut:.0%} height"))
             c["cap_cut"] = cut
         if need_f:
             render_final(raw, cid, cam, c["hook"], tmp, layout=lay, cut=cut)

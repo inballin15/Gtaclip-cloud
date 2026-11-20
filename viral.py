@@ -383,3 +383,38 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
         status = "ok"
     log(f"AI scoring: {len(out)} clips rated ({status})")
     return out, status
+
+
+def ai_visual_ok(jpegs: list[bytes], log=print) -> tuple[bool | None, str]:
+    """Look at a few frames of a clip (Gemini vision). False = nudity / sexual content / gore -> don't post.
+    None = couldn't check (no key, quota, error)."""
+    import base64
+    import json as _json
+    import os
+    import urllib.request
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not key or not jpegs:
+        return None, "no key"
+    parts = [{"text": "These are frames from a GTA 6 game livestream clip that will be posted on TikTok. "
+                      "Is there any nudity (bare breasts, genitals, bare buttocks, even in-game), sexual activity, "
+                      "strip-club dancing, or graphic gore? Answer JSON {\"ok\": true|false, \"why\": \"...\"} where "
+                      "ok=false means it must not be posted."}]
+    for j in jpegs[:4]:
+        parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(j).decode()}})
+    body = {"contents": [{"parts": parts}],
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0,
+                                 "thinkingConfig": {"thinkingBudget": 0}}}
+    for model in gemini_models(key, log):
+        try:
+            req = urllib.request.Request(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=25) as r:
+                res = _json.loads(r.read())
+            row = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
+            if isinstance(row, list):
+                row = row[0] if row else {}
+            return bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90]
+        except Exception as e:  # noqa: BLE001
+            log(f"picture check ({model}): {str(e)[:80]}")
+    return None, "check failed"
