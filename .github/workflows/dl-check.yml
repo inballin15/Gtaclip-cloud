@@ -5,5 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: pip install -q yt-dlp
-      - run: yt-dlp -F "https://www.twitch.tv/ishowspeed/clip/CrowdedEsteemedPigeonDatBoi-GJD-l8MPsVSh4KXI"
-      - run: yt-dlp -q -f "bestvideo*[aspect_ratio>1]+bestaudio/best[aspect_ratio>1]/best" -S res,fps,tbr -o c.mp4 "https://www.twitch.tv/ishowspeed/clip/CrowdedEsteemedPigeonDatBoi-GJD-l8MPsVSh4KXI" && ffprobe -v error -show_entries stream=width,height,r_frame_rate,bit_rate -of csv=p=0 c.mp4
+      - name: old rule
+        run: yt-dlp -q -f "bestvideo*+bestaudio/best" -o old.mp4 "https://www.twitch.tv/ishowspeed/clip/CrowdedEsteemedPigeonDatBoi-GJD-l8MPsVSh4KXI" && ffprobe -v error -show_entries stream=width,height,r_frame_rate,bit_rate -of csv=p=0 old.mp4
+      - name: new rule
+        run: yt-dlp -q -f "bestvideo*[aspect_ratio>1]+bestaudio/best[aspect_ratio>1]/best" -S res,fps,tbr -o new.mp4 "https://www.twitch.tv/ishowspeed/clip/CrowdedEsteemedPigeonDatBoi-GJD-l8MPsVSh4KXI" && ffprobe -v error -show_entries stream=width,height,r_frame_rate,bit_rate -of csv=p=0 new.mp4
+      - name: portrait
+        run: yt-dlp -q -f portrait-1098 -o p.mp4 "https://www.twitch.tv/ishowspeed/clip/CrowdedEsteemedPigeonDatBoi-GJD-l8MPsVSh4KXI" && ffprobe -v error -show_entries stream=width,height -of csv=p=0 p.mp4
