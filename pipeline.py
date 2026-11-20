@@ -47,6 +47,7 @@ KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
 KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
 REPLACE_QUEUE_EACH_RUN = False   # off: clips stay until they're 9 h old (max 30 in the queue)
 MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
+SITE_MAX_MB = 900        # GitHub Pages limit is 1 GB; keep room
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v3-textonly-capcut"
@@ -648,7 +649,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         inputs = ["-i", str(raw)]
         flt = base + ",format=yuv420p[out]"
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
-       "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-maxrate", "5000k", "-bufsize", "10M", "-r", "30",
+       "-c:v", "libx264", "-preset", "fast", "-crf", "19", "-maxrate", "8000k", "-bufsize", "16M", "-r", "30",
        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
 
 
@@ -1171,8 +1172,8 @@ def main() -> None:
         keep_h = KEEP_UPLOAD_HOURS if c.get("source") == "upload" else KEEP_NEW_HOURS
         if (c["status"] == "new" and clip_age_h > keep_h) or (c["status"] != "new" and age_h > KEEP_POSTED_HOURS):
             c["status"] = "expired" if c["status"] == "new" else c["status"]
-        if c["status"] == "used" and age_h < 24:
-            continue  # keep the posted video online a day (Buffer downloads it from here)
+        if c["status"] == "used" and age_h < 3:
+            continue  # keep the posted video online a few hours (Buffer downloads it from here within minutes)
         if c["status"] != "new":
             for suf in (".mp4", "_final.mp4", "_clean.mp4", ".jpg"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
@@ -1301,6 +1302,22 @@ def main() -> None:
                     clips[cid]["final_hash"] = clips[cid]["final_v"] = hh
                 except Exception as e:  # noqa: BLE001
                     log(f"re-make failed: {e}")
+
+    # 4e. size guard: GitHub Pages sites must stay under 1 GB -> drop the lowest-rated queued clips if close
+    def site_mb():
+        return sum(f.stat().st_size for f in VID.glob("*") if f.is_file()) / 1e6
+    mb = site_mb()
+    if mb > SITE_MAX_MB:
+        cands = sorted([(c.get("viral") or 0, cid) for cid, c in clips.items() if c["status"] == "new"
+                        and c.get("source") != "upload" and not c.get("post_now")])
+        for _, cid in cands:
+            if mb <= SITE_MAX_MB:
+                break
+            clips[cid].update(status="expired", skip_reason="site space (lowest rated)")
+            for suf in ("_final.mp4", "_clean.mp4", ".mp4", ".jpg"):
+                (VID / f"{cid}{suf}").unlink(missing_ok=True)
+            mb = site_mb()
+        log(f"site size guard: now {mb:.0f} MB")
 
     # 5. queue.json
     write_queue()
