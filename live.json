@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-20T05:36:37Z",
+ "updated": "2026-11-20T05:41:45Z",
  "paused": true,
  "switched_at": "2026-11-19T17:54:15Z",
  "postnow": [],
@@ -13,7 +13,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-20T05:26:28Z",
+  "at": "2026-11-20T05:41:45Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -37,7 +37,6 @@
  "blocked": [
   "AffluentAuspiciousShieldArgieB8-mFf3ThrEyPR80JRX",
   "AwkwardSlickDurianDatSheffy-TMQEkfQz-O7AHcJ_",
-  "AwkwardTenuousAlfalfaPunchTrees-OQDzvDF6chDgfZ7U",
   "DiligentTolerantSnoodTriHard-Ss7oZi6YP7-0Sbej",
   "EasyThirstyBottlePeanutButterJellyTime-naAgu52jJiR9uPnF",
   "FairBillowingNightingaleSwiftRage-9-uW2HYOhBTlU-JA",
@@ -57,8 +56,6 @@
   "SuperHelplessYakNerfRedBlaster-6aEmgnw830WpU0hI",
   "ThankfulSpookyWoodpeckerWow-Gs7udfXVH_yXstNU",
   "ToughYawningGooseMau5-2PnplpOOX4eow-YN",
-  "ViscousRelievedGoshawkOptimizePrime-AonnlgjQ_Yn1cIRy",
-  "YummyExuberantManateeTBTacoRight-1fsqLIQGYozFBgVs",
   "vod2933739024_37803",
   "vod2933767012_37479"
  ],
@@ -546,6 +543,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-20T05:36:37Z",
+ "stats_updated": "2026-11-20T05:41:45Z",
  "log": []
 }
