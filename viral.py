@@ -425,18 +425,26 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
     body = {"contents": [{"parts": parts}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0,
                                  "thinkingConfig": {"thinkingBudget": 0}}}
-    for model in gemini_models(key, log):
-        try:
-            req = urllib.request.Request(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
-                data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=25) as r:
-                res = _json.loads(r.read())
-            row = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
-            if isinstance(row, list):
-                row = row[0] if row else {}
-            return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
-                    clean_line(str(row.get("hook", "")))[:120])
-        except Exception as e:  # noqa: BLE001
-            log(f"picture check ({model}): {str(e)[:80]}")
+    import time as _t
+    for attempt in range(3):          # Google's free tier says "too many requests" in bursts: wait and try again
+        busy = False
+        for model in gemini_models(key, log):
+            try:
+                req = urllib.request.Request(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                    data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=25) as r:
+                    res = _json.loads(r.read())
+                row = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
+                if isinstance(row, list):
+                    row = row[0] if row else {}
+                return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
+                        clean_line(str(row.get("hook", "")))[:120])
+            except Exception as e:  # noqa: BLE001
+                busy = busy or "429" in str(e) or "503" in str(e)
+                log(f"picture check ({model}): {str(e)[:80]}")
+        if not busy:
+            break
+        _t.sleep(20 * (attempt + 1))
     return None, "check failed", ""
+

@@ -1645,6 +1645,26 @@ def main() -> None:
                 except Exception as e:  # noqa: BLE001
                     log(f"re-make failed: {e}")
 
+    # 4c2. clips that missed the picture check (Google busy) get checked now; until then the poster won't post them
+    if not control.get("ai_off"):
+        import viral
+        todo = [cid for cid, c in clips.items() if c["status"] == "new" and c.get("pic_ok") is None
+                and (VID / f"{cid}_final.mp4").exists()][:6]
+        for cid in todo:
+            c = clips[cid]
+            try:
+                fr = _frames(VID / f"{cid}_final.mp4", [1.5, 6, 11, 16])
+                jp = [cv2.imencode(".jpg", cv2.resize(f, (432, 768)), [cv2.IMWRITE_JPEG_QUALITY, 80])[1].tobytes() for f in fr]
+                ok, why, _h = viral.ai_visual_ok(jp, log, c.get("streamer", ""), c.get("title") or "")
+                if ok is None:
+                    break                      # Google still busy: try again next run
+                c["pic_ok"] = ok
+                if ok is False and not c.get("post_now"):
+                    c.update(status="skip", skip_reason=f"AI picture check: {why or 'nudity/sexual content'}")
+                    log(f"picture check removed {cid}: {why}")
+            except Exception as e:  # noqa: BLE001
+                log(f"late picture check skipped {cid}: {e}")
+
     # 4d2. webcam sources still waiting for the upscaler: only clips that are queued and not upscaled yet
     if CAMSRC.exists():
         for f in CAMSRC.glob("*.mp4"):

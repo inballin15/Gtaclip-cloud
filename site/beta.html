@@ -493,6 +493,7 @@ function clipCard(r, st) {
   b.append(el('div', 'hook', r.hook || ''));
   if (r.viral_why) b.append(el('div', 'why', r.viral_why));
   if (isPending('edit: ' + r.id) || isPending('layout: ' + r.id)) b.append(el('div', 'note warn', 'Re-making this video with your changes… (a few minutes)'));
+  else if (r.pic_ok == null && !(L && L.ai_off)) b.append(el('div', 'note', 'Waiting for the AI picture check — it won\'t auto-post until it passes.'));
   const btns = el('div', 'btns');
   if (!r.nowing) { const pn = el('button', 'btn pink', 'Post now'); pn.onclick = async () => { pn.disabled = true; pn.textContent = 'Sending…'; if (await ghTap('post: ' + r.id)) toast('Posting — goes out in about a minute'); lastSig = ''; render(); }; btns.append(pn); }
   const dl = el('button', 'btn cyan', variant === 'clean' ? '⬇ Save (no caption)' : '⬇ Save'); dl.onclick = () => saveVideo(r, dl);
