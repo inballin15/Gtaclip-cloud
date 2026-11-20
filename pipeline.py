@@ -549,6 +549,70 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
         return raw
 
 
+_YUNET = None
+
+
+def _yunet_faces(img, min_score=0.75):
+    """Modern AI face detector (OpenCV YuNet). Returns [(x, y, w, h, score)] in pixels."""
+    global _YUNET
+    if _YUNET is None:
+        _YUNET = cv2.FaceDetectorYN.create(str(Path(__file__).parent / "models" / "face_yunet.onnx"), "", (320, 320),
+                                           min_score, 0.3, 5000)
+    h, w = img.shape[:2]
+    _YUNET.setInputSize((w, h))
+    _, f = _YUNET.detect(img)
+    return [] if f is None else [(float(r[0]), float(r[1]), float(r[2]), float(r[3]), float(r[-1])) for r in f]
+
+
+def face_cam(path: Path, box: str) -> str | None:
+    """Frame the webcam strip around the streamer's real face.
+    The streamer's face is the one that stays in the same spot through the clip (NPC faces in the game move).
+    Returns 'x,y,w,h' (fractions) shaped like the top strip, or None when nobody is on camera."""
+    cap = cv2.VideoCapture(str(path))
+    dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+    cap.release()
+    frames = _frames(path, [max(0.5, dur * p) for p in (0.06, 0.2, 0.35, 0.5, 0.65, 0.8, 0.94)])
+    if not frames:
+        return None
+    H, W = frames[0].shape[:2]
+    dets = [_yunet_faces(f) for f in frames]
+    # group faces that sit in the same place with a similar size across moments
+    best, best_n = None, 0
+    for fi, fl in enumerate(dets):
+        for (x, y, w, h, sc) in fl:
+            cx, cy = x + w / 2, y + h / 2
+            hits = []
+            for fl2 in dets:
+                m = [f for f in fl2 if abs(f[0] + f[2] / 2 - cx) < 0.05 * W and abs(f[1] + f[3] / 2 - cy) < 0.07 * H
+                     and 0.65 < f[2] / w < 1.5]
+                if m:
+                    hits.append(m[0])
+            if len(hits) > best_n:
+                best_n, best = len(hits), hits
+    if best_n < 4:          # nobody steady on camera (away / camera off / only game characters)
+        return None
+    fx = float(np.median([f[0] + f[2] / 2 for f in best]))
+    fy = float(np.median([f[1] + f[3] / 2 for f in best]))
+    fw = float(np.median([f[2] for f in best]))
+    A = 1080 / TOP_H        # strip shape (wide)
+    # the webcam overlay we found earlier limits the frame, if the face is inside it
+    bx0, by0, bx1, by1 = 0.0, 0.0, float(W), float(H)
+    try:
+        x, y, w, h = [float(v) for v in box.split(",")]
+        if x * W <= fx <= (x + w) * W and y * H <= fy <= (y + h) * H:
+            bx0, by0, bx1, by1 = x * W, y * H, (x + w) * W, (y + h) * H
+    except Exception:  # noqa: BLE001
+        pass
+    ww = min(fw * 4.4, bx1 - bx0, (by1 - by0) * A)     # face ~23% of the strip width: head, shoulders, some room
+    ww = min(ww, (fy - by0) / 0.36 * A)               # face sits low in the webcam -> zoom in a bit so it stays high
+    ww = max(ww, min(fw * 2.4, bx1 - bx0))
+    hh = ww / A
+    x0 = min(max(fx - ww / 2, bx0), bx1 - ww)
+    y0 = min(max(fy - hh * 0.36, by0), by1 - hh)       # face high enough that the hook box never covers it
+    x0, y0 = max(0.0, x0), max(0.0, y0)
+    return f"{x0 / W:.4f},{y0 / H:.4f},{min(ww, W - x0) / W:.4f},{min(hh, H - y0) / H:.4f}"
+
+
 def cam_has_face(path: Path, cam: str) -> bool:
     """Someone is actually in the webcam box in at least 2 of 5 moments (not an empty chair / wall / BRB screen)."""
     try:
@@ -1100,6 +1164,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_face_v", 0) < 1:   # one time: re-frame every queued clip around the streamer's real face
+        st["redo_face_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new":
+                c.pop("final_hash", None); c.pop("clean_v", None)
     if st.get("redo_vision_v", 0) < 1:   # one time: re-check every queued clip (picture hook, face, smaller caption)
         st["redo_vision_v"] = 1
         for c in clips.values():
@@ -1284,15 +1353,21 @@ def main() -> None:
                 log(f"picture check skipped {cid}: {e}")
         cut = 0.0
         cam = c.get("cam", "")
-        if lay == "split" and cam and not cam_has_face(raw, cam) and not c.get("post_now") and c.get("source") != "upload":
-            c.update(status="skip", skip_reason="no one in the webcam (streamer away / camera off)")
-            log(f"skipped {cid}: no face in the webcam")
-            return job
         if lay == "split" and cam:
             cam2 = cam_without_chat(raw, cam)
             if cam2 != cam:
                 log(f"chat over the webcam in {cid}: webcam box ends above it")
                 cam = cam2
+            try:
+                fc = face_cam(raw, cam)       # frame the strip around the streamer's actual face
+            except Exception as e:  # noqa: BLE001
+                fc = cam
+                log(f"face framing skipped {cid}: {e}")
+            if fc is None and not c.get("post_now") and c.get("source") != "upload":
+                c.update(status="skip", skip_reason="no one steady in the webcam (away / camera off)")
+                log(f"skipped {cid}: no steady face on camera")
+                return job
+            cam = fc or cam
         if lay == "split":
             cut = purple_caption_cut(raw, 0, c.get("cam", ""))
             if cut:
