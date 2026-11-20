@@ -251,13 +251,22 @@ def _faces(frame, neighbors=5):
 
 
 def box_has_face(path: Path, duration: float, cam: str) -> bool:
+    """The streamer's usual webcam spot really shows a clear face in most of the clip (not hidden, blurred or
+    pixelated - e.g. a 'be right back' cam)."""
     x, y, w, h = [float(v) for v in cam.split(",")]
-    for fr in _frames(path, [max(0.5, duration * p) for p in (0.2, 0.5, 0.8)]):
+    frames = _frames(path, [max(0.5, duration * p) for p in (0.15, 0.35, 0.5, 0.65, 0.85)])
+    hits = 0
+    for fr in frames:
         H, W = fr.shape[:2]
         crop = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
-        if crop.size and _faces(cv2.resize(crop, None, fx=2, fy=2), neighbors=4):
-            return True
-    return False
+        if not crop.size:
+            continue
+        sharp = cv2.Laplacian(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()
+        big = cv2.resize(crop, None, fx=2, fy=2)
+        faces = [f for f in _faces(big, neighbors=5) if f[2] >= 0.12 * big.shape[1]]
+        if faces and sharp > 40:
+            hits += 1
+    return hits >= max(3, len(frames) - 2)
 
 
 def _frames(path: Path, secs):
@@ -552,7 +561,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             f"[0:v]split=2[a][b];"
             # webcam: a wide strip, ~1/3 of the screen (cam boxes taller than that lose a little top/bottom,
             # cut so the face stays in the upper-middle)
-            f"[a]crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{TOP_H}/1080)':x=iw*{x}:y='ih*{y}+(ih*{h}-oh)*0.3',"
+            f"[a]crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{TOP_H}/1080)':x=iw*{x}:y='ih*{y}+(ih*{h}-oh)*0.1',"
             # small webcams get blown up ~4-5x: light denoise first, sharp (lanczos) scaling, then sharpen
             f"hqdn3d=1.5:1.5:3:3,scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
             f"crop=1080:{TOP_H},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
