@@ -148,6 +148,12 @@ nav button b:empty{display:none}
 .camb{position:absolute;border:2px solid var(--cyan);box-shadow:0 0 0 9999px #0007;border-radius:4px;touch-action:none}
 .camb .hd{position:absolute;right:-11px;bottom:-11px;width:24px;height:24px;border-radius:50%;background:var(--cyan);border:3px solid #000}
 .slider{display:flex;align-items:center;gap:10px;font-size:13px}.slider span{width:92px;color:var(--mut)}.slider input{flex:1;padding:0;accent-color:var(--cyan)}
+.topic{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--line);background:linear-gradient(135deg,#29e3ff1c,var(--p1) 70%);border-radius:18px;padding:12px 14px;margin-bottom:12px}
+.topic .k{font-size:11px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.6px}.topic b{font-size:18px;letter-spacing:-.2px}
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tg{border:0;background:var(--p2);border-radius:12px;padding:0 0 6px;overflow:hidden;text-align:center;font-size:11px;font-weight:600;transition:transform .12s}
+.tg:active{transform:scale(.95)}.tg img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;margin-bottom:4px;background:var(--p3)}
+.tg.on{outline:2px solid var(--cyan)}
 @media (min-width:760px){.ed{grid-template-columns:220px 1fr}.edprev{position:sticky;top:0;align-self:start}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -314,7 +320,7 @@ function render() {
   const age = L ? (Date.now() - new Date(L.updated)) / 60000 : 99;
   $('dot').className = 'dot' + (!L ? ' bad' : age > 15 ? ' warn' : '');
   $('livetxt').textContent = L ? `updated ${ago(L.updated)}` : 'connecting…';
-  const sig = tab + JSON.stringify([ql.map((r) => [r.id, r.final, r.clean, r.nowing, r.hook, r.viral]), L && [L.updated, L.paused, L.buffer_off, L.next_slot, (L.videos || []).length],
+  const sig = tab + JSON.stringify([Q.topic, (Q.trending || []).length, ql.map((r) => [r.id, r.final, r.clean, r.nowing, r.hook, r.viral]), L && [L.updated, L.paused, L.buffer_off, L.next_slot, (L.videos || []).length],
     Object.keys(pend), openIssues, RUNS.slice(0, 6).map((r) => r.id + r.status), RUNSTEP, variant, submitted, uploads.map((u) => u.state + u.pct + (u.msg || ''))]);
   if (sig === lastSig) return; lastSig = sig;
   const m = $('main'); const scroll = window.scrollY;
@@ -328,8 +334,35 @@ function render() {
 }
 
 // ---------------------------------------------------------------- HOME
+function topicCard() {
+  const t = Q.topic || { name: 'GTA 6' }; const want = Object.keys(pend).concat(openIssues).find((k) => k.startsWith('topic:'));
+  const b = el('button', 'topic'); const d = el('div'); d.append(el('div', 'k', 'Clipping now'), el('b', null, want ? `Switching to ${want.slice(6).trim()}…` : t.name));
+  d.append(el('div', 'mut', t.game_ids && t.game_ids.length ? 'Twitch category' : t.keywords && t.keywords.length ? 'Live streams about it' : 'Any game your streamers play'));
+  b.append(d, el('span', 'lnk', 'Change →')); b.onclick = openTopic; return b;
+}
+function openTopic() {
+  const t = Q.topic || { name: 'GTA 6' };
+  const q = el('input'); q.placeholder = 'Search a game, event or anything…'; q.enterKeyHint = 'search';
+  const send = async (title, body, label) => { if (await ghTap('topic: ' + title, JSON.stringify(body))) { toast(`Switching to ${label} — next run`); closeSheet(); lastSig = ''; render(); } };
+  const bg = el('button', 'btn cyan', '🎮 Search games'); bg.onclick = () => { const v = q.value.trim(); if (!v) return toast('Type something first'); send(v, { query: v, kind: 'game' }, v); };
+  const bk = el('button', 'btn', '📡 Search live topic'); bk.onclick = () => { const v = q.value.trim(); if (!v) return toast('Type something first'); send(v, { query: v, kind: 'keyword' }, v); };
+  const row = el('div', 'btns'); row.append(bg, bk);
+  const quick = el('div', 'btns');
+  const any = el('button', 'btn', 'Any game my streamers play'); any.onclick = () => send('any', { any: true }, 'any game');
+  const gta = el('button', 'btn', 'Back to GTA 6'); gta.onclick = () => send('GTA 6', { reset: true }, 'GTA 6');
+  quick.append(any, gta);
+  const grid = el('div', 'tgrid');
+  for (const g of (Q.trending || []).slice(0, 24)) {
+    const b = el('button', 'tg' + ((t.game_ids || []).includes(g.id) ? ' on' : '')); const im = el('img'); im.loading = 'lazy'; im.src = g.box; im.alt = ''; im.onerror = () => { im.style.visibility = 'hidden'; }; b.append(im, document.createTextNode(g.name));
+    b.onclick = () => send(g.name, { game_id: g.id, name: g.name }, g.name); grid.append(b);
+  }
+  sheet('What should we clip?', [el('div', 'mut', `Now: ${t.name}. Auto-posting keeps working for whatever you pick. Your campaign streamers are always included.`), q, row, quick,
+    el('h2', null, 'Trending on Twitch now'), (Q.trending || []).length ? grid : el('div', 'mut', 'Shows up after the next clip-maker run.')]);
+  setTimeout(() => q.focus(), 350);
+}
 function renderHome(v, ql) {
   v.append(chipRow());
+  v.append(topicCard());
   // status hero
   const on = L && !L.paused && !L.buffer_off;
   const hero = el('div', 'hero ' + (on ? 'on' : 'off'));
@@ -379,7 +412,7 @@ function renderHome(v, ql) {
   });
   c2.append(rail); v.append(c2);
   // live
-  const live = (Q.live || []).filter((x) => x.gta || x.approved);
+  const live = (Q.live || []).filter((x) => x.gta || x.approved);   // gta = on the current topic
   const c3 = el('div', 'card'); const h3 = el('div', 'hrow'); h3.append(el('h2', null, 'Live now')); const s3 = el('button', 'lnk', 'All →'); s3.onclick = () => switchTab('stats'); h3.append(s3); c3.append(h3);
   const lv = el('div', 'live');
   if (!live.length) lv.append(el('div', 'mut', 'Nobody from your list is live right now.'));
@@ -423,6 +456,7 @@ function platState(p, s) {
 
 // ---------------------------------------------------------------- QUEUE
 function renderQueue(v, ql) {
+  v.append(topicCard());
   const up = el('button', 'big alt', '＋ Make clips — upload or paste a link'); up.style.marginBottom = '10px'; up.onclick = openUpload; v.append(up);
   for (const u of uploads.filter((x) => Date.now() - x.at < 2 * 86400e3).slice(0, 4)) v.append(uploadItem(u));
   const seg = el('div', 'seg');

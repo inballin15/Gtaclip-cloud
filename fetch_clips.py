@@ -75,6 +75,19 @@ def already_have() -> set[str]:
 
 
 LIVE: list[dict] = []   # who's live right now (for the dashboard)
+# What we're clipping right now (set from the dashboard's topic search; GTA 6 by default).
+#   game_ids: Twitch categories (empty = any game)   keywords: words that must be in the clip/stream title (optional)
+TOPIC: dict = {"name": "GTA 6", "game_ids": [CFG["game_id"]], "keywords": [], "tags": "#GTA6 #GTAVI #gaming"}
+
+
+def on_topic(game_id: str, title: str) -> bool:
+    ids = TOPIC.get("game_ids") or []
+    kws = [k.lower() for k in TOPIC.get("keywords") or []]
+    if ids and str(game_id) not in ids:
+        return False
+    if kws and not any(k in (title or "").lower() for k in kws):
+        return False
+    return True
 
 
 def live_now(h: dict) -> tuple[list[dict], dict]:
@@ -87,25 +100,32 @@ def live_now(h: dict) -> tuple[list[dict], dict]:
     except Exception as e:  # noqa: BLE001
         log(f"live check failed: {e}")
         mine = []
+    top = []
     try:
-        top = helix(h, "streams", game_id=CFG["game_id"], first=40, language="en").get("data") or []
+        if TOPIC.get("game_ids"):
+            top = helix(h, "streams", game_id=TOPIC["game_ids"], first=40, language="en").get("data") or []
+        elif TOPIC.get("keywords"):   # a topic that isn't one game: live channels talking about it
+            found = helix(h, "search/channels", query=TOPIC.get("query") or " ".join(TOPIC["keywords"]), live_only="true", first=40).get("data") or []
+            ids = [c["id"] for c in found if c.get("broadcaster_language", "en") == "en"][:40]
+            top = helix(h, "streams", user_id=ids, first=40).get("data") or [] if ids else []
     except Exception as e:  # noqa: BLE001
-        log(f"top GTA 6 streams failed: {e}")
-        top = []
+        log(f"top {TOPIC.get('name')} streams failed: {e}")
+    top = [st for st in top if on_topic(st.get("game_id", ""), st.get("title", ""))] if TOPIC.get("keywords") and TOPIC.get("game_ids") else top
+    big_min = d.get("min_live_viewers", 10000) if TOPIC.get("name") == "GTA 6" else d.get("min_live_viewers_other", 1500)
     for st in mine + top:
         login = st["user_login"].lower()
         if any(x["login"] == login for x in out):
             continue
         approved = login in CFG["streamers"]
-        big = st["viewer_count"] >= d.get("min_live_viewers", 10000)
+        big = st["viewer_count"] >= big_min and st in top[:12]
         if not approved and not big:
             continue
         out.append({"login": login, "name": st["user_name"], "viewers": st["viewer_count"],
-                    "game": st.get("game_name", ""), "gta": st.get("game_id") == CFG["game_id"],
+                    "game": st.get("game_name", ""), "gta": on_topic(st.get("game_id", ""), st.get("title", "")),
                     "title": st.get("title", "")[:120], "since": st.get("started_at", ""),
                     "approved": approved,
                     "thumb": st.get("thumbnail_url", "").replace("{width}", "320").replace("{height}", "180")})
-        if not approved and st.get("game_id") == CFG["game_id"] and d.get("discover_live", True):
+        if not approved and big and on_topic(st.get("game_id", ""), st.get("title", "")) and d.get("discover_live", True):
             extra[login] = {"name": st["user_name"], "tag": "#" + "".join(ch for ch in st["user_name"] if ch.isalnum()),
                             "id": st["user_id"], "discovered": True}
     out.sort(key=lambda x: (not x["gta"], -x["viewers"]))
@@ -135,7 +155,7 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
             log(f"{login}: clips failed {e}")
             continue
         good = [c for c in clips
-                if c.get("game_id") == CFG["game_id"]
+                if (on_topic(c.get("game_id", ""), c.get("title", "")) or (s.get("discovered") and not TOPIC.get("game_ids")))
                 and c["id"] not in seen
                 and c["view_count"] >= d["min_views"]
                 and d["min_seconds"] <= c["duration"] <= d["max_seconds"]
@@ -146,7 +166,7 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
             c["paid"] = bool(s.get("campaign"))
             c["discovered"] = bool(s.get("discovered"))
             picks.append(c)
-        log(f"{s['name']}: {len(good)} fresh GTA 6 clips" + (" (live GTA 6 streamer)" if s.get("discovered") else ""))
+        log(f"{s['name']}: {len(good)} fresh {TOPIC.get('name', 'topic')} clips" + (" (live topic streamer)" if s.get("discovered") else ""))
     # paid first, then newest-and-most-viewed; discovered streamers can't crowd out your list
     picks.sort(key=lambda c: (c["paid"], not c["discovered"], c["view_count"]), reverse=True)
     return picks[: d["max_total"]]

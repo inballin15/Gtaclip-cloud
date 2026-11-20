@@ -32,7 +32,8 @@ import cv2
 import numpy as np
 import imageio_ffmpeg
 
-from fetch_clips import CFG, LIVE, download, log, pick_clips, transcript, twitch_headers
+import fetch_clips as fetch_clips_mod
+from fetch_clips import CFG, LIVE, download, helix, log, pick_clips, transcript, twitch_headers
 from render_hook import render as render_hook
 from render_hook import strip_emoji
 
@@ -135,6 +136,51 @@ def _gh(method: str, path: str, body=None):
         return r.status_code, {}
 
 
+DEFAULT_TOPIC = {"name": "GTA 6", "game_ids": [CFG["game_id"]], "keywords": [], "tags": "#GTA6 #GTAVI #gaming"}
+
+
+def _tags_for(name: str) -> str:
+    w = re.sub(r"[^A-Za-z0-9]", "", name)
+    return f"#{w} #gaming #streamer" if w else "#gaming #streamer"
+
+
+def set_topic(st: dict, req: dict) -> str:
+    """Change what the clip finder looks for. req: {game_id, name} (picked from trending) | {query} | {any: true}."""
+    try:
+        if req.get("reset") or (req.get("query") or "").strip().lower() in ("gta 6", "gta6", "gta vi", "grand theft auto vi"):
+            st["topic"] = dict(DEFAULT_TOPIC)
+        elif req.get("any"):
+            st["topic"] = {"name": "any game", "game_ids": [], "keywords": [], "tags": "#gaming #streamer"}
+        elif req.get("game_id"):
+            nm = req.get("name") or req["game_id"]
+            st["topic"] = {"name": nm, "game_ids": [str(req["game_id"])], "keywords": [], "tags": _tags_for(nm)}
+        elif req.get("kind") == "keyword":
+            q = (req.get("query") or "").strip()[:60]
+            if not q:
+                return "Nothing to search for."
+            words = [w for w in re.findall(r"[a-z0-9']+", q.lower()) if len(w) >= 3] or [q.lower()]
+            st["topic"] = {"name": q, "game_ids": [], "keywords": words, "query": q, "tags": _tags_for(q)}
+        else:
+            q = (req.get("query") or "").strip()[:60]
+            if not q:
+                return "Nothing to search for."
+            cats = helix(twitch_headers(), "search/categories", query=q, first=5).get("data") or []
+            norm = lambda t: re.sub(r"[^a-z0-9]", "", t.lower())   # noqa: E731
+            hit = next((c for c in cats if norm(c["name"]) == norm(q)), None) or \
+                next((c for c in cats if norm(q) in norm(c["name"]) or norm(c["name"]) in norm(q)), None)
+            if hit:
+                st["topic"] = {"name": hit["name"], "game_ids": [hit["id"]], "keywords": [], "tags": _tags_for(hit["name"])}
+            else:   # not a game: live channels talking about it (real-world news, events, anything)
+                words = [w for w in re.findall(r"[a-z0-9']+", q.lower()) if len(w) >= 3] or [q.lower()]
+                st["topic"] = {"name": q, "game_ids": [], "keywords": words, "query": q, "tags": _tags_for(q)}
+        st["topic"]["set_at"] = iso(NOW)
+        t = st["topic"]
+        return (f"Now clipping: {t['name']}" + (" (Twitch category)" if t["game_ids"] else " (live streams about it)" if t["keywords"]
+                                                  else " (any game your streamers play)") + ". New clips start with the next run.")
+    except Exception as e:  # noqa: BLE001
+        return f"Couldn't change the topic ({e})."
+
+
 def apply_issues(st: dict) -> None:
     """Dashboard 'Don't post' / 'Edit' taps. Handles EVERY open one, so a tap is never lost
     (GitHub drops queued runs when several taps arrive together)."""
@@ -148,6 +194,17 @@ def apply_issues(st: dict) -> None:
     for it in sorted(items, key=lambda i: i["created_at"]):
         title = it["title"].strip()
         body = (it.get("body") or "").replace("\r\n", "\n")
+        tm = re.match(r"^\s*topic:\s*(.*)$", title, re.I)
+        if tm:
+            try:
+                req = json.loads(body[body.index("{"):body.rindex("}") + 1]) if "{" in body else {"query": tm.group(1)}
+            except Exception:  # noqa: BLE001
+                req = {"query": tm.group(1)}
+            msg = set_topic(st, req)
+            log(f"topic: {msg}")
+            _gh("POST", f"/repos/{REPO}/issues/{it['number']}/comments", {"body": msg})
+            _gh("PATCH", f"/repos/{REPO}/issues/{it['number']}", {"state": "closed"})
+            continue
         m = re.match(r"^\s*(skip|edit|layout|approve|unapprove):\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title, re.I)
         if not m:
             continue
@@ -221,10 +278,11 @@ def auto_hook(c: dict) -> tuple[str, str]:
         hook = t[0].upper() + t[1:]
         if name.lower().split()[0] not in hook.lower() and not re.search(r"\b(he|she|they|his|her)\b", hook, re.I):
             hook = f"{name}: {hook}"
-        if "gta" not in hook.lower():
-            hook += " in GTA 6"
+        tn = fetch_clips_mod.TOPIC.get("name") or "GTA 6"
+        if tn.lower() not in hook.lower() and "gta" not in hook.lower():
+            hook += f" in {tn}"
         return hook[:100], "title"
-    return f"{name} can't believe this in GTA 6", "placeholder"
+    return f"{name} can't believe this in {fetch_clips_mod.TOPIC.get('name') or 'GTA 6'}", "placeholder"
 
 
 def mix_order(ready: list) -> list:
@@ -1059,6 +1117,10 @@ git push -qf origin "$c:refs/heads/gh-pages"
 # ---------------------------------------------------------------- main
 def main() -> None:
     st = load_state()
+    _topic = st.get("topic") or dict(DEFAULT_TOPIC)   # what we're clipping (site's topic search)
+    fetch_clips_mod.TOPIC.clear(); fetch_clips_mod.TOPIC.update(_topic)
+    import viral as _viral_topic
+    _viral_topic.TOPIC.clear(); _viral_topic.TOPIC.update(_topic)
     clips = st["clips"]
     apply_posted(st)
     apply_issues(st)
@@ -1140,7 +1202,18 @@ def main() -> None:
     picks = []
     if os.environ.get("FETCH", "1") == "1":
         try:
+            topic = st.get("topic") or dict(DEFAULT_TOPIC)
+            fetch_clips_mod.TOPIC.clear(); fetch_clips_mod.TOPIC.update(topic)
+            import viral as _v
+            _v.TOPIC.clear(); _v.TOPIC.update(topic)
             picks = pick_clips(twitch_headers(), set(clips))
+            for pc in picks:
+                pc["topic"], pc["topic_tags"] = topic.get("name", ""), topic.get("tags", "")
+            try:   # what's big on Twitch right now (shown in the site's topic search)
+                st["trending"] = [{"id": g["id"], "name": g["name"], "box": g.get("box_art_url", "").replace("{width}", "144").replace("{height}", "192")}
+                                  for g in (helix(twitch_headers(), "games/top", first=24).get("data") or [])]
+            except Exception as e:  # noqa: BLE001
+                log(f"trending list failed: {e}")
         except Exception as e:  # noqa: BLE001
             log(f"twitch failed: {e}")
             picks = []
@@ -1157,7 +1230,7 @@ def main() -> None:
                     "status": "new", "streamer": c["name"], "login": c["login"], "tag": s.get("tag", ""),
                     "campaign": s.get("campaign", "") or "", "title": c["title"], "views": c["view_count"],
                     "created": c["created_at"], "found": iso(NOW), "twitch": c["url"], "transcript": text,
-                    "seconds": round(dur),
+                    "seconds": round(dur), "topic": c.get("topic", ""), "topic_tags": c.get("topic_tags", ""),
                 }
                 bad = [w.lower() for w in CFG["discovery"]["skip_title_words"]]
                 if any(w in text.lower() for w in ("penis", "dick", "pussy", "nigg", "fag", "retard", " cock", "strip club",
@@ -1219,7 +1292,7 @@ def main() -> None:
         status = {}
         try:
             log_text = Path("/tmp/pipeline.log").read_text() if Path("/tmp/pipeline.log").exists() else ""
-            for m in re.finditer(r"\] (.+?): (\d+) fresh GTA 6 clips", log_text):
+            for m in re.finditer(r"\] (.+?): (\d+) fresh .+? clips", log_text):
                 status[m.group(1)] = int(m.group(2))
         except Exception:  # noqa: BLE001
             pass
@@ -1239,6 +1312,8 @@ def main() -> None:
                                         and c["status"] in ("new", "used")),
                         "every_min": 10},
             "live": LIVE,
+            "topic": st.get("topic") or DEFAULT_TOPIC,
+            "trending": st.get("trending", []),
             "ai": {"status": st.get("ai_status", "no key"), "checked": st.get("ai_checked", ""),
                    "rated": sum(1 for c in clips.values() if c["status"] == "new" and "viral" in c)},
         }, indent=1, ensure_ascii=False))

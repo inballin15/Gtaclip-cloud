@@ -248,8 +248,9 @@ def texts(c: dict) -> tuple[str, str, str]:
     hook = (c.get("hook") or c.get("title") or "").strip()
     login, streamer, tag = c.get("login", ""), c.get("streamer", ""), c.get("tag", "")
     cap = (c.get("caption") or "").strip()
-    tt = cap or f"{hook}\n\n🎥 @{login}\n\n{tag} #GTA6 #GTAVI #gaming #fyp".strip()
-    yt = cap or f"{hook}\n\nCredit: {streamer} (https://www.twitch.tv/{login})\n\n{tag} #GTA6 #GTAVI #Shorts".strip()
+    tags = c.get("topic_tags") or "#GTA6 #GTAVI #gaming"
+    tt = cap or f"{hook}\n\n🎥 @{login}\n\n{tag} {tags} #fyp".strip()
+    yt = cap or f"{hook}\n\nCredit: {streamer} (https://www.twitch.tv/{login})\n\n{tag} {tags} #Shorts".strip()
     title = (hook[:88] + " #Shorts").strip()
     return tt, yt, title
 

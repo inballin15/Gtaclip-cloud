@@ -255,6 +255,21 @@ HOOK_STYLE = (
     "no swearing, no quotes, no hashtags.\n")
 
 
+TOPIC = {"name": "GTA 6"}   # what we're clipping (set by the pipeline from the dashboard's topic search)
+
+
+def hook_style() -> str:
+    """The proven hook formula, re-aimed at whatever topic is being clipped."""
+    name = TOPIC.get("name") or "GTA 6"
+    if name == "GTA 6":
+        return HOOK_STYLE
+    return (HOOK_STYLE.replace("biggest GTA 6 clip pages", "biggest streamer clip pages")
+            .replace("[one specific GTA 6 detail]", f"[one specific {name} detail]")
+            .replace("(Lucia, Jason, Vice City, a number", "(a character, place, item, a number")
+            + f"These clips are about {name}: write about {name} (e.g. end with 'in {name}' when natural). The examples above are "
+              f"from GTA 6 only to show the style - never mention GTA unless the clip is GTA.\n")
+
+
 def ai_rank(clips: list[dict], log=print, streamer: str = "") -> list[dict]:
     """Ask Gemini (one request for all candidates) which moments would actually go viral, and for a better hook.
     No key / quota used up / any error -> keep the signal-based ranking."""
@@ -267,12 +282,12 @@ def ai_rank(clips: list[dict], log=print, streamer: str = "") -> list[dict]:
     items = [{"i": i, "transcript": c["text"][:700], "signals": c["reasons"], "seconds": round(c["end"] - c["start"])}
              for i, c in enumerate(clips)]
     prompt = (
-        "You pick viral short-form clips (TikTok/YouTube Shorts) from GTA 6 livestreams, like OpusClip does.\n"
+        f"You pick viral short-form clips (TikTok/YouTube Shorts) from {TOPIC.get('name', 'GTA 6')} livestreams, like OpusClip does.\n"
         "For each candidate, judge from the transcript: is it funny, surprising, dramatic or relatable? Does it have a "
         "clear setup and payoff? Does it make sense without context? Would the first 3 seconds stop the scroll?\n"
         + (f"The streamer in every candidate is {streamer}. Always use that exact name in the hook, never the word "
            f"'streamer'.\n" if streamer else "") +
-        "Return JSON: a list of {\"i\": number, \"score\": 0-10, \"hook\": \"...\"}. " + HOOK_STYLE +
+        "Return JSON: a list of {\"i\": number, \"score\": 0-10, \"hook\": \"...\"}. " + hook_style() +
         "Score 0 for anything sexual, hateful, about strippers, or harming animals.\n\nCandidates:\n" + _json.dumps(items))
     body = {"contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4,
@@ -336,11 +351,11 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
         batch = [{"id": it["id"], "streamer": it.get("streamer", ""), "twitch_title": it.get("title", "")[:120],
                   "transcript": (it.get("transcript") or "")[:600], "seconds": it.get("seconds")} for it in items[i:i + 10]]
         prompt = (
-            "You rate short GTA 6 livestream clips for TikTok/YouTube Shorts like OpusClip's virality score.\n"
+            f"You rate short {TOPIC.get('name', 'GTA 6')} livestream clips for TikTok/YouTube Shorts like OpusClip's virality score.\n"
             "Score each 0-100 for how likely it is to go viral: a strong hook in the first seconds, a funny/shocking/"
             "dramatic or relatable moment, a clear payoff, makes sense without context, big-name streamer appeal.\n"
             "Give 0-10 for anything sexual, hateful, about strippers/clubs, harming animals, or where nothing happens.\n"
-            "Also write the on-screen hook. " + HOOK_STYLE +
+            "Also write the on-screen hook. " + hook_style() +
             "Return JSON list: [{\"id\": \"...\", \"score\": 0-100, \"why\": \"max 12 words\", \"hook\": \"...\"}]\n\n"
             "Clips:\n" + _json.dumps(batch))
         body = {"contents": [{"parts": [{"text": prompt}]}],
@@ -397,13 +412,13 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key or not jpegs:
         return None, "no key", ""
-    parts = [{"text": f"These are frames (in order) from a GTA 6 livestream clip of {streamer or 'a streamer'} "
+    parts = [{"text": f"These are frames (in order) from a {TOPIC.get('name', 'GTA 6')} livestream clip of {streamer or 'a streamer'} "
                       "(their webcam is in the stream) that will be posted on TikTok.\n"
                       f"What they said / stream title: {context[:600] or '(nothing)'}\n"
                       "1) Is there any nudity (bare breasts, genitals, bare buttocks, even in-game), sexual activity, "
                       "strip-club dancing, drug use, or graphic gore? ok=false means it must not be posted.\n"
                       "2) Write the on-screen hook about what ACTUALLY happens in these frames and what was said. "
-                      + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + HOOK_STYLE +
+                      + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style() +
                       "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\"}."}]
     for j in jpegs[:4]:
         parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(j).decode()}})
