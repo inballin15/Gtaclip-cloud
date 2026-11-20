@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-20T17:59:28Z",
+ "updated": "2026-11-20T18:04:59Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
@@ -13,7 +13,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-20T17:49:54Z",
+  "at": "2026-11-20T18:04:59Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -534,9 +534,10 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-20T17:59:28Z",
+ "stats_updated": "2026-11-20T18:04:59Z",
  "log": [
-  "[17:59:29Z] post list query failed (full): Buffer: Buffer rate limit hit (24h, retry in 0 min) {\"code\": \"RATE_LIMIT_EXCEEDED\", \"window\": \"24h\"}",
-  "[17:59:29Z] post list query failed (lite): Buffer: Buffer rate limit hit (24h, retry in 0 min) {\"code\": \"RATE_LIMIT_EXCEEDED\", \"window\": \"24h\"}"
+  "[18:05:01Z] post list query failed (full): Buffer: Buffer rate limit hit (24h, retry in 0 min) {\"code\": \"RATE_LIMIT_EXCEEDED\", \"window\": \"24h\"}",
+  "[18:05:01Z] post list query failed (lite): Buffer: waiting out its rate limit until 2026-11-20T19:05:01Z (no request sent)",
+  "[18:05:01Z] Buffer rate limit: no Buffer requests until 2026-11-20T19:05:01Z"
  ]
 }
