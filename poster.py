@@ -356,9 +356,14 @@ def channel_videos(ctl: dict) -> list[dict]:
                 vid = re.search(r"<yt:videoId>([^<]+)", e)
                 title = re.search(r"<title>([^<]*)", e)
                 desc = re.search(r"<media:description>([^<]*)", e)
+                views = re.search(r'<media:statistics views="(\d+)"', e)
+                likes = re.search(r'<media:starRating count="(\d+)"', e)
+                pub = re.search(r"<published>([^<]+)", e)
                 if vid:
                     out.append({"service": "youtube", "link": f"https://youtube.com/shorts/{vid.group(1)}",
-                                "text": __import__("html").unescape((title.group(1) if title else "") + " " + (desc.group(1) if desc else ""))})
+                                "text": __import__("html").unescape((title.group(1) if title else "") + " " + (desc.group(1) if desc else "")),
+                                "views": int(views.group(1)) if views else None, "likes": int(likes.group(1)) if likes else None,
+                                "published": pub.group(1) if pub else ""})
         ctl["yt_check"] = "ok"
     except Exception as e:  # noqa: BLE001
         ctl["yt_check"] = f"failed: {str(e)[:80]}"
@@ -371,12 +376,27 @@ def channel_videos(ctl: dict) -> list[dict]:
             continue
         found = re.findall(r'"id":"(\d{15,22})","desc":"((?:[^"\\]|\\.)*)"', page)
         found += [(a, b) for b, a in re.findall(r'"desc":"((?:[^"\\]|\\.)*)"[^{}]{0,400}?"id":"(\d{15,22})"', page)]
+        seen_ids = set()
         for vid, desc in found:
+            if vid in seen_ids:
+                continue
+            seen_ids.add(vid)
             try:
                 text = json.loads(f'"{desc}"')
             except Exception:  # noqa: BLE001
                 text = desc
-            out.append({"service": "tiktok", "link": f"https://www.tiktok.com/@{TIKTOK_USER}/video/{vid}", "text": text})
+            # the numbers for this video sit near its id in the page data
+            i = page.find(f'"{vid}"')
+            near = page[i:i + 6000] if i >= 0 else ""
+            nxt = re.search(r'"id":"\d{15,22}"', near[30:])
+            if nxt:
+                near = near[:30 + nxt.start()]
+            pc = re.search(r'"playCount":\s*"?(\d+)', near)
+            dc = re.search(r'"diggCount":\s*"?(\d+)', near)
+            ct = re.search(r'"createTime":\s*"?(\d+)', near)
+            out.append({"service": "tiktok", "link": f"https://www.tiktok.com/@{TIKTOK_USER}/video/{vid}", "text": text,
+                        "views": int(pc.group(1)) if pc else None, "likes": int(dc.group(1)) if dc else None,
+                        "published": iso(datetime.fromtimestamp(int(ct.group(1)), timezone.utc)) if ct else ""})
             n += 1
         if n:
             break
@@ -384,12 +404,59 @@ def channel_videos(ctl: dict) -> list[dict]:
     return out
 
 
+def campaign_names() -> dict[str, str]:
+    """streamer name / login -> Content Rewards campaign (from streamers.yaml)."""
+    out = {}
+    try:
+        for line in (Path(__file__).parent / "streamers.yaml").read_text().splitlines():
+            m = re.match(r'\s*([a-z0-9_]+):\s*\{.*?name:\s*"([^"]+)".*?campaign:\s*"([^"]+)"', line)
+            if m:
+                out[m.group(1).lower()] = m.group(3)
+                out[m.group(2).lower()] = m.group(3)
+    except Exception:  # noqa: BLE001
+        pass
+    out.setdefault("kai", "Kai")
+    out.setdefault("yourrage", "YourRAGE")
+    return out
+
+
+def guess_campaign(text: str, names: dict[str, str]) -> str:
+    t = (text or "").lower()
+    for n in sorted(names, key=len, reverse=True):
+        if re.search(r"(?<![a-z0-9])@?" + re.escape(n) + r"(?![a-z0-9])", t):
+            return names[n]
+    return ""
+
+
+CHANNEL = P / "channel.json"   # every video on our TikTok + YouTube with its latest numbers
+
+
 def detect_manual_posts(ctl: dict, by_id: dict, recs: dict) -> None:
-    """A queued clip whose hook shows up on our TikTok/YouTube = you posted it yourself. Mark it posted."""
-    if DRY_RUN or (ctl.get("manual_check") and NOW - parse(ctl["manual_check"]) < timedelta(minutes=14)):
+    """Every ~10 min: read our TikTok + YouTube (public pages, not Buffer). Save each video's views/likes, match it to
+    a clip (a queued clip whose hook shows up = you posted it yourself) and to its Content Rewards campaign."""
+    if DRY_RUN or (ctl.get("manual_check") and NOW - parse(ctl["manual_check"]) < timedelta(minutes=9)):
         return
     ctl["manual_check"] = iso(NOW)
     vids = channel_videos(ctl)
+    names = campaign_names()
+    chan = rj(CHANNEL, {})
+    by_link = {r.get(sv): cid for cid, r in recs.items() for sv in ("tiktok", "youtube") if r.get(sv)}
+    for v in vids:
+        e = chan.get(v["link"], {"link": v["link"], "service": v["service"], "first_seen": iso(NOW)})
+        e.update(text=v["text"][:300], published=v.get("published") or e.get("published", ""), checked=iso(NOW))
+        for k in ("views", "likes"):
+            if v.get(k) is not None:
+                e[k] = v[k]
+        cid = by_link.get(v["link"]) or e.get("clip", "")
+        if not cid:
+            t = norm(v["text"])
+            cid = next((k for k, c in by_id.items() if len(norm(c.get("hook"))) >= 12 and norm(c.get("hook"))[:40] in t), "")
+        e["clip"] = cid
+        rec = recs.get(cid) or {}
+        e["campaign"] = rec.get("campaign") or (by_id.get(cid) or {}).get("campaign") or guess_campaign(v["text"], names)
+        e["streamer"] = rec.get("streamer") or (by_id.get(cid) or {}).get("streamer", "")
+        chan[v["link"]] = e
+    wj(CHANNEL, chan)
     known = {r.get(s) for r in recs.values() for s in ("tiktok", "youtube") if r.get(s)}
     for v in vids:
         if v["link"] in known:
@@ -690,6 +757,9 @@ def main() -> None:
     live = {
         "updated": iso(NOW), "paused": bool(ctl.get("paused")), "switched_at": ctl.get("switched_at", ""),
         "postnow": ctl["postnow"], "next_slot": iso(nxt) if nxt else "", "up_next": up_next,
+        "videos": sorted(rj(CHANNEL, {}).values(), key=lambda e: e.get("published") or e.get("first_seen", ""),
+                         reverse=True)[:80],
+        "videos_checked": ctl.get("manual_check", ""),
         "buffer_ok": buffer_ok, "buffer_error": buffer_err, "buffer_off": bool(ctl.get("buffer_off")),
         "buffer_wait": ctl.get("buffer_wait", ""), "cooldown": ctl.get("cooldown", {}),
         "ai_off": bool(ctl.get("ai_off")),
