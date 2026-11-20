@@ -1,38 +1,45 @@
-# GTA Clip playbook (learned) — updated 2026-11-19
+# GTA Clip playbook (learned) — updated 2026-11-20
 
 ## Data status
-- 24 sent posts (Nov 18). Every stats row still shows 0 views/likes/comments/shares,
-  so there is NO real performance signal yet. Rules below are working rules, re-check
-  once Buffer stats come in.
+- 26 stats rows (14 TikTok, 12 YouTube). Posting paused since Nov 19; no auto-posts since Nov 18.
+- TikTok: ~2,025 views, 71 likes, 5 shares. YouTube: ~24 views, 0 likes. TikTok is ~80x YouTube.
+- Sample is still tiny — treat rules as working rules.
+
+## What works (TikTok)
+- Lacy found the first shoe store in GTA 6 — 1,217 views (best by far).
+- GTA 6 cops really just teleport in — 291 views, 28 likes (best like rate, no streamer name).
+- Clix refuses to dive in GTA 6 waters — 258 views; Clix road rage — 147 views.
+- Winners name ONE concrete, relatable thing (shoe store, cops teleporting, diving, road rage).
+- A "game observation" hook (what GTA 6 does) can beat a "streamer reacts" hook.
+
+## What doesn't
+- Dialogue-quote hooks ("Girl you okay? ... hormones") and vague ones ("can't believe this") = 0 views.
+- Duplicate posts of the same clip all got 0 except one. One clip = one post.
+- YouTube Shorts get almost nothing so far (unverified channel, upload caps).
+- The AI template "STREAMER is SHOCKED after DISCOVERING..." — too many caps, too long, generic. Rewrite always.
 
 ## Posting problems seen
-- Same clip sent multiple times: "Clix refuses to dive in GTA 6 waters" went out 3x on
-  BOTH platforms within ~1 hour. Duplicates burn API quota and look spammy. One clip = one post.
-- TikTok API: "large number of posts published through the API… wait 24 hours" (Nov 18 22:49).
-- YouTube: "daily video upload limit for an unverified YouTube account". Account verification
-  (free, phone) would lift it.
-- Off-policy posts went out: a RockstarGames trailer clip and a strip-club clip. Never again.
-- ~12 posts in a day on TikTok is too many for the API; spread out.
+- Nov 19: "daily posting limit for this channel has been reached" (Buffer) x2.
+- Nov 18: TikTok "large number of posts through the API, wait 24h"; YouTube "daily upload limit for an unverified account".
+- Nov 19 YouTube rows have blank streamer/hook in stats — check poster logging.
+- Off-policy posts went out on Nov 18 (Rockstar trailer, strip club). Never again.
 
 ## Hook rules
-- Max ~70 chars, plain text, no emojis on the video, no swearing.
-- Start with the streamer name: "Lacy …", "Clix …", "Speed …".
-- One CAPS word for the key moment: RAGES, FIRST, NOT, ALLIGATOR, WILD.
-- Concrete beats vague: name the thing (alligator, tiger, gator, wheelie, Donnie).
-- "can't believe this" / raw stream titles ("[679/730] …", "TAKING A BREAK") are filler — rewrite.
-- Questions and quotes work for dialogue clips ("who is Mandy?").
-- Stay true to title + transcript; don't invent events.
+- Max ~70 chars, plain text, no emojis on video, no swearing.
+- Lead with the streamer name OR the funny game fact; then one concrete noun.
+- Exactly ONE caps word for the key moment (HOUR, FIRST, SECRET, BIKE, SCAMMER).
+- No "STREAMER", no "LOSES IT/SHOCKED" filler, no raw stream titles or chat-spam.
+- Stay true to title + transcript; when the transcript is thin, keep the hook modest.
 - Captions may carry emojis/hashtags; the video hook box may not.
 
 ## Streamers
-- Paid campaigns first: Clix, Lacy (bulk of queue is Lacy — interleave so it is not all Lacy).
-- Big names next: IShowSpeed, Kai Cenat, xQc, Jynxzi.
-- Then Stable Ronaldo, JasonTheWeen, Marlon, Adapt. Their clips often have thin
-  transcripts — only post if the moment is clear.
+- Paid first: Lacy, Clix (Lacy has the best single result). Interleave, don't run all-Lacy.
+- Big names next: IShowSpeed, Kai Cenat, xQc, Jynxzi, HasanAbi, Ludwig.
+- Then Joe Bartolozzi, Stable Ronaldo, Marlon, JasonTheWeen, RealKatieB, HutchMF.
 
 ## Always skip
-- Slurs, sexual remarks/nudity, strippers/clubs, animal harm, Rockstar trailers/footage,
-  other clippers' reposts.
+- Slurs, sexual remarks, strippers/clubs, animal harm, drugs-as-the-hook, Rockstar trailers/footage,
+  other clippers' reposts, mostly-cutscene clips, duplicate moments of the same clip.
 
 ## Layout (fixed)
 - Split screen: webcam top, gameplay bottom, white rounded hook box, text only.
