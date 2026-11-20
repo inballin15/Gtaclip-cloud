@@ -6,7 +6,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - run: pip install -q yt-dlp opencv-contrib-python-headless numpy imageio-ffmpeg
+      - run: pip install -q yt-dlp "opencv-contrib-python-headless<5" "numpy<3" imageio-ffmpeg
       - run: |
           yt-dlp -q -f 1080 -o clip.mp4 "https://www.twitch.tv/ishowspeed/clip/CrowdedEsteemedPigeonDatBoi-GJD-l8MPsVSh4KXI"
           for m in FSRCNN_x4 ESPCN_x4; do curl -sL -o $m.pb https://raw.githubusercontent.com/fannymonori/TF-ESPCN/master/export/$m.pb || true; done
