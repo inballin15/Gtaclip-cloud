@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-20T21:21:22Z",
+ "updated": "2026-11-20T21:26:18Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
  "next_slot": "2026-11-20T22:37:00Z",
- "up_next": "RefinedBlazingMeatloafPraiseIt-MHGUFRE4fnZ4I-Uy",
+ "up_next": "LivelyNimbleBottleMcaT-2F4zFoT5hkMDdXpF",
  "buffer_ok": false,
  "buffer_error": "Buffer is turned off on the dashboard — nothing is posted or sent to Buffer.",
  "buffer_off": true,
@@ -15,7 +15,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-20T21:11:16Z",
+  "at": "2026-11-20T21:26:18Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
