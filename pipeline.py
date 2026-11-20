@@ -566,6 +566,43 @@ def _yunet_faces(img, min_score=0.75):
     return [] if f is None else [(float(r[0]), float(r[1]), float(r[2]), float(r[3]), float(r[-1])) for r in f]
 
 
+def irl_focus(path: Path, cam: str) -> float | None:
+    """No gameplay on screen (streamer on a room camera / watching another stream): a real person's face holds
+    still in the big picture outside the webcam box. Returns where to centre a full-screen shot (0-1 across), else None."""
+    cap = cv2.VideoCapture(str(path))
+    dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+    cap.release()
+    frames = _frames(path, [max(0.5, dur * p) for p in (0.06, 0.2, 0.35, 0.5, 0.65, 0.8, 0.94)])
+    if not frames:
+        return None
+    H, W = frames[0].shape[:2]
+    try:
+        cx0, cy0, cw, chh = [float(v) for v in cam.split(",")]
+    except Exception:  # noqa: BLE001
+        cx0 = cy0 = cw = chh = 0.0
+    dets = []
+    for f in frames:
+        out = []
+        for (x, y, w, h, sc) in _yunet_faces(f, 0.8):
+            mx, my = (x + w / 2) / W, (y + h / 2) / H
+            if cx0 - 0.02 <= mx <= cx0 + cw + 0.02 and cy0 - 0.02 <= my <= cy0 + chh + 0.02:
+                continue                       # that's the webcam overlay itself
+            if w >= 0.045 * W:                 # a real-size person in the main picture
+                out.append((x, y, w, h))
+        dets.append(out)
+    best, best_n = None, 0
+    for fl in dets:
+        for (x, y, w, h) in fl:
+            cx, cy = x + w / 2, y + h / 2
+            hits = [m[0] for m in ([g for g in fl2 if abs(g[0] + g[2] / 2 - cx) < 0.06 * W and abs(g[1] + g[3] / 2 - cy) < 0.08 * H]
+                                   for fl2 in dets) if m]
+            if len(hits) > best_n or (len(hits) == best_n and best and w > best[0][2]):
+                best_n, best = len(hits), hits
+    if best_n < 5:                             # game cutscene faces rarely hold the same spot this long
+        return None
+    return float(np.median([g[0] + g[2] / 2 for g in best])) / W
+
+
 def face_cam(path: Path, box: str) -> str | None:
     """Frame the webcam strip around the streamer's real face.
     The streamer's face is the one that stays in the same spot through the clip (NPC faces in the game move).
@@ -716,7 +753,11 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     x, y, w, h = [float(v) for v in cam.split(",")]
-    if layout == "full":
+    if layout.startswith("irl"):
+        fx = float(layout.split(":")[1]) if ":" in layout else 0.5
+        base = (f"[0:v]crop=w=ih*9/16:h=ih:x='min(max(iw*{fx}-ow/2,0),iw-ow)':y=0,"
+                f"scale=1080:1920:flags=lanczos,unsharp=3:3:0.4:3:3:0.0,setsar=1")
+    elif layout == "full":
         base = ("[0:v]split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
                 "boxblur=20:2,setsar=1[bg];[b]scale=1080:-2,setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
     else:
@@ -735,7 +776,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             f"[top][bot]vstack=inputs=2"
         )
     extra = []
-    if cam_video and layout != "full":   # AI-upscaled webcam strip (made on its own server) replaces the stretched one
+    if cam_video and layout == "split":   # AI-upscaled webcam strip (made on its own server) replaces the stretched one
         ci = 2 if hook else 1
         a_end = base.index("[top];") + len("[top];")
         base = (f"[0:v]copy[b];[{ci}:v]scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
@@ -744,7 +785,8 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     if hook:
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"))
         inputs = ["-i", str(raw), "-i", png] + extra
-        oy = "(H-h)/2" if layout == "full" else f"{TOP_H}-h*0.2"   # hook box sits on the webcam/gameplay line
+        oy = ("(H-h)/2" if layout == "full" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
+              else f"{TOP_H}-h*0.2")                                                   # split: on the line
         flt = base + f"[st];[st][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]"
     else:
         inputs = ["-i", str(raw)] + extra
@@ -1375,6 +1417,16 @@ def main() -> None:
                 log(f"picture check skipped {cid}: {e}")
         cut = 0.0
         cam = c.get("cam", "")
+        if lay == "split" and cam and c.get("irl_x") is None:
+            try:
+                ix = irl_focus(raw, cam)
+            except Exception as e:  # noqa: BLE001
+                ix = None
+                log(f"no-gameplay check skipped {cid}: {e}")
+            c["irl_x"] = ix if ix is not None else -1
+        if lay == "split" and (c.get("irl_x") or -1) >= 0:
+            lay = f"irl:{c['irl_x']:.3f}"
+            log(f"no gameplay in {cid}: full-screen shot on the streamer")
         if lay == "split" and cam:
             cam2 = cam_without_chat(raw, cam)
             if cam2 != cam:
