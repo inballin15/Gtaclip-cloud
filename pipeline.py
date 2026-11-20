@@ -605,6 +605,7 @@ def face_cam(path: Path, box: str) -> str | None:
         pass
     ww = min(fw * 4.4, bx1 - bx0, (by1 - by0) * A)     # face ~23% of the strip width: head, shoulders, some room
     ww = min(ww, (fy - by0) / 0.36 * A)               # face sits low in the webcam -> zoom in a bit so it stays high
+    ww = min(ww, (by1 - fy) / 0.64 * A)               # ...and keep room under the face (the hook box sits there)
     ww = max(ww, min(fw * 2.4, bx1 - bx0))
     hh = ww / A
     x0 = min(max(fx - ww / 2, bx0), bx1 - ww)
@@ -663,8 +664,8 @@ def cam_without_chat(path: Path, cam: str) -> str:
                     H, W = fr.shape[:2]
                     c = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
                     big = cv2.resize(c, None, fx=2, fy=2)
-                    for fx_, fy_, fw_, fh_ in _faces(big, neighbors=4):
-                        if (fy_ + fh_ * 1.15) / big.shape[0] > frac:
+                    for fx_, fy_, fw_, fh_, _sc in _yunet_faces(big, 0.6):
+                        if (fy_ + fh_ * 1.6) / big.shape[0] > frac:   # face + chin + neck must stay above the cut
                             return cam
                 return f"{x:.4f},{y:.4f},{w:.4f},{h * frac:.4f}"
         return cam
@@ -1164,6 +1165,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_face_v2", 0) < 1:   # one time: re-frame again with the fixed chat trim
+        st["redo_face_v2"] = 1
+        for c in clips.values():
+            if c["status"] == "new":
+                c.pop("final_hash", None); c.pop("clean_v", None)
     if st.get("redo_face_v", 0) < 1:   # one time: re-frame every queued clip around the streamer's real face
         st["redo_face_v"] = 1
         for c in clips.values():
