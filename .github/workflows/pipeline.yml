@@ -72,7 +72,7 @@ jobs:
             git --work-tree="$1" add -A
             tree=$(git write-tree); unset GIT_INDEX_FILE
             c=$(git commit-tree "$tree" -m "$2 $(date -u +%FT%TZ)")
-            git push -qf origin "$c:refs/heads/$2"
+            for i in 1 2 3 4; do git push -qf origin "$c:refs/heads/$2" && break; [ $i = 4 ] && exit 1; sleep $((i*5)); done   # GitHub sometimes rejects a push for a moment
           }
           publish _site gh-pages
           publish _state state
