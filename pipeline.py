@@ -548,8 +548,41 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
         return raw
 
 
+def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
+    """Streamers like Lacy/Kai run a live caption overlay (white words, purple highlight) near the bottom.
+    If it's there, return how much to zoom off the bottom (0.08-0.14) to push it out; otherwise 0."""
+    try:
+        if not duration:
+            cap = cv2.VideoCapture(str(path))
+            duration = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+            cap.release()
+        frames = _frames(path, [max(0.5, duration * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)])
+        if not frames:
+            return 0.0
+        H, W = frames[0].shape[:2]
+        cx, cy, cw, ch = ([float(v) for v in cam.split(",")] if cam else [0, 0, 0, 0])
+        y0, x0, x1 = int(H * 0.6), int(W * 0.22), int(W * 0.78)   # only the part of the gameplay that shows
+        tops = []
+        for fr in frames:
+            hsv = cv2.cvtColor(fr[y0:, x0:x1], cv2.COLOR_BGR2HSV)
+            m = cv2.inRange(hsv, (122, 110, 110), (158, 255, 255))
+            if cw:   # ignore the webcam's own purple border/lighting
+                a0, a1 = max(0, int(cy * H) - y0), max(0, int((cy + ch) * H) - y0)
+                b0, b1 = max(0, int(cx * W) - x0), max(0, int((cx + cw) * W) - x0)
+                m[a0:a1, b0:b1] = 0
+            rows = np.where(m.sum(axis=1) / 255 > 0.015 * (x1 - x0))[0]
+            if len(rows) and (rows[-1] - rows[0]) < 0.12 * H:   # a thin band = text, not a purple scene
+                tops.append((rows[0] + y0) / H)
+        if len(tops) < 2 or max(tops) - min(tops) > 0.06:
+            return 0.0
+        need = 1 - min(tops) + 0.05      # the white words sit just above the purple highlight
+        return round(min(0.14, max(0.08, need)), 3)
+    except Exception:  # noqa: BLE001
+        return 0.0
+
+
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
-                 layout: str = "split") -> None:
+                 layout: str = "split", cut: float = 0.0) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     x, y, w, h = [float(v) for v in cam.split(",")]
@@ -565,7 +598,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             # small webcams get blown up ~4-5x: light denoise first, sharp (lanczos) scaling, then sharpen
             f"hqdn3d=1.5:1.5:3:3,scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
             f"crop=1080:{TOP_H},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
-            f"[b]crop=iw:ih*{1 - CAPTION_CUT}:0:0,scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H},"
+            f"[b]crop=iw*{1 - max(CAPTION_CUT, cut)}:ih*{1 - max(CAPTION_CUT, cut)}:(iw-ow)/2:0,scale=-2:{1920 - TOP_H}:flags=lanczos,crop=1080:{1920 - TOP_H},"
             f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
@@ -1138,10 +1171,16 @@ def main() -> None:
         c = clips[cid]
         lay = c.get("layout", "split")
         raw = best_part(raw, cid, tmp, c)
+        cut = 0.0
+        if lay == "split":
+            cut = purple_caption_cut(raw, 0, c.get("cam", ""))
+            if cut:
+                log(f"purple captions in {cid}: zoomed gameplay {cut:.0%} off the bottom")
+            c["cap_cut"] = cut
         if need_f:
-            render_final(raw, cid, c["cam"], c["hook"], tmp, layout=lay)
+            render_final(raw, cid, c["cam"], c["hook"], tmp, layout=lay, cut=cut)
         if need_c:
-            render_final(raw, cid, c["cam"], None, tmp, out="_clean", layout=lay)
+            render_final(raw, cid, c["cam"], None, tmp, out="_clean", layout=lay, cut=cut)
         return job
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
