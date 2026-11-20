@@ -16,6 +16,7 @@ concurrency:
 permissions:
   contents: write
   issues: write
+  actions: write
 
 jobs:
   run:
@@ -48,6 +49,8 @@ jobs:
           git show origin/state:state.json > _state/state.json 2>/dev/null || rm -f _state/state.json
           git archive origin/posted 2>/dev/null | tar -x -C _posted || true
           git archive origin/gh-pages 2>/dev/null | tar -x -C _site || true
+          mkdir -p _camsrc _camhd   # AI webcam upscaling: sources waiting / upscaled strips back
+          for b in camsrc camhd; do git fetch -q --depth=1 origin "$b:refs/remotes/origin/$b" 2>/dev/null && git archive "origin/$b" | tar -x -C "_$b" || true; done
       - name: pipeline
         shell: bash
         run: python pipeline.py 2>&1 | tee /tmp/pipeline.log; exit ${PIPESTATUS[0]}
@@ -59,6 +62,8 @@ jobs:
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
       - name: publish site + save state
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
           # always publish the NEWEST site code (it may have changed while this run was busy)
@@ -76,6 +81,10 @@ jobs:
           }
           publish _site gh-pages
           publish _state state
+          if ls _camsrc/*.mp4 >/dev/null 2>&1; then   # webcams waiting for the AI upscaler -> start it
+            publish _camsrc camsrc
+            gh workflow run enhance.yml -R "${{ github.repository }}" || true
+          fi
       - name: save log (so Claude can read it)
         continue-on-error: true
         if: always()

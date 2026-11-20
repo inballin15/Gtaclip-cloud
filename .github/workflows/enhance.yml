@@ -1,0 +1,92 @@
+name: gtaclip webcam AI upscale
+# Each queued clip's webcam gets upscaled by AI (Real-ESRGAN) on its own server, in parallel.
+# The clip maker picks the sharp webcam up on its next run and re-makes the video with it.
+on: workflow_dispatch
+concurrency:
+  group: enhance
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      todo: ${{ steps.p.outputs.todo }}
+      keep: ${{ steps.p.outputs.keep }}
+    steps:
+      - id: p
+        shell: bash
+        run: |
+          git init -q r && cd r
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          src=$(git fetch -q --depth=1 origin camsrc 2>/dev/null && git ls-tree --name-only FETCH_HEAD | grep '\.mp4$' | sed 's/\.mp4$//' || true)
+          hd=$(git fetch -q --depth=1 origin camhd 2>/dev/null && git ls-tree --name-only FETCH_HEAD | grep '\.mp4$' | sed 's/\.mp4$//' || true)
+          todo=$(comm -23 <(echo "$src" | sort -u | sed '/^$/d') <(echo "$hd" | sort -u | sed '/^$/d') | head -15)
+          echo "todo=$(echo "$todo" | sed '/^$/d' | python3 -c 'import json,sys;print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')" >> "$GITHUB_OUTPUT"
+          echo "keep=$(echo "$src" | sed '/^$/d' | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+          echo "waiting: $(echo "$src" | sed '/^$/d' | wc -l) · already upscaled: $(echo "$hd" | sed '/^$/d' | wc -l) · to do now: $(echo "$todo" | sed '/^$/d' | wc -l)"
+  up:
+    needs: plan
+    if: needs.plan.outputs.todo != '[]' && needs.plan.outputs.todo != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 15
+      matrix:
+        cid: ${{ fromJSON(needs.plan.outputs.todo) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: enhance_cam.py
+      - uses: actions/cache@v4
+        with:
+          path: models_sr
+          key: esrgan-general-x4v3-v1
+      - name: tools + model
+        shell: bash
+        run: |
+          pip install -q "opencv-python-headless<5" "numpy<3" imageio-ffmpeg
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          mkdir -p models_sr
+          [ -s models_sr/x4v3.pth ] || curl -sL -o models_sr/x4v3.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-x4v3.pth
+          [ -s models_sr/wdn.pth ] || curl -sL -o models_sr/wdn.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-wdn-x4v3.pth
+      - name: upscale ${{ matrix.cid }}
+        shell: bash
+        run: |
+          git fetch -q --depth=1 origin camsrc
+          git show "FETCH_HEAD:${{ matrix.cid }}.mp4" > src.mp4
+          mkdir -p out && python enhance_cam.py src.mp4 "out/${{ matrix.cid }}.mp4" models_sr
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hd-${{ matrix.cid }}
+          path: out/${{ matrix.cid }}.mp4
+          retention-days: 1
+  collect:
+    needs: [plan, up]
+    if: always() && needs.plan.outputs.todo != '[]' && needs.plan.outputs.todo != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hd-*
+          merge-multiple: true
+          path: new
+      - name: save the sharp webcams (branch camhd)
+        shell: bash
+        run: |
+          git init -q r && cd r
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          mkdir -p hd
+          git fetch -q --depth=1 origin camhd 2>/dev/null && git archive FETCH_HEAD | tar -x -C hd || true
+          cp ../new/*.mp4 hd/ 2>/dev/null || true
+          keep=" ${{ needs.plan.outputs.keep }} "
+          for f in hd/*.mp4; do id=$(basename "$f" .mp4); case "$keep" in *" $id "*) ;; *) rm -f "$f";; esac; done
+          echo "sharp webcams kept: $(ls hd | wc -l)"
+          export GIT_INDEX_FILE=/tmp/idx; git --work-tree=hd add -A; tree=$(git write-tree); unset GIT_INDEX_FILE
+          c=$(git commit-tree "$tree" -m "camhd $(date -u +%FT%TZ)")
+          for i in 1 2 3 4; do git push -qf origin "$c:refs/heads/camhd" && break; sleep $((i*5)); done

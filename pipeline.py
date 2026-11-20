@@ -47,6 +47,8 @@ KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
 KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
 REPLACE_QUEUE_EACH_RUN = False   # off: clips stay until they're 9 h old (max 30 in the queue)
 MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
+CAMSRC = Path("_camsrc")   # webcam sources waiting for the AI upscaler (branch camsrc)
+CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
 SITE_MAX_MB = 900        # GitHub Pages limit is 1 GB; keep room
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
@@ -710,7 +712,7 @@ def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
 
 
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
-                 layout: str = "split", cut: float = 0.0) -> None:
+                 layout: str = "split", cut: float = 0.0, cam_video: Path | None = None) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     x, y, w, h = [float(v) for v in cam.split(",")]
@@ -732,13 +734,20 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
+    extra = []
+    if cam_video and layout != "full":   # AI-upscaled webcam strip (made on its own server) replaces the stretched one
+        ci = 2 if hook else 1
+        a_end = base.index("[top];") + len("[top];")
+        base = (f"[0:v]copy[b];[{ci}:v]scale=1080:{TOP_H}:force_original_aspect_ratio=increase:flags=lanczos,"
+                f"crop=1080:{TOP_H},setsar=1[top];" + base[a_end:])
+        extra = ["-i", str(cam_video)]
     if hook:
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"))
-        inputs = ["-i", str(raw), "-i", png]
+        inputs = ["-i", str(raw), "-i", png] + extra
         oy = "(H-h)/2" if layout == "full" else f"{TOP_H}-h*0.2"   # hook box sits on the webcam/gameplay line
         flt = base + f"[st];[st][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]"
     else:
-        inputs = ["-i", str(raw)]
+        inputs = ["-i", str(raw)] + extra
         flt = base + ",format=yuv420p[out]"
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
        "-c:v", "libx264", "-preset", "fast", "-crf", "19", "-maxrate", "8000k", "-bufsize", "16M", "-r", "30",
@@ -1315,6 +1324,8 @@ def main() -> None:
                 ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + c.get("layout", "")).encode()).hexdigest()[:10]
                 need_f = c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists()
                 need_c = c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists()
+                if (CAMHD / f"{cid}.mp4").exists() and not c.get("hd"):   # AI-upscaled webcam came back: re-make
+                    need_f = need_c = True
                 if need_f or need_c:
                     jobs.append((cid, raw, hh, ch, need_f, need_c))
         except Exception as e:  # noqa: BLE001
@@ -1374,6 +1385,21 @@ def main() -> None:
                 log(f"skipped {cid}: no steady face on camera")
                 return job
             cam = fc or cam
+        hd = CAMHD / f"{cid}.mp4"
+        cam_video = hd if (lay == "split" and hd.exists() and c.get("hd_cam") == cam) else None
+        if lay == "split" and cam and not cam_video:
+            try:   # small webcam source for the AI upscaler (runs on its own server, comes back in a later run)
+                CAMSRC.mkdir(exist_ok=True)
+                x, y, w, h = [float(v) for v in cam.split(",")]
+                ff("-i", str(raw), "-vf", f"crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{TOP_H}/1080)':x=iw*{x}:"
+                   f"y='ih*{y}+(ih*{h}-oh)*0.1',scale='min(270,iw)':-2:flags=area,fps=30",
+                   "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "12", str(CAMSRC / f"{cid}.mp4"))
+                c["hd_cam"] = cam
+            except Exception as e:  # noqa: BLE001
+                log(f"webcam source for upscaling failed {cid}: {e}")
+        if cam_video:
+            c["hd"] = True
+            log(f"using AI-upscaled webcam for {cid}")
         if lay == "split":
             cut = purple_caption_cut(raw, 0, c.get("cam", ""))
             if cut:
@@ -1381,9 +1407,9 @@ def main() -> None:
                                                        else f"blurred a strip at {-cut:.0%} height"))
             c["cap_cut"] = cut
         if need_f:
-            render_final(raw, cid, cam, c["hook"], tmp, layout=lay, cut=cut)
+            render_final(raw, cid, cam, c["hook"], tmp, layout=lay, cut=cut, cam_video=cam_video)
         if need_c:
-            render_final(raw, cid, cam, None, tmp, out="_clean", layout=lay, cut=cut)
+            render_final(raw, cid, cam, None, tmp, out="_clean", layout=lay, cut=cut, cam_video=cam_video)
         return job
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -1430,6 +1456,13 @@ def main() -> None:
                     clips[cid]["final_hash"] = clips[cid]["final_v"] = hh
                 except Exception as e:  # noqa: BLE001
                     log(f"re-make failed: {e}")
+
+    # 4d2. webcam sources still waiting for the upscaler: only clips that are queued and not upscaled yet
+    if CAMSRC.exists():
+        for f in CAMSRC.glob("*.mp4"):
+            c = clips.get(f.stem)
+            if not c or c["status"] != "new" or c.get("hd"):
+                f.unlink(missing_ok=True)
 
     # 4e. size guard: GitHub Pages sites must stay under 1 GB -> drop the lowest-rated queued clips if close
     def site_mb():
