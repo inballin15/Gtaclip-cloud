@@ -97,7 +97,7 @@ def main() -> None:
                     continue
                 meta = {"id": cid, "login": login, "streamer": s.get("name", login), "tag": s.get("tag", ""),
                         "campaign": s.get("campaign", ""), "title": f"{v['title'][:80]} @ {int(a // 3600)}:{int(a % 3600 // 60):02d}:{int(a % 60):02d}",
-                        "created": (created + timedelta(seconds=a)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "created": (created + timedelta(seconds=float(a))).strftime("%Y-%m-%dT%H:%M:%SZ"),
                         "twitch": f"{v['url']}?t={int(a // 3600)}h{int(a % 3600 // 60)}m{int(a % 60)}s",
                         "transcript": m["text"], "hook": m.get("hook", ""), "hook_ai": bool(m.get("hook_ai")),
                         "moment": {k: m.get(k) for k in ("score", "reasons", "ai_score")}}
