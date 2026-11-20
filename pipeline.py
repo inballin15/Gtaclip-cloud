@@ -573,7 +573,7 @@ def cam_without_chat(path: Path, cam: str) -> str:
             if d[r:r + k].mean() > max(2.2 * base, 0.06):
                 while r > n * 0.5 and d[r - 1] > 1.4 * base:   # walk up to where the chat really starts
                     r -= 1
-                frac = max(0.5, (r - n * 0.04) / n)
+                frac = max(0.5, (r - n * 0.08) / n)
                 return f"{x:.4f},{y:.4f},{w:.4f},{h * frac:.4f}"
         return cam
     except Exception:  # noqa: BLE001
@@ -1072,6 +1072,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_kai_v2", 0) < 1:   # one time: Kai again (more room above his chat)
+        st["redo_kai_v2"] = 1
+        for c in clips.values():
+            if c["status"] == "new" and c.get("login") == "kaicenat":
+                c.pop("final_hash", None); c.pop("clean_v", None)
     if st.get("redo_all_v", 0) < 1:   # one time: re-make every queued clip (chat/purple fixes + picture check)
         st["redo_all_v"] = 1
         for c in clips.values():
