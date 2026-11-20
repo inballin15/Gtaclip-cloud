@@ -79,7 +79,7 @@ def main() -> None:
             tmp = Path(tempfile.mkdtemp())
             try:
                 audio, _, _ = fetch_link_audio(v["url"], f"{start}-{end}", tmp)
-                moments = viral.find_moments(audio, max_clips=PER_CHUNK, log=log)
+                moments = viral.find_moments(audio, max_clips=PER_CHUNK, log=log, streamer=s.get("name", login))
             except Exception as e:  # noqa: BLE001
                 log(f"{login}: VOD audio failed {str(e)[:150]}")
                 shutil.rmtree(tmp, ignore_errors=True)

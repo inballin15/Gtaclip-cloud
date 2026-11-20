@@ -88,7 +88,7 @@ def clean_line(t: str) -> str:
     return t
 
 
-def find_moments(path: Path, max_clips: int | None = None, log=print) -> list[dict]:
+def find_moments(path: Path, max_clips: int | None = None, log=print, streamer: str = "") -> list[dict]:
     audio = _audio(path)
     secs = max(1, int(len(audio) / 16000))
     log(f"video is {secs // 60} min {secs % 60} s long — listening and watching for the best moments")
@@ -187,7 +187,7 @@ def find_moments(path: Path, max_clips: int | None = None, log=print) -> list[di
         clips.append({"start": round(start, 2), "end": round(end, 2), "peak": p, "score": 0.5,
                       "reasons": ["best part"], "hook": clean_line(best["text"])[:70] if best else "",
                       "text": " ".join(s_["text"] for s_ in lines)[:900]})
-    clips = ai_rank(clips, log)   # smarter picks + hooks when a Gemini key is set (free tier); otherwise unchanged
+    clips = ai_rank(clips, log, streamer)   # smarter picks + hooks when a Gemini key is set (free tier); otherwise unchanged
     clips.sort(key=lambda c: -c["score"])
     return clips[:want]
 
@@ -255,7 +255,7 @@ HOOK_STYLE = (
     "no swearing, no quotes, no hashtags.\n")
 
 
-def ai_rank(clips: list[dict], log=print) -> list[dict]:
+def ai_rank(clips: list[dict], log=print, streamer: str = "") -> list[dict]:
     """Ask Gemini (one request for all candidates) which moments would actually go viral, and for a better hook.
     No key / quota used up / any error -> keep the signal-based ranking."""
     import json as _json
@@ -270,6 +270,8 @@ def ai_rank(clips: list[dict], log=print) -> list[dict]:
         "You pick viral short-form clips (TikTok/YouTube Shorts) from GTA 6 livestreams, like OpusClip does.\n"
         "For each candidate, judge from the transcript: is it funny, surprising, dramatic or relatable? Does it have a "
         "clear setup and payoff? Does it make sense without context? Would the first 3 seconds stop the scroll?\n"
+        + (f"The streamer in every candidate is {streamer}. Always use that exact name in the hook, never the word "
+           f"'streamer'.\n" if streamer else "") +
         "Return JSON: a list of {\"i\": number, \"score\": 0-10, \"hook\": \"...\"}. " + HOOK_STYLE +
         "Score 0 for anything sexual, hateful, about strippers, or harming animals.\n\nCandidates:\n" + _json.dumps(items))
     body = {"contents": [{"parts": [{"text": prompt}]}],
@@ -385,7 +387,7 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
     return out, status
 
 
-def ai_visual_ok(jpegs: list[bytes], log=print) -> tuple[bool | None, str]:
+def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str = "") -> tuple[bool | None, str, str]:
     """Look at a few frames of a clip (Gemini vision). False = nudity / sexual content / gore -> don't post.
     None = couldn't check (no key, quota, error)."""
     import base64
@@ -394,11 +396,15 @@ def ai_visual_ok(jpegs: list[bytes], log=print) -> tuple[bool | None, str]:
     import urllib.request
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key or not jpegs:
-        return None, "no key"
-    parts = [{"text": "These are frames from a GTA 6 game livestream clip that will be posted on TikTok. "
-                      "Is there any nudity (bare breasts, genitals, bare buttocks, even in-game), sexual activity, "
-                      "strip-club dancing, or graphic gore? Answer JSON {\"ok\": true|false, \"why\": \"...\"} where "
-                      "ok=false means it must not be posted."}]
+        return None, "no key", ""
+    parts = [{"text": f"These are frames (in order) from a GTA 6 livestream clip of {streamer or 'a streamer'} "
+                      "(their webcam is in the stream) that will be posted on TikTok.\n"
+                      f"What they said / stream title: {context[:600] or '(nothing)'}\n"
+                      "1) Is there any nudity (bare breasts, genitals, bare buttocks, even in-game), sexual activity, "
+                      "strip-club dancing, drug use, or graphic gore? ok=false means it must not be posted.\n"
+                      "2) Write the on-screen hook about what ACTUALLY happens in these frames and what was said. "
+                      + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + HOOK_STYLE +
+                      "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\"}."}]
     for j in jpegs[:4]:
         parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(j).decode()}})
     body = {"contents": [{"parts": parts}],
@@ -414,7 +420,8 @@ def ai_visual_ok(jpegs: list[bytes], log=print) -> tuple[bool | None, str]:
             row = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
             if isinstance(row, list):
                 row = row[0] if row else {}
-            return bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90]
+            return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
+                    clean_line(str(row.get("hook", "")))[:120])
         except Exception as e:  # noqa: BLE001
             log(f"picture check ({model}): {str(e)[:80]}")
-    return None, "check failed"
+    return None, "check failed", ""

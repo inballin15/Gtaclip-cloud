@@ -549,6 +549,26 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
         return raw
 
 
+def cam_has_face(path: Path, cam: str) -> bool:
+    """Someone is actually in the webcam box in at least 2 of 5 moments (not an empty chair / wall / BRB screen)."""
+    try:
+        x, y, w, h = [float(v) for v in cam.split(",")]
+        cap = cv2.VideoCapture(str(path))
+        dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+        cap.release()
+        hits = 0
+        for fr in _frames(path, [max(0.5, dur * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)]):
+            H, W = fr.shape[:2]
+            crop = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+            if crop.size:
+                big = cv2.resize(crop, None, fx=2, fy=2)
+                if [f for f in _faces(big, neighbors=4) if f[2] >= 0.1 * big.shape[1]]:
+                    hits += 1
+        return hits >= 2
+    except Exception:  # noqa: BLE001
+        return True   # can't tell -> don't throw the clip away
+
+
 def cam_without_chat(path: Path, cam: str) -> str:
     """Some streamers (Kai) have chat scrolling over the bottom of their webcam. Find where that text band starts
     and end the webcam box above it, so no chat shows between the face and the gameplay."""
@@ -575,6 +595,13 @@ def cam_without_chat(path: Path, cam: str) -> str:
                 while r > n * 0.5 and d[r - 1] > 1.4 * base:   # walk up to where the chat really starts
                     r -= 1
                 frac = max(0.5, (r - n * 0.08) / n)
+                for fr in _frames(path, [max(0.5, dur * p) for p in (0.3, 0.6)]):   # never cut through the face
+                    H, W = fr.shape[:2]
+                    c = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+                    big = cv2.resize(c, None, fx=2, fy=2)
+                    for fx_, fy_, fw_, fh_ in _faces(big, neighbors=4):
+                        if (fy_ + fh_ * 1.15) / big.shape[0] > frac:
+                            return cam
                 return f"{x:.4f},{y:.4f},{w:.4f},{h * frac:.4f}"
         return cam
     except Exception:  # noqa: BLE001
@@ -1073,6 +1100,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_vision_v", 0) < 1:   # one time: re-check every queued clip (picture hook, face, smaller caption)
+        st["redo_vision_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new":
+                c.pop("pic_ok", None); c.pop("final_hash", None); c.pop("clean_v", None)
     if st.get("redo_hookfit_v", 0) < 1:   # one time: re-make queued videos with the narrower hook box
         st["redo_hookfit_v"] = 1
         for c in clips.values():
@@ -1235,9 +1267,15 @@ def main() -> None:
                 fr = _frames(raw, [1.5, 6, 11, 16])
                 jp = [cv2.imencode(".jpg", cv2.resize(f, (768, int(f.shape[0] * 768 / f.shape[1]))),
                                    [cv2.IMWRITE_JPEG_QUALITY, 80])[1].tobytes() for f in fr]
-                ok, why = viral.ai_visual_ok(jp, log)
+                ok, why, vhook = viral.ai_visual_ok(jp, log, c.get("streamer", ""),
+                                                   (c.get("transcript") or "") + " | title: " + (c.get("title") or ""))
                 if ok is not None:
                     c["pic_ok"] = ok
+                if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower():
+                    c["hook"], c["hook_kind"] = vhook, "ai"   # hook written from what's actually on screen
+                    hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+                    job = (cid, job[1], hh, ch, True, need_c)
+                    need_f = True
                 if ok is False and not c.get("post_now"):
                     c.update(status="skip", skip_reason=f"AI picture check: {why or 'nudity/sexual content'}")
                     log(f"picture check removed {cid}: {why}")
@@ -1246,6 +1284,10 @@ def main() -> None:
                 log(f"picture check skipped {cid}: {e}")
         cut = 0.0
         cam = c.get("cam", "")
+        if lay == "split" and cam and not cam_has_face(raw, cam) and not c.get("post_now") and c.get("source") != "upload":
+            c.update(status="skip", skip_reason="no one in the webcam (streamer away / camera off)")
+            log(f"skipped {cid}: no face in the webcam")
+            return job
         if lay == "split" and cam:
             cam2 = cam_without_chat(raw, cam)
             if cam2 != cam:
