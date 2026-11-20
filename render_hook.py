@@ -10,9 +10,9 @@ HERE = Path(__file__).parent / "fonts"
 TEXT_FONT = str(HERE / "Inter-Bold.otf")
 EMOJI_FONT = str(HERE / "NotoColorEmoji.ttf")
 
-SIZE = 64          # text size on a 1080-wide video
-MAX_W = 1000        # widest a line may be
-PAD_X, PAD_Y = 22, 16   # box padding (sides, top/bottom)
+SIZE = 58          # text size on a 1080-wide video
+MAX_W = 800         # TikTok zooms 9:16 videos on tall phones and cuts ~9% off each side: stay in the middle
+PAD_X, PAD_Y = 24, 16   # box padding (sides, top/bottom)
 LINE_GAP = 2
 RADIUS = 18
 

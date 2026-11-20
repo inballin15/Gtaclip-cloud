@@ -1073,6 +1073,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_hookfit_v", 0) < 1:   # one time: re-make queued videos with the narrower hook box
+        st["redo_hookfit_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new":
+                c.pop("final_hash", None)
     if st.get("redo_kai_v2", 0) < 1:   # one time: Kai again (more room above his chat)
         st["redo_kai_v2"] = 1
         for c in clips.values():
