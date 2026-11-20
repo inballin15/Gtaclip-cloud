@@ -95,7 +95,12 @@ def _json_short(d) -> str:
     return _j.dumps(d)[:160]
 
 
+BUFFER_WAIT: dict = {}   # filled from control.json: no Buffer calls before this time after a rate-limit answer
+
+
 def buffer(query: str, variables: dict | None = None):
+    if BUFFER_WAIT.get("until") and parse(BUFFER_WAIT["until"]) > datetime.now(timezone.utc):
+        raise RuntimeError(f"Buffer: waiting out its rate limit until {BUFFER_WAIT['until']} (no request sent)")
     code, res = http("POST", "https://api.buffer.com", {"Authorization": f"Bearer {BUFFER_KEY}"},
                      {"query": query, "variables": variables or {}})
     if code >= 400 and not res.get("errors"):
@@ -103,7 +108,8 @@ def buffer(query: str, variables: dict | None = None):
     if res.get("errors"):
         msg = "; ".join(e.get("message", "?") for e in res["errors"])
         ext = (res["errors"][0].get("extensions") or {})
-        if ext.get("code") == "RATE_LIMIT_EXCEEDED":   # say which Buffer limit and how long until it frees up
+        if ext.get("code") == "RATE_LIMIT_EXCEEDED":   # back off for an hour; say which Buffer limit was hit
+            BUFFER_WAIT["until"] = iso(datetime.now(timezone.utc) + timedelta(minutes=60))
             msg = (f"Buffer rate limit hit ({ext.get('limitType') or ext.get('window') or '?'}"
                    f", retry in {int(ext.get('retryAfter') or 0) // 60} min) {_json_short(ext)}")
         raise RuntimeError("Buffer: " + msg[:400])
@@ -461,6 +467,7 @@ def main() -> None:
         buffer_err = "Buffer API key missing — add the BUFFER_API_KEY secret in GitHub (see dashboard Settings)."
         log(buffer_err)
 
+    BUFFER_WAIT["until"] = ctl.get("buffer_wait", "")
     # Buffer limits how often we may ask it things: only talk to it when a post is due, while a post is still
     # uploading, or every 30 min for stats (this runs every 5 min)
     _slot = due_slot()
@@ -523,6 +530,8 @@ def main() -> None:
     # 2) post it
     if DRY_RUN:
         buffer_ok = True
+    elif BUFFER_KEY and BUFFER_WAIT.get("until") and parse(BUFFER_WAIT["until"]) > NOW:
+        buffer_err = f"Buffer's request limit was hit — posting resumes after {BUFFER_WAIT['until']}"
     elif BUFFER_KEY:
         buffer_ok = True   # (no separate key check: it cost a request every 5 min; a bad key shows up as a post error)
     if buffer_ok:
@@ -571,6 +580,7 @@ def main() -> None:
         except Exception as e:  # noqa: BLE001
             nodes = []
             followed = False
+            ctl["stats_at"] = iso(NOW)   # don't retry right away
             buffer_err = str(e)[:300]
         by_buf = {n["id"]: n for n in nodes}
         gone: list[str] = []
@@ -646,6 +656,9 @@ def main() -> None:
                 "clip": match[0] if match else "", "streamer": (match[1].get("streamer") if match else "") or guess_streamer(n.get("text") or ""),
                 **metrics(n)})
 
+    ctl["buffer_wait"] = BUFFER_WAIT.get("until", "")
+    if ctl["buffer_wait"] and parse(ctl["buffer_wait"]) > NOW:
+        log(f"Buffer rate limit: no Buffer requests until {ctl['buffer_wait']}")
     # 4) live.json for the dashboard
     nxt = next_slot()
     cd = [parse(v) for v in ctl.get("cooldown", {}).values() if v and parse(v) > NOW]
