@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-20T18:04:59Z",
+ "updated": "2026-11-20T18:09:29Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
- "next_slot": "2026-11-20T18:07:00Z",
+ "next_slot": "2026-11-20T19:37:00Z",
  "up_next": "AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO",
- "buffer_ok": true,
- "buffer_error": "couldn't read posts from Buffer",
+ "buffer_ok": false,
+ "buffer_error": "Buffer's request limit was hit — posting resumes after 2026-11-20T19:05:01Z",
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
@@ -536,8 +536,9 @@
  ],
  "stats_updated": "2026-11-20T18:04:59Z",
  "log": [
-  "[18:05:01Z] post list query failed (full): Buffer: Buffer rate limit hit (24h, retry in 0 min) {\"code\": \"RATE_LIMIT_EXCEEDED\", \"window\": \"24h\"}",
-  "[18:05:01Z] post list query failed (lite): Buffer: waiting out its rate limit until 2026-11-20T19:05:01Z (no request sent)",
-  "[18:05:01Z] Buffer rate limit: no Buffer requests until 2026-11-20T19:05:01Z"
+  "[18:09:30Z] post list query failed (full): Buffer: waiting out its rate limit until 2026-11-20T19:05:01Z (no request sent)",
+  "[18:09:30Z] post list query failed (lite): Buffer: waiting out its rate limit until 2026-11-20T19:05:01Z (no request sent)",
+  "[18:09:30Z] duplicate check skipped: couldn't read posts from Buffer",
+  "[18:09:30Z] Buffer rate limit: no Buffer requests until 2026-11-20T19:05:01Z"
  ]
 }
