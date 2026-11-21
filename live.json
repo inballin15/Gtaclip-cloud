@@ -149,7 +149,7 @@
    "lowcaps": 0
   }
  },
- "updated": "2026-11-21T19:06:01Z",
+ "updated": "2026-11-21T19:07:17Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1005,8 +1005,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-21T19:06:01Z",
- "log": [
-  "[19:06:03Z] Automatic posting is ON — next post at the next :07 or :37 (7am–10:37pm)."
- ]
+ "stats_updated": "2026-11-21T19:07:17Z",
+ "log": []
 }
