@@ -178,6 +178,8 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             kind = "buffer"
         elif tl.startswith("split:"):
             kind = "split"
+        elif tl.startswith("youpost:"):
+            kind = "youpost"
         if not kind:
             continue  # skip:/edit: belong to the render pipeline
         if age_min > REQUEST_MAX_AGE_MIN:
@@ -192,6 +194,17 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
                    else "Automatic posting is STOPPED. Nothing posts on the schedule until you press Start.")
             close_issue(it["number"], msg)
             log(msg)
+            continue
+        if kind == "youpost":
+            sv = "tiktok" if "tiktok" in tl else "youtube" if "youtube" in tl else ""
+            if sv:
+                yp = set(ctl.get("you_post", []))
+                (yp.discard if "off" in tl else yp.add)(sv)
+                ctl["you_post"] = sorted(yp)
+                msg = (f"{sv.title()}: you post these yourself now — they wait on the site, the bot won't upload them."
+                       if sv in yp else f"{sv.title()}: back to automatic uploads.")
+                close_issue(it["number"], msg)
+                log(msg)
             continue
         if kind == "split":
             ctl["split"] = "off" not in tl
@@ -214,14 +227,21 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             log(f"AI scoring {'off' if ctl['ai_off'] else 'on'}")
             continue
         if kind == "manual":
-            m = re.match(r"^manual:\s*" + ID_RE + r"\s*$", t, re.I)
+            m = re.match(r"^manual:\s*" + ID_RE + r"(?:\s+(tiktok|youtube))?\s*$", t, re.I)
             cid = m.group(1) if m else ""
+            only = (m.group(2) or "").lower() if m else ""
             cid = next((k for k in ready_ids if k == cid or k.startswith(cid) or cid.startswith(k)), cid)
-            if cid in ready_ids and cid not in posted_ids:
+            prev = rj(P / "posted" / f"{cid}.json", {}) if cid else {}
+            if cid in ready_ids and (cid not in posted_ids or (only and only not in (prev.get("platforms") or []))):
                 c = QUEUE_BY_ID.get(cid, {})
-                wj(P / "posted" / f"{cid}.json", {"id": cid, "hook": c.get("hook", ""), "streamer": c.get("streamer", ""),
-                                                  "campaign": c.get("campaign", ""), "why": "posted by Nicholas", "manual": True,
-                                                  "posted_at": iso(NOW), "tiktok": "", "youtube": ""})
+                plats = sorted(set(prev.get("platforms") or []) | ({only} if only else {"tiktok", "youtube"}))
+                rec = {**prev, "id": cid, "hook": c.get("hook", ""), "streamer": c.get("streamer", ""),
+                       "campaign": c.get("campaign", ""), "why": "posted by Nicholas", "manual": True,
+                       "posted_at": prev.get("posted_at") or iso(NOW), "platforms": plats,
+                       "style": c.get("style") or {}, "hook_variant": c.get("hook_variant", ""), "seconds": c.get("seconds")}
+                rec.setdefault("tiktok", ""); rec.setdefault("youtube", "")
+                rec.setdefault("manual_on", {})[only or "both"] = iso(NOW)
+                wj(P / "posted" / f"{cid}.json", rec)
                 posted_ids.add(cid)
                 ctl["postnow"] = [p for p in ctl["postnow"] if p["id"] != cid]
                 close_issue(it["number"], "Got it — marked as posted by you. The bot won't post this clip.")
@@ -685,6 +705,8 @@ def main() -> None:
             cool = ctl.get("cooldown", {})
             used: set[str] = set()
             for sv in ("tiktok", "youtube"):
+                if sv in ctl.get("you_post", []):
+                    continue   # you post this platform yourself (native upload); the site lines the clips up
                 if cool.get(sv) and parse(cool[sv]) > NOW:
                     continue
                 last_sv = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)
@@ -716,7 +738,7 @@ def main() -> None:
         for c, why, targets in to_post:
             cid = c["id"]
             cool = ctl.get("cooldown", {})
-            want = targets or ["tiktok", "youtube"]
+            want = targets or [s for s in ("tiktok", "youtube") if s not in ctl.get("you_post", []) or why == "post now"]
             live_svcs = [s for s in want if not cool.get(s) or parse(cool[s]) <= NOW]
             if not live_svcs:
                 log(f"{why}: {', '.join(want)} waiting out an upload limit — holding {cid}")
@@ -872,7 +894,7 @@ def main() -> None:
                          reverse=True)[:80],
         "videos_checked": ctl.get("manual_check", ""),
         "buffer_ok": buffer_ok, "buffer_error": buffer_err, "buffer_off": bool(ctl.get("buffer_off")),
-        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "budget": {**BUDGET, "active": [list(x) for x in ACTIVE_SLOTS]}, "cooldown": ctl.get("cooldown", {}),
+        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "you_post": ctl.get("you_post", []), "budget": {**BUDGET, "active": [list(x) for x in ACTIVE_SLOTS]}, "cooldown": ctl.get("cooldown", {}),
         "ai_off": bool(ctl.get("ai_off")),
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
