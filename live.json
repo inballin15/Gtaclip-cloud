@@ -190,7 +190,7 @@
    }
   }
  },
- "updated": "2026-11-21T23:28:44Z",
+ "updated": "2026-11-21T23:33:47Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -505,12 +505,12 @@
  "you_post": [],
  "budget": {
   "day": "2026-11-21",
-  "used": 12,
+  "used": 13,
   "cap": 30,
   "slots": 6,
-  "remain30": 787,
-  "reset30": "2026-12-18T22:03:16Z",
-  "remain24": 587,
+  "remain30": 786,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 586,
   "active": [
    [
     16,
@@ -586,11 +586,11 @@
    "posted_at": "2026-11-21T23:08:23Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/CredulousTsundereSalsifyWow-9zosjTsfZF6ahQfl_final.mp4?v=b661815bc5&r=1795299307",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/CredulousTsundereSalsifyWow-9zosjTsfZF6ahQfl.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7710765467274611982",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b02246a02479690920b02df",
      "error": ""
     }
@@ -900,6 +900,20 @@
   }
  },
  "stats": [
+  {
+   "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7710765467274611982",
+   "sent": "2026-11-21T23:09:07.431Z",
+   "hook": "Lacy STUNNED fans DELETING 90 hours of GTA 6 progress",
+   "clip": "CredulousTsundereSalsifyWow-9zosjTsfZF6ahQfl",
+   "streamer": "Lacy",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
   {
    "service": "youtube",
    "link": "https://www.youtube.com/shorts/F_AmqAzAaDU",
@@ -1475,6 +1489,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-21T23:28:44Z",
+ "stats_updated": "2026-11-21T23:33:47Z",
  "log": []
 }
