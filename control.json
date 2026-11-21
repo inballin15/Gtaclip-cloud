@@ -1,7 +1,7 @@
 {
  "paused": false,
  "postnow": [],
- "last_slot": "2026-11-21T21:07:00Z",
+ "last_slot": "2026-11-21T22:07:00Z",
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
@@ -32,17 +32,17 @@
  "yt_channel": "UCtxm_iDQ0Y7baG2mwrGGcSg",
  "yt_check": "ok",
  "tt_check": "ok",
- "manual_check": "2026-11-21T21:57:37Z",
- "stats_at": "2026-11-21T21:37:08Z",
+ "manual_check": "2026-11-21T22:07:48Z",
+ "stats_at": "2026-11-21T22:07:48Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-21",
-  "used": 5,
+  "used": 8,
   "cap": 30,
   "slots": 6,
-  "remain30": 794,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 594
+  "remain30": 791,
+  "reset30": "2026-12-18T22:03:17Z",
+  "remain24": 591
  }
 }
