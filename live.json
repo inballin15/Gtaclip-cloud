@@ -130,7 +130,7 @@
    "lowcaps": 0
   }
  },
- "updated": "2026-11-21T15:50:24Z",
+ "updated": "2026-11-21T15:52:54Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
@@ -375,11 +375,46 @@
   }
  ],
  "videos_checked": "2026-11-21T15:45:55Z",
- "buffer_ok": false,
- "buffer_error": "Buffer is turned off on the dashboard — nothing is posted or sent to Buffer.",
- "buffer_off": true,
+ "buffer_ok": true,
+ "buffer_error": "",
+ "buffer_off": false,
  "buffer_wait": "",
  "split": true,
+ "budget": {
+  "day": "2026-11-21",
+  "used": 1,
+  "cap": 28,
+  "slots": 6,
+  "remain30": 798,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 598,
+  "active": [
+   [
+    8,
+    37
+   ],
+   [
+    11,
+    37
+   ],
+   [
+    13,
+    7
+   ],
+   [
+    16,
+    7
+   ],
+   [
+    19,
+    7
+   ],
+   [
+    20,
+    37
+   ]
+  ]
+ },
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
@@ -577,12 +612,26 @@
  "stats": [
   {
    "service": "youtube",
+   "link": "https://www.youtube.com/shorts/JJzjO45cTQg",
+   "sent": "2026-11-20T18:36:43.000Z",
+   "hook": "",
+   "clip": "",
+   "streamer": "",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "youtube",
    "link": "https://www.youtube.com/shorts/jR8AnrCvB7M",
    "sent": "2026-11-19T15:41:31.000Z",
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1,
+   "views": 2,
    "likes": 0,
    "comments": 0,
    "shares": 0,
@@ -736,7 +785,7 @@
    "hook": "GTA 6 cops really just teleport in 😭🚔 #Clix #GTA6 #GTAVI #gta6gameplay #fyp",
    "clip": "",
    "streamer": "",
-   "views": 296,
+   "views": 298,
    "likes": 28,
    "comments": 0,
    "shares": 0,
@@ -750,7 +799,7 @@
    "hook": "Clix had a road rage moment in GTA 6",
    "clip": "",
    "streamer": "Clix",
-   "views": 1,
+   "views": 0,
    "likes": 0,
    "comments": 0,
    "shares": 0,
@@ -792,7 +841,7 @@
    "hook": "Lacy found the first shoe store in GTA 6 👟😭",
    "clip": "",
    "streamer": "lacy",
-   "views": 1363,
+   "views": 1405,
    "likes": 19,
    "comments": 0,
    "shares": 0,
@@ -940,6 +989,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-20T18:04:59Z",
- "log": []
+ "stats_updated": "2026-11-21T15:52:54Z",
+ "log": [
+  "[15:52:56Z] Buffer is back ON — scheduled posts go out again."
+ ]
 }
