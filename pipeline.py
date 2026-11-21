@@ -844,38 +844,39 @@ def cam_without_chat(path: Path, cam: str, chat_layout: bool = False) -> str:
         return cam
 
 
+def _caption_line_top(fr, cam: str) -> float | None:
+    """Burned-in caption text (Twitch live captions, GTA's own subtitles) = bold white letters with a black outline,
+    low in the frame. Returns where that text line starts (fraction of the frame height) or None."""
+    H, W = fr.shape[:2]
+    y0, x0, x1 = int(H * 0.6), int(W * 0.08), int(W * 0.92)
+    hsv = cv2.cvtColor(fr[y0:, x0:x1], cv2.COLOR_BGR2HSV)
+    white = cv2.inRange(hsv, (0, 0, 225), (180, 50, 255))
+    black = cv2.inRange(hsv, (0, 0, 0), (180, 255, 45))
+    edge = cv2.bitwise_and(white, cv2.dilate(black, np.ones((5, 5), np.uint8)))   # white touching a black outline
+    if cam:   # never count the webcam overlay
+        cx, cy, cw, ch = [float(v) for v in cam.split(",")]
+        a0, a1 = max(0, int(cy * H) - y0), max(0, int((cy + ch) * H) - y0)
+        b0, b1 = max(0, int(cx * W) - x0), max(0, int((cx + cw) * W) - x0)
+        edge[a0:a1, b0:b1] = 0
+    r = np.convolve(edge.mean(axis=1) / 255, np.ones(5) / 5, mode="same")
+    rows = np.where(r > 0.012)[0]
+    return (rows[0] + y0) / H if len(rows) >= 6 else None
+
+
 def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
-    """Streamers like Lacy/Kai run a live caption overlay (white words, purple highlight) near the bottom.
-    If it's there and low, return how much to zoom off the bottom (0.08-0.14) to push it out; if it sits higher,
-    return -top (a strip from 'top' down ~14% gets blurred instead of zooming more); otherwise 0."""
+    """Captions burned into the stream (Twitch live captions, GTA subtitles) near the bottom: return the smallest
+    bottom crop (fraction) that removes them, or 0 if the clip has none. Only the caption line and a hair more."""
     try:
         if not duration:
             cap = cv2.VideoCapture(str(path))
             duration = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
             cap.release()
-        frames = _frames(path, [max(0.5, duration * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)])
-        if not frames:
+        frames = _frames(path, [max(0.3, duration * (i + 0.5) / 12) for i in range(12)])   # captions come and go
+        tops = [t for t in (_caption_line_top(f, cam) for f in frames) if t is not None and t >= 0.8]
+        if len(tops) < 3:
             return 0.0
-        H, W = frames[0].shape[:2]
-        cx, cy, cw, ch = ([float(v) for v in cam.split(",")] if cam else [0, 0, 0, 0])
-        y0, x0, x1 = int(H * 0.6), int(W * 0.22), int(W * 0.78)   # only the part of the gameplay that shows
-        tops = []
-        for fr in frames:
-            hsv = cv2.cvtColor(fr[y0:, x0:x1], cv2.COLOR_BGR2HSV)
-            m = cv2.inRange(hsv, (122, 110, 110), (158, 255, 255))
-            if cw:   # ignore the webcam's own purple border/lighting
-                a0, a1 = max(0, int(cy * H) - y0), max(0, int((cy + ch) * H) - y0)
-                b0, b1 = max(0, int(cx * W) - x0), max(0, int((cx + cw) * W) - x0)
-                m[a0:a1, b0:b1] = 0
-            rows = np.where(m.sum(axis=1) / 255 > 0.015 * (x1 - x0))[0]
-            if len(rows) and (rows[-1] - rows[0]) < 0.12 * H:   # a thin band = text, not a purple scene
-                tops.append((rows[0] + y0) / H)
-        if len(tops) < 2 or max(tops) - min(tops) > 0.06:
-            return 0.0
-        need = 1 - min(tops) + 0.05      # the white words sit just above the purple highlight
-        if need <= 0.14:
-            return round(max(0.08, need), 3)
-        return -round(min(tops) - 0.06, 3)   # captions sit high: negative = blur a strip starting at this height
+        top = float(np.percentile(tops, 15))   # the highest the caption line usually reaches
+        return round(min(0.2, 1 - top + 0.012), 3)
     except Exception:  # noqa: BLE001
         return 0.0
 
@@ -1405,6 +1406,11 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_captions_v", 0) < 1:   # one time: re-check every queued clip with the new caption finder
+        st["redo_captions_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new":
+                c.pop("final_hash", None); c.pop("clean_v", None)
     if st.get("redo_kaichat_v", 0) < 2:   # one time: Kai's chat strip came back on sharp footage -> re-frame his clips
         st["redo_kaichat_v"] = 2
         for c in clips.values():
@@ -1747,8 +1753,7 @@ def main() -> None:
         if lay == "split":
             cut = purple_caption_cut(raw, 0, c.get("cam", ""))
             if cut:
-                log(f"purple captions in {cid}: " + (f"zoomed gameplay {cut:.0%} off the bottom" if cut > 0
-                                                       else f"blurred a strip at {-cut:.0%} height"))
+                log(f"burned-in captions in {cid}: cropped just {cut:.0%} off the bottom of the gameplay")
             c["cap_cut"] = cut
         c["cam_used"], c["layout_used"] = cam, lay
         if ul.get("trim") or (ul.get("speed") or 1) > 1.01:
