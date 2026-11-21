@@ -1,61 +1,79 @@
 {
  "insights": {
-  "updated": "2026-11-21T20:32:14Z",
+  "updated": "2026-11-21T22:33:25Z",
   "videos": 19,
   "findings": [
    {
-    "feature": "posted",
-    "value": "midday (11-15)",
-    "x": 0.6,
-    "n": 5
+    "feature": "has a number",
+    "value": "no",
+    "x": 3.03,
+    "n": 3
+   },
+   {
+    "feature": "streamer",
+    "value": "Clix",
+    "x": 0.35,
+    "n": 3
    },
    {
     "feature": "CAPS words",
     "value": "4-6",
-    "x": 0.67,
+    "x": 0.55,
     "n": 4
+   },
+   {
+    "feature": "hook length",
+    "value": "long (90+)",
+    "x": 0.59,
+    "n": 4
+   },
+   {
+    "feature": "streamer",
+    "value": "?",
+    "x": 1.49,
+    "n": 8
+   },
+   {
+    "feature": "hook length",
+    "value": "short (<60)",
+    "x": 1.45,
+    "n": 10
+   },
+   {
+    "feature": "CAPS words",
+    "value": "0-1",
+    "x": 1.45,
+    "n": 10
    },
    {
     "feature": "posted",
     "value": "morning (7-11)",
-    "x": 1.48,
+    "x": 0.69,
+    "n": 5
+   },
+   {
+    "feature": "hook length",
+    "value": "medium (60-90)",
+    "x": 0.73,
     "n": 5
    },
    {
     "feature": "CAPS words",
     "value": "2-3",
-    "x": 1.39,
+    "x": 0.76,
     "n": 5
    },
    {
-    "feature": "streamer",
-    "value": "Clix",
-    "x": 0.75,
-    "n": 3
-   },
-   {
-    "feature": "hook length",
-    "value": "long (90+)",
-    "x": 1.25,
-    "n": 4
-   },
-   {
-    "feature": "hook length",
-    "value": "medium (60-90)",
-    "x": 0.84,
+    "feature": "posted",
+    "value": "midday (11-15)",
+    "x": 1.29,
     "n": 5
    },
    {
     "feature": "has a number",
-    "value": "no",
-    "x": 0.86,
-    "n": 3
-   },
-   {
-    "feature": "has 'FIRST'",
-    "value": "no",
-    "x": 0.92,
-    "n": 17
+    "value": "yes",
+    "x": 0.81,
+    "n": 16
    },
    {
     "feature": "posted",
@@ -70,34 +88,16 @@
     "n": 15
    },
    {
-    "feature": "has a number",
-    "value": "yes",
-    "x": 1.03,
-    "n": 16
-   },
-   {
-    "feature": "streamer",
-    "value": "?",
-    "x": 1.02,
-    "n": 8
+    "feature": "has 'FIRST'",
+    "value": "no",
+    "x": 1.01,
+    "n": 17
    },
    {
     "feature": "hook style",
     "value": "unknown",
     "x": 1.0,
     "n": 19
-   },
-   {
-    "feature": "hook length",
-    "value": "short (<60)",
-    "x": 1.0,
-    "n": 10
-   },
-   {
-    "feature": "CAPS words",
-    "value": "0-1",
-    "x": 1.0,
-    "n": 10
    },
    {
     "feature": "question",
@@ -107,16 +107,20 @@
    }
   ],
   "guidance": [
-   "AVOID: CAPS words = 4-6 (0.67x views, 4 videos)",
-   "DO: CAPS words = 2-3 (1.39x views, 5 videos)",
-   "DO: hook length = long (90+) (1.25x views, 4 videos)"
+   "DO: has a number = no (3.03x views, 3 videos)",
+   "AVOID: CAPS words = 4-6 (0.55x views, 4 videos)",
+   "AVOID: hook length = long (90+) (0.59x views, 4 videos)",
+   "DO: hook length = short (<60) (1.45x views, 10 videos)",
+   "DO: CAPS words = 0-1 (1.45x views, 10 videos)",
+   "AVOID: hook length = medium (60-90) (0.73x views, 5 videos)",
+   "AVOID: CAPS words = 2-3 (0.76x views, 5 videos)"
   ],
   "weights": {
-   "formula": 0.5,
-   "news": 0.15,
+   "formula": 0.25,
+   "news": 0.1,
    "quote": 0.1,
    "question": 0.1,
-   "lowcaps": 0.15
+   "lowcaps": 0.45
   },
   "style_weights": {
    "box": {
@@ -143,8 +147,12 @@
     "views": 532
    },
    {
+    "hook": "Speed found him",
+    "views": 433
+   },
+   {
     "hook": "Lacy stalking in gta 6",
-    "views": 334
+    "views": 335
    },
    {
     "hook": "Adapt tries texting and driving in GTA 6",
@@ -153,10 +161,6 @@
    {
     "hook": "ohnePixel IPad Kid maxxing brainrot in GTA 6",
     "views": 263
-   },
-   {
-    "hook": "Kai Cenat LOSES IT after seeing NPCS try to STEAL his CAR in GTA 6",
-    "views": 204
    }
   ],
   "style_counts": {
@@ -186,7 +190,7 @@
    }
   }
  },
- "updated": "2026-11-21T22:27:49Z",
+ "updated": "2026-11-21T22:33:25Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -489,12 +493,12 @@
  "you_post": [],
  "budget": {
   "day": "2026-11-21",
-  "used": 8,
+  "used": 9,
   "cap": 30,
   "slots": 6,
-  "remain30": 791,
-  "reset30": "2026-12-18T22:03:17Z",
-  "remain24": 591,
+  "remain30": 790,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 590,
   "active": [
    [
     16,
@@ -565,11 +569,11 @@
    "posted_at": "2026-11-21T22:07:48Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/LivelySaltyCrabsKreygasm-SSJloq0S-nzw0tzb_final.mp4?v=a328f5ffde&r=1795297001",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/LivelySaltyCrabsKreygasm-SSJloq0S-nzw0tzb.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7710749853541797134",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b0216370247969092060a2e",
      "error": ""
     }
@@ -601,10 +605,10 @@
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/PlayfulTriumphantWalletTinyFace-22B9lCIYz9kQ9j5O_final.mp4?v=c9d8a91314&r=1795298116",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/PlayfulTriumphantWalletTinyFace-22B9lCIYz9kQ9j5O.jpg",
    "tiktok": "",
-   "youtube": "",
+   "youtube": "https://www.youtube.com/shorts/F_AmqAzAaDU",
    "status": {
     "youtube": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b021642c72676f5e9e4a727",
      "error": ""
     }
@@ -844,6 +848,34 @@
   }
  },
  "stats": [
+  {
+   "service": "youtube",
+   "link": "https://www.youtube.com/shorts/F_AmqAzAaDU",
+   "sent": "2026-11-21T22:08:04.398Z",
+   "hook": "Lacy STUNNED by 90 HOUR restart",
+   "clip": "PlayfulTriumphantWalletTinyFace-22B9lCIYz9kQ9j5O",
+   "streamer": "Lacy",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7710749853541797134",
+   "sent": "2026-11-21T22:08:33.172Z",
+   "hook": "Joe Bartolozzi STUNNED finding first GTA 6 shortcut",
+   "clip": "LivelySaltyCrabsKreygasm-SSJloq0S-nzw0tzb",
+   "streamer": "Joe_Bartolozzi",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
   {
    "service": "youtube",
    "link": "https://www.youtube.com/shorts/-OzCgT-Ufyw",
@@ -1391,6 +1423,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-21T22:27:49Z",
- "log": []
+ "stats_updated": "2026-11-21T22:33:25Z",
+ "log": [
+  "[22:33:26Z] hook learner: 19 videos, 7 lessons"
+ ]
 }

@@ -1,60 +1,78 @@
 {
- "updated": "2026-11-21T20:32:14Z",
+ "updated": "2026-11-21T22:33:25Z",
  "videos": 19,
  "findings": [
   {
-   "feature": "posted",
-   "value": "midday (11-15)",
-   "x": 0.6,
-   "n": 5
+   "feature": "has a number",
+   "value": "no",
+   "x": 3.03,
+   "n": 3
+  },
+  {
+   "feature": "streamer",
+   "value": "Clix",
+   "x": 0.35,
+   "n": 3
   },
   {
    "feature": "CAPS words",
    "value": "4-6",
-   "x": 0.67,
+   "x": 0.55,
    "n": 4
+  },
+  {
+   "feature": "hook length",
+   "value": "long (90+)",
+   "x": 0.59,
+   "n": 4
+  },
+  {
+   "feature": "streamer",
+   "value": "?",
+   "x": 1.49,
+   "n": 8
+  },
+  {
+   "feature": "hook length",
+   "value": "short (<60)",
+   "x": 1.45,
+   "n": 10
+  },
+  {
+   "feature": "CAPS words",
+   "value": "0-1",
+   "x": 1.45,
+   "n": 10
   },
   {
    "feature": "posted",
    "value": "morning (7-11)",
-   "x": 1.48,
+   "x": 0.69,
+   "n": 5
+  },
+  {
+   "feature": "hook length",
+   "value": "medium (60-90)",
+   "x": 0.73,
    "n": 5
   },
   {
    "feature": "CAPS words",
    "value": "2-3",
-   "x": 1.39,
+   "x": 0.76,
    "n": 5
   },
   {
-   "feature": "streamer",
-   "value": "Clix",
-   "x": 0.75,
-   "n": 3
-  },
-  {
-   "feature": "hook length",
-   "value": "long (90+)",
-   "x": 1.25,
-   "n": 4
-  },
-  {
-   "feature": "hook length",
-   "value": "medium (60-90)",
-   "x": 0.84,
+   "feature": "posted",
+   "value": "midday (11-15)",
+   "x": 1.29,
    "n": 5
   },
   {
    "feature": "has a number",
-   "value": "no",
-   "x": 0.86,
-   "n": 3
-  },
-  {
-   "feature": "has 'FIRST'",
-   "value": "no",
-   "x": 0.92,
-   "n": 17
+   "value": "yes",
+   "x": 0.81,
+   "n": 16
   },
   {
    "feature": "posted",
@@ -69,34 +87,16 @@
    "n": 15
   },
   {
-   "feature": "has a number",
-   "value": "yes",
-   "x": 1.03,
-   "n": 16
-  },
-  {
-   "feature": "streamer",
-   "value": "?",
-   "x": 1.02,
-   "n": 8
+   "feature": "has 'FIRST'",
+   "value": "no",
+   "x": 1.01,
+   "n": 17
   },
   {
    "feature": "hook style",
    "value": "unknown",
    "x": 1.0,
    "n": 19
-  },
-  {
-   "feature": "hook length",
-   "value": "short (<60)",
-   "x": 1.0,
-   "n": 10
-  },
-  {
-   "feature": "CAPS words",
-   "value": "0-1",
-   "x": 1.0,
-   "n": 10
   },
   {
    "feature": "question",
@@ -106,16 +106,20 @@
   }
  ],
  "guidance": [
-  "AVOID: CAPS words = 4-6 (0.67x views, 4 videos)",
-  "DO: CAPS words = 2-3 (1.39x views, 5 videos)",
-  "DO: hook length = long (90+) (1.25x views, 4 videos)"
+  "DO: has a number = no (3.03x views, 3 videos)",
+  "AVOID: CAPS words = 4-6 (0.55x views, 4 videos)",
+  "AVOID: hook length = long (90+) (0.59x views, 4 videos)",
+  "DO: hook length = short (<60) (1.45x views, 10 videos)",
+  "DO: CAPS words = 0-1 (1.45x views, 10 videos)",
+  "AVOID: hook length = medium (60-90) (0.73x views, 5 videos)",
+  "AVOID: CAPS words = 2-3 (0.76x views, 5 videos)"
  ],
  "weights": {
-  "formula": 0.5,
-  "news": 0.15,
+  "formula": 0.25,
+  "news": 0.1,
   "quote": 0.1,
   "question": 0.1,
-  "lowcaps": 0.15
+  "lowcaps": 0.45
  },
  "style_weights": {
   "box": {
@@ -142,8 +146,12 @@
    "views": 532
   },
   {
+   "hook": "Speed found him",
+   "views": 433
+  },
+  {
    "hook": "Lacy stalking in gta 6",
-   "views": 334
+   "views": 335
   },
   {
    "hook": "Adapt tries texting and driving in GTA 6",
@@ -152,10 +160,6 @@
   {
    "hook": "ohnePixel IPad Kid maxxing brainrot in GTA 6",
    "views": 263
-  },
-  {
-   "hook": "Kai Cenat LOSES IT after seeing NPCS try to STEAL his CAR in GTA 6",
-   "views": 204
   }
  ],
  "style_counts": {
