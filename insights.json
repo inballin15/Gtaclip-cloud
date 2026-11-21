@@ -1,70 +1,96 @@
 {
- "updated": "2026-11-21T12:28:14Z",
- "videos": 7,
+ "updated": "2026-11-21T14:29:23Z",
+ "videos": 8,
  "findings": [
   {
-   "feature": "streamer",
-   "value": "Clix",
-   "x": 0.64,
+   "feature": "posted",
+   "value": "midday (11-15)",
+   "x": 0.52,
    "n": 3
   },
   {
    "feature": "CAPS words",
    "value": "2-3",
-   "x": 1.27,
+   "x": 1.49,
    "n": 4
   },
   {
    "feature": "posted",
    "value": "morning (7-11)",
-   "x": 1.26,
-   "n": 5
-  },
-  {
-   "feature": "has 'FIRST'",
-   "value": "no",
-   "x": 0.81,
+   "x": 1.48,
    "n": 5
   },
   {
    "feature": "streamer",
-   "value": "?",
-   "x": 0.92,
+   "value": "Clix",
+   "x": 0.75,
    "n": 3
   },
   {
    "feature": "hook length",
    "value": "long (90+)",
-   "x": 1.07,
+   "x": 1.25,
    "n": 4
+  },
+  {
+   "feature": "streamer",
+   "value": "?",
+   "x": 0.8,
+   "n": 4
+  },
+  {
+   "feature": "has 'FIRST'",
+   "value": "no",
+   "x": 0.8,
+   "n": 6
+  },
+  {
+   "feature": "hook length",
+   "value": "short (<60)",
+   "x": 0.86,
+   "n": 3
+  },
+  {
+   "feature": "CAPS words",
+   "value": "0-1",
+   "x": 0.86,
+   "n": 3
+  },
+  {
+   "feature": "has a number",
+   "value": "no",
+   "x": 0.86,
+   "n": 3
   },
   {
    "feature": "has a number",
    "value": "yes",
-   "x": 0.94,
+   "x": 1.1,
    "n": 5
   },
   {
    "feature": "hook style",
    "value": "unknown",
    "x": 1.0,
-   "n": 7
+   "n": 8
   },
   {
    "feature": "question",
    "value": "no",
    "x": 1.0,
-   "n": 7
+   "n": 8
   },
   {
    "feature": "emotion word",
    "value": "none",
    "x": 1.0,
-   "n": 7
+   "n": 8
   }
  ],
  "guidance": [
-  "DO: CAPS words = 2-3 (1.27x views, 4 videos)"
+  "DO: CAPS words = 2-3 (1.49x views, 4 videos)",
+  "DO: hook length = long (90+) (1.25x views, 4 videos)",
+  "AVOID: has 'FIRST' = no (0.8x views, 6 videos)"
  ],
  "weights": {
   "formula": 0.5,
