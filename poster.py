@@ -68,6 +68,19 @@ def wj(p: Path, obj) -> None:
 
 
 # ------------------------------------------------------------------ http
+LAST_HDR: dict = {}   # Buffer's rate-limit headers from the last request
+
+
+def _ratelimits(hdrs) -> dict:
+    """'ratelimit: "30d"; r=799; t=2363565' -> {"30d": (799 left, 2363565 s to reset)}"""
+    out = {}
+    for h in (hdrs.get_all("ratelimit") or []) if hdrs is not None else []:
+        m = re.match(r'\s*"?(\w+)"?\s*;\s*r=(\d+)\s*;\s*t=(\d+)', h)
+        if m:
+            out[m.group(1)] = (int(m.group(2)), int(m.group(3)))
+    return out
+
+
 def http(method: str, url: str, headers: dict, body=None, timeout=40):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method, headers={**headers, "User-Agent": "gtaclip-poster"})
@@ -75,9 +88,11 @@ def http(method: str, url: str, headers: dict, body=None, timeout=40):
         req.add_header("Content-Type", "application/json")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
+            LAST_HDR.clear(); LAST_HDR.update(_ratelimits(r.headers))
             txt = r.read().decode()
             return r.status, (json.loads(txt) if txt else {})
     except urllib.error.HTTPError as e:
+        LAST_HDR.clear(); LAST_HDR.update(_ratelimits(e.headers))
         txt = e.read().decode(errors="replace")
         try:
             return e.code, json.loads(txt)
@@ -103,8 +118,17 @@ def buffer(query: str, variables: dict | None = None):
         raise RuntimeError("Buffer is turned off on the dashboard (no request sent)")
     if BUFFER_WAIT.get("until") and parse(BUFFER_WAIT["until"]) > datetime.now(timezone.utc):
         raise RuntimeError(f"Buffer: waiting out its rate limit until {BUFFER_WAIT['until']} (no request sent)")
+    if BUDGET.get("cap") is not None and BUDGET.get("used", 0) >= BUDGET["cap"] + 2:
+        raise RuntimeError(f"Buffer: today's request budget is used ({BUDGET['used']}/{BUDGET['cap']}) — "
+                           "saving the rest so Buffer's 30-day limit isn't hit (no request sent)")
     code, res = http("POST", "https://api.buffer.com", {"Authorization": f"Bearer {BUFFER_KEY}"},
                      {"query": query, "variables": variables or {}})
+    BUDGET["used"] = BUDGET.get("used", 0) + 1
+    if "30d" in LAST_HDR:     # Buffer tells us exactly how many requests are left
+        BUDGET["remain30"], secs = LAST_HDR["30d"]
+        BUDGET["reset30"] = iso(datetime.now(timezone.utc) + timedelta(seconds=secs))
+    if "24h" in LAST_HDR:
+        BUDGET["remain24"] = LAST_HDR["24h"][0]
     if code >= 400 and not res.get("errors"):
         raise RuntimeError(f"Buffer HTTP {code}: {res.get('message') or res}")
     if res.get("errors"):
@@ -492,11 +516,41 @@ def detect_manual_posts(ctl: dict, by_id: dict, recs: dict) -> None:
 # TikTok blocks accounts that publish too much through the API, so: every 90 minutes (11 a day)
 SLOTS = [(7, 7), (8, 37), (10, 7), (11, 37), (13, 7), (14, 37), (16, 7), (17, 37), (19, 7), (20, 37), (22, 7)]
 DAILY_CAP = 12   # most posts (slots + Post now) in any 24 hours
+# Buffer free plan only allows ~2,000 requests per 30 days. The budget guard spreads what's left evenly over the
+# days until Buffer's counter resets, and only uses as many posting slots as that allows (best times first).
+SLOT_PRIORITY = [(19, 7), (16, 7), (11, 37), (13, 7), (20, 37), (8, 37), (17, 37), (14, 37), (10, 7), (22, 7), (7, 7)]
+SLOT_COST = 4          # duplicate check + TikTok upload + YouTube upload + one follow-up check
+STATS_HOURS = 6        # Buffer stats every 6 h (views on the site come from TikTok/YouTube directly every 9 min)
+RESERVE = 25           # keep a few requests spare for Post now and retries
+BUDGET: dict = {}
+ACTIVE_SLOTS = list(SLOTS)
+
+
+def plan_budget(b: dict) -> None:
+    """Once per day (ET): today's cap = what's left / days until Buffer's 30-day counter resets."""
+    global ACTIVE_SLOTS
+    day = NOW.astimezone(ET).strftime("%Y-%m-%d")
+    if b.get("day") != day:
+        b.update(day=day, used=0)
+        left = b.get("remain30")
+        if left is None:
+            b["cap"] = 28
+        else:
+            try:
+                days = max(1.0, (parse(b["reset30"]) - NOW).total_seconds() / 86400) if b.get("reset30") else 30
+                if b.get("reset30") and parse(b["reset30"]) <= NOW:
+                    days, left = 30, 2000          # counter already reset
+            except Exception:  # noqa: BLE001
+                days = 30
+            b["cap"] = int(max(0, min(200, (left - RESERVE) / days)))
+    k = max(0, min(len(SLOTS), (b["cap"] - 24 // STATS_HOURS) // SLOT_COST))
+    ACTIVE_SLOTS = sorted(SLOT_PRIORITY[:k])
+    b["slots"] = k
 
 
 def slots_today(on: datetime | None = None) -> list[datetime]:
     d = (on or NOW).astimezone(ET).date()
-    return [datetime(d.year, d.month, d.day, h, m, tzinfo=ET) for h, m in SLOTS]
+    return [datetime(d.year, d.month, d.day, h, m, tzinfo=ET) for h, m in ACTIVE_SLOTS]
 
 
 def due_slot() -> datetime | None:
@@ -513,7 +567,8 @@ def next_slot(after: datetime | None = None) -> datetime | None:
     if nxt:
         return nxt[0]
     d = after.astimezone(ET).date() + timedelta(days=1)
-    return datetime(d.year, d.month, d.day, SLOTS[0][0], SLOTS[0][1], tzinfo=ET)
+    first = (ACTIVE_SLOTS or SLOTS)[0]
+    return datetime(d.year, d.month, d.day, first[0], first[1], tzinfo=ET)
 
 
 # ------------------------------------------------------------------ main
@@ -560,17 +615,23 @@ def main() -> None:
 
     BUFFER_WAIT["until"] = ctl.get("buffer_wait", "")
     BUFFER_WAIT["off"] = bool(ctl.get("buffer_off"))
+    BUDGET.clear(); BUDGET.update(ctl.get("budget") or {})
+    plan_budget(BUDGET)
     # Buffer limits how often we may ask it things: only talk to it when a post is due, while a post is still
     # uploading, or every 30 min for stats (this runs every 5 min)
     _slot = due_slot()
     post_due = bool(ctl["postnow"]) or bool(_slot and not ctl.get("paused") and ctl.get("last_slot") != iso(_slot))
-    in_flight = any(r.get("posted_at") and NOW - parse(r["posted_at"]) < timedelta(minutes=45)
+    in_flight = any(r.get("posted_at") and timedelta(minutes=25) <= NOW - parse(r["posted_at"]) < timedelta(minutes=45)
                     and any((st or {}).get("state") not in ("live", "error") for st in (r.get("status") or {}).values())
                     for r in recs.values())
     # Buffer free plan: ~2,000 requests / 30 days for 2 channels -> stay around 50-60 a day
     since = NOW - parse(ctl["stats_at"]) if ctl.get("stats_at") else timedelta(days=1)
-    stats_due = since >= timedelta(hours=2)
-    follow_due = post_due or (in_flight and since >= timedelta(minutes=10)) or stats_due
+    stats_due = since >= timedelta(hours=STATS_HOURS)
+    follow_due = post_due or (in_flight and since >= timedelta(minutes=20)) or stats_due
+    if post_due and not ctl["postnow"] and BUDGET.get("used", 0) + SLOT_COST > BUDGET.get("cap", 99) + 2:
+        log(f"slot skipped — today's Buffer budget is used ({BUDGET.get('used')}/{BUDGET.get('cap')})")
+        ctl["last_slot"] = iso(_slot)
+        post_due = False
 
     # 0) never post the same clip twice: look at everything Buffer sent / is sending (it retries failed posts itself)
     early_nodes: list[dict] = []
@@ -690,7 +751,7 @@ def main() -> None:
     if buffer_ok and (follow_due or to_post):
         followed = True
         try:
-            nodes = [] if DRY_RUN else (early_nodes if early_ok and not to_post else recent_buffer_posts())
+            nodes = [] if DRY_RUN else (early_nodes if early_ok else recent_buffer_posts())   # new uploads get checked ~25 min later
             ctl["stats_at"] = iso(NOW)
         except Exception as e:  # noqa: BLE001
             nodes = []
@@ -772,6 +833,7 @@ def main() -> None:
                 **metrics(n)})
 
     ctl["buffer_wait"] = BUFFER_WAIT.get("until", "")
+    ctl["budget"] = dict(BUDGET)
     if ctl["buffer_wait"] and parse(ctl["buffer_wait"]) > NOW:
         log(f"Buffer rate limit: no Buffer requests until {ctl['buffer_wait']}")
     # 4) live.json for the dashboard
@@ -805,7 +867,7 @@ def main() -> None:
                          reverse=True)[:80],
         "videos_checked": ctl.get("manual_check", ""),
         "buffer_ok": buffer_ok, "buffer_error": buffer_err, "buffer_off": bool(ctl.get("buffer_off")),
-        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "cooldown": ctl.get("cooldown", {}),
+        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "budget": {**BUDGET, "active": [list(x) for x in ACTIVE_SLOTS]}, "cooldown": ctl.get("cooldown", {}),
         "ai_off": bool(ctl.get("ai_off")),
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),

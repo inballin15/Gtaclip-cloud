@@ -119,6 +119,7 @@ h2{font-size:15px;margin:0 0 10px;letter-spacing:-.1px}
 .lane .lh{font-weight:800;font-size:15px}.lane .row{margin-top:8px;flex-wrap:wrap}.lane .row .mut{font-size:12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .lnext{display:flex;gap:8px;align-items:center;background:none;border:0;color:inherit;text-align:left;padding:0;margin-top:8px;width:100%}
 .lnext .th{flex:0 0 40px;height:70px;border-radius:8px;background:#000 center/cover}.lnext .h{font-size:12.5px;font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.budget{margin-top:10px}.budget .bbg{height:6px}.budget .mut{font-size:12px;margin-top:4px}
 .lessons{margin:6px 0 4px;padding:0;list-style:none}.lessons li{padding:6px 10px;border-radius:10px;margin:4px 0;font-size:13.5px;background:#2ecc7122}.lessons li.bad{background:#ff3b3b22}
 .card .sub{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin:12px 0 4px}
 .pill.up{background:#2ecc7133;color:#7dffb0}.pill.down{background:#ff3b3b33;color:#ff9a9a}
@@ -332,7 +333,7 @@ const subKey = (v) => v.link;
 function toSubmit() { return videos().filter((v) => CR[v.campaign] && !submitted[subKey(v)]); }
 function slotPlan() {
   const now = new Date(); const day = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-  const offset = now - day; return SLOTS.map(([h, m]) => { const d = new Date(day); d.setHours(h, m, 0, 0); return new Date(+d + offset); });
+  const offset = now - day; const act = (L && L.budget && L.budget.active) || SLOTS; return act.map(([h, m]) => { const d = new Date(day); d.setHours(h, m, 0, 0); return new Date(+d + offset); });
 }
 function sysState() {
   const pipes = RUNS.filter((r) => r.name.startsWith('gtaclip pipeline'));
@@ -404,7 +405,7 @@ function renderHome(v, ql) {
   hero.append(st);
   const nxt = ql.filter((r) => r.final && !r.nowing)[0];
   hero.append(el('div', 'why', !L ? '' : L.buffer_off ? 'Nothing is sent to Buffer. Clips keep being made — save them from the Queue and post them yourself.'
-    : L.paused ? 'Nothing posts on the schedule. "Post now" still works.' : `Every 90 min, 11 a day. Next post ${L.next_slot ? tET(L.next_slot) : '—'}${nxt ? ' — "' + nxt.hook + '"' : ''}.`));
+    : L.paused ? 'Nothing posts on the schedule. "Post now" still works.' : `${(L.budget && L.budget.slots != null) ? L.budget.slots + ' slots a day (paced to Buffer\'s limit)' : 'Every 90 min, 11 a day'}. Next post ${L.next_slot ? tET(L.next_slot) : '—'}${nxt ? ' — "' + nxt.hook + '"' : ''}.`));
   if (L && L.buffer_off) {
     const b = el('button', 'big go', isPending('buffer:') ? 'Turning Buffer on… (under 1 min)' : 'Turn Buffer back on'); b.disabled = isPending('buffer:'); b.onclick = openBufferSwitch; hero.append(b);
   } else if (L) {
@@ -503,6 +504,14 @@ function lanesCard(ql) {
   tg.onclick = async () => { tg.disabled = true; if (await ghTap(ln.split ? 'split: off' : 'split: on')) toast(ln.split ? 'Both platforms will get the same clip' : 'Each platform gets its own clip'); lastSig = ''; render(); };
   h.append(tg); c.append(h);
   c.append(el('div', 'mut', ln.split ? 'Each slot sends one clip to TikTok and a different one to YouTube, so you can see what each platform likes.' : 'Each slot sends the same clip to both.'));
+  const B = (L && L.budget) || {};
+  if (B.cap != null) {
+    const pct = Math.min(100, Math.round((B.used || 0) / Math.max(1, B.cap) * 100));
+    const bb = el('div', 'budget'); const bar = el('div', 'bbg'); const f = el('div', 'bfg'); f.style.width = pct + '%'; bar.append(f);
+    const reset = B.reset30 ? new Date(B.reset30).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+    bb.append(el('div', 'row', ''), bar, el('div', 'mut', `Buffer budget: ${B.used || 0} of ${B.cap} requests today · ${B.slots} slots a day · ${B.remain30 ?? '?'} left until ${reset || 'reset'}`));
+    c.append(bb);
+  }
   const g = el('div', 'lanes');
   for (const sv of ['tiktok', 'youtube']) {
     const o = ln[sv]; const d = el('div', 'lane ' + (sv === 'tiktok' ? 'tt' : 'yt'));
