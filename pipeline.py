@@ -1152,13 +1152,16 @@ def main() -> None:
     _viral_topic.TOPIC.clear(); _viral_topic.TOPIC.update(_topic)
     clips = st["clips"]
     try:   # what the engagement learner found on our channels -> feeds the AI hook writer
+        import viral
         _ins = json.loads((POSTED_DIR / "insights.json").read_text())
         viral.LEARNED["guidance"] = learn.guidance_text(_ins)
         LEARNED_INS.update(_ins)
         if _ins.get("guidance"):
             log(f"hook learner: {len(_ins['guidance'])} lessons from {_ins.get('videos')} videos, style weights {_ins.get('weights')}")
-    except Exception:  # noqa: BLE001
+    except FileNotFoundError:
         pass
+    except Exception as e:  # noqa: BLE001
+        log(f"hook learner not loaded: {e}")
     apply_posted(st)
     apply_issues(st)
     control = {}
