@@ -1,6 +1,6 @@
 {
- "updated": "2026-11-21T18:31:09Z",
- "videos": 18,
+ "updated": "2026-11-21T20:32:14Z",
+ "videos": 19,
  "findings": [
   {
    "feature": "posted",
@@ -15,15 +15,15 @@
    "n": 4
   },
   {
-   "feature": "CAPS words",
-   "value": "2-3",
-   "x": 1.49,
-   "n": 4
-  },
-  {
    "feature": "posted",
    "value": "morning (7-11)",
    "x": 1.48,
+   "n": 5
+  },
+  {
+   "feature": "CAPS words",
+   "value": "2-3",
+   "x": 1.39,
    "n": 5
   },
   {
@@ -41,8 +41,8 @@
   {
    "feature": "hook length",
    "value": "medium (60-90)",
-   "x": 0.8,
-   "n": 4
+   "x": 0.84,
+   "n": 5
   },
   {
    "feature": "has a number",
@@ -54,12 +54,12 @@
    "feature": "has 'FIRST'",
    "value": "no",
    "x": 0.92,
-   "n": 16
+   "n": 17
   },
   {
    "feature": "posted",
    "value": "evening (15-19)",
-   "x": 1.07,
+   "x": 1.06,
    "n": 8
   },
   {
@@ -72,7 +72,7 @@
    "feature": "has a number",
    "value": "yes",
    "x": 1.03,
-   "n": 15
+   "n": 16
   },
   {
    "feature": "streamer",
@@ -84,7 +84,7 @@
    "feature": "hook style",
    "value": "unknown",
    "x": 1.0,
-   "n": 18
+   "n": 19
   },
   {
    "feature": "hook length",
@@ -102,14 +102,13 @@
    "feature": "question",
    "value": "no",
    "x": 1.0,
-   "n": 18
+   "n": 19
   }
  ],
  "guidance": [
   "AVOID: CAPS words = 4-6 (0.67x views, 4 videos)",
-  "DO: CAPS words = 2-3 (1.49x views, 4 videos)",
-  "DO: hook length = long (90+) (1.25x views, 4 videos)",
-  "AVOID: hook length = medium (60-90) (0.8x views, 4 videos)"
+  "DO: CAPS words = 2-3 (1.39x views, 5 videos)",
+  "DO: hook length = long (90+) (1.25x views, 4 videos)"
  ],
  "weights": {
   "formula": 0.5,
@@ -118,6 +117,25 @@
   "question": 0.1,
   "lowcaps": 0.15
  },
+ "style_weights": {
+  "box": {
+   "white": 0.5,
+   "black": 0.25,
+   "outline": 0.25
+  },
+  "cam": {
+   "small": 0.35,
+   "medium": 0.65
+  },
+  "len": {
+   "short": 0.4,
+   "normal": 0.6
+  },
+  "hooklen": {
+   "tiny": 0.4,
+   "short": 0.6
+  }
+ },
  "top": [
   {
    "hook": "Marlon can't handle a night in GTA 6",
@@ -125,7 +143,7 @@
   },
   {
    "hook": "Lacy stalking in gta 6",
-   "views": 333
+   "views": 334
   },
   {
    "hook": "Adapt tries texting and driving in GTA 6",
@@ -133,7 +151,7 @@
   },
   {
    "hook": "ohnePixel IPad Kid maxxing brainrot in GTA 6",
-   "views": 262
+   "views": 263
   },
   {
    "hook": "Kai Cenat LOSES IT after seeing NPCS try to STEAL his CAR in GTA 6",
@@ -146,5 +164,24 @@
   "quote": 0,
   "question": 0,
   "lowcaps": 0
+ },
+ "style_tested": {
+  "box": {
+   "white": 0,
+   "black": 0,
+   "outline": 0
+  },
+  "cam": {
+   "small": 0,
+   "medium": 0
+  },
+  "len": {
+   "short": 0,
+   "normal": 0
+  },
+  "hooklen": {
+   "tiny": 0,
+   "short": 0
+  }
  }
 }
