@@ -27,6 +27,7 @@
 - Nov 18: TikTok "large number of posts through the API, wait 24h"; YouTube "daily upload limit for an unverified account".
 - Nov 19 YouTube rows have blank streamer/hook in stats — check poster logging.
 - Off-policy posts went out on Nov 18 (Rockstar trailer, strip club). Never again.
+- Nov 21: a Marlon clip got a TikTok violation for Body Exposure and Sexualized Behaviors.
 
 ## Hook rules
 - Max ~70 chars (aim 35-55), plain text, no emojis on video, no swearing.
@@ -42,7 +43,8 @@
 - Then Joe Bartolozzi, Stable Ronaldo, Marlon, JasonTheWeen, RealKatieB, HutchMF.
 
 ## Always skip
-- Slurs, sexual remarks, strippers/clubs, animal harm, drugs-as-the-hook, Rockstar trailers/footage,
+- Slurs, sexual remarks or innuendo (even misheard words like "cream"), beach/bikini/club/
+  revealing-outfit scenes, any "girl" talk that could read sexual, strippers/clubs, animal harm, drugs-as-the-hook, Rockstar trailers/footage,
   other clippers' reposts, mostly-cutscene/radio clips, real-life talk about death,
   duplicate moments of the same clip (VOD clips from the same stream often repeat a moment).
 
