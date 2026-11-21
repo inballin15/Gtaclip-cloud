@@ -16,7 +16,7 @@ jobs:
           import pathlib, cv2, numpy as np, pipeline, fetch_clips
           d = pathlib.Path("raw"); d.mkdir(exist_ok=True)
           for slug, cam in [("TransparentFitDugongPJSalt-upbpH2p2KjnHmndK", "0.0023,0.4056,0.1984,0.3136"),
-                            ("KitschySoftTriangleBibleThump-9S4PZf5Z3kqieslj", None)]:
+                            ("KitschySoftTriangleBibleThump-9S4PZf5Z3kqieslj", "0.0327,0.2514,0.1222,0.1931")]:
               p = fetch_clips.download(f"https://clips.twitch.tv/{slug}", d)
               dur = pipeline.duration_of(p)
               if cam is None:

@@ -777,16 +777,42 @@ def cam_without_chat(path: Path, cam: str, chat_layout: bool = False) -> str:
         cap = cv2.VideoCapture(str(path))
         dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
         cap.release()
-        dens = []
+        dens, lums = [], []
         for fr in _frames(path, [max(0.5, dur * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)]):
             H, W = fr.shape[:2]
             c = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
             if c.size:
-                e = cv2.Canny(cv2.cvtColor(c, cv2.COLOR_BGR2GRAY), 80, 200)
+                g = cv2.cvtColor(c, cv2.COLOR_BGR2GRAY)
+                e = cv2.Canny(g, 80, 200)
                 dens.append(e.mean(axis=1) / 255)
+                lums.append(g.mean(axis=1))
         if len(dens) < 3:
             return cam
         n = min(len(d) for d in dens)
+        if chat_layout:
+            # chat sits on a dark panel over the bottom of the webcam: find where the rows turn dark and stay dark
+            L = np.convolve(np.mean([l[:n] for l in lums], axis=0), np.ones(5) / 5, mode="same")
+            k2 = max(3, int(n * 0.05))
+            for r in range(int(n * 0.45), int(n * 0.92)):
+                above, below, rest = L[max(0, r - 3 * k2):r].mean(), L[r:r + k2].mean(), L[r:n - 2].mean()
+                if below < 0.78 * above and rest < 0.62 * L[:r].mean():
+                    lums = r / n
+                    break
+            else:
+                lums = None
+            if lums:
+                need = 0.0
+                for fr in _frames(path, [max(0.5, dur * p) for p in (0.15, 0.3, 0.45, 0.6, 0.75, 0.9)]):
+                    H, W = fr.shape[:2]
+                    c = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+                    fs = _yunet_faces(cv2.resize(c, None, fx=2, fy=2), 0.6)
+                    if fs:
+                        f = max(fs, key=lambda f: f[4])
+                        need = max(need, (f[1] + f[3] * 1.12) / (c.shape[0] * 2))
+                if need <= lums + 0.02:
+                    frac = max(0.5, need, lums - 0.02)
+                    return f"{x:.4f},{y:.4f},{w:.4f},{h * frac:.4f}"
+                return cam
         d = np.convolve(np.mean([d[:n] for d in dens], axis=0), np.ones(5) / 5, mode="same")
         base = float(np.median(d[int(n * 0.3):int(n * 0.55)]))
         k = max(3, int(n * 0.04))
