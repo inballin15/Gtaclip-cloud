@@ -186,7 +186,7 @@
    }
   }
  },
- "updated": "2026-11-21T21:07:17Z",
+ "updated": "2026-11-21T21:12:25Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -511,41 +511,6 @@
   "ToughYawningGooseMau5-2PnplpOOX4eow-YN"
  ],
  "posts": {
-  "vod2934996320_93424": {
-   "id": "vod2934996320_93424",
-   "hook": "Clix SHOCKED by REALISTIC bird flight in GTA 6",
-   "streamer": "Clix",
-   "login": "clix",
-   "campaign": "Clix",
-   "tag": "#Clix",
-   "caption": "",
-   "why": "4:07 PM slot",
-   "posted_at": "2026-11-21T21:07:17Z",
-   "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2934996320_93424_final.mp4?v=d24eeaa4b1&r=1795291088",
-   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2934996320_93424.jpg",
-   "tiktok": "",
-   "youtube": "",
-   "status": {
-    "tiktok": {
-     "state": "uploading",
-     "buffer_id": "6b020807d5eabfb8cc5f050d",
-     "error": ""
-    }
-   },
-   "platforms": [
-    "tiktok"
-   ],
-   "hook_kind": "ai",
-   "hook_variant": "formula",
-   "style": {
-    "box": "black",
-    "cam": "small",
-    "len": "normal",
-    "hooklen": "short"
-   },
-   "viral": 90,
-   "seconds": 18
-  },
   "vod2934996320_93392": {
    "id": "vod2934996320_93392",
    "hook": "Clix SHOCKED he TRICKED police with empty boat",
@@ -580,6 +545,41 @@
    },
    "viral": 70,
    "seconds": 24
+  },
+  "vod2934996320_93424": {
+   "id": "vod2934996320_93424",
+   "hook": "Clix SHOCKED by REALISTIC bird flight in GTA 6",
+   "streamer": "Clix",
+   "login": "clix",
+   "campaign": "Clix",
+   "tag": "#Clix",
+   "caption": "",
+   "why": "4:07 PM slot",
+   "posted_at": "2026-11-21T21:07:17Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2934996320_93424_final.mp4?v=d24eeaa4b1&r=1795291088",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2934996320_93424.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b020807d5eabfb8cc5f050d",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "formula",
+   "style": {
+    "box": "black",
+    "cam": "small",
+    "len": "normal",
+    "hooklen": "short"
+   },
+   "viral": 90,
+   "seconds": 18
   },
   "EncouragingFlaccidBobaWutFace-wXF5gAfA2PxaTMVU": {
    "id": "EncouragingFlaccidBobaWutFace-wXF5gAfA2PxaTMVU",
@@ -1251,11 +1251,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-21T21:07:17Z",
- "log": [
-  "[21:07:19Z] posting vod2934996320_93424 (4:07 PM slot) to tiktok: Clix SHOCKED by REALISTIC bird flight in GTA 6",
-  "[21:07:30Z]   tiktok: uploading ",
-  "[21:07:30Z] posting vod2934996320_93392 (4:07 PM slot) to youtube: Clix SHOCKED he TRICKED police with empty boat",
-  "[21:07:32Z]   youtube: uploading "
- ]
+ "stats_updated": "2026-11-21T21:12:25Z",
+ "log": []
 }
