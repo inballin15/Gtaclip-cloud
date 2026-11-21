@@ -1,0 +1,37 @@
+[21:22:54Z] hook learner: 3 lessons from 19 videos, style weights {'formula': 0.5, 'news': 0.15, 'quote': 0.1, 'question': 0.1, 'lowcaps': 0.15}
+[21:23:10Z] VOD moment Clix -> new 0.1022,0.3042,0.1714,0.2708
+[21:23:19Z] VOD moment Clix -> new 0.0612,0.3042,0.1714,0.2708
+[21:23:30Z] VOD moment Clix -> new 0.0690,0.3042,0.1714,0.2708
+[21:23:32Z] vod import vodclip-20261121212150: 3 clips
+[21:23:32Z] twitch id length=30 secret length=30 (both should be 30)
+[21:23:33Z] Clix: 0 fresh GTA 6 clips
+[21:23:33Z] Lacy: 0 fresh GTA 6 clips
+[21:23:33Z] Kai Cenat: 0 fresh GTA 6 clips
+[21:23:34Z] YourRAGE: 0 fresh GTA 6 clips
+[21:23:34Z] Jynxzi: 0 fresh GTA 6 clips
+[21:23:34Z] xQc: 0 fresh GTA 6 clips
+[21:23:34Z] Vanoss: 0 fresh GTA 6 clips
+[21:23:35Z] H2O Delirious: 0 fresh GTA 6 clips
+[21:23:35Z] IShowSpeed: 0 fresh GTA 6 clips
+[21:23:35Z] Stable Ronaldo: 0 fresh GTA 6 clips
+[21:23:36Z] JasonTheWeen: 0 fresh GTA 6 clips
+[21:23:36Z] NICKMERCS: 0 fresh GTA 6 clips
+[21:23:36Z] Marlon: 0 fresh GTA 6 clips
+[21:23:36Z] Adapt: 0 fresh GTA 6 clips
+[21:23:37Z] Silky: 0 fresh GTA 6 clips
+[21:23:37Z] HasanAbi: 0 fresh GTA 6 clips (live topic streamer)
+[21:23:37Z] LIRIK: 0 fresh GTA 6 clips (live topic streamer)
+[21:23:37Z] Joe_Bartolozzi: 0 fresh GTA 6 clips (live topic streamer)
+[21:23:37Z] twitch id length=30 secret length=30 (both should be 30)
+[21:23:41Z] site updated (mid-run)
+[21:24:17Z] trimmed vod2936385310_9333: 24s -> 1-19s
+[21:24:17Z] trimmed vod2936385310_10070: 26s -> 0-18s
+[21:24:27Z] AI models answering now: gemini-3.1-flash-lite-preview, gemini-3.1-flash-lite, gemini-3.5-flash
+[21:24:28Z] AI models answering now: gemini-3.1-flash-lite-preview, gemini-3.1-flash-lite, gemini-3-flash-preview
+[21:24:31Z] picture check removed vod2936385310_9333: The provided frames and transcript are from a Fortnite gameplay session, not GTA 6. The us
+[21:24:31Z] made video 1/3: Clix vod2936385310_9333
+[21:24:33Z] picture check removed vod2936385310_10070: The provided images and transcript are from a Fortnite gameplay session, not GTA 6. The co
+[21:24:33Z] made video 2/3: Clix vod2936385310_10070
+[21:24:35Z] picture check removed vod2936385310_9171: The provided video frames and transcript are from a Fortnite gameplay session, not GTA 6. 
+[21:24:35Z] made video 3/3: Clix vod2936385310_9171
+[21:24:43Z] queue: 22 ready (22 with final video)
