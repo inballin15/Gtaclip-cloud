@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GTA Clip · Dashboard</title>
+<meta name="theme-color" content="#0b0b12">
+<style>
+  :root { --bg:#0b0b12; --panel:#161622; --panel2:#1d1d2c; --line:#262636; --fg:#f4f4f8; --muted:#9a9ab0;
+          --pink:#ff3d8b; --cyan:#29e3ff; --green:#2ee59d; --amber:#f5b544; --red:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  a { color:inherit; }
+  header { position:sticky; top:0; z-index:5; background:rgba(11,11,18,.94); backdrop-filter:blur(10px); padding:10px 16px; border-bottom:1px solid var(--line); }
+  .bar { display:flex; align-items:center; gap:10px; }
+  .logo { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-weight:800; background:linear-gradient(135deg,var(--pink),var(--cyan)); color:#000; flex:none; }
+  h1 { font-size:17px; margin:0; } h2 { font-size:16px; margin:0 0 10px; }
+  .sub, .meta { color:var(--muted); font-size:12px; }
+  .live { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); white-space:nowrap; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--green); }
+  .dot.warn { background:var(--amber); } .dot.bad { background:var(--red); }
+  .gear { background:none; border:1px solid var(--line); color:var(--fg); border-radius:999px; padding:6px 10px; font:inherit; font-size:13px; }
+  .bnav { position:fixed; left:0; right:0; bottom:0; z-index:6; display:flex; background:rgba(11,11,18,.97); border-top:1px solid var(--line); padding:6px 6px calc(6px + env(safe-area-inset-bottom)); backdrop-filter:blur(10px); }
+  .tab { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 2px; border:0; border-radius:12px; background:transparent; color:var(--muted); font:inherit; font-size:12px; font-weight:600; }
+  .tab .ic { font-size:18px; line-height:1; }
+  .tab b { position:absolute; margin:-4px 0 0 34px; background:var(--pink); color:#000; border-radius:999px; font-size:10px; padding:1px 5px; }
+  .tab b:empty { display:none; }
+  .tab[aria-selected="true"] { color:var(--fg); background:#ffffff12; }
+  .hrow { display:flex; align-items:center; margin-bottom:8px; } .hrow h2 { margin:0; }
+  .link { margin-left:auto; background:none; border:0; color:var(--cyan); font:inherit; font-size:13px; font-weight:600; }
+  .strip { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .strip a { flex:none; text-decoration:none; background:var(--panel2); border-radius:12px; padding:8px 10px; min-width:110px; }
+  .strip .nm { font-weight:700; font-size:14px; } .strip .v { color:var(--muted); font-size:12px; }
+  .upbtn { width:100%; background:var(--panel); color:var(--fg); border:1px dashed #ffffff40; margin-bottom:10px; font-size:15px; padding:12px; }
+  .bar2 { height:10px; border-radius:6px; background:var(--panel2); overflow:hidden; } .bar2 > div { height:100%; background:linear-gradient(90deg,var(--pink),var(--cyan)); width:0; transition:width .3s; }
+  .upitem { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:10px 12px; margin-bottom:8px; display:flex; flex-direction:column; gap:6px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .chip { border:1px solid var(--line); background:var(--panel); color:var(--fg); font:inherit; font-size:12px; font-weight:700; padding:6px 10px; border-radius:999px; }
+  .chip.warn { border-color:#f5b54466; color:var(--amber); } .chip.bad { border-color:#ff6b6b66; color:#ff9a9a; }
+  .chip::before { content:"●"; margin-right:5px; font-size:9px; vertical-align:2px; }
+  .viral { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:12px; background:var(--panel2); font-size:13px; }
+  .viral b { font-size:20px; min-width:30px; } .viral span { font-weight:800; } .viral em { color:var(--muted); font-style:normal; font-size:12px; }
+  .viral.post b, .viral.post span { color:var(--green); } .viral.maybe b, .viral.maybe span { color:var(--amber); } .viral.skip b, .viral.skip span { color:var(--red); }
+  .sysline { width:100%; text-align:left; font:inherit; color:inherit; display:flex; align-items:center; gap:10px; padding:12px 14px; }
+  .sysline .t { font-weight:700; } .sysline .m { color:var(--muted); font-size:12px; margin-left:auto; text-align:right; }
+  .pulse { width:10px; height:10px; border-radius:50%; background:var(--muted); flex:none; }
+  .pulse.run { background:var(--cyan); box-shadow:0 0 0 0 #29e3ff88; animation:pl 1.6s infinite; } .pulse.ok { background:var(--green); } .pulse.bad { background:var(--red); } .pulse.wait { background:var(--amber); }
+  @keyframes pl { 0% { box-shadow:0 0 0 0 #29e3ff88; } 70% { box-shadow:0 0 0 10px #29e3ff00; } 100% { box-shadow:0 0 0 0 #29e3ff00; } }
+  .sysrow { display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); } .sysrow:last-child { border:0; }
+  .sysrow .pulse { margin-top:5px; } .sysrow b { display:block; } .sysrow .meta { margin-top:2px; }
+  .btns.more { display:none; } .btns.more.open { display:flex; }
+  .wrap { padding:12px 12px calc(84px + env(safe-area-inset-bottom)); max-width:1200px; margin:0 auto; }
+  section[hidden], [hidden] { display:none !important; }
+  .box { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:14px; margin-bottom:14px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px; }
+  .kpi { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:12px 14px; }
+  .kpi .l { color:var(--muted); font-size:12px; } .kpi .n { font-size:26px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums; } .kpi .s { color:var(--muted); font-size:12px; }
+  .run { display:flex; flex-direction:column; gap:10px; }
+  .run .state { font-size:20px; font-weight:800; }
+  .run.on { background:linear-gradient(135deg,#2ee59d22,var(--panel) 70%); border-color:#2ee59d55; }
+  .run.off { background:linear-gradient(135deg,#ff6b6b1a,var(--panel) 70%); border-color:#ff6b6b44; }
+  .bigbtn { padding:14px; border-radius:16px; border:0; font:inherit; font-size:17px; font-weight:800; }
+  .bigbtn.start { background:var(--green); color:#000; } .bigbtn.stop { background:var(--red); color:#000; }
+  .bigbtn:disabled { opacity:.6; }
+  .note { font-size:13px; padding:9px 11px; border-radius:12px; background:#29e3ff14; border:1px solid #29e3ff40; }
+  .note.warn { background:#f5b5441a; border-color:#f5b54466; } .note.bad { background:#ff6b6b1a; border-color:#ff6b6b66; } .note.good { background:#2ee59d1a; border-color:#2ee59d66; }
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:20px; overflow:hidden; display:flex; flex-direction:column; }
+  .card.now { border-color:var(--pink); box-shadow:0 0 0 1px var(--pink); }
+  .vwrap { background:#000; aspect-ratio:9/16; max-height:62vh; width:100%; position:relative; }
+  .vwrap video { width:100%; height:100%; display:block; object-fit:contain; background:#000; }
+  .body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; }
+  .row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .pill { padding:4px 10px; border-radius:999px; background:#ffffff14; font-size:12px; font-weight:600; }
+  .pill.paid { background:var(--pink); color:#000; }
+  .status { padding:5px 10px; border-radius:999px; font-size:12px; font-weight:700; display:inline-flex; gap:6px; align-items:center; }
+  .s-wait { background:#ffffff14; color:var(--muted); } .s-next { background:#29e3ff26; color:var(--cyan); }
+  .s-busy { background:#f5b54426; color:var(--amber); } .s-live { background:#2ee59d26; color:var(--green); } .s-err { background:#ff6b6b26; color:var(--red); }
+  .spin { width:10px; height:10px; border-radius:50%; border:2px solid currentColor; border-right-color:transparent; animation:sp 1s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+  .title { font-size:16px; font-weight:650; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn { padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--fg); font:inherit; font-size:13px; text-decoration:none; display:inline-block; cursor:pointer; }
+  .btn.pink { background:var(--pink); color:#000; border-color:var(--pink); font-weight:700; }
+  .btn.cyan { background:var(--cyan); color:#000; border-color:var(--cyan); font-weight:600; }
+  .btn.del { border-color:#ff6b6b66; color:#ff9a9a; }
+  .btn:disabled { opacity:.5; }
+  .edit { display:flex; flex-direction:column; gap:8px; padding:10px; border-radius:14px; background:var(--panel2); }
+  .edit label { font-size:12px; color:var(--muted); }
+  .edit input, .edit textarea, .setin { width:100%; font:inherit; font-size:16px; color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 10px; }
+  .edit textarea { min-height:110px; resize:vertical; }
+  .plist { display:flex; flex-direction:column; gap:10px; }
+  .prow { background:var(--panel2); border-radius:16px; padding:12px; display:flex; gap:12px; }
+  .prow img { width:64px; height:114px; object-fit:cover; border-radius:10px; background:#000; flex:none; }
+  .prow .info { display:flex; flex-direction:column; gap:7px; min-width:0; flex:1; }
+  .plat { display:grid; grid-template-columns:auto 1fr; gap:4px 8px; align-items:center; font-size:13px; }
+  .nums { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .nums b { color:var(--fg); }
+  details > summary { cursor:pointer; list-style:none; font-weight:700; display:flex; align-items:center; gap:8px; }
+  details > summary::-webkit-details-marker { display:none; }
+  details > summary::after { content:"▾"; margin-left:auto; color:var(--muted); }
+  details[open] > summary::after { content:"▴"; }
+  .slots { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-top:12px; }
+  .slot { border-radius:14px; padding:9px 10px; background:var(--panel2); border:1px solid transparent; font-size:12px; }
+  .slot .t { font-weight:700; font-size:14px; } .slot .w { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .slot.done { background:#2ee59d1f; } .slot.next { border-color:var(--cyan); } .slot.past { opacity:.45; }
+  table { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+  th, td { text-align:left; padding:7px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:12px; } td.n, th.n { text-align:right; }
+  .barrow { display:grid; grid-template-columns:90px 1fr 70px; gap:8px; align-items:center; font-size:13px; margin:6px 0; }
+  .barbg { height:10px; border-radius:6px; background:var(--panel2); overflow:hidden; } .barfg { height:100%; background:linear-gradient(90deg,var(--pink),var(--cyan)); }
+  .empty { text-align:center; color:var(--muted); padding:28px 10px; }
+  .toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:var(--fg); color:var(--bg); padding:10px 16px; border-radius:999px; font-weight:600; font-size:14px; z-index:30; max-width:92vw; }
+  .sheet { position:fixed; inset:0; background:#000a; z-index:20; display:flex; align-items:flex-end; justify-content:center; }
+  .sheet .in { background:var(--panel); width:100%; max-width:560px; max-height:88vh; overflow:auto; border-radius:22px 22px 0 0; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .sheet .head { display:flex; align-items:center; } .sheet .head .btn { margin-left:auto; }
+  .steps { white-space:pre-line; font-size:14px; }
+  .scroll { overflow-x:auto; }
+  .lrow { display:flex; gap:10px; align-items:center; text-decoration:none; background:var(--panel2); border-radius:14px; padding:8px; }
+  .lrow img { width:96px; height:54px; object-fit:cover; border-radius:8px; background:#000; flex:none; }
+  .lrow .nm { font-weight:700; } .lrow .t { color:var(--muted); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .redpill { background:var(--red); color:#000; padding:2px 7px; border-radius:999px; font-size:11px; font-weight:800; }
+  .fstat { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin-bottom:8px; }
+  .fstat div { background:var(--panel2); border-radius:12px; padding:8px 10px; } .fstat b { display:block; font-size:20px; }
+  .seg { display:flex; background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px; margin-bottom:8px; }
+  .seg button { flex:1; border:0; background:transparent; color:var(--fg); font:inherit; font-weight:700; padding:9px; border-radius:999px; }
+  .seg button[aria-pressed="true"] { background:var(--cyan); color:#000; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo">GC</div>
+    <div><h1>GTA Clip</h1><div class="sub" id="livetxt">loading…</div></div>
+    <span class="dot" id="dot" style="margin-left:auto"></span>
+    <button class="gear" id="reboot" aria-label="Get newest version" title="Get newest version">↻</button>
+    <button class="gear" id="gear" aria-label="Settings">⚙︎</button>
+  </div>
+</header>
+<main class="wrap">
+  <section id="tab-home">
+    <div id="setup"></div>
+    <div class="box run" id="run"></div>
+    <div id="nowbox"></div>
+    <button class="box sysline" id="sysline" data-go="stats"></button>
+    <div class="box"><div class="hrow"><h2>Live now</h2><button class="link" data-go="stats">See all</button></div><div class="strip" id="livestrip"></div></div>
+    <div id="submitcard"></div>
+    <details class="box" id="slots-box"><summary id="slots-sum">Today's slots</summary><div class="slots" id="slots"></div></details>
+  </section>
+  <section id="tab-queue" hidden>
+    <button class="bigbtn upbtn" id="upbtn">＋ Make clips (upload or link)</button>
+    <div id="uploads"></div>
+    <div class="seg" id="variant">
+      <button data-v="final">With caption</button><button data-v="clean">No caption</button>
+    </div>
+    <div class="meta" id="queuemeta" style="margin:0 2px 10px"></div>
+    <div class="grid" id="queuelist"></div>
+  </section>
+  <section id="tab-posted" hidden>
+    <div id="submitwrap"></div>
+    <div class="plist" id="postedlist"></div>
+  </section>
+  <section id="tab-stats" hidden>
+    <div class="box"><h2>System status</h2><div id="sysbox"></div></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="box"><h2>Clip finder</h2><div id="finder"></div></div>
+    <div class="box"><h2>Live now</h2><div class="meta" id="livemeta" style="margin-bottom:8px"></div><div class="plist" id="liveboard"></div></div>
+    <div id="statsbox"></div>
+  </section>
+</main>
+<nav class="bnav" role="tablist">
+  <button class="tab" data-tab="home" aria-selected="true"><span class="ic">⌂</span>Home</button>
+  <button class="tab" data-tab="queue" aria-selected="false"><span class="ic">▶</span>Queue <b id="qcount"></b></button>
+  <button class="tab" data-tab="posted" aria-selected="false"><span class="ic">✓</span>Posted <b id="pcount"></b></button>
+  <button class="tab" data-tab="stats" aria-selected="false"><span class="ic">▤</span>Stats</button>
+</nav>
+<div class="sheet" id="sheet" hidden><div class="in" id="sheet-in"></div></div>
+<script>
+const BUILD = '__BUILD__';
+const DEV = !/^[0-9a-f]{10}$/.test(BUILD);   // true only when not published
+const REPO = 'inballin15/Gtaclip-cloud';
+const SLOTS = [[7, 7], [8, 37], [10, 7], [11, 37], [13, 7], [14, 37], [16, 7], [17, 37], [19, 7], [20, 37], [22, 7]];
+const PAGES = 'https://inballin15.github.io/Gtaclip-cloud/';
+const CR = { Clix: 'https://contentrewards.com/discover/7a6a234b-1e9e-4da3-a600-54cc3142e710',
+             Lacy: 'https://contentrewards.com/c/campaigns/4479e5e2-9a00-489e-8b0c-345834f37cc7?group=1',
+             Kai: 'https://contentrewards.com/',          // TODO: exact campaign link
+             YourRAGE: 'https://contentrewards.com/' };   // TODO: exact campaign link
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+             set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode */ } } };
+const ghKey = () => ls.get('gc-gh2', '') || (() => { try { return localStorage.getItem('gc-gh') || ''; } catch (e) { return ''; } })();
+const fmt = (n) => n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(n || 0);
+const tET = (iso) => new Date(iso).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' });
+const dET = (iso) => new Date(iso).toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const ago = (iso) => { const s = Math.max(0, (Date.now() - new Date(iso)) / 1000); return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; };
+function toast(msg) { const t = el('div', 'toast', msg); document.body.append(t); setTimeout(() => t.remove(), 2600); }
+async function copy(text, what) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { const ta = el('textarea'); ta.value = text; document.body.append(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  toast(`${what} copied`);
+}
+
+// ------------------------------------------------------------ state
+let Q = { ready: [], posted: [] };     // queue.json  (rebuilt by the render pipeline)
+let L = null;                          // live.json   (written by the poster every few minutes / right after a tap)
+let openIssues = [];                   // your taps GitHub hasn't finished yet
+let pend = ls.get('gc-pending', {});   // taps made on this phone: {key: {at, title}}
+let submitted = ls.get('gc-submitted', {});
+let tab = 'home';
+const savePend = () => ls.set('gc-pending', pend);
+
+async function ghTap(title, body = '') {
+  const key = ghKey();
+  if (!key) { openSettings('Connect GitHub once so buttons work with one tap.'); return false; }
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/issues`, { method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, body }) });
+    if (r.status === 401) { openSettings('Your GitHub key expired or is wrong. Make a new one below.'); return false; }
+    if (r.status === 403 || r.status === 404) { openSettings('Your GitHub key needs "Issues: Read and write" on Gtaclip-cloud.'); return false; }
+    if (!r.ok) { toast(`GitHub error ${r.status} — try again`); return false; }
+    pend[title] = { at: Date.now(), title }; savePend();
+    setTimeout(refreshLive, 4000); setTimeout(refreshLive, 15000);
+    return true;
+  } catch (e) { toast('No connection — try again'); return false; }
+}
+
+async function getJSON(url, headers) {
+  const r = await fetch(url, { cache: 'no-store', headers }); if (!r.ok) throw new Error(r.status); return r.json();
+}
+async function refreshQueue() {
+  try {
+    Q = await getJSON(PAGES + 'queue.json?t=' + Date.now());
+    if (Q.site_build && !DEV && Q.site_build !== BUILD && !sessionStorage.getItem('rl-' + Q.site_build)) {
+      sessionStorage.setItem('rl-' + Q.site_build, '1'); location.reload(); return;
+    }
+  } catch (e) { /* keep last */ }
+}
+async function refreshLive() {
+  const key = ghKey();
+  try {
+    if (key) {
+      L = await getJSON(`https://api.github.com/repos/${REPO}/contents/live.json?ref=posted&t=${Date.now()}`,
+        { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github.raw+json' });
+      const iss = await getJSON(`https://api.github.com/repos/${REPO}/issues?state=open&per_page=50&t=${Date.now()}`,
+        { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github+json' });
+      openIssues = iss.filter((i) => !i.pull_request).map((i) => i.title);
+    } else {
+      L = await getJSON(`https://raw.githubusercontent.com/${REPO}/posted/live.json?t=${Date.now()}`);
+    }
+  } catch (e) {
+    try { L = await getJSON(`https://raw.githubusercontent.com/${REPO}/posted/live.json?t=${Date.now()}`); } catch (e2) { /* keep last */ }
+  }
+  // a tap is done when GitHub closed it, or it's old
+  for (const [k, p] of Object.entries(pend)) {
+    const stillOpen = openIssues.includes(k);
+    const age = Date.now() - p.at;
+    if ((!stillOpen && age > 20000 && key) || age > 15 * 60000) delete pend[k];
+  }
+  savePend();
+  render();
+}
+
+// ------------------------------------------------------------ derived data
+const posts = () => (L && L.posts) || {};
+const isPending = (prefix) => Object.keys(pend).some((k) => k.startsWith(prefix)) || openIssues.some((t) => t.startsWith(prefix));
+function queueList() {
+  const P = posts(); const blocked = new Set((L && L.blocked) || []);
+  const now = new Set(((L && L.postnow) || []).map((p) => p.id));
+  const list = (Q.ready || []).filter((r) => (r.source === 'upload' || (Date.now() - new Date(r.created || r.found || Date.now())) < 9 * 3600e3) && !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
+  const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
+  const tier = (r) => { const fresh = Date.now() - new Date(r.created || r.found || 0) < 5 * 3600e3; const real = !r.hook_auto || r.hook_kind === 'title'; return fresh && real ? 0 : real ? 1 : fresh ? 2 : 3; };
+  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || ((a.viral_verdict === 'skip') - (b.viral_verdict === 'skip')) || (tier(a) - tier(b)) || ((b.viral ?? 50) - (a.viral ?? 50)));
+}
+function postList() {
+  const out = Object.values(posts()).map((p) => ({ ...p, _new: true }));
+  const norm = (h) => (h || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+  const have = new Set(out.map((p) => norm(p.hook)));
+  for (const p of Q.posted || []) if (!have.has(norm(p.hook))) out.push({ hook: p.hook, streamer: p.streamer, campaign: p.campaign, posted_at: p.posted, tiktok: p.tiktok, youtube: p.youtube });
+  return out.sort((a, b) => (b.posted_at || '').localeCompare(a.posted_at || ''));
+}
+function statFor(link) { return ((L && L.stats) || []).find((s) => s.link && link && (s.link === link || link.includes(s.link) || s.link.includes(link.split('/').pop()))); }
+function platState(p, s) {
+  const st = (p.status || {})[s];
+  if (p[s]) return { cls: 's-live', txt: 'Live', link: p[s] };
+  if (p.manual) return { cls: 's-wait', txt: 'Not spotted yet' };
+  if (!st) return (p._new && Date.now() - new Date(p.posted_at) < 3600e3) ? { cls: 's-busy', txt: 'Uploading', spin: true } : { cls: 's-wait', txt: 'Not posted' };
+  if (st.state === 'error') return { cls: 's-err', txt: 'Failed: ' + (st.error || 'unknown error') };
+  if (st.state === 'live') return { cls: 's-live', txt: 'Live' };
+  return { cls: 's-busy', txt: 'Uploading to ' + (s === 'tiktok' ? 'TikTok' : 'YouTube') + '…', spin: true };
+}
+function slotPlan() {
+  const now = new Date(); const day = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const offset = now - day; const out = [];
+  for (const [h, m] of SLOTS) { const d = new Date(day); d.setHours(h, m, 0, 0); out.push(new Date(+d + offset)); }
+  return out;
+}
+
+// ------------------------------------------------------------ render
+function render() {
+  $('qcount').textContent = queueList().filter((r) => r.final).length || '';
+  const age = L ? (Date.now() - new Date(L.updated)) / 60000 : 99;
+  $('dot').className = 'dot' + (!L ? ' bad' : age > 15 ? ' warn' : '');
+  $('livetxt').textContent = L ? `updated ${ago(L.updated)}` : 'connecting…';
+  const toSubmit = postList().filter((p) => CR[p.campaign] && (p.tiktok || p.youtube) && !submitted[p.tiktok || p.youtube]);
+  $('pcount').textContent = toSubmit.length || '';
+  if (tab === 'home') { renderSetup(); renderRun(); renderNow(); renderSysline(); renderLiveStrip(); renderSubmitCard(toSubmit); renderSlots(); }
+  if (tab === 'queue') { renderUploads(); renderQueue(); }
+  if (tab === 'posted') renderPosted(toSubmit);
+  if (tab === 'stats') { renderSys(); renderKpis(); renderFinder(); renderLive(); renderStats(); }
+}
+function renderSetup() {
+  // every alert is a small bubble; tap one to see the details
+  const box = $('setup'); box.replaceChildren();
+  const chips = [];
+  if (!ghKey()) chips.push({ cls: 'warn', txt: 'Connect GitHub', act: () => openSettings() });
+  if (L && L.buffer_off) chips.push({ cls: 'bad', txt: 'Buffer OFF · not posting', act: openBufferSwitch });
+  else if (L && L.buffer_wait && new Date(L.buffer_wait) > Date.now()) chips.push({ cls: 'bad', txt: 'Buffer limit hit · waiting', act: openBufferSwitch });
+  else if (L && !L.buffer_ok) chips.push({ cls: 'bad', txt: 'Buffer not connected', act: openBufferHelp });
+  for (const [sv, until] of Object.entries((L && L.cooldown) || {})) {
+    if (new Date(until) <= Date.now()) continue;
+    const name = sv === 'tiktok' ? 'TikTok' : 'YouTube';
+    chips.push({ cls: 'warn', txt: `${name} paused · back ${tET(until)}`, act: () => sheet(`${name} is paused`, [
+      el('div', 'note warn', `${name} hit its upload limit. Uploads there start again by themselves at ${dET(until)}. No clips are lost — they stay in the queue.`),
+      el('div', 'meta', sv === 'youtube' ? 'Buffer allows 10 YouTube Shorts a day for unverified accounts. Verify the channel at youtube.com/verify, then refresh it in Buffer (Manage Channels) to remove the limit.' : 'TikTok limits how many posts go out through apps per day. The bot posts at most 11 a day to stay under it.')]) });
+  }
+  const errs = ((L && L.errors) || []).filter((e) => Date.now() - new Date(e.at) < 6 * 3600e3);
+  if (errs.length) chips.push({ cls: 'bad', txt: `${errs.length} failed post${errs.length > 1 ? 's' : ''}`, act: () => sheet('Failed posts', [
+    el('div', 'meta', 'These clips went back into the queue and will be tried again later.'),
+    ...errs.map((e) => el('div', 'note bad', `${ago(e.at)} — ${e.error.replace(/; skipped — waiting out the platform limit/, '')}`))]) });
+  const cc = L && L.channel_check;
+  if (cc && cc.tiktok && cc.tiktok !== 'ok') chips.push({ cls: 'warn', txt: 'TikTok check limited', act: () => sheet('Spotting your own posts', [
+    el('div', 'meta', `YouTube: ${cc.youtube || '—'}`), el('div', 'meta', `TikTok: ${cc.tiktok}`),
+    el('div', 'meta', 'The bot looks at your channels every 15 minutes to spot clips you posted yourself. TikTok sometimes hides videos from automated checks.')]) });
+  const ai = Q.ai || {};
+  if (ai.status && ai.status !== 'ok' && ai.status !== 'no key') chips.push({ cls: 'warn', txt: 'AI scoring paused', act: () => sheet('AI viral scores', [
+    el('div', 'note warn', `Gemini didn't answer: ${ai.status}`), el('div', 'meta', 'Clips still post. Scores come back by themselves (it retries every hour). If it says the key is invalid, make a new key at aistudio.google.com and replace the GEMINI_API_KEY secret in GitHub.')]) });
+  if (!chips.length) return;
+  const row = el('div', 'chips');
+  for (const c of chips) { const b = el('button', 'chip ' + c.cls, c.txt); b.onclick = c.act; row.append(b); }
+  box.append(row);
+}
+function renderRun() {
+  const box = $('run'); box.replaceChildren();
+  if (!L) { box.className = 'box run'; box.append(el('div', 'meta', 'Loading posting status…')); return; }
+  const wantOn = isPending('resume:'), wantOff = isPending('pause:');
+  const on = !L.paused;
+  box.className = 'box run ' + (on ? 'on' : 'off');
+  if (L.buffer_off) {
+    box.className = 'box run off';
+    box.append(el('div', 'state', '■ Automatic posting is PAUSED — Buffer is off'));
+    box.append(el('div', 'meta', 'Buffer hit its request limit, so nothing is posted or sent to Buffer. Clips are still being made — download them below and post them yourself.'));
+    const bb = el('button', 'bigbtn start', isPending('buffer:') ? 'Turning Buffer on… (under 1 min)' : 'Turn Buffer back on');
+    bb.disabled = !!isPending('buffer:');
+    bb.onclick = openBufferSwitch;
+    box.append(bb);
+    return;
+  }
+  box.append(el('div', 'state', on ? '● Automatic posting is ON' : '■ Automatic posting is STOPPED'));
+  if (on) {
+    const nxt = L.next_slot ? tET(L.next_slot) : '';
+    const c = (Q.ready || []).find((r) => r.id === L.up_next);
+    box.append(el('div', 'meta', `Every 90 min, 11 a day (7:07am–10:07pm). Next post ${nxt}${c ? ' — "' + c.hook + '"' : ''}.`));
+  } else box.append(el('div', 'meta', 'Nothing posts on the schedule. Post now still works.'));
+  const b = el('button', 'bigbtn ' + (on ? 'stop' : 'start'), on ? 'Stop posting' : 'Start posting');
+  if (wantOn || wantOff) {
+    b.disabled = true;
+    const goal = wantOn ? 'ON' : 'OFF';
+    if ((wantOn && on) || (wantOff && !on)) { /* done; wait for GitHub to close */ }
+    b.textContent = `Turning ${goal}… (usually under 1 min)`;
+  }
+  b.onclick = async () => {
+    b.disabled = true; b.textContent = 'Sending…';
+    const ok = await ghTap(on ? 'pause: posting' : 'resume: posting');
+    if (ok) toast(on ? 'Stopping…' : 'Starting…'); render();
+  };
+  box.append(b);
+}
+function renderNow() {
+  const box = $('nowbox'); box.replaceChildren();
+  const P = posts(); const items = queueList().filter((r) => r.nowing);
+  const recent = Object.values(P).filter((p) => Date.now() - new Date(p.posted_at) < 30 * 60000);
+  if (!items.length && !recent.length) return;
+  const b = el('div', 'box'); b.append(el('h2', null, 'Posting now'));
+  for (const r of items) b.append(statusRow(r.hook, { cls: 's-busy', txt: 'Sending to Buffer… (about 1 min)', spin: true }));
+  for (const p of recent) for (const s of ['tiktok', 'youtube']) b.append(statusRow(`${p.hook} — ${s === 'tiktok' ? 'TikTok' : 'YouTube'}`, platState(p, s)));
+  box.append(b);
+}
+function statusRow(text, st) {
+  const r = el('div', 'row'); r.style.margin = '6px 0';
+  r.append(badge(st)); const t = el('span', null, text); t.style.fontSize = '13px'; r.append(t);
+  if (st.link) { const a = el('a', 'btn', 'Open'); a.href = st.link; a.target = '_blank'; r.append(a); }
+  return r;
+}
+function badge(st) { const b = el('span', 'status ' + st.cls); if (st.spin) b.append(el('span', 'spin')); b.append(document.createTextNode(st.txt)); return b; }
+function totals() {
+  const S = (L && L.stats) || []; const t = { views: 0, likes: 0, comments: 0, shares: 0, reposts: 0, tiktok: 0, youtube: 0, n: S.length };
+  for (const s of S) { for (const k of ['views', 'likes', 'comments', 'shares', 'reposts']) t[k] += s[k] || 0; t[s.service] = (t[s.service] || 0) + (s.views || 0); }
+  return t;
+}
+function renderKpis() {
+  const t = totals(); const box = $('kpis'); box.replaceChildren();
+  const today = postList().filter((p) => p.posted_at && new Date(p.posted_at).toLocaleDateString('en-US', { timeZone: 'America/New_York' }) === new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York' })).length;
+  const k = (l, n, s) => { const d = el('div', 'kpi'); d.append(el('div', 'l', l), el('div', 'n', n), el('div', 's', s || '')); box.append(d); };
+  k('Views (45 days)', fmt(t.views), `TikTok ${fmt(t.tiktok)} · YouTube ${fmt(t.youtube)}`);
+  k('Likes', fmt(t.likes), `${fmt(t.comments)} comments`);
+  k('Shares + reposts', fmt(t.shares + t.reposts), `${fmt(t.shares)} shares · ${fmt(t.reposts)} reposts`);
+  k('Posted today', String(today), `${queueList().filter((r) => r.final).length} ready in queue`);
+}
+function renderLive() {
+  const box = $('liveboard'); box.replaceChildren();
+  const live = Q.live || [];
+  const gta = live.filter((x) => x.gta);
+  $('livemeta').textContent = Q.fetcher && Q.fetcher.last_run
+    ? `${gta.length} streaming GTA 6 · ${live.length - gta.length} live on something else · updated ${ago(Q.fetcher.last_run)}`
+    : 'Updates with every clip finder run.';
+  if (!live.length) { box.append(el('div', 'meta', 'Nobody from your list is live right now.')); return; }
+  for (const x of live.slice(0, 12)) {
+    const a = el('a', 'lrow'); a.href = 'https://www.twitch.tv/' + x.login; a.target = '_blank'; a.rel = 'noopener';
+    const img = el('img'); img.src = x.thumb; img.loading = 'lazy'; img.onerror = () => { img.style.visibility = 'hidden'; }; a.append(img);
+    const info = el('div'); info.style.minWidth = '0';
+    const top = el('div', 'row'); top.append(el('span', 'redpill', 'LIVE'), el('span', 'nm', x.name));
+    if (!x.approved) top.append(el('span', 'pill', 'big GTA 6 stream'));
+    info.append(top);
+    const hrs = x.since ? Math.max(0, (Date.now() - new Date(x.since)) / 3600e3) : 0;
+    info.append(el('div', 't', `${fmt(x.viewers)} watching · ${x.gta ? 'GTA 6' : (x.game || '?')} · ${hrs >= 1 ? Math.floor(hrs) + 'h' : Math.round(hrs * 60) + 'm'}`));
+    info.append(el('div', 't', x.title || ''));
+    a.append(info); box.append(a);
+  }
+}
+function renderFinder() {
+  const box = $('finder'); box.replaceChildren(); const f = Q.fetcher || {};
+  const all = queueList(); const ready = all.filter((r) => r.final).length;
+  const stat = el('div', 'fstat');
+  const add = (n, l) => { const d = el('div'); d.append(el('b', null, String(n)), el('span', 'meta', l)); stat.append(d); };
+  add(f.added ?? '—', 'new clips last run');
+  add(f.found_24h ?? '—', 'clips checked (24h)');
+  add(f.kept_24h ?? '—', 'kept (24h)');
+  add(ready, 'videos ready');
+  box.append(stat);
+  const last = f.last_run ? ago(f.last_run) : '—';
+  const ai = Q.ai || {};
+  box.append(el('div', 'meta', ai.status === 'ok' ? `AI viral scores: ON · ${ai.rated || 0} clips rated` : ai.status === 'no key' || !ai.status ? 'AI viral scores: off (no Gemini key yet)' : `AI viral scores: paused (${String(ai.status).slice(0, 60)})`));
+  box.append(el('div', 'meta', `Last check ${last} · checks every ${f.every_min || 10} min · ${all.length - ready ? (all.length - ready) + ' being made' : 'nothing waiting to be made'}`));
+  const by = Object.entries(f.fresh_by_streamer || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  const row = el('div', 'row'); row.style.marginTop = '8px';
+  if (by.length) for (const [n, k] of by) row.append(el('span', 'pill', `${n} ${k}`));
+  else row.append(el('span', 'meta', 'No new GTA 6 clips on Twitch in the last check.'));
+  box.append(row);
+}
+function renderSlots() {
+  const box = $('slots'); box.replaceChildren();
+  const plan = slotPlan(); const now = Date.now(); const P = Object.values(posts());
+  const q = queueList().filter((r) => r.final && !r.nowing);
+  let qi = 0, done = 0, nextLbl = '';
+  for (const s of plan) {
+    const d = el('div', 'slot'); const t = +s;
+    const hit = P.find((p) => p.why && p.why.endsWith('slot') && Math.abs(new Date(p.posted_at) - t) < 26 * 60000);
+    let w;
+    if (hit) { d.classList.add('done'); w = '✓ ' + hit.hook; done++; }
+    else if (t < now - 25 * 60000) { d.classList.add('past'); w = '—'; }
+    else if (L && L.paused) { w = 'stopped'; }
+    else { const c = q[qi++]; w = c ? c.hook : 'nothing ready'; if (!nextLbl) { d.classList.add('next'); nextLbl = tET(s); } }
+    d.append(el('div', 't', tET(s)), el('div', 'w', w)); box.append(d);
+  }
+  $('slots-sum').textContent = `Today's slots · ${done} posted · ${L && L.paused ? 'posting stopped' : nextLbl ? 'next ' + nextLbl : 'done for today'}`;
+}
+function linkBtns(p, wrap) {
+  if (p.tiktok) { const b = el('button', 'btn', 'Copy TikTok link'); b.onclick = () => copy(p.tiktok, 'TikTok link'); wrap.append(b); }
+  if (p.youtube) { const b = el('button', 'btn', 'Copy YouTube link'); b.onclick = () => copy(p.youtube, 'YouTube link'); wrap.append(b); }
+  if (p.tiktok && p.youtube) { const b = el('button', 'btn cyan', 'Copy both'); b.onclick = () => copy(p.tiktok + '\n' + p.youtube, 'Both links'); wrap.append(b); }
+  if (CR[p.campaign]) { const a = el('a', 'btn pink', `Submit to ${p.campaign}`); a.href = CR[p.campaign]; a.target = '_blank'; a.rel = 'noopener'; wrap.append(a); }
+}
+function postRow(p, opts = {}) {
+  const r = el('div', 'prow');
+  if (p.poster && p._new) { const img = el('img'); img.src = p.poster; img.loading = 'lazy'; img.onerror = () => img.remove(); r.append(img); }
+  const info = el('div', 'info');
+  const top = el('div', 'row'); top.append(el('span', 'pill', p.streamer || '?'));
+  if (CR[p.campaign]) top.append(el('span', 'pill paid', 'Paid · ' + p.campaign));
+  top.append(el('span', 'meta', p.posted_at ? dET(p.posted_at) + (p.why ? ' · ' + p.why : '') : ''));
+  info.append(top, el('div', 'title', p.hook || ''));
+  const plat = el('div', 'plat');
+  for (const s of ['tiktok', 'youtube']) {
+    plat.append(el('span', 'meta', s === 'tiktok' ? 'TikTok' : 'YouTube'));
+    const cell = el('div', 'row'); const st = platState(p, s); cell.append(badge(st));
+    const m = statFor(p[s]);
+    if (m) { const n = el('span', 'nums'); n.innerHTML = `<span><b>${fmt(m.views)}</b> views</span><span><b>${fmt(m.likes)}</b> likes</span><span><b>${fmt(m.comments)}</b> comm.</span><span><b>${fmt(m.shares + m.reposts)}</b> shares</span>`; cell.append(n); }
+    plat.append(cell);
+  }
+  info.append(plat);
+  const b = el('div', 'btns'); linkBtns(p, b);
+  if (opts.submit) {
+    const key = p.tiktok || p.youtube; const sb = el('button', 'btn', submitted[key] ? '✓ Submitted' : 'Mark submitted');
+    sb.onclick = () => { submitted[key] = !submitted[key]; ls.set('gc-submitted', submitted); render(); }; b.append(sb);
+  }
+  info.append(b); r.append(info); return r;
+}
+function renderSubmitCard(list) {
+  const box = $('submitcard'); box.replaceChildren();
+  if (!list.length) return;
+  const b = el('button', 'box note good'); b.style.cssText = 'width:100%;text-align:left;font:inherit;color:inherit;display:flex;align-items:center;gap:8px';
+  b.append(el('b', null, `${list.length} paid post${list.length > 1 ? 's' : ''} to submit`), el('span', 'meta', 'Content Rewards links ready'));
+  const go = el('span', 'link', 'Open →'); b.append(go);
+  b.onclick = () => switchTab('posted'); box.append(b);
+}
+function renderPosted(toSubmit) {
+  const sw = $('submitwrap'); sw.replaceChildren();
+  if (toSubmit.length) {
+    const b = el('div', 'box'); b.append(el('h2', null, `To submit (${toSubmit.length})`));
+    b.append(el('div', 'meta', 'Copy the links, paste them on the campaign page, then tap "Mark submitted".'));
+    const pl = el('div', 'plist'); pl.style.marginTop = '8px';
+    for (const p of toSubmit) pl.append(postRow(p, { submit: true }));
+    b.append(pl); sw.append(b);
+  }
+  const box = $('postedlist'); box.replaceChildren();
+  const list = postList().filter((p) => !toSubmit.includes(p));
+  if (!list.length && !toSubmit.length) box.append(el('div', 'empty', 'Nothing posted yet.'));
+  if (list.length) box.append(el('h2', null, 'All posts'));
+  for (const p of list) box.append(postRow(p, { submit: !!CR[p.campaign] }));
+}
+function renderLiveStrip() {
+  const box = $('livestrip'); box.replaceChildren();
+  const live = (Q.live || []).filter((x) => x.gta || x.approved);
+  if (!live.length) { box.append(el('div', 'meta', 'Nobody from your list is live right now.')); return; }
+  for (const x of live.slice(0, 15)) {
+    const a = el('a'); a.href = 'https://www.twitch.tv/' + x.login; a.target = '_blank'; a.rel = 'noopener';
+    const top = el('div', 'nm'); top.append(el('span', 'redpill', '●'), document.createTextNode(' ' + x.name)); top.querySelector('.redpill').style.cssText = 'background:none;color:var(--red);padding:0';
+    a.append(top, el('div', 'v', `${fmt(x.viewers)} · ${x.gta ? 'GTA 6' : (x.game || '').slice(0, 14)}`));
+    box.append(a);
+  }
+}
+let editing = null;
+let variant = ls.get('gc-variant', 'final');
+const vidOf = (r) => (variant === 'clean' && r.clean) ? r.clean : r.final;
+function renderQueue() {
+  document.querySelectorAll('#variant button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.v === variant));
+  const all = queueList(); const ready = all.filter((r) => r.final); const prep = all.length - ready.length;
+  $('queuemeta').textContent = `${ready.length} videos in posting order${prep ? ` · ${prep} being made` : ''}${variant === 'clean' ? ' · no-caption copies (the bot still posts the captioned one)' : ''}`;
+  const box = $('queuelist');
+  // keep playing videos alive: rebuild only when the list changed
+  const sig = JSON.stringify(ready.map((r) => [r.id, r.final, r.nowing, r.hook])) + (L && L.paused) + (L && L.next_slot) + editing + variant;
+  if (box.dataset.sig === sig) return; box.dataset.sig = sig; box.replaceChildren();
+  if (!ready.length) { box.append(el('div', 'empty', 'Queue is empty — new clips arrive with the next clip-maker run (every 10 min).')); return; }
+  const plan = slotPlan().filter((s) => +s > Date.now() - 60000); let qi = 0;
+  for (const r of ready) {
+    let st;
+    if (r.nowing) st = { cls: 's-busy', txt: 'Posting now — sending to TikTok & YouTube', spin: true };
+    else if (L && L.paused) st = { cls: 's-wait', txt: `#${qi + 1} in line · posting stopped` };
+    else { const s = plan[qi]; st = { cls: qi === 0 ? 's-next' : 's-wait', txt: s ? `${qi === 0 ? 'Next · ' : ''}posts ~${tET(s)}` : `#${qi + 1} · tomorrow` }; }
+    if (!r.nowing) qi++;
+    box.append(clipCard(r, st));
+  }
+}
+function clipCard(r, st) {
+  const c = el('div', 'card' + (r.nowing ? ' now' : ''));
+  const vw = el('div', 'vwrap'); const v = el('video'); v.controls = true; v.playsInline = true; v.preload = 'none';
+  v.poster = PAGES + r.poster; v.src = PAGES + vidOf(r); vw.append(v); c.append(vw);
+  const b = el('div', 'body');
+  const top = el('div', 'row'); top.append(badge(st)); b.append(top);
+  const tags = el('div', 'row'); tags.append(el('span', 'pill', r.streamer));
+  if (r.source === 'upload') tags.append(el('span', 'pill', 'Your video'));
+  if (r.source === 'vod') tags.append(el('span', 'pill', 'From VOD'));
+  if (CR[r.campaign]) tags.append(el('span', 'pill paid', 'Paid · ' + r.campaign));
+  tags.append(el('span', 'meta', r.source === 'upload' ? `${r.seconds || '?'}s · ${(r.moment && r.moment.reasons || []).join(', ')}` : `${r.seconds || '?'}s · clipped ${r.created ? ago(r.created) : ''} · leaves the queue at 9 h`));
+  b.append(tags);
+  if (r.viral != null) {
+    const v = el('div', 'viral ' + (r.viral_verdict || ''));
+    v.append(el('b', null, String(r.viral)), el('span', null, { post: 'Post it', maybe: 'Maybe', skip: 'Skip' }[r.viral_verdict] || ''));
+    if (r.viral_why) v.append(el('em', null, r.viral_why));
+    b.append(v);
+  }
+  b.append(el('div', 'title', r.hook || ''));
+  const btns = el('div', 'btns');
+  if (!r.nowing) {
+    const pn = el('button', 'btn pink', 'Post now');
+    pn.onclick = async () => { pn.disabled = true; pn.textContent = 'Sending…'; if (await ghTap('post: ' + r.id)) toast('Posting — goes out in about 1 minute'); render(); };
+    btns.append(pn);
+  }
+  const dl = el('button', 'btn cyan', variant === 'clean' ? '⬇ Save (no caption)' : '⬇ Save');
+  dl.onclick = () => saveVideo(r, dl);
+  const mb = el('button', 'btn', '⋯ More');
+  btns.append(dl, mb); b.append(btns);
+  const more = el('div', 'btns more');
+  mb.onclick = () => { more.classList.toggle('open'); mb.textContent = more.classList.contains('open') ? '× Less' : '⋯ More'; };
+  const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
+  const ed = el('button', 'btn', 'Edit hook'); ed.onclick = () => { editing = editing === r.id ? null : r.id; $('queuelist').dataset.sig = ''; renderQueue(); };
+  const tw = el('a', 'btn', 'Twitch'); tw.href = r.twitch || '#'; tw.target = '_blank'; tw.rel = 'noopener'; if (!r.twitch) tw.hidden = true;
+  const sk = el('button', 'btn del', "Don't post");
+  sk.onclick = async () => { if (sk.dataset.arm) { sk.disabled = true; if (await ghTap('skip: ' + r.id)) toast('Removed from the queue'); render(); } else { sk.dataset.arm = 1; sk.textContent = 'Tap again to remove'; setTimeout(() => { delete sk.dataset.arm; sk.textContent = "Don't post"; }, 3000); } };
+  more.append(cc, ed, tw, sk); b.append(more);
+  if (isPending('edit: ' + r.id)) b.append(el('div', 'note warn', 'Re-making the video with your new hook… (2–4 min)'));
+  if (editing === r.id) {
+    const f = el('div', 'edit');
+    const hi = el('input'); hi.value = r.hook || ''; hi.maxLength = 110;
+    const ci = el('textarea'); ci.placeholder = 'Leave empty for the automatic caption'; ci.value = r.caption || '';
+    const sv = el('button', 'btn pink', 'Save');
+    sv.onclick = async () => { sv.disabled = true; if (await ghTap('edit: ' + r.id, `hook: ${hi.value.trim()}\ncaption: ${ci.value.trim()}`)) { toast('Saved — video is being re-made'); editing = null; } render(); };
+    f.append(el('label', null, 'Hook (the text on the video, no emojis)'), hi, el('label', null, 'Caption (TikTok/YouTube description)'), ci, sv);
+    b.append(f);
+  }
+  c.append(b); return c;
+}
+function captionFor(r) {
+  return (r.caption || `${r.hook}\n\n🎥 @${r.login}\n\n${r.tag || ''} #GTA6 #GTAVI #gaming #fyp`).trim();
+}
+async function saveVideo(r, btn) {
+  const url = PAGES + vidOf(r);
+  const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${variant === 'clean' && r.clean ? '-nocaption' : ''}.mp4`;
+  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Getting video…';
+  try {
+    const blob = await (await fetch(url)).blob();
+    const file = new File([blob], name, { type: 'video/mp4' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      copy(captionFor(r), 'Caption');
+      await navigator.share({ files: [file] });   // iPhone: tap "Save Video" (or pick TikTok)
+    } else {
+      const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+      copy(captionFor(r), 'Caption');
+    }
+  } catch (e) {
+    if (e && e.name !== 'AbortError') window.open(url, '_blank');   // fallback: open the video, long-press to save
+  }
+  btn.disabled = false; btn.textContent = label;
+}
+// ------------------------------------------------------------ system status (what GitHub is doing right now)
+let RUNS = []; let RUNSTEP = {}; let runsAt = 0;
+const STEPNAME = { 'Set up job': 'starting up', 'Run actions/checkout@v4': 'starting up', 'Run actions/setup-python@v5': 'starting up',
+  'Run pip install -r requirements.txt': 'starting up', 'cache raw clips + speech model': 'loading saved clips',
+  'load state, posted reports and the current site': 'loading the queue', 'pipeline': 'finding clips & making videos',
+  'publish site + save state': 'publishing to the site', 'save log (so Claude can read it)': 'finishing up' };
+const dur = (a, b) => { const m = Math.max(0, Math.round(((b ? new Date(b) : Date.now()) - new Date(a)) / 60000)); return m < 1 ? '<1 min' : m + ' min'; };
+async function refreshRuns() {
+  if (Date.now() - runsAt < (ghKey() ? 15000 : 90000)) return; runsAt = Date.now();
+  const h = ghKey() ? { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github+json' } : { Accept: 'application/vnd.github+json' };
+  try {
+    RUNS = (await getJSON(`https://api.github.com/repos/${REPO}/actions/runs?per_page=30&t=${Date.now()}`, h)).workflow_runs || [];
+    const cur = RUNS.find((r) => r.name.startsWith('gtaclip pipeline') && r.status === 'in_progress');
+    if (cur) {
+      const jobs = (await getJSON(`https://api.github.com/repos/${REPO}/actions/runs/${cur.id}/jobs?t=${Date.now()}`, h)).jobs || [];
+      const st = (jobs[0] && jobs[0].steps) || [];
+      const now = st.find((x) => x.status === 'in_progress') || st.filter((x) => x.status === 'completed').pop();
+      RUNSTEP[cur.id] = now ? (STEPNAME[now.name] || now.name.toLowerCase()) : 'starting up';
+    }
+  } catch (e) { /* keep last */ }
+  if (tab === 'home') renderSysline(); if (tab === 'stats') renderSys();
+}
+function sysState() {
+  const pipes = RUNS.filter((r) => r.name.startsWith('gtaclip pipeline'));
+  const running = pipes.find((r) => r.status === 'in_progress');
+  const waiting = pipes.filter((r) => r.status === 'queued' || r.status === 'pending' || r.status === 'waiting').length;
+  const lastDone = pipes.find((r) => r.status === 'completed' && r.conclusion !== 'cancelled' && r.conclusion !== 'skipped');
+  const poster = RUNS.find((r) => r.name.startsWith('gtaclip poster') && r.status === 'completed' && r.conclusion !== 'skipped');
+  const clock = RUNS.find((r) => r.name.startsWith('gtaclip clock'));
+  const procUploads = uploads.filter((u) => u.state === 'processing' || u.state === 'uploading').length;
+  return { running, waiting, lastDone, poster, clock, procUploads };
+}
+function renderSysline() {
+  const b = $('sysline'); if (!b) return; b.replaceChildren();
+  if (!RUNS.length) { b.hidden = true; return; } b.hidden = false;
+  const s = sysState(); const p = el('span', 'pulse');
+  let t, m;
+  if (s.running) { p.classList.add('run'); t = `Clip maker: ${RUNSTEP[s.running.id] || 'working'}`; m = `${dur(s.running.run_started_at)}${s.waiting ? ' · next run queued' : ''}`; }
+  else if (s.waiting) { p.classList.add('wait'); t = 'Clip maker: starting soon'; m = `${s.waiting} run${s.waiting > 1 ? 's' : ''} waiting`; }
+  else if (s.lastDone) { p.classList.add(s.lastDone.conclusion === 'success' ? 'ok' : 'bad'); t = `Clip maker: idle`; m = `last run ${ago(s.lastDone.updated_at)} · ${s.lastDone.conclusion === 'success' ? 'OK' : 'had a problem'}`; }
+  else { t = 'Clip maker'; m = '—'; }
+  const tt = el('span', 't', t); const mm = el('span', 'm', m); b.append(p, tt, mm);
+}
+function renderSys() {
+  const box = $('sysbox'); if (!box) return; box.replaceChildren();
+  if (!RUNS.length) { box.append(el('div', 'meta', 'Loading…')); return; }
+  const s = sysState();
+  const row = (cls, title, sub) => { const r = el('div', 'sysrow'); r.append(el('span', 'pulse ' + cls)); const d = el('div'); d.append(el('b', null, title), el('div', 'meta', sub)); r.append(d); box.append(r); };
+  if (s.running) row('run', `Clip maker is running — ${RUNSTEP[s.running.id] || 'working'}`, `Started ${dur(s.running.run_started_at)} ago${s.waiting ? ' · another run is queued to start right after' : ''}. It finds new clips, checks webcams, writes hooks, rates them and makes the videos.`);
+  else if (s.waiting) row('wait', 'Clip maker is about to start', `${s.waiting} run${s.waiting > 1 ? 's' : ''} waiting in line`);
+  else row(s.lastDone && s.lastDone.conclusion === 'success' ? 'ok' : 'bad', 'Clip maker is idle', s.lastDone ? `Last run finished ${ago(s.lastDone.updated_at)} (${s.lastDone.conclusion === 'success' ? 'OK' : s.lastDone.conclusion}) and took ${dur(s.lastDone.run_started_at, s.lastDone.updated_at)}. Runs every 10 min.` : 'No runs yet.');
+  if (s.procUploads) row('run', `Your videos: ${s.procUploads} being processed`, 'Clips appear in the Queue tagged "Your video".');
+  const f = Q.fetcher || {};
+  row('ok', `Clip finder: ${f.added ?? 0} new clips last run`, `${f.found_24h ?? '—'} checked in 24 h · ${(Q.ready || []).length} in the queue`);
+  const ai = Q.ai || {};
+  row(ai.status === 'ok' ? 'ok' : ai.status && ai.status !== 'no key' ? 'wait' : '', `AI viral scores: ${ai.status === 'ok' ? 'ON' : ai.status === 'no key' || !ai.status ? 'off' : 'paused'}`, ai.status === 'ok' ? `${ai.rated || 0} clips rated · checked ${ai.checked ? ago(ai.checked) : '—'}` : String(ai.status || 'Add a Gemini key to turn it on'));
+  row(s.poster && s.poster.conclusion === 'success' && !(L && L.buffer_off) ? 'ok' : 'bad', `Poster: ${L && L.buffer_off ? 'paused (Buffer off)' : L && L.paused ? 'stopped' : 'on'}`, s.poster ? `Last check ${ago(s.poster.updated_at)} · runs every 5 min · next post ${L && L.next_slot ? tET(L.next_slot) : '—'}` : '—');
+  row(s.clock && s.clock.status === 'in_progress' ? 'ok' : 'bad', `Timer: ${s.clock && s.clock.status === 'in_progress' ? 'running' : 'restarting'}`, 'Starts the poster every 5 min and the clip maker every 10 min.');
+}
+
+// ------------------------------------------------------------ your own videos -> clips
+let uploads = ls.get('gc-uploads', []);   // [{id, name, at, state, pct, issue, msg}]
+const saveUploads = () => ls.set('gc-uploads', uploads.slice(0, 10));
+const STREAMERS = [['', 'Me / someone else'], ['clix', 'Clix'], ['lacy', 'Lacy'], ['kaicenat', 'Kai Cenat'], ['yourragegaming', 'YourRAGE'],
+  ['jynxzi', 'Jynxzi'], ['xqc', 'xQc'], ['ishowspeed', 'IShowSpeed'], ['jasontheween', 'JasonTheWeen'], ['stableronaldo', 'Stable Ronaldo'],
+  ['nickmercs', 'NICKMERCS'], ['marlon', 'Marlon'], ['adapt', 'Adapt']];
+function openUpload() {
+  if (!ghKey()) { openSettings('Connect GitHub first — uploads go to your GitHub.'); return; }
+  const f = el('input'); f.type = 'file'; f.accept = 'video/*'; f.className = 'setin';
+  const who = el('select', 'setin'); for (const [v, n] of STREAMERS) { const o = el('option', null, n); o.value = v; who.append(o); }
+  const other = el('input', 'setin'); other.placeholder = 'Name for the credit (if not on the list)';
+  const go = el('button', 'btn pink', 'Make clips');
+  const note = el('div', 'meta', 'Upload a video OR paste a YouTube / Twitch link. It finds the best moments — big reactions, hype, action — and makes 15–60 s clips with hooks. Takes about 5–20 min.');
+  const link = el('input', 'setin'); link.type = 'url'; link.placeholder = 'https://www.twitch.tv/videos/… or youtube.com/…';
+  const sec = el('input', 'setin'); sec.placeholder = 'Optional part, e.g. 1:20:00-2:00:00 (long VODs)';
+  go.onclick = () => {
+    const n0 = STREAMERS.find((x) => x[0] === who.value);
+    const credit = who.value ? n0[1] : (other.value.trim() || 'Nicholas');
+    if (link.value.trim()) {
+      if (!/^https?:\/\/(www\.|m\.)?(youtube\.com|youtu\.be|twitch\.tv)\//i.test(link.value.trim())) { toast('Paste a YouTube or Twitch link'); return; }
+      $('sheet').hidden = true; clipLink(link.value.trim(), sec.value.trim(), who.value, credit); return;
+    }
+    const file = f.files && f.files[0]; if (!file) { toast('Pick a video or paste a link'); return; }
+    if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB) — trim it first'); return; }
+    $('sheet').hidden = true;
+    const n = STREAMERS.find((x) => x[0] === who.value);
+    uploadVideo(file, who.value, who.value ? n[1] : (other.value.trim() || 'Nicholas'));
+  };
+  sheet('Make clips', [note, el('label', 'meta', 'Paste a link'), link, sec, el('label', 'meta', '— or upload a video —'), f,
+    el('label', 'meta', 'Whose stream is it?'), who, other, go]);
+}
+function b64(blob) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
+}
+async function gh(method, path, body) {
+  const r = await fetch(`https://api.github.com/repos/${REPO}${path}`, { method,
+    headers: { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined });
+  if (!r.ok) { const e = new Error(`GitHub ${r.status}`); e.status = r.status; throw e; }
+  return r.json();
+}
+async function uploadVideo(file, login, streamer) {
+  const id = Date.now().toString(36);
+  const u = { id, name: file.name.replace(/\.[^.]+$/, '').slice(0, 60), at: Date.now(), state: 'uploading', pct: 0 };
+  uploads.unshift(u); saveUploads(); switchTab('queue'); renderUploads();
+  const CH = 20 * 1024 * 1024; const parts = []; const tree = [];
+  try {
+    for (let i = 0, off = 0; off < file.size; i++, off += CH) {
+      const data = await b64(file.slice(off, off + CH));
+      let sha = null;
+      for (let t = 0; t < 3 && !sha; t++) {
+        try { sha = (await gh('POST', '/git/blobs', { content: data, encoding: 'base64' })).sha; }
+        catch (e) { if (e.status === 403 || e.status === 404) throw e; await new Promise((r) => setTimeout(r, 2000)); }
+      }
+      if (!sha) throw new Error('upload kept failing — check your connection');
+      const path = `uploads/${id}/part${String(i).padStart(3, '0')}`;
+      parts.push(path); tree.push({ path, mode: '100644', type: 'blob', sha });
+      u.pct = Math.min(99, Math.round(((off + CH) / file.size) * 100)); saveUploads(); renderUploads();
+    }
+    const t = await gh('POST', '/git/trees', { tree });
+    const c = await gh('POST', '/git/commits', { message: `upload ${u.name}`, tree: t.sha, parents: [] });
+    await gh('POST', '/git/refs', { ref: `refs/heads/upload-${id}`, sha: c.sha });
+    const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, ref: `upload-${id}`, parts, name: u.name, login, streamer, size: file.size }) });
+    Object.assign(u, { state: 'processing', pct: 100, issue: iss.number }); saveUploads(); renderUploads();
+    toast('Uploaded — finding the best moments now');
+  } catch (e) {
+    u.state = 'failed';
+    u.msg = (e.status === 403 || e.status === 404)
+      ? 'Your GitHub key needs one more permission: Contents → Read and write (Settings → Make a key → edit your key).'
+      : `Upload failed: ${e.message}`;
+    saveUploads(); renderUploads();
+  }
+}
+async function clipLink(url, section, login, streamer) {
+  const id = Date.now().toString(36);
+  const name = url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40);
+  const u = { id, name, at: Date.now(), state: 'processing', pct: 100 };
+  uploads.unshift(u); saveUploads(); switchTab('queue'); renderUploads();
+  try {
+    const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, url, section, name: '', login, streamer }) });
+    u.issue = iss.number; saveUploads(); renderUploads(); toast('Got it — finding the best moments');
+  } catch (e) { u.state = 'failed'; u.msg = `Couldn't send the link (GitHub ${e.status || e.message})`; saveUploads(); renderUploads(); }
+}
+async function checkUploads() {
+  let changed = false;
+  for (const u of uploads.filter((x) => x.state === 'processing' && x.issue)) {
+    try {
+      const iss = await gh('GET', `/issues/${u.issue}`);
+      const cm = await gh('GET', `/issues/${u.issue}/comments?per_page=10`);
+      const last = cm.length ? cm[cm.length - 1].body : '';
+      if (iss.state === 'closed') { u.state = /^Made \d+ clips?/.test(last) ? 'done' : 'failed'; u.msg = last; changed = true; }
+      else if (last && last !== u.msg) { u.msg = last; changed = true; }
+    } catch (e) { /* try later */ }
+  }
+  if (changed) { saveUploads(); renderUploads(); refreshQueue().then(render); }
+}
+function renderUploads() {
+  const box = $('uploads'); if (!box) return; box.replaceChildren();
+  for (const u of uploads.filter((x) => Date.now() - x.at < 2 * 86400e3).slice(0, 4)) {
+    const d = el('div', 'upitem');
+    const top = el('div', 'row'); top.append(el('b', null, u.name));
+    const lbl = { uploading: `Uploading ${u.pct}%`, processing: 'Finding the best moments…', done: 'Clips ready ✓', failed: 'Problem' }[u.state];
+    top.append(badge({ cls: u.state === 'done' ? 's-live' : u.state === 'failed' ? 's-err' : 's-busy', txt: lbl, spin: u.state === 'uploading' || u.state === 'processing' }));
+    d.append(top);
+    if (u.state === 'uploading') { const b = el('div', 'bar2'); const f = el('div'); f.style.width = u.pct + '%'; b.append(f); d.append(b, el('div', 'meta', 'Keep this page open until it reaches 100%.')); }
+    if (u.state === 'processing') d.append(el('div', 'meta', 'Usually 5–20 minutes. The clips show up in the queue below, tagged "Your video". You can close the site.'));
+    if (u.msg && u.state !== 'uploading') d.append(el('div', 'meta', u.msg.split('\n')[0]));
+    if (u.state === 'done' || u.state === 'failed') { const x = el('button', 'btn', 'Dismiss'); x.onclick = () => { uploads = uploads.filter((y) => y !== u); saveUploads(); renderUploads(); }; d.append(x); }
+    box.append(d);
+  }
+}
+
+function renderStats() {
+  const box = $('statsbox'); box.replaceChildren();
+  const S = ((L && L.stats) || []).slice(); const t = totals();
+  const k = el('div', 'kpis');
+  const kp = (l, n, s) => { const d = el('div', 'kpi'); d.append(el('div', 'l', l), el('div', 'n', n), el('div', 's', s || '')); k.append(d); };
+  kp('Total views', fmt(t.views), `${S.length} posts · last 45 days`); kp('TikTok views', fmt(t.tiktok)); kp('YouTube views', fmt(t.youtube));
+  kp('Likes', fmt(t.likes)); kp('Comments', fmt(t.comments)); kp('Shares', fmt(t.shares)); kp('Reposts', fmt(t.reposts));
+  kp('Avg views / post', fmt(S.length ? Math.round(t.views / S.length) : 0));
+  box.append(k);
+  if (!S.length) { box.append(el('div', 'box empty', L && !L.buffer_ok ? 'Stats appear once Buffer is connected (Settings).' : 'No stats yet — they show up a few hours after posts go live.')); return; }
+  box.append(el('div', 'meta', `Stats from Buffer · updated ${L.stats_updated ? ago(L.stats_updated) : '—'}`));
+  // by streamer
+  const by = {}; for (const s of S) { const n = s.streamer || 'Other'; by[n] = by[n] || { v: 0, n: 0 }; by[n].v += s.views || 0; by[n].n++; }
+  const rows = Object.entries(by).map(([n, o]) => [n, Math.round(o.v / o.n), o.n]).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...rows.map((r) => r[1]));
+  const sb = el('div', 'box'); sb.append(el('h2', null, 'Average views by streamer'));
+  for (const [n, avg, cnt] of rows) { const r = el('div', 'barrow'); r.append(el('span', null, n)); const bg = el('div', 'barbg'); const fg = el('div', 'barfg'); fg.style.width = (avg / max * 100) + '%'; bg.append(fg); r.append(bg, el('span', 'meta', `${fmt(avg)} · ${cnt}`)); sb.append(r); }
+  box.append(sb);
+  // platform comparison
+  const pb = el('div', 'box'); pb.append(el('h2', null, 'TikTok vs YouTube'));
+  const tbl = el('table'); tbl.innerHTML = '<tr><th></th><th class="n">Posts</th><th class="n">Views</th><th class="n">Avg</th><th class="n">Likes</th><th class="n">Shares</th></tr>';
+  for (const sv of ['tiktok', 'youtube']) { const L2 = S.filter((s) => s.service === sv); const sum = (k2) => L2.reduce((a, s) => a + (s[k2] || 0), 0);
+    const tr = el('tr'); tr.innerHTML = `<td>${sv === 'tiktok' ? 'TikTok' : 'YouTube'}</td><td class="n">${L2.length}</td><td class="n">${fmt(sum('views'))}</td><td class="n">${fmt(L2.length ? Math.round(sum('views') / L2.length) : 0)}</td><td class="n">${fmt(sum('likes'))}</td><td class="n">${fmt(sum('shares') + sum('reposts'))}</td>`; tbl.append(tr); }
+  pb.append(tbl); box.append(pb);
+  // every post
+  const ab = el('div', 'box'); ab.append(el('h2', null, 'Every post (best first)'));
+  const wrap = el('div', 'scroll'); const t2 = el('table');
+  t2.innerHTML = '<tr><th>Post</th><th>Where</th><th class="n">Views</th><th class="n">Likes</th><th class="n">Comm.</th><th class="n">Shares</th></tr>';
+  for (const s of S.sort((a, b) => (b.views || 0) - (a.views || 0))) {
+    const tr = el('tr'); const td = el('td'); const a = el('a', null, s.hook || '(no text)'); a.href = s.link || '#'; a.target = '_blank'; td.append(a, el('div', 'meta', `${s.streamer || ''} · ${s.sent ? dET(s.sent) : ''}`)); tr.append(td);
+    tr.insertAdjacentHTML('beforeend', `<td>${s.service === 'tiktok' ? 'TikTok' : 'YouTube'}</td><td class="n">${fmt(s.views)}</td><td class="n">${fmt(s.likes)}</td><td class="n">${fmt(s.comments)}</td><td class="n">${fmt((s.shares || 0) + (s.reposts || 0))}</td>`);
+    t2.append(tr);
+  }
+  wrap.append(t2); ab.append(wrap); box.append(ab);
+}
+
+// ------------------------------------------------------------ sheets
+function sheet(title, nodes) {
+  const inn = $('sheet-in'); inn.replaceChildren();
+  const h = el('div', 'head'); h.append(el('h2', null, title)); const x = el('button', 'btn', 'Close'); x.onclick = () => { $('sheet').hidden = true; }; h.append(x);
+  inn.append(h, ...nodes); $('sheet').hidden = false;
+}
+function openSettings(why) {
+  const nodes = [];
+  if (why) nodes.push(el('div', 'note warn', why));
+  const rb = el('button', 'btn cyan', '↻ Get newest version'); rb.onclick = rebootSite;
+  nodes.push(el('div', 'meta', `Site version ${DEV ? 'dev' : BUILD}${Q.site_build && Q.site_build !== BUILD ? ' · a newer version is out — tap below' : ' · up to date'}`), rb);
+  nodes.push(el('div', 'meta', ghKey() ? 'GitHub is connected on this phone ✓' : 'GitHub is not connected on this phone.'));
+  nodes.push(el('div', 'steps', ['GitHub key (one time, 2 minutes):', '1. Tap "Make a key" (opens GitHub).', '2. Name: gtaclip site · Expiration: 1 year.',
+    '3. Repository access: Only select repositories → Gtaclip-cloud.', '4. Repository permissions → Issues: Read and write.',
+    '   For uploading your own videos also: Contents → Read and write.', '5. Generate, copy, paste below, Save.', 'The key stays only on this phone.'].join('\n')));
+  const mk = el('a', 'btn cyan', 'Make a key'); mk.href = 'https://github.com/settings/personal-access-tokens/new'; mk.target = '_blank'; nodes.push(mk);
+  const inp = el('input', 'setin'); inp.type = 'password'; inp.placeholder = 'Paste key (github_pat_…)'; inp.autocomplete = 'off';
+  const sv = el('button', 'btn pink', 'Save'); sv.onclick = async () => {
+    const k = inp.value.trim(); if (!k) return;
+    const r = await fetch(`https://api.github.com/repos/${REPO}`, { headers: { Authorization: `Bearer ${k}` } }).catch(() => null);
+    if (!r || !r.ok) { toast('That key did not work — check the steps'); return; }
+    ls.set('gc-gh2', k); toast('Connected ✓'); $('sheet').hidden = true; refreshLive();
+  };
+  const rm = el('button', 'btn', 'Disconnect'); rm.onclick = () => { ls.set('gc-gh2', ''); try { localStorage.removeItem('gc-gh'); } catch (e) { /* */ } openSettings(); };
+  const row = el('div', 'btns'); row.append(sv); if (ghKey()) row.append(rm); nodes.push(inp, row);
+  const aiOn = !(L && L.ai_off);
+  const ab = el('button', 'btn ' + (aiOn ? '' : 'cyan'), aiOn ? 'AI viral scores: ON — tap to turn off' : 'AI viral scores: OFF — tap to turn on');
+  ab.onclick = async () => { ab.disabled = true; if (await ghTap(aiOn ? 'ai: off' : 'ai: on')) toast(aiOn ? 'Turning AI scores off…' : 'Turning AI scores on…'); $('sheet').hidden = true; };
+  nodes.push(el('hr'), el('div', 'meta', 'AI viral scores (Gemini) rate every clip 0–100 and write hooks. Leave on unless Google is having problems.'), ab);
+  const bh = el('button', 'btn', 'Buffer connection help'); bh.onclick = openBufferHelp; nodes.push(el('hr'), bh);
+  sheet('Settings', nodes);
+}
+function openBufferSwitch() {
+  const off = L && L.buffer_off;
+  const want = isPending('buffer:');
+  const b = el('button', 'bigbtn ' + (off ? 'start' : 'stop'), want ? 'Sending… (usually under 1 min)' : off ? 'Turn Buffer back ON' : 'Turn Buffer OFF');
+  b.disabled = !!want;
+  b.onclick = async () => { b.disabled = true; if (await ghTap(off ? 'buffer: on' : 'buffer: off')) toast(off ? 'Turning Buffer on…' : 'Turning Buffer off…'); $('sheet').hidden = true; };
+  sheet(off ? 'Buffer is OFF' : 'Buffer hit its request limit', [
+    el('div', 'note bad', off
+      ? 'Nothing is posted and no requests are sent to Buffer. Clips keep being made — download them from the Queue and post them yourself. Turn Buffer back on once its limit has reset.'
+      : `Buffer refused requests (too many in 24 h). The poster waits and tries once more after ${tET(L.buffer_wait)}.`),
+    el('div', 'meta', 'Buffer free plan: about 600 requests per day and ~2,000 per month for two channels. The poster now uses about 50–60 a day.'),
+    b]);
+}
+function openBufferHelp() {
+  const ok = L && L.buffer_ok;
+  sheet('Connect Buffer (one time)', [
+    el('div', 'note ' + (ok ? 'good' : 'warn'), ok ? 'Buffer is connected ✓ — posts go out automatically.' : 'GitHub posts straight to Buffer. It needs your Buffer API key saved as a GitHub secret.'),
+    el('div', 'steps', ['1. Tap "Open Buffer API page" and sign in.', '2. Personal Access → + New Key (name it gtaclip). Copy the key.',
+      '3. Tap "Open GitHub secrets" → New repository secret.', '4. Name: BUFFER_API_KEY  ·  Secret: paste the key → Add secret.',
+      '5. Come back here — within 5 minutes this shows "Buffer is connected".', 'Never paste the key in a chat.'].join('\n')),
+    Object.assign(el('a', 'btn cyan', 'Open Buffer API page'), { href: 'https://publish.buffer.com/settings/api', target: '_blank' }),
+    Object.assign(el('a', 'btn cyan', 'Open GitHub secrets'), { href: `https://github.com/${REPO}/settings/secrets/actions/new`, target: '_blank' }),
+  ]);
+}
+
+// ------------------------------------------------------------ boot
+function switchTab(t) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === t));
+  for (const s of ['home', 'queue', 'posted', 'stats']) $('tab-' + s).hidden = s !== tab;
+  render(); window.scrollTo(0, 0);
+}
+document.querySelectorAll('.tab').forEach((b) => b.onclick = () => switchTab(b.dataset.tab));
+document.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => switchTab(b.dataset.go));
+$('gear').onclick = () => openSettings();
+async function rebootSite() {
+  toast('Getting the newest version…');
+  try { if (window.caches) for (const k of await caches.keys()) await caches.delete(k); } catch (e) { /* */ }
+  try { if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch (e) { /* */ }
+  try { sessionStorage.clear(); } catch (e) { /* */ }
+  try { await fetch(location.pathname + '?v=' + Date.now(), { cache: 'reload' }); } catch (e) { /* */ }
+  try { sessionStorage.setItem('gc-rebooted', '1'); } catch (e) { /* */ }
+  location.replace(location.pathname + '?v=' + Date.now());
+}
+$('reboot').onclick = rebootSite;
+$('upbtn').onclick = openUpload;
+setInterval(checkUploads, 30000);
+refreshRuns(); setInterval(refreshRuns, 20000);
+document.querySelectorAll('#variant button').forEach((b) => b.onclick = () => { variant = b.dataset.v; ls.set('gc-variant', variant); renderQueue(); });
+$('sheet').onclick = (e) => { if (e.target.id === 'sheet') $('sheet').hidden = true; };
+(async () => {
+  await Promise.all([refreshQueue(), refreshLive()]);
+  try { if (sessionStorage.getItem('gc-rebooted')) { sessionStorage.removeItem('gc-rebooted'); toast(Q.site_build === BUILD || DEV ? 'You have the newest version ✓' : 'Newest version is still publishing — try again in a minute'); } } catch (e) { /* */ }
+  render();
+  setInterval(refreshQueue, 45000);
+  setInterval(() => { const busy = Object.keys(pend).length > 0; if (busy || Date.now() % 30000 < 10000) refreshLive(); }, 10000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshQueue(); refreshLive(); } });
+})();
+</script>
+</body>
+</html>
