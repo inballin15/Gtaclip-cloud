@@ -665,7 +665,8 @@ def main() -> None:
                 "campaign": c.get("campaign", ""), "tag": c.get("tag", ""), "caption": c.get("caption", ""), "why": why, "posted_at": iso(NOW), "video": c["final_abs"],
                 "poster": f"https://inballin15.github.io/Gtaclip-cloud/{c.get('poster', '')}",
                 "tiktok": "", "youtube": "", "status": res, "platforms": want,
-                "hook_kind": c.get("hook_kind", ""), "viral": c.get("viral"), "seconds": c.get("seconds"),
+                "hook_kind": c.get("hook_kind", ""), "hook_variant": c.get("hook_variant", ""),
+                "viral": c.get("viral"), "seconds": c.get("seconds"),
             }
             for s, r in res.items():
                 log(f"  {s}: {r['state']} {r.get('error', '')}")
@@ -785,8 +786,19 @@ def main() -> None:
                     key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -(r.get("viral") or 50)))
         up = ok[0] if ok else None
         up_next = up["id"] if up else None
+    # 3b) engagement learner: what hook styles / spellings / lengths get views on OUR channels
+    insights = rj(P / "insights.json", {})
+    try:
+        import learn
+        if not insights.get("updated") or NOW - parse(insights["updated"]) >= timedelta(hours=2):
+            insights = learn.learn(list(rj(CHANNEL, {}).values()), recs, NOW)
+            wj(P / "insights.json", insights)
+            log(f"hook learner: {insights.get('videos')} videos, {len(insights.get('guidance', []))} lessons")
+    except Exception as e:  # noqa: BLE001
+        log(f"hook learner skipped: {e}")
     old = rj(P / "live.json", {})
     live = {
+        "insights": insights,
         "updated": iso(NOW), "paused": bool(ctl.get("paused")), "switched_at": ctl.get("switched_at", ""),
         "postnow": ctl["postnow"], "next_slot": iso(nxt) if nxt else "", "up_next": up_next,
         "videos": sorted(rj(CHANNEL, {}).values(), key=lambda e: e.get("published") or e.get("first_seen", ""),

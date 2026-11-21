@@ -33,6 +33,8 @@ import numpy as np
 import imageio_ffmpeg
 
 import fetch_clips as fetch_clips_mod
+import learn
+LEARNED_INS: dict = {}
 from fetch_clips import CFG, LIVE, download, helix, log, pick_clips, transcript, twitch_headers
 from render_hook import render as render_hook
 from render_hook import strip_emoji
@@ -1149,6 +1151,14 @@ def main() -> None:
     import viral as _viral_topic
     _viral_topic.TOPIC.clear(); _viral_topic.TOPIC.update(_topic)
     clips = st["clips"]
+    try:   # what the engagement learner found on our channels -> feeds the AI hook writer
+        _ins = json.loads((POSTED_DIR / "insights.json").read_text())
+        viral.LEARNED["guidance"] = learn.guidance_text(_ins)
+        LEARNED_INS.update(_ins)
+        if _ins.get("guidance"):
+            log(f"hook learner: {len(_ins['guidance'])} lessons from {_ins.get('videos')} videos, style weights {_ins.get('weights')}")
+    except Exception:  # noqa: BLE001
+        pass
     apply_posted(st)
     apply_issues(st)
     control = {}
@@ -1550,12 +1560,14 @@ def main() -> None:
                 fr = _frames(raw, [1.5, 6, 11, 16])
                 jp = [cv2.imencode(".jpg", cv2.resize(f, (768, int(f.shape[0] * 768 / f.shape[1]))),
                                    [cv2.IMWRITE_JPEG_QUALITY, 80])[1].tobytes() for f in fr]
+                var = c.get("hook_variant") or learn.pick_variant(LEARNED_INS, cid)   # hook style being tested
                 ok, why, vhook = viral.ai_visual_ok(jp, log, c.get("streamer", ""),
-                                                   (c.get("transcript") or "") + " | title: " + (c.get("title") or ""))
+                                                   (c.get("transcript") or "") + " | title: " + (c.get("title") or ""),
+                                                   variant=var)
                 if ok is not None:
                     c["pic_ok"] = ok
                 if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower():
-                    c["hook"], c["hook_kind"] = vhook, "ai"   # hook written from what's actually on screen
+                    c["hook"], c["hook_kind"], c["hook_variant"] = vhook, "ai", var   # written from what's on screen
                     hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, need_c)
                     need_f = True

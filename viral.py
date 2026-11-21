@@ -258,8 +258,22 @@ HOOK_STYLE = (
 TOPIC = {"name": "GTA 6"}   # what we're clipping (set by the pipeline from the dashboard's topic search)
 
 
-def hook_style() -> str:
-    """The proven hook formula, re-aimed at whatever topic is being clipped."""
+LEARNED = {"guidance": "", "variant": ""}   # set by the pipeline from what the engagement learner found
+
+
+def hook_style(variant: str | None = None) -> str:
+    """The proven hook formula, re-aimed at the topic, plus what our own channel's views taught us,
+    plus the style being tested on this clip."""
+    import learn
+    extra = LEARNED.get("guidance") or ""
+    v = variant if variant is not None else (LEARNED.get("variant") or "")
+    if v and v != "formula" and v in learn.VARIANTS:
+        extra += ("STYLE TEST for this clip (this overrides the formula and CAPS rules above): "
+                  + learn.VARIANTS[v] + "\n")
+    return _base_style() + extra
+
+
+def _base_style() -> str:
     name = TOPIC.get("name") or "GTA 6"
     if name == "GTA 6":
         return HOOK_STYLE
@@ -402,7 +416,7 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
     return out, status
 
 
-def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str = "") -> tuple[bool | None, str, str]:
+def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str = "", variant: str = "") -> tuple[bool | None, str, str]:
     """Look at a few frames of a clip (Gemini vision). False = nudity / sexual content / gore -> don't post.
     None = couldn't check (no key, quota, error)."""
     import base64
@@ -418,7 +432,7 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                       "1) Is there any nudity (bare breasts, genitals, bare buttocks, even in-game), sexual activity, "
                       "strip-club dancing, drug use, or graphic gore? ok=false means it must not be posted.\n"
                       "2) Write the on-screen hook about what ACTUALLY happens in these frames and what was said. "
-                      + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style() +
+                      + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style(variant) +
                       "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\"}."}]
     for j in jpegs[:4]:
         parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(j).decode()}})
