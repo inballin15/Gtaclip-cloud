@@ -152,6 +152,8 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             kind = "ai"
         elif tl.startswith("buffer:"):
             kind = "buffer"
+        elif tl.startswith("split:"):
+            kind = "split"
         if not kind:
             continue  # skip:/edit: belong to the render pipeline
         if age_min > REQUEST_MAX_AGE_MIN:
@@ -164,6 +166,13 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             ctl["switched_at"] = iso(NOW)
             msg = ("Automatic posting is ON — next post at the next :07 or :37 (7am–10:37pm)." if on
                    else "Automatic posting is STOPPED. Nothing posts on the schedule until you press Start.")
+            close_issue(it["number"], msg)
+            log(msg)
+            continue
+        if kind == "split":
+            ctl["split"] = "off" not in tl
+            msg = ("TikTok and YouTube now get DIFFERENT clips each slot." if ctl["split"]
+                   else "TikTok and YouTube now get the SAME clip each slot.")
             close_issue(it["number"], msg)
             log(msg)
             continue
@@ -205,8 +214,10 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             close_issue(it["number"], "Couldn't find that clip in the queue (it may have been removed or expired).")
             log(f"post-now: clip not in queue {cid}")
         else:
+            body = (it.get("body") or "").strip().lower()
+            to = "tiktok" if body.startswith("tiktok") else "youtube" if body.startswith("youtube") else "both"
             if not any(p["id"] == cid for p in ctl["postnow"]):
-                ctl["postnow"].append({"id": cid, "at": iso(NOW)})
+                ctl["postnow"].append({"id": cid, "at": iso(NOW), "to": to})
             close_issue(it["number"], "On it — posting to TikTok and YouTube now.")
             log(f"post-now requested: {cid}")
 
@@ -577,14 +588,16 @@ def main() -> None:
         return len(h) >= 12 and any(h in t for t in buffer_texts)
 
     # 1) what should go out now?
-    to_post: list[tuple[dict, str]] = []
+    split = ctl.get("split", True)        # different clips on TikTok and YouTube (test what each platform likes)
+    to_post: list[tuple[dict, str, list | None]] = []
     if ctl["postnow"]:
         cid = ctl["postnow"][0]["id"]
+        to = ctl["postnow"][0].get("to", "both")
         if by_id.get(cid) and already_on_buffer(by_id[cid]):
             log(f"post now skipped — {cid} is already on Buffer (no duplicates)")
             ctl["postnow"] = ctl["postnow"][1:]
         elif by_id.get(cid, {}).get("final_abs"):
-            to_post.append((by_id[cid], "post now"))
+            to_post.append((by_id[cid], "post now", None if to == "both" else [to]))
     slot = due_slot()
     slot_key = iso(slot) if slot else ""
     last24 = sum(1 for r in recs.values() if r.get("posted_at") and NOW - parse(r["posted_at"]) < timedelta(hours=24)
@@ -601,11 +614,26 @@ def main() -> None:
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
         # newest clips with a real hook first, then the AI viral score (clips rated "skip" go last)
         ok = sorted(ok, key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -(r.get("viral") or 50)))
-        pick = (next((r for r in ok[:4] if r.get("streamer") != last_streamer), None)
-                or (ok[0] if ok else None)) if ok else None
-        if pick:
-            to_post.append((pick, f"{slot.astimezone(ET):%-I:%M %p} slot"))
+        why = f"{slot.astimezone(ET):%-I:%M %p} slot"
+        if split:
+            cool = ctl.get("cooldown", {})
+            used: set[str] = set()
+            for sv in ("tiktok", "youtube"):
+                if cool.get(sv) and parse(cool[sv]) > NOW:
+                    continue
+                last_sv = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)
+                                if sv in (r.get("platforms") or ["tiktok", "youtube"])), "")
+                cand = (next((r for r in ok[:6] if r["id"] not in used and r.get("streamer") != last_sv), None)
+                        or next((r for r in ok if r["id"] not in used), None))
+                if cand:
+                    used.add(cand["id"])
+                    to_post.append((cand, why, [sv]))
         else:
+            pick = (next((r for r in ok[:4] if r.get("streamer") != last_streamer), None)
+                    or (ok[0] if ok else None)) if ok else None
+            if pick:
+                to_post.append((pick, why, None))
+        if not to_post:
             log("slot due but no finished clip is ready")
             ctl["last_slot"] = slot_key
 
@@ -619,23 +647,25 @@ def main() -> None:
     elif BUFFER_KEY:
         buffer_ok = True   # (no separate key check: it cost a request every 5 min; a bad key shows up as a post error)
     if buffer_ok:
-        for c, why in to_post:
+        for c, why, targets in to_post:
             cid = c["id"]
             cool = ctl.get("cooldown", {})
-            live_svcs = [s for s in ("tiktok", "youtube") if not cool.get(s) or parse(cool[s]) <= NOW]
+            want = targets or ["tiktok", "youtube"]
+            live_svcs = [s for s in want if not cool.get(s) or parse(cool[s]) <= NOW]
             if not live_svcs:
-                log(f"{why}: TikTok and YouTube are both waiting out an upload limit — holding {cid}")
-                break
+                log(f"{why}: {', '.join(want)} waiting out an upload limit — holding {cid}")
+                continue
             log(f"posting {cid} ({why}) to {', '.join(live_svcs)}: {c.get('hook')}")
             res = {s: create(s, c) for s in live_svcs}
             res.update({s: {"state": "error", "error": "skipped — waiting out the platform limit", "tries": 3}
-                        for s in ("tiktok", "youtube") if s not in live_svcs})
+                        for s in want if s not in live_svcs})
             ok = any(r["state"] != "error" for r in res.values())
             recs[cid] = {
                 "id": cid, "hook": c.get("hook", ""), "streamer": c.get("streamer", ""), "login": c.get("login", ""),
                 "campaign": c.get("campaign", ""), "tag": c.get("tag", ""), "caption": c.get("caption", ""), "why": why, "posted_at": iso(NOW), "video": c["final_abs"],
                 "poster": f"https://inballin15.github.io/Gtaclip-cloud/{c.get('poster', '')}",
-                "tiktok": "", "youtube": "", "status": res,
+                "tiktok": "", "youtube": "", "status": res, "platforms": want,
+                "hook_kind": c.get("hook_kind", ""), "viral": c.get("viral"), "seconds": c.get("seconds"),
             }
             for s, r in res.items():
                 log(f"  {s}: {r['state']} {r.get('error', '')}")
@@ -763,7 +793,7 @@ def main() -> None:
                          reverse=True)[:80],
         "videos_checked": ctl.get("manual_check", ""),
         "buffer_ok": buffer_ok, "buffer_error": buffer_err, "buffer_off": bool(ctl.get("buffer_off")),
-        "buffer_wait": ctl.get("buffer_wait", ""), "cooldown": ctl.get("cooldown", {}),
+        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "cooldown": ctl.get("cooldown", {}),
         "ai_off": bool(ctl.get("ai_off")),
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
