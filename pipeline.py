@@ -928,20 +928,24 @@ def fetch_link_audio(url: str, section, tmp: Path) -> tuple[Path, float, str]:
 
 
 def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path) -> None:
-    """Download only the video section of a chosen moment, then normalise it to MP4."""
+    """Download only the video section of a chosen moment at full source quality.
+    (Before: yt-dlp's section download re-saved the 1080p60 VOD as old low-bitrate MPEG-4, which made every
+    VOD clip blocky. Now ffmpeg reads the stream itself and saves a high-quality H.264 copy.)"""
     import yt_dlp
-    from yt_dlp.utils import download_range_func
-    import viral
-    out = tmp / f"sec_{int(start)}"
-    opts = {"format": "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best", "outtmpl": str(out) + ".%(ext)s",
-            "quiet": True, "noprogress": True, "noplaylist": True, "merge_output_format": "mp4",
-            "download_ranges": download_range_func(None, [(max(0.0, start - 1), end + 1)]),
-            "force_keyframes_at_cuts": True, "ffmpeg_location": FF}
-    with yt_dlp.YoutubeDL(opts) as y:
-        y.download([url])
-    f = next(tmp.glob(f"sec_{int(start)}.*"))
-    viral.cut(f, 0, (end - start) + 2, raw)
-    f.unlink(missing_ok=True)
+    with yt_dlp.YoutubeDL({"quiet": True, "noprogress": True, "noplaylist": True,
+                           "format": "best[height<=1080][vcodec!=none]/bestvideo[height<=1080]+bestaudio/best",
+                           "format_sort": ["res", "fps", "tbr"]}) as y:
+        info = y.extract_info(url, download=False)
+    fmts = info.get("requested_formats") or [info]
+    args = []
+    for f in fmts:
+        hdr = "".join(f"{k}: {v}\r\n" for k, v in (f.get("http_headers") or {}).items())
+        args += (["-headers", hdr] if hdr else []) + ["-ss", f"{max(0.0, start - 1):.2f}", "-i", f["url"]]
+    maps = ["-map", "0:v:0", "-map", ("1:a:0" if len(fmts) > 1 else "0:a:0?")]
+    ff(*args, *maps, "-t", f"{(end - start) + 2:.2f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "16",
+       "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(raw))
+    h = info.get("height") or (fmts[0].get("height") if fmts else None)
+    log(f"[download] VOD section {info.get('format_id')} {info.get('width')}x{h} -> H.264 full quality")
 
 
 # ---------------------------------------------------------------- your own uploads -> clips

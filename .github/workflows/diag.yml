@@ -4,28 +4,20 @@ jobs:
   d:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install -q yt-dlp imageio-ffmpeg
+      - run: pip install -q -r requirements.txt
       - run: |
-          for v in 2935059680 2934996320; do
-            echo "=== VOD $v formats"; yt-dlp -F "https://www.twitch.tv/videos/$v" 2>&1 | tail -12
-            python3 - "$v" <<'PY'
-          import sys, yt_dlp, imageio_ffmpeg, subprocess, glob
-          from yt_dlp.utils import download_range_func
-          v = sys.argv[1]
-          for name, fmt, extra in [("CURRENT", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best", {}),
-                                   ("FIXED", "best[height<=1080][vcodec!=none]/best", {"format_sort": ["res", "fps", "tbr"]})]:
-              o = {"format": fmt, "outtmpl": f"/tmp/{name}_{v}.%(ext)s", "quiet": True, "noprogress": True,
-                   "download_ranges": download_range_func(None, [(3600, 3610)]), "force_keyframes_at_cuts": True,
-                   "ffmpeg_location": imageio_ffmpeg.get_ffmpeg_exe(), **extra}
-              try:
-                  with yt_dlp.YoutubeDL(o) as y:
-                      info = y.extract_info(f"https://www.twitch.tv/videos/{v}", download=True)
-                  f = glob.glob(f"/tmp/{name}_{v}.*")[0]
-                  r = subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-i", f], capture_output=True, text=True).stderr
-                  print(name, "picked", info.get("format_id"), info.get("width"), "x", info.get("height"), "|", [l.strip()[:120] for l in r.splitlines() if "Video:" in l])
-              except Exception as e:
-                  print(name, "ERROR", str(e)[:300])
+          python3 - <<'PY'
+          import subprocess, pathlib, pipeline
+          tmp = pathlib.Path("/tmp/t"); tmp.mkdir(exist_ok=True)
+          for v, at in [("2935059680", 3600), ("2934996320", 5000)]:
+              out = tmp / f"{v}.mp4"
+              pipeline.fetch_link_section(f"https://www.twitch.tv/videos/{v}", at, at + 15, out, tmp)
+              r = subprocess.run([pipeline.FF, "-i", str(out)], capture_output=True, text=True).stderr
+              print("RESULT", v, out.stat().st_size // 1024, "KB", [l.strip()[:140] for l in r.splitlines() if "Video:" in l or "Duration" in l])
+              subprocess.run([pipeline.FF, "-y", "-loglevel", "error", "-ss", "5", "-i", str(out), "-frames:v", "1", f"/tmp/t/{v}.png"])
           PY
-          done
+      - uses: actions/upload-artifact@v4
+        with: { name: frames, path: /tmp/t/*.png }
