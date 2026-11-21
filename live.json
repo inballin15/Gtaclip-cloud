@@ -130,7 +130,7 @@
    "lowcaps": 0
   }
  },
- "updated": "2026-11-21T16:19:16Z",
+ "updated": "2026-11-21T16:20:42Z",
  "paused": true,
  "switched_at": "2026-11-21T16:19:16Z",
  "postnow": [],
@@ -989,8 +989,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-21T16:19:16Z",
- "log": [
-  "[16:19:18Z] Automatic posting is STOPPED. Nothing posts on the schedule until you press Start."
- ]
+ "stats_updated": "2026-11-21T16:20:42Z",
+ "log": []
 }
