@@ -620,9 +620,14 @@ function clipCard(r, st) {
   mb.onclick = () => { more.classList.toggle('open'); mb.textContent = more.classList.contains('open') ? '×' : '⋯'; };
   c.append(b); return c;
 }
-function captionFor(r) { return (r.caption || `${r.hook}\n\n${r.login ? '🎥 @' + r.login + '\n\n' : ''}${r.tag || ''} ${(Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'} #fyp`).trim(); }
-async function saveVideo(r, btn) {
-  const url = PAGES + vidOf(r); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${variant === 'clean' && r.clean ? '-nocaption' : ''}.mp4`;
+function naturalCase(t) {   // "Lacy LOSES IT over EXPENSIVE furniture" -> "Lacy loses it over expensive furniture"
+  const keep = /^(GTA|GTAVI|NPC|NPCS|NPCs|SWAT|FBI|CEO|USA|UK|VI|IV|V|OG|POV|AI|\d+)$/;
+  return String(t || '').split(' ').map((w) => (w.length > 1 && w === w.toUpperCase() && /[A-Z]/.test(w) && !keep.test(w.replace(/[^A-Za-z0-9]/g, ''))) ? w.toLowerCase() : w).join(' ').replace(/\bNPCS\b/g, 'NPCs');
+}
+function captionFor(r) { return (r.caption || `${naturalCase(r.hook)}\n\n${r.login ? '🎥 @' + r.login + '\n\n' : ''}${r.tag || ''} ${(Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'} #fyp`).trim(); }
+async function saveVideo(r, btn, which) {
+  const clean = which ? which === 'clean' && r.clean : (variant === 'clean' && r.clean);
+  const url = PAGES + (clean ? r.clean : r.final); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}.mp4`;
   const label = btn.textContent; btn.disabled = true; btn.textContent = 'Getting video…';
   try {
     const blob = await (await fetch(url)).blob(); const file = new File([blob], name, { type: 'video/mp4' });

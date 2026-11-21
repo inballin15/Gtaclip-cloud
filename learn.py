@@ -18,9 +18,11 @@ VARIANTS = {
     "news": "Breaking-news angle: '[name] just BECAME the FIRST…' / '[name] is OFFICIALLY…' / 'No way [name]…'.",
     "quote": "Lead with the streamer's own most shocking words in quotes-free form, then the context: '[name] said … after …'.",
     "question": "A curiosity question the clip answers: 'Why did [name] …?' / 'How did [name] …?' Keep 2-4 CAPS words.",
-    "lowcaps": "Same story but calm spelling: normal sentence case, at most ONE CAPS word, short (25-55 characters).",
+    "lowcaps": ("NATURAL, like a friend telling you what happened: normal spelling, NO all-caps words (GTA is fine), "
+                "casual and specific, 20-50 characters. Real top performers on this channel: 'Marlon can't handle a night in "
+                "GTA 6' / 'Lacy stalking in gta 6' / 'Adapt tries texting and driving in GTA 6'."),
 }
-PRIOR = {"formula": 0.5, "news": 0.15, "quote": 0.1, "question": 0.1, "lowcaps": 0.15}   # start mostly on what's proven
+PRIOR = {"formula": 0.25, "news": 0.1, "quote": 0.1, "question": 0.1, "lowcaps": 0.45}   # natural hooks did best on our TikTok   # start mostly on what's proven
 MIN_WEIGHT = 0.08          # every style keeps getting a few tries so the learner can notice when tastes change
 
 # Clip-style tests ("dynamic model"): each automatic clip gets one option per dimension; views decide the mix.

@@ -687,9 +687,14 @@ function clipCard(r, st) {
   mb.onclick = () => { more.classList.toggle('open'); mb.textContent = more.classList.contains('open') ? '×' : '⋯'; };
   c.append(b); return c;
 }
-function captionFor(r) { return (r.caption || `${r.hook}\n\n${r.login ? '🎥 @' + r.login + '\n\n' : ''}${r.tag || ''} ${(Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'} #fyp`).trim(); }
-async function saveVideo(r, btn) {
-  const url = PAGES + vidOf(r); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${variant === 'clean' && r.clean ? '-nocaption' : ''}.mp4`;
+function naturalCase(t) {   // "Lacy LOSES IT over EXPENSIVE furniture" -> "Lacy loses it over expensive furniture"
+  const keep = /^(GTA|GTAVI|NPC|NPCS|NPCs|SWAT|FBI|CEO|USA|UK|VI|IV|V|OG|POV|AI|\d+)$/;
+  return String(t || '').split(' ').map((w) => (w.length > 1 && w === w.toUpperCase() && /[A-Z]/.test(w) && !keep.test(w.replace(/[^A-Za-z0-9]/g, ''))) ? w.toLowerCase() : w).join(' ').replace(/\bNPCS\b/g, 'NPCs');
+}
+function captionFor(r) { return (r.caption || `${naturalCase(r.hook)}\n\n${r.login ? '🎥 @' + r.login + '\n\n' : ''}${r.tag || ''} ${(Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'} #fyp`).trim(); }
+async function saveVideo(r, btn, which) {
+  const clean = which ? which === 'clean' && r.clean : (variant === 'clean' && r.clean);
+  const url = PAGES + (clean ? r.clean : r.final); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}.mp4`;
   const label = btn.textContent; btn.disabled = true; btn.textContent = 'Getting video…';
   try {
     const blob = await (await fetch(url)).blob(); const file = new File([blob], name, { type: 'video/mp4' });
@@ -1174,15 +1179,16 @@ function yourTurnCard(ql) {
   const items = yourTurn(ql); if (!youPost().length) return null;
   const c = el('div', 'card turn'); c.append(el('h2', null, items.length ? `Your turn · ${items.length}` : 'Your turn'));
   if (!items.length) { c.append(el('div', 'mut', 'Nothing waiting — new clips show up here as they finish.')); return c; }
-  c.append(el('div', 'mut', '1 Save → 2 post it in the app with the copied caption → 3 tap Posted.'));
+  c.append(el('div', 'mut', '1 Save (with the hook on the video, or No caption) — the caption text is copied too → 2 post it in the app → 3 tap Posted.'));
   for (const { r, sv } of items) {
     const it = el('div', 'tit'); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
     const body = el('div', 'tb'); body.append(el('span', 'pill ' + (sv === 'tiktok' ? 'tt' : 'yt'), PN[sv]), el('div', 'h', r.hook || ''));
     const bt = el('div', 'tbtn');
-    const sv1 = el('button', 'btn pink', 'Save + copy'); sv1.onclick = () => saveVideo(r, sv1);
+    const sv1 = el('button', 'btn pink', 'Save + copy'); sv1.onclick = () => saveVideo(r, sv1, 'final');
+    const sv2 = el('button', 'btn', r.clean ? 'No caption' : 'No caption (making…)'); sv2.disabled = !r.clean; sv2.onclick = () => saveVideo(r, sv2, 'clean');
     const op = el('a', 'btn', 'Open app'); op.href = sv === 'tiktok' ? 'https://www.tiktok.com/upload' : 'https://studio.youtube.com'; op.target = '_blank'; op.rel = 'noopener';
     const ok = el('button', 'btn ok', 'Posted ✓'); ok.onclick = async () => { ok.disabled = true; if (await ghTap(`manual: ${r.id} ${sv}`)) toast(`Marked posted on ${PN[sv]} — it's tracked for views & submitting`); lastSig = ''; render(); };
-    bt.append(sv1, op, ok); body.append(bt); it.append(th, body); c.append(it);
+    bt.append(sv1, sv2, op, ok); body.append(bt); it.append(th, body); c.append(it);
   }
   return c;
 }
