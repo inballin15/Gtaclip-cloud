@@ -1,0 +1,35 @@
+{
+ "id": "vod2934996320_93424",
+ "hook": "Clix SHOCKED by REALISTIC bird flight in GTA 6",
+ "streamer": "Clix",
+ "login": "clix",
+ "campaign": "Clix",
+ "tag": "#Clix",
+ "caption": "",
+ "why": "4:07 PM slot",
+ "posted_at": "2026-11-21T21:07:17Z",
+ "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2934996320_93424_final.mp4?v=d24eeaa4b1&r=1795291088",
+ "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2934996320_93424.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "uploading",
+   "buffer_id": "6b020807d5eabfb8cc5f050d",
+   "error": ""
+  }
+ },
+ "platforms": [
+  "tiktok"
+ ],
+ "hook_kind": "ai",
+ "hook_variant": "formula",
+ "style": {
+  "box": "black",
+  "cam": "small",
+  "len": "normal",
+  "hooklen": "short"
+ },
+ "viral": 90,
+ "seconds": 18
+}
