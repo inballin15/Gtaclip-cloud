@@ -1,12 +1,18 @@
 {
- "updated": "2026-11-21T14:29:23Z",
- "videos": 8,
+ "updated": "2026-11-21T16:30:35Z",
+ "videos": 18,
  "findings": [
   {
    "feature": "posted",
    "value": "midday (11-15)",
-   "x": 0.52,
-   "n": 3
+   "x": 0.6,
+   "n": 5
+  },
+  {
+   "feature": "CAPS words",
+   "value": "4-6",
+   "x": 0.67,
+   "n": 4
   },
   {
    "feature": "CAPS words",
@@ -28,69 +34,82 @@
   },
   {
    "feature": "hook length",
+   "value": "medium (60-90)",
+   "x": 0.79,
+   "n": 4
+  },
+  {
+   "feature": "hook length",
    "value": "long (90+)",
    "x": 1.25,
    "n": 4
   },
   {
-   "feature": "streamer",
-   "value": "?",
-   "x": 0.8,
-   "n": 4
+   "feature": "has a number",
+   "value": "no",
+   "x": 0.86,
+   "n": 3
   },
   {
    "feature": "has 'FIRST'",
    "value": "no",
-   "x": 0.8,
-   "n": 6
+   "x": 0.92,
+   "n": 16
   },
   {
-   "feature": "hook length",
-   "value": "short (<60)",
-   "x": 0.86,
-   "n": 3
-  },
-  {
-   "feature": "CAPS words",
-   "value": "0-1",
-   "x": 0.86,
-   "n": 3
-  },
-  {
-   "feature": "has a number",
-   "value": "no",
-   "x": 0.86,
-   "n": 3
-  },
-  {
-   "feature": "has a number",
-   "value": "yes",
-   "x": 1.1,
-   "n": 5
-  },
-  {
-   "feature": "hook style",
-   "value": "unknown",
-   "x": 1.0,
+   "feature": "posted",
+   "value": "evening (15-19)",
+   "x": 1.08,
    "n": 8
   },
   {
-   "feature": "question",
-   "value": "no",
-   "x": 1.0,
+   "feature": "streamer",
+   "value": "?",
+   "x": 1.03,
    "n": 8
   },
   {
    "feature": "emotion word",
    "value": "none",
+   "x": 1.03,
+   "n": 15
+  },
+  {
+   "feature": "has a number",
+   "value": "yes",
+   "x": 1.03,
+   "n": 15
+  },
+  {
+   "feature": "hook style",
+   "value": "unknown",
    "x": 1.0,
-   "n": 8
+   "n": 18
+  },
+  {
+   "feature": "hook length",
+   "value": "short (<60)",
+   "x": 1.0,
+   "n": 10
+  },
+  {
+   "feature": "CAPS words",
+   "value": "0-1",
+   "x": 1.0,
+   "n": 10
+  },
+  {
+   "feature": "question",
+   "value": "no",
+   "x": 1.0,
+   "n": 18
   }
  ],
  "guidance": [
+  "AVOID: CAPS words = 4-6 (0.67x views, 4 videos)",
   "DO: CAPS words = 2-3 (1.49x views, 4 videos)",
-  "DO: hook length = long (90+) (1.25x views, 4 videos)",
-  "AVOID: has 'FIRST' = no (0.8x views, 6 videos)"
+  "AVOID: hook length = medium (60-90) (0.79x views, 4 videos)",
+  "DO: hook length = long (90+) (1.25x views, 4 videos)"
  ],
  "weights": {
   "formula": 0.5,
@@ -101,24 +120,24 @@
  },
  "top": [
   {
-   "hook": "Lacy found the FIRST shoe store in GTA 6  Lacy found the first shoe store in GTA 6\n\nCredit: Lacy (https://www.twitch.tv/",
-   "views": 17
+   "hook": "Marlon can't handle a night in GTA 6",
+   "views": 532
   },
   {
-   "hook": "Little sushi night for Marlon",
-   "views": 5
+   "hook": "Lacy stalking in gta 6",
+   "views": 333
   },
   {
-   "hook": "Clix refuses to dive in GTA 6 waters  Clix refuses to dive in GTA 6 waters\n\nCredit: Clix (https://www.twitch.tv/clix)",
-   "views": 5
+   "hook": "Adapt tries texting and driving in GTA 6",
+   "views": 301
   },
   {
-   "hook": "Speed found the hulk in gta",
-   "views": 2
+   "hook": "ohnePixel IPad Kid maxxing brainrot in GTA 6",
+   "views": 261
   },
   {
-   "hook": "IShowSpeed tried his first robbery in GTA 6  IShowSpeed tried his first robbery in GTA 6\n\nCredit: IShowSpeed (https://ww",
-   "views": 1
+   "hook": "Kai Cenat LOSES IT after seeing NPCS try to STEAL his CAR in GTA 6",
+   "views": 204
   }
  ],
  "style_counts": {
