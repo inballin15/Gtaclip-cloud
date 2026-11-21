@@ -1,8 +1,8 @@
 {
- "paused": true,
+ "paused": false,
  "postnow": [],
  "last_slot": "2026-11-19T15:07:00Z",
- "switched_at": "2026-11-21T16:19:16Z",
+ "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
@@ -32,7 +32,7 @@
  "yt_channel": "UCtxm_iDQ0Y7baG2mwrGGcSg",
  "yt_check": "ok",
  "tt_check": "ok",
- "manual_check": "2026-11-21T18:56:31Z",
+ "manual_check": "2026-11-21T19:06:01Z",
  "stats_at": "2026-11-21T15:52:54Z",
  "buffer_wait": "",
  "buffer_off": false,
