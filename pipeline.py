@@ -769,7 +769,7 @@ def cam_has_face(path: Path, cam: str) -> bool:
         return True   # can't tell -> don't throw the clip away
 
 
-def cam_without_chat(path: Path, cam: str) -> str:
+def cam_without_chat(path: Path, cam: str, chat_layout: bool = False) -> str:
     """Some streamers (Kai) have chat scrolling over the bottom of their webcam. Find where that text band starts
     and end the webcam box above it, so no chat shows between the face and the gameplay."""
     try:
@@ -790,18 +790,27 @@ def cam_without_chat(path: Path, cam: str) -> str:
         d = np.convolve(np.mean([d[:n] for d in dens], axis=0), np.ones(5) / 5, mode="same")
         base = float(np.median(d[int(n * 0.3):int(n * 0.55)]))
         k = max(3, int(n * 0.04))
+        # streamers known to run chat over their webcam (Kai): sensitive check (chat text on sharp 1080p footage
+        # is only ~0.02-0.05), but the band has to run all the way down to the bottom of the box
+        thr = max(3 * base, 0.018) if chat_layout else max(2.2 * base, 0.06)
         for r in range(int(n * 0.55), n - k):
-            if d[r:r + k].mean() > max(2.2 * base, 0.06):
+            if d[r:r + k].mean() > thr and (not chat_layout or (d[r:] > thr * 0.5).mean() > 0.5):
                 while r > n * 0.5 and d[r - 1] > 1.4 * base:   # walk up to where the chat really starts
                     r -= 1
-                frac = max(0.5, (r - n * 0.08) / n)
-                for fr in _frames(path, [max(0.5, dur * p) for p in (0.3, 0.6)]):   # never cut through the face
+                start = r / n
+                frac = max(0.5, start - 0.08)
+                need = 0.0      # lowest chin seen: the cut may move down to just below it, never through the face
+                for fr in _frames(path, [max(0.5, dur * p) for p in (0.15, 0.3, 0.45, 0.6, 0.75, 0.9)]):
                     H, W = fr.shape[:2]
                     c = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
                     big = cv2.resize(c, None, fx=2, fy=2)
-                    for fx_, fy_, fw_, fh_, _sc in _yunet_faces(big, 0.6):
-                        if (fy_ + fh_ * 1.6) / big.shape[0] > frac:   # face + chin + neck must stay above the cut
-                            return cam
+                    fs = _yunet_faces(big, 0.6)
+                    if fs:   # only the streamer's own face (the surest one) — chat emotes can look like tiny faces
+                        fx_, fy_, fw_, fh_, _sc = max(fs, key=lambda f: f[4])
+                        need = max(need, (fy_ + fh_ * 1.12) / big.shape[0])
+                if need > start + 0.02:      # the face itself reaches into the chat band: leave it alone
+                    return cam
+                frac = max(frac, need)
                 return f"{x:.4f},{y:.4f},{w:.4f},{h * frac:.4f}"
         return cam
     except Exception:  # noqa: BLE001
@@ -1369,6 +1378,13 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_kaichat_v", 0) < 1:   # one time: Kai's chat strip came back on sharp footage -> re-frame his clips
+        st["redo_kaichat_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new" and CFG["streamers"].get(c.get("login", ""), {}).get("chat_on_cam") and not (c.get("user_layout") or {}).get("cam"):
+                for k in ("final_hash", "clean_v", "hd", "hd_cam"):
+                    c.pop(k, None)
+                c["hd_sfx"] = "_q3"
     if st.get("redo_vodhq_v", 0) < 1:   # one time: VOD clips were saved blocky -> download again at full quality
         st["redo_vodhq_v"] = 1
         n_re = 0
@@ -1643,7 +1659,7 @@ def main() -> None:
             lay = f"irl:{c['irl_x']:.3f}"
             log(f"no gameplay in {cid}: full-screen shot on the streamer")
         if lay == "split" and cam and not ul.get("cam"):
-            cam2 = cam_without_chat(raw, cam)
+            cam2 = cam_without_chat(raw, cam, bool(CFG["streamers"].get(c.get("login", ""), {}).get("chat_on_cam")))
             if cam2 != cam:
                 log(f"chat over the webcam in {cid}: webcam box ends above it")
                 cam = cam2
