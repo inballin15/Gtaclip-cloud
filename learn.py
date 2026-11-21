@@ -18,7 +18,7 @@ VARIANTS = {
     "news": "Breaking-news angle: '[name] just BECAME the FIRST…' / '[name] is OFFICIALLY…' / 'No way [name]…'.",
     "quote": "Lead with the streamer's own most shocking words in quotes-free form, then the context: '[name] said … after …'.",
     "question": "A curiosity question the clip answers: 'Why did [name] …?' / 'How did [name] …?' Keep 2-4 CAPS words.",
-    "lowcaps": "Same story but calm spelling: normal sentence case, at most ONE CAPS word, short (40-70 characters).",
+    "lowcaps": "Same story but calm spelling: normal sentence case, at most ONE CAPS word, short (25-55 characters).",
 }
 PRIOR = {"formula": 0.5, "news": 0.15, "quote": 0.1, "question": 0.1, "lowcaps": 0.15}   # start mostly on what's proven
 MIN_WEIGHT = 0.08          # every style keeps getting a few tries so the learner can notice when tastes change

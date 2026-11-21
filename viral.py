@@ -242,17 +242,68 @@ def gemini_models(key: str, log=print) -> list[str]:
 
 
 HOOK_STYLE = (
-    "The on-screen hook copies the formula of the biggest GTA 6 clip pages (1-7M views each): "
-    "[streamer's well-known name] [CAPS emotion: SHOCKED / LOSES IT / DEVASTATED / DISAPPOINTED / CRYING / FURIOUS] "
-    "after [finding out / realizing / seeing / discovering] [one specific GTA 6 detail]. Or a 'FIRST' / 'just now' "
-    "news angle. Real examples: 'Kai Cenat LOSES IT after finding out Rakai is STILL stuck on the FIRST mission in "
-    "GTA 6 after 5 HOURS' / 'IShowSpeed was SHOCKED seeing the HULK in GTA 6' / 'Kai was DISAPPOINTED he wasn't ABLE "
-    "to walk into EVERY building inside GTA 6 DESPITE waiting 13 YEARS' / 'Kai Cenat was SHOCKED that NPCS he FOUGHT "
-    "earlier REMEMBERED him and tried to JUMP him in GTA 6' / 'Lacy realises you can't just steal cars anymore'.\n"
-    "Rules: 45-110 characters (2-3 lines); 3-6 CAPS words on the emotion and the key facts; a specific detail (Lucia, "
-    "Jason, Vice City, a number, a dollar amount, hours played, a first); exaggerate the reaction, but the event must "
-    "come from the transcript, title or the streamer's real story (never invent fake records or crimes); no emojis, "
-    "no swearing, no quotes, no hashtags.\n")
+    "The on-screen hook copies the formula of the biggest GTA 6 clip pages (1-7M views each), kept SHORT: "
+    "[streamer's well-known name] [CAPS emotion: SHOCKED / LOSES IT / FURIOUS / CRYING / STUNNED] "
+    "[over / after / seeing] [ONE specific GTA 6 detail]. Or a 'FIRST' / 'just now' news angle. "
+    "Real examples: 'Kai Cenat LOSES IT over Rakai stuck on mission 1' / 'IShowSpeed SHOCKED seeing the HULK in GTA 6' / "
+    "'Kai FURIOUS that NPCs REMEMBERED him' / 'Lacy realizes you can't steal cars anymore' / "
+    "'Clix CRYING after Jason dies'.\n"
+    "Rules: SHORT - 25-60 characters, at most 10 words, one line of thought (1-2 lines on screen); cut every word "
+    "that isn't needed (no 'during his marathon', 'in this intense moment', 'that he thought it was'); 2-4 CAPS words "
+    "on the emotion and the key fact; one specific detail (Lucia, Jason, Vice City, a number, hours played, a first); "
+    "exaggerate the reaction, but the event must come from the transcript, title or the streamer's real story "
+    "(never invent fake records or crimes); no emojis, no swearing, no quotes, no hashtags.\n")
+
+HOOK_MAX = 64   # automatic hooks longer than this get shortened (your own typed hooks are never touched)
+_TAIL = re.compile(r"(?:,| -| during | while | because | despite | even though | as he | as she | after spending "
+                   r"| after playing | immediately after | for (?:over )?\d+ hours)", re.I)
+
+
+def short_hook(h: str, limit: int = HOOK_MAX) -> str:
+    """Drop a trailing filler clause (', during his marathon', ' while ...') from an automatic hook if that brings it
+    under the limit without losing the point. Anything still too long is rewritten by ai_shorten() later."""
+    h = clean_line(h)
+    if len(h) <= limit:
+        return h
+    cuts = [m.start() for m in _TAIL.finditer(h) if 28 <= m.start() <= limit]
+    return h[:max(cuts)].strip(" ,-") if cuts else h
+
+
+def ai_shorten(hooks: dict[str, str], log=print) -> dict[str, str]:
+    """One Gemini request: rewrite long hooks to 25-60 characters, same story, same name, same punch."""
+    import json as _json
+    import os
+    import urllib.request
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not key or not hooks:
+        return {}
+    prompt = ("Rewrite each on-screen hook for a TikTok/YouTube Shorts clip so it is SHORT: 25-60 characters, at most "
+              "10 words. Keep the streamer's name exactly, keep the key event and 2-3 CAPS words, keep the meaning; cut "
+              "filler ('during his marathon', 'in this intense moment', 'that he thought'). It must still read as a "
+              "complete thought. Examples: 'Kai Cenat LOSES IT after finding out Rakai is STILL stuck on the FIRST "
+              "mission in GTA 6 after 5 HOURS' -> 'Kai Cenat LOSES IT over Rakai stuck on mission 1'; 'Kai Cenat was "
+              "SHOCKED that NPCS he FOUGHT earlier REMEMBERED him and tried to JUMP him in GTA 6' -> 'Kai SHOCKED NPCs "
+              "REMEMBERED him and tried to JUMP him'.\nReturn JSON {id: short hook}.\n" + _json.dumps(hooks))
+    body = {"contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.3,
+                                 "thinkingConfig": {"thinkingBudget": 0}}}
+    for model in gemini_models(key, log):
+        try:
+            req = urllib.request.Request(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                data=_json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                out = _json.loads(r.read())
+            got = _json.loads(out["candidates"][0]["content"]["parts"][0]["text"])
+            res = {}
+            for k, v in (got.items() if isinstance(got, dict) else []):
+                v = clean_line(str(v))
+                if k in hooks and 18 <= len(v) <= 72:
+                    res[k] = v
+            return res
+        except Exception as e:  # noqa: BLE001
+            log(f"hook shortening ({model}): {str(e)[:120]}")
+    return {}
 
 
 TOPIC = {"name": "GTA 6"}   # what we're clipping (set by the pipeline from the dashboard's topic search)
@@ -325,7 +376,7 @@ def ai_rank(clips: list[dict], log=print, streamer: str = "") -> list[dict]:
                     ai = max(0.0, min(10.0, float(r.get("score", 5))))
                     c["ai_score"] = ai
                     c["score"] = round(0.4 * (c["score"] / top) * 10 + 0.6 * ai, 2)
-                    h = clean_line(str(r.get("hook", "")))[:120]
+                    h = short_hook(str(r.get("hook", "")))
                     if len(h) >= 12:
                         c["hook"], c["hook_ai"] = h, True
                     if ai <= 1:
@@ -394,7 +445,7 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
                     out[str(row.get("id"))] = {
                         "score": sc, "why": clean_line(str(row.get("why", "")))[:90],
                         "verdict": "post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
-                        "hook": clean_line(str(row.get("hook", "")))[:120], "model": model}
+                        "hook": short_hook(str(row.get("hook", ""))), "model": model}
                 done = True
                 break
             except urllib.error.HTTPError as e:
@@ -453,7 +504,7 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                 if isinstance(row, list):
                     row = row[0] if row else {}
                 return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
-                        clean_line(str(row.get("hook", "")))[:120])
+                        short_hook(str(row.get("hook", ""))))
             except Exception as e:  # noqa: BLE001
                 busy = busy or "429" in str(e) or "503" in str(e)
                 log(f"picture check ({model}): {str(e)[:80]}")

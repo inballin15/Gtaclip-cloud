@@ -1555,6 +1555,23 @@ def main() -> None:
     except Exception as e:  # noqa: BLE001
         log(f"AI scoring failed: {e}")
 
+    # 3c. short hooks: automatic hooks that came out long get rewritten shorter by the AI (yours are never touched)
+    try:
+        import viral
+        long_h = {cid: c["hook"] for cid, c in clips.items()
+                  if c["status"] == "new" and c.get("hook") and not c.get("hook_by_user")
+                  and len(c["hook"]) > viral.HOOK_MAX and not c.get("hook_short_tried")}
+        if long_h:
+            got = viral.ai_shorten(dict(list(long_h.items())[:30]), log)
+            for cid, h in got.items():
+                log(f"shorter hook {cid}: {h}")
+                clips[cid]["hook"] = h
+                clips[cid]["hook_short_tried"] = True
+            if got:
+                log(f"shortened {len(got)} long hooks")
+    except Exception as e:  # noqa: BLE001
+        log(f"hook shortening skipped: {e}")
+
     # 4. drop old stuff, get queued clips ready (thumbnail, hook); videos are made in 4b
     jobs = []
     for cid, c in list(clips.items()):
@@ -1646,6 +1663,7 @@ def main() -> None:
                     c["pic_ok"] = ok
                 if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower():
                     c["hook"], c["hook_kind"], c["hook_variant"] = vhook, "ai", var   # written from what's on screen
+                    c.pop("hook_short_tried", None)   # a fresh hook gets its own length check
                     hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, need_c)
                     need_f = True
