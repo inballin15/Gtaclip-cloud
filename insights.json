@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-21T16:30:35Z",
+ "updated": "2026-11-21T18:31:09Z",
  "videos": 18,
  "findings": [
   {
@@ -34,14 +34,14 @@
   },
   {
    "feature": "hook length",
-   "value": "medium (60-90)",
-   "x": 0.79,
+   "value": "long (90+)",
+   "x": 1.25,
    "n": 4
   },
   {
    "feature": "hook length",
-   "value": "long (90+)",
-   "x": 1.25,
+   "value": "medium (60-90)",
+   "x": 0.8,
    "n": 4
   },
   {
@@ -59,13 +59,7 @@
   {
    "feature": "posted",
    "value": "evening (15-19)",
-   "x": 1.08,
-   "n": 8
-  },
-  {
-   "feature": "streamer",
-   "value": "?",
-   "x": 1.03,
+   "x": 1.07,
    "n": 8
   },
   {
@@ -79,6 +73,12 @@
    "value": "yes",
    "x": 1.03,
    "n": 15
+  },
+  {
+   "feature": "streamer",
+   "value": "?",
+   "x": 1.02,
+   "n": 8
   },
   {
    "feature": "hook style",
@@ -108,8 +108,8 @@
  "guidance": [
   "AVOID: CAPS words = 4-6 (0.67x views, 4 videos)",
   "DO: CAPS words = 2-3 (1.49x views, 4 videos)",
-  "AVOID: hook length = medium (60-90) (0.79x views, 4 videos)",
-  "DO: hook length = long (90+) (1.25x views, 4 videos)"
+  "DO: hook length = long (90+) (1.25x views, 4 videos)",
+  "AVOID: hook length = medium (60-90) (0.8x views, 4 videos)"
  ],
  "weights": {
   "formula": 0.5,
@@ -129,11 +129,11 @@
   },
   {
    "hook": "Adapt tries texting and driving in GTA 6",
-   "views": 301
+   "views": 302
   },
   {
    "hook": "ohnePixel IPad Kid maxxing brainrot in GTA 6",
-   "views": 261
+   "views": 262
   },
   {
    "hook": "Kai Cenat LOSES IT after seeing NPCS try to STEAL his CAR in GTA 6",
