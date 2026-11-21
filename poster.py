@@ -523,6 +523,8 @@ SLOT_COST = 4          # duplicate check + TikTok upload + YouTube upload + one 
 STATS_HOURS = 6        # Buffer stats every 6 h (views on the site come from TikTok/YouTube directly every 9 min)
 RESERVE = 25           # keep a few requests spare for Post now and retries
 BUDGET: dict = {}
+# Nicholas, Nov 21: hourly test posts for the rest of today only (4:07-9:07 PM ET), normal schedule from tomorrow
+ONE_DAY_SLOTS = {"2026-11-21": [(16, 7), (17, 7), (18, 7), (19, 7), (20, 7), (21, 7)]}
 ACTIVE_SLOTS = list(SLOTS)
 
 
@@ -545,7 +547,10 @@ def plan_budget(b: dict) -> None:
             b["cap"] = int(max(0, min(200, (left - RESERVE) / days)))
     k = max(0, min(len(SLOTS), (b["cap"] - 24 // STATS_HOURS) // SLOT_COST))
     ACTIVE_SLOTS = sorted(SLOT_PRIORITY[:k])
-    b["slots"] = k
+    if day in ONE_DAY_SLOTS:          # a one-off schedule for a single day (ends by itself at midnight ET)
+        ACTIVE_SLOTS = sorted(ONE_DAY_SLOTS[day])
+        b["cap"] = max(b["cap"], len(ACTIVE_SLOTS) * SLOT_COST + 6)
+    b["slots"] = len(ACTIVE_SLOTS)
 
 
 def slots_today(on: datetime | None = None) -> list[datetime]:
