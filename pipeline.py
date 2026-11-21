@@ -1404,13 +1404,13 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
-    if st.get("redo_kaichat_v", 0) < 1:   # one time: Kai's chat strip came back on sharp footage -> re-frame his clips
-        st["redo_kaichat_v"] = 1
+    if st.get("redo_kaichat_v", 0) < 2:   # one time: Kai's chat strip came back on sharp footage -> re-frame his clips
+        st["redo_kaichat_v"] = 2
         for c in clips.values():
             if c["status"] == "new" and CFG["streamers"].get(c.get("login", ""), {}).get("chat_on_cam") and not (c.get("user_layout") or {}).get("cam"):
                 for k in ("final_hash", "clean_v", "hd", "hd_cam"):
                     c.pop(k, None)
-                c["hd_sfx"] = "_q3"
+                c["hd_sfx"] = "_q4"
     if st.get("redo_vodhq_v", 0) < 1:   # one time: VOD clips were saved blocky -> download again at full quality
         st["redo_vodhq_v"] = 1
         n_re = 0
