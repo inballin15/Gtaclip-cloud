@@ -487,6 +487,12 @@ def guess_campaign(text: str, names: dict[str, str]) -> str:
 CHANNEL = P / "channel.json"   # every video on our TikTok + YouTube with its latest numbers
 
 
+def vid_key(link: str) -> str:
+    """Same video, any link form (tiktok.com vs www.tiktok.com, youtu.be vs /shorts/): its id."""
+    m = re.search(r"/video/(\d+)|/shorts/([\w-]{6,})|youtu\.be/([\w-]{6,})|[?&]v=([\w-]{6,})", link or "")
+    return next((g for g in m.groups() if g), "") if m else (link or "")
+
+
 def detect_manual_posts(ctl: dict, by_id: dict, recs: dict) -> None:
     """Every ~10 min: read our TikTok + YouTube (public pages, not Buffer). Save each video's views/likes, match it to
     a clip (a queued clip whose hook shows up = you posted it yourself) and to its Content Rewards campaign."""
@@ -496,26 +502,28 @@ def detect_manual_posts(ctl: dict, by_id: dict, recs: dict) -> None:
     vids = channel_videos(ctl)
     names = campaign_names()
     chan = rj(CHANNEL, {})
-    by_link = {r.get(sv): cid for cid, r in recs.items() for sv in ("tiktok", "youtube") if r.get(sv)}
+    by_link = {vid_key(r.get(sv)): cid for cid, r in recs.items() for sv in ("tiktok", "youtube") if r.get(sv)}
+    by_hook = {norm(r.get("hook"))[:40]: cid for cid, r in recs.items() if len(norm(r.get("hook"))) >= 12}
     for v in vids:
         e = chan.get(v["link"], {"link": v["link"], "service": v["service"], "first_seen": iso(NOW)})
         e.update(text=v["text"][:300], published=v.get("published") or e.get("published", ""), checked=iso(NOW))
         for k in ("views", "likes"):
             if v.get(k) is not None:
                 e[k] = v[k]
-        cid = by_link.get(v["link"]) or e.get("clip", "")
+        cid = by_link.get(vid_key(v["link"])) or e.get("clip", "")
         if not cid:
             t = norm(v["text"])
-            cid = next((k for k, c in by_id.items() if len(norm(c.get("hook"))) >= 12 and norm(c.get("hook"))[:40] in t), "")
+            cid = (next((k for h, k in by_hook.items() if h in t), "")
+                   or next((k for k, c in by_id.items() if len(norm(c.get("hook"))) >= 12 and norm(c.get("hook"))[:40] in t), ""))
         e["clip"] = cid
         rec = recs.get(cid) or {}
         e["campaign"] = rec.get("campaign") or (by_id.get(cid) or {}).get("campaign") or guess_campaign(v["text"], names)
         e["streamer"] = rec.get("streamer") or (by_id.get(cid) or {}).get("streamer", "")
         chan[v["link"]] = e
     wj(CHANNEL, chan)
-    known = {r.get(s) for r in recs.values() for s in ("tiktok", "youtube") if r.get(s)}
+    known = {vid_key(r.get(s)) for r in recs.values() for s in ("tiktok", "youtube") if r.get(s)}
     for v in vids:
-        if v["link"] in known:
+        if vid_key(v["link"]) in known:
             continue
         t = norm(v["text"])
         for cid, c in by_id.items():
