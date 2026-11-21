@@ -269,7 +269,7 @@ def short_hook(h: str, limit: int = HOOK_MAX) -> str:
     return h[:max(cuts)].strip(" ,-") if cuts else h
 
 
-def ai_shorten(hooks: dict[str, str], log=print) -> dict[str, str]:
+def ai_shorten(hooks: dict[str, str], log=print, tiny: bool = False) -> dict[str, str]:
     """One Gemini request: rewrite long hooks to 25-60 characters, same story, same name, same punch."""
     import json as _json
     import os
@@ -277,8 +277,9 @@ def ai_shorten(hooks: dict[str, str], log=print) -> dict[str, str]:
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key or not hooks:
         return {}
-    prompt = ("Rewrite each on-screen hook for a TikTok/YouTube Shorts clip so it is SHORT: 25-60 characters, at most "
-              "10 words. Keep the streamer's name exactly, keep the key event and 2-3 CAPS words, keep the meaning; cut "
+    size = "VERY SHORT: 18-40 characters, at most 6 words" if tiny else "SHORT: 25-60 characters, at most 10 words"
+    prompt = (f"Rewrite each on-screen hook for a TikTok/YouTube Shorts clip so it is {size}. "
+              "Keep the streamer's name exactly, keep the key event and 2-3 CAPS words, keep the meaning; cut "
               "filler ('during his marathon', 'in this intense moment', 'that he thought'). It must still read as a "
               "complete thought. Examples: 'Kai Cenat LOSES IT after finding out Rakai is STILL stuck on the FIRST "
               "mission in GTA 6 after 5 HOURS' -> 'Kai Cenat LOSES IT over Rakai stuck on mission 1'; 'Kai Cenat was "
@@ -298,7 +299,7 @@ def ai_shorten(hooks: dict[str, str], log=print) -> dict[str, str]:
             res = {}
             for k, v in (got.items() if isinstance(got, dict) else []):
                 v = clean_line(str(v))
-                if k in hooks and 18 <= len(v) <= 72:
+                if k in hooks and 14 <= len(v) <= (48 if tiny else 72):
                     res[k] = v
             return res
         except Exception as e:  # noqa: BLE001
@@ -318,6 +319,10 @@ def hook_style(variant: str | None = None) -> str:
     import learn
     extra = LEARNED.get("guidance") or ""
     v = variant if variant is not None else (LEARNED.get("variant") or "")
+    tiny = v.endswith("|tiny")
+    v = v.split("|")[0]
+    if tiny:
+        extra += "LENGTH TEST for this clip: VERY short hook, 18-40 characters, at most 6 words (e.g. 'Kai FURIOUS at Lucia').\n"
     if v and v != "formula" and v in learn.VARIANTS:
         extra += ("STYLE TEST for this clip (this overrides the formula and CAPS rules above): "
                   + learn.VARIANTS[v] + "\n")

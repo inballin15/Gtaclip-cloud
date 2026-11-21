@@ -624,14 +624,15 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
     try:
         a = viral._audio(raw)
         secs = len(a) // 16000
-        if secs <= CLIP_MAX_S:
+        keep_s, max_s = (12, 15) if (c.get("style") or {}).get("len") == "short" else (CLIP_KEEP_S, CLIP_MAX_S)
+        if secs <= max_s:
             return raw
         rms = np.array([np.sqrt(np.mean(a[i * 16000:(i + 1) * 16000] ** 2) + 1e-9) for i in range(secs)])
         db = 20 * np.log10(rms + 1e-9)
         sm = np.convolve(db, np.ones(3) / 3, mode="same")
         p = int(np.argmax(sm[1:-1])) + 1
-        start = float(max(0, min(p - 7, secs - CLIP_KEEP_S)))
-        end = float(min(secs, start + CLIP_KEEP_S))
+        start = float(max(0, min(p - (5 if keep_s < 15 else 7), secs - keep_s)))
+        end = float(min(secs, start + keep_s))
         if secs - end < 3:          # don't leave a tiny leftover at the end
             end = float(secs)
         out = tmp / f"{cid}_best.mp4"
@@ -1558,11 +1559,17 @@ def main() -> None:
     # 3c. short hooks: automatic hooks that came out long get rewritten shorter by the AI (yours are never touched)
     try:
         import viral
+        def _lim(c):
+            return 42 if (c.get("style") or {}).get("hooklen") == "tiny" else viral.HOOK_MAX
         long_h = {cid: c["hook"] for cid, c in clips.items()
                   if c["status"] == "new" and c.get("hook") and not c.get("hook_by_user")
-                  and len(c["hook"]) > viral.HOOK_MAX and not c.get("hook_short_tried")}
-        if long_h:
-            got = viral.ai_shorten(dict(list(long_h.items())[:30]), log)
+                  and len(c["hook"]) > _lim(c) and not c.get("hook_short_tried")}
+        got = {}
+        for tiny in (True, False):
+            part = {k: v for k, v in long_h.items() if (_lim(clips[k]) < viral.HOOK_MAX) == tiny}
+            if part:
+                got.update(viral.ai_shorten(dict(list(part.items())[:30]), log, tiny=tiny))
+        if got:
             for cid, h in got.items():
                 log(f"shorter hook {cid}: {h}")
                 clips[cid]["hook"] = h
@@ -1634,6 +1641,10 @@ def main() -> None:
         cid, raw, hh, ch, need_f, need_c = job
         c = clips[cid]
         lay = c.get("layout", "split")
+        if not c.get("style") and not c.get("user_layout") and not c.get("asis") and c.get("source") != "upload" \
+                and not c.get("final_hash"):
+            c["style"] = learn.pick_style(LEARNED_INS, cid)   # dynamic model: test looks, keep what gets views
+        sty = c.get("style") or {}
         if not c.get("asis"):
             raw = best_part(raw, cid, tmp, c)
         _ul = c.get("user_layout") or {}
@@ -1656,9 +1667,10 @@ def main() -> None:
                 jp = [cv2.imencode(".jpg", cv2.resize(f, (768, int(f.shape[0] * 768 / f.shape[1]))),
                                    [cv2.IMWRITE_JPEG_QUALITY, 80])[1].tobytes() for f in fr]
                 var = c.get("hook_variant") or learn.pick_variant(LEARNED_INS, cid)   # hook style being tested
+                var_p = var + ("|tiny" if sty.get("hooklen") == "tiny" else "")
                 ok, why, vhook = viral.ai_visual_ok(jp, log, c.get("streamer", ""),
                                                    (c.get("transcript") or "") + " | title: " + (c.get("title") or ""),
-                                                   variant=var)
+                                                   variant=var_p)
                 if ok is not None:
                     c["pic_ok"] = ok
                 if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower():
@@ -1742,8 +1754,9 @@ def main() -> None:
         if ul.get("trim") or (ul.get("speed") or 1) > 1.01:
             cam_video = None    # the sharp webcam was made for the untrimmed clip
         opts = dict(layout=lay, cut=cut, cam_video=cam_video, hook_y=ul.get("hook_y"), zoom=ul.get("zoom", 1.0),
-                    pan=ul.get("pan", 0.0), hook_style=ul.get("hook_style", "white"), hook_scale=ul.get("hook_scale", 1.0),
-                    top_h=int(ul["top_h"]) if ul.get("top_h") else None)
+                    pan=ul.get("pan", 0.0), hook_style=ul.get("hook_style") or sty.get("box") or "white",
+                    hook_scale=ul.get("hook_scale", 1.0),
+                    top_h=int(ul["top_h"]) if ul.get("top_h") else learn.CAM_PX.get(sty.get("cam", ""), None))
         if need_f:
             render_final(raw, cid, cam, c["hook"], tmp, **opts)
             try:   # vertical thumbnail of the finished video for the site

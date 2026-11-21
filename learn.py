@@ -23,11 +23,23 @@ VARIANTS = {
 PRIOR = {"formula": 0.5, "news": 0.15, "quote": 0.1, "question": 0.1, "lowcaps": 0.15}   # start mostly on what's proven
 MIN_WEIGHT = 0.08          # every style keeps getting a few tries so the learner can notice when tastes change
 
+# Clip-style tests ("dynamic model"): each automatic clip gets one option per dimension; views decide the mix.
+STYLE_DIMS = {
+    "box": {"white": "white caption box", "black": "black caption box", "outline": "outlined text, no box"},
+    # webcam size: never bigger than today's (a bigger strip would stretch the webcam and cost sharpness)
+    "cam": {"small": "smaller webcam (560 px)", "medium": "standard webcam (672 px)"},
+    "len": {"short": "punchy ~12 s clip", "normal": "~18 s clip"},
+    "hooklen": {"tiny": "very short hook (max ~40 chars)", "short": "short hook (max ~60 chars)"},
+}
+STYLE_PRIOR = {"box": {"white": 0.5, "black": 0.25, "outline": 0.25}, "cam": {"small": 0.35, "medium": 0.65},
+               "len": {"short": 0.4, "normal": 0.6}, "hooklen": {"tiny": 0.4, "short": 0.6}}
+CAM_PX = {"small": 560, "medium": 672}
+
 EMOTIONS = ["LOSES IT", "SHOCKED", "DEVASTATED", "DISAPPOINTED", "FURIOUS", "CRYING", "SCARED", "CONFUSED", "SPEECHLESS",
             "HYPED", "TERRIFIED", "STUNNED", "MAD", "LAUGHING"]
 
 
-def features(hook: str, posted: str, seconds, streamer: str, variant: str, service: str) -> dict:
+def features(hook: str, posted: str, seconds, streamer: str, variant: str, service: str, style: dict | None = None) -> dict:
     h = (hook or "").strip()
     words = re.findall(r"[A-Za-z0-9$']+", h)
     caps = [w for w in words if len(w) >= 2 and w.isupper() and not w.isdigit()]
@@ -48,6 +60,9 @@ def features(hook: str, posted: str, seconds, streamer: str, variant: str, servi
         f["posted"] = "morning (7-11)" if 7 <= hr < 11 else "midday (11-15)" if hr < 15 else "evening (15-19)" if hr < 19 else "night (19+)" if hr >= 19 else "late night"
     except Exception:  # noqa: BLE001
         pass
+    for dim, arm in (style or {}).items():
+        if dim in STYLE_DIMS and arm in STYLE_DIMS[dim]:
+            f["style:" + dim] = arm
     if isinstance(seconds, (int, float)) and seconds:
         f["clip length"] = "≤15 s" if seconds <= 15 else "16-22 s" if seconds <= 22 else "23 s+"
     return f
@@ -70,11 +85,11 @@ def learn(videos: list[dict], recs: dict[str, dict], now: datetime | None = None
         rec = recs.get(v.get("clip") or "", {})
         hook = rec.get("hook") or re.sub(r"[#@]\S+|🎥", "", v.get("text") or "").strip()
         f = features(hook, rec.get("posted_at") or pub, rec.get("seconds"), rec.get("streamer") or v.get("campaign") or v.get("streamer", ""),
-                     rec.get("hook_variant", ""), v.get("service", ""))
+                     rec.get("hook_variant", ""), v.get("service", ""), rec.get("style"))
         # score: views on a log scale, compared within the same platform (YouTube and TikTok differ a lot)
         rows.append((f, math.log1p(v["views"]), v["service"], v["views"], hook))
     out = {"updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "videos": len(rows), "findings": [], "guidance": [],
-           "weights": dict(PRIOR), "top": []}
+           "weights": dict(PRIOR), "style_weights": {d: dict(p) for d, p in STYLE_PRIOR.items()}, "top": []}
     if len(rows) < 6:
         out["note"] = f"Learning starts after 6 videos are at least 18 h old (now {len(rows)})."
         return out
@@ -107,7 +122,7 @@ def learn(videos: list[dict], recs: dict[str, dict], now: datetime | None = None
             continue
         better = r["x"] >= 1.25
         k, val = r["feature"], r["value"]
-        if k in ("hook length", "CAPS words", "has a number", "has 'FIRST'", "question", "emotion word", "clip length"):
+        if k in ("hook length", "CAPS words", "has a number", "has 'FIRST'", "question", "emotion word"):
             g.append(f"{'DO' if better else 'AVOID'}: {k} = {val} ({r['x']}x views, {r['n']} videos)")
     out["guidance"] = g[:8]
     # style weights: average performance, then keep a floor so every style is still tested
@@ -121,6 +136,21 @@ def learn(videos: list[dict], recs: dict[str, dict], now: datetime | None = None
     tot = sum(w.values())
     out["weights"] = {k: round(v / tot, 3) for k, v in w.items()}
     out["style_counts"] = {k: len(v) for k, v in vs.items()}
+    # clip-style weights per dimension, same idea: what's working gets more clips, the rest keep a floor
+    sw, sc = {}, {}
+    for dim, arms in STYLE_DIMS.items():
+        got = {a: [] for a in arms}
+        for f, d, *_ in norm:
+            a = f.get("style:" + dim)
+            if a in got:
+                got[a].append(d)
+        raw = {a: STYLE_PRIOR[dim][a] * (math.exp(sum(v) / len(v)) if len(v) >= 2 else 1.0) for a, v in got.items()}
+        tot = sum(raw.values())
+        w = {a: max(0.12, r / tot) for a, r in raw.items()}
+        tot = sum(w.values())
+        sw[dim] = {a: round(v / tot, 3) for a, v in w.items()}
+        sc[dim] = {a: len(v) for a, v in got.items()}
+    out["style_weights"], out["style_tested"] = sw, sc
     out["top"] = [{"hook": h[:120], "views": vw} for _, _, vw, h in sorted(norm, key=lambda r: -r[2])[:5]]
     return out
 
@@ -144,3 +174,23 @@ def pick_variant(ins: dict, seed: str) -> str:
         if r < acc:
             return k
     return "formula"
+
+
+def pick_style(ins: dict, seed: str) -> dict:
+    """One option per style dimension for this clip, weighted by what has been getting views."""
+    import hashlib
+    sw = (ins or {}).get("style_weights") or STYLE_PRIOR
+    out = {}
+    for dim, arms in STYLE_DIMS.items():
+        w = sw.get(dim) or STYLE_PRIOR[dim]
+        r = int(hashlib.sha1(f"{seed}:{dim}".encode()).hexdigest()[:8], 16) / 0xFFFFFFFF
+        acc, pick = 0.0, next(iter(arms))
+        for a in arms:
+            acc += w.get(a, 0)
+            if r < acc:
+                pick = a
+                break
+        else:
+            pick = max(w, key=w.get)
+        out[dim] = pick
+    return out

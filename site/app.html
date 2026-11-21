@@ -120,6 +120,7 @@ h2{font-size:15px;margin:0 0 10px;letter-spacing:-.1px}
 .lnext{display:flex;gap:8px;align-items:center;background:none;border:0;color:inherit;text-align:left;padding:0;margin-top:8px;width:100%}
 .lnext .th{flex:0 0 40px;height:70px;border-radius:8px;background:#000 center/cover}.lnext .h{font-size:12.5px;font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
 .budget{margin-top:10px}.budget .bbg{height:6px}.budget .mut{font-size:12px;margin-top:4px}
+.stylerow{display:flex;align-items:center;gap:10px;margin:6px 0}.stylerow b{flex:0 0 92px;font-size:13px}.chips2{display:flex;flex-wrap:wrap;gap:6px}
 .lessons{margin:6px 0 4px;padding:0;list-style:none}.lessons li{padding:6px 10px;border-radius:10px;margin:4px 0;font-size:13.5px;background:#2ecc7122}.lessons li.bad{background:#ff3b3b22}
 .card .sub{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin:12px 0 4px}
 .pill.up{background:#2ecc7133;color:#7dffb0}.pill.down{background:#ff3b3b33;color:#ff9a9a}
@@ -528,7 +529,7 @@ function openPostNow(r) {
   sheet('Post now', [el('div', 'hook', r.hook || ''), mk('TikTok + YouTube', 'both', 'go'), mk('TikTok only', 'tiktok', 'tt'), mk('YouTube only', 'youtube', 'yt')]);
 }
 function learnerCard() {
-  const I = (L && L.insights) || {}; const c = el('div', 'card'); c.append(el('h2', null, 'Hook learner'));
+  const I = (L && L.insights) || {}; const c = el('div', 'card'); c.append(el('h2', null, 'Dynamic model · what gets views'));
   if (!I.updated) { c.append(el('div', 'mut', 'Starts learning after the poster\'s next check.')); return c; }
   c.append(el('div', 'mut', `${I.videos || 0} videos judged (18 h+ old) · updated ${ago(I.updated)}${I.note ? ' · ' + I.note : ''}`));
   if ((I.guidance || []).length) { const ul = el('ul', 'lessons'); for (const g of I.guidance) ul.append(el('li', /^AVOID/.test(g) ? 'bad' : 'good', g.replace(/^(DO|AVOID): /, (m, k) => k === 'DO' ? '✓ ' : '✗ '))); c.append(el('div', 'sub', 'What the AI is told'), ul); }
@@ -536,6 +537,19 @@ function learnerCard() {
   const W = I.weights || {}; const NAMES2 = { formula: 'Proven formula', news: 'Breaking news', quote: 'Their own words', question: 'Question', lowcaps: 'Calm spelling' };
   c.append(el('div', 'sub', 'Hook styles being tested (share of new clips)'));
   for (const [k, w] of Object.entries(W).sort((a, b) => b[1] - a[1])) { const r = el('div', 'brow'); const bg = el('div', 'bbg'); const fg = el('div', 'bfg'); bg.append(fg); r.append(el('span', null, NAMES2[k] || k), bg, el('span', 'mut', `${Math.round(w * 100)}%${I.style_counts && I.style_counts[k] ? ' · ' + I.style_counts[k] + ' vids' : ''}`)); c.append(r); requestAnimationFrame(() => requestAnimationFrame(() => { fg.style.width = (w * 100) + '%'; })); }
+  const SW = I.style_weights || {}; const ST = I.style_tested || {};
+  const DIMN = { box: 'Caption box', cam: 'Webcam size', len: 'Clip length', hooklen: 'Hook length' };
+  const ARMN = { white: 'White', black: 'Black', outline: 'Outline', small: 'Smaller', medium: 'Standard', normal: '~18 s', tiny: 'Very short' };
+  if (Object.keys(SW).length) {
+    c.append(el('div', 'sub', 'Clip style tests (share of new clips)'));
+    for (const [dim, arms] of Object.entries(SW)) {
+      const row = el('div', 'stylerow'); row.append(el('b', null, DIMN[dim] || dim));
+      const chips = el('div', 'chips2');
+      const best = Object.entries(arms).sort((a, b) => b[1] - a[1])[0][0];
+      for (const [a, w] of Object.entries(arms)) { const n = (ST[dim] || {})[a]; chips.append(el('span', 'pill' + (a === best ? ' up' : ''), `${a === 'short' ? (dim === 'len' ? '~12 s' : 'Short') : (ARMN[a] || a)} ${Math.round(w * 100)}%${n ? ' · ' + n : ''}`)); }
+      row.append(chips); c.append(row);
+    }
+  }
   const F = (I.findings || []).filter((f) => f.n >= 3 && (f.x >= 1.15 || f.x <= 0.87)).slice(0, 6);
   if (F.length) { c.append(el('div', 'sub', 'Biggest differences')); for (const f of F) { const r = el('div', 'row'); r.style.margin = '4px 0'; r.append(el('span', 'pill ' + (f.x >= 1 ? 'up' : 'down'), (f.x >= 1 ? '▲ ' : '▼ ') + f.x + '×'), el('span', 'mut', `${f.feature}: ${f.value} (${f.n} videos)`)); c.append(r); } }
   return c;

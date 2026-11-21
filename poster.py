@@ -726,7 +726,7 @@ def main() -> None:
                 "campaign": c.get("campaign", ""), "tag": c.get("tag", ""), "caption": c.get("caption", ""), "why": why, "posted_at": iso(NOW), "video": c["final_abs"],
                 "poster": f"https://inballin15.github.io/Gtaclip-cloud/{c.get('poster', '')}",
                 "tiktok": "", "youtube": "", "status": res, "platforms": want,
-                "hook_kind": c.get("hook_kind", ""), "hook_variant": c.get("hook_variant", ""),
+                "hook_kind": c.get("hook_kind", ""), "hook_variant": c.get("hook_variant", ""), "style": c.get("style") or {},
                 "viral": c.get("viral"), "seconds": c.get("seconds"),
             }
             for s, r in res.items():
