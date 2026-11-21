@@ -32,17 +32,17 @@
  "yt_channel": "UCtxm_iDQ0Y7baG2mwrGGcSg",
  "yt_check": "ok",
  "tt_check": "ok",
- "manual_check": "2026-11-21T21:27:03Z",
- "stats_at": "2026-11-21T21:07:17Z",
+ "manual_check": "2026-11-21T21:37:08Z",
+ "stats_at": "2026-11-21T21:37:08Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-21",
-  "used": 4,
+  "used": 5,
   "cap": 30,
   "slots": 6,
-  "remain30": 795,
-  "reset30": "2026-12-18T22:03:17Z",
-  "remain24": 595
+  "remain30": 794,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 594
  }
 }
