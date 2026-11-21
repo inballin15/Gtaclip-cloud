@@ -1,0 +1,105 @@
+{
+ "updated": "2026-11-21T00:20:56Z",
+ "videos": 7,
+ "findings": [
+  {
+   "feature": "streamer",
+   "value": "Clix",
+   "x": 0.64,
+   "n": 3
+  },
+  {
+   "feature": "CAPS words",
+   "value": "2-3",
+   "x": 1.27,
+   "n": 4
+  },
+  {
+   "feature": "posted",
+   "value": "morning (7-11)",
+   "x": 1.26,
+   "n": 5
+  },
+  {
+   "feature": "has 'FIRST'",
+   "value": "no",
+   "x": 0.81,
+   "n": 5
+  },
+  {
+   "feature": "streamer",
+   "value": "?",
+   "x": 0.92,
+   "n": 3
+  },
+  {
+   "feature": "hook length",
+   "value": "long (90+)",
+   "x": 1.07,
+   "n": 4
+  },
+  {
+   "feature": "has a number",
+   "value": "yes",
+   "x": 0.94,
+   "n": 5
+  },
+  {
+   "feature": "hook style",
+   "value": "unknown",
+   "x": 1.0,
+   "n": 7
+  },
+  {
+   "feature": "question",
+   "value": "no",
+   "x": 1.0,
+   "n": 7
+  },
+  {
+   "feature": "emotion word",
+   "value": "none",
+   "x": 1.0,
+   "n": 7
+  }
+ ],
+ "guidance": [
+  "DO: CAPS words = 2-3 (1.27x views, 4 videos)"
+ ],
+ "weights": {
+  "formula": 0.5,
+  "news": 0.15,
+  "quote": 0.1,
+  "question": 0.1,
+  "lowcaps": 0.15
+ },
+ "top": [
+  {
+   "hook": "Lacy found the FIRST shoe store in GTA 6  Lacy found the first shoe store in GTA 6\n\nCredit: Lacy (https://www.twitch.tv/",
+   "views": 17
+  },
+  {
+   "hook": "Little sushi night for Marlon",
+   "views": 5
+  },
+  {
+   "hook": "Clix refuses to dive in GTA 6 waters  Clix refuses to dive in GTA 6 waters\n\nCredit: Clix (https://www.twitch.tv/clix)",
+   "views": 5
+  },
+  {
+   "hook": "Speed found the hulk in gta",
+   "views": 2
+  },
+  {
+   "hook": "IShowSpeed tried his first robbery in GTA 6  IShowSpeed tried his first robbery in GTA 6\n\nCredit: IShowSpeed (https://ww",
+   "views": 1
+  }
+ ],
+ "style_counts": {
+  "formula": 0,
+  "news": 0,
+  "quote": 0,
+  "question": 0,
+  "lowcaps": 0
+ }
+}
