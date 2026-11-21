@@ -1,0 +1,37 @@
+name: diag (temporary - Kai chat check)
+on: workflow_dispatch
+permissions: { contents: write }
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q -r requirements.txt
+      - env: { TWITCH_CLIENT_ID: "${{ secrets.TWITCH_CLIENT_ID }}", TWITCH_CLIENT_SECRET: "${{ secrets.TWITCH_CLIENT_SECRET }}" }
+        run: |
+          mkdir -p out
+          python3 - <<'PY'
+          import pathlib, cv2, numpy as np, pipeline, fetch_clips
+          d = pathlib.Path("raw"); d.mkdir(exist_ok=True)
+          for slug, cam in [("TransparentFitDugongPJSalt-upbpH2p2KjnHmndK", "0.0023,0.4056,0.1984,0.3136"),
+                            ("KitschySoftTriangleBibleThump-9S4PZf5Z3kqieslj", None)]:
+              p = fetch_clips.download(f"https://clips.twitch.tv/{slug}", d)
+              dur = pipeline.duration_of(p)
+              if cam is None:
+                  cam = pipeline.find_cam_info(p, dur, None)[0]
+              print("CAM", slug[:20], cam)
+              print("RESULT", slug[:20], pipeline.cam_without_chat(p, cam, True))
+              x, y, w, h = [float(v) for v in cam.split(",")]
+              fr = pipeline._frames(p, [dur * 0.5])[0]; H, W = fr.shape[:2]
+              c = fr[int(y*H):int((y+h)*H), int(x*W):int((x+w)*W)]
+              cv2.imwrite(f"out/{slug[:12]}.png", c)
+              e = cv2.Canny(cv2.cvtColor(c, cv2.COLOR_BGR2GRAY), 80, 200).mean(axis=1) / 255
+              n = len(e); print("PROFILE", slug[:12], n, [round(float(e[int(f*n):int(f*n)+max(3,int(n*.04))].mean()), 3) for f in np.arange(0.5, 0.97, 0.04)])
+              big = cv2.resize(c, None, fx=2, fy=2)
+              print("FACES", [(round(f[1]/big.shape[0],2), round(f[3]/big.shape[0],2), round(f[4],2)) for f in pipeline._yunet_faces(big, 0.6)])
+          PY
+      - run: |
+          git config user.name diag; git config user.email diag@x
+          git checkout -q --orphan diag && git rm -rqf --cached . && git add -f out && git commit -qm diag && git push -qf origin diag
