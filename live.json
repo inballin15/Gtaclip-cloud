@@ -1,10 +1,10 @@
 {
- "updated": "2026-11-21T00:12:05Z",
+ "updated": "2026-11-21T00:17:31Z",
  "paused": false,
  "switched_at": "2026-11-20T17:02:06Z",
  "postnow": [],
  "next_slot": "2026-11-21T01:37:00Z",
- "up_next": "vod2934996320_28141",
+ "up_next": "vod2935059680_24738",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7710337274008980749",
@@ -236,6 +236,7 @@
  "buffer_error": "Buffer is turned off on the dashboard — nothing is posted or sent to Buffer.",
  "buffer_off": true,
  "buffer_wait": "",
+ "split": true,
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
