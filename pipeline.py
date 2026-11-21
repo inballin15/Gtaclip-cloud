@@ -53,6 +53,11 @@ REPLACE_QUEUE_EACH_RUN = False   # off: clips stay until they're 9 h old (max 30
 MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
 CAMSRC = Path("_camsrc")   # webcam sources waiting for the AI upscaler (branch camsrc)
 CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
+
+
+def hd_key(cid: str, c: dict) -> str:
+    """File name for a clip's webcam in the upscaler branches (a new suffix = a fresh upscale from a new source)."""
+    return cid + c.get("hd_sfx", "")
 SITE_MAX_MB = 900        # GitHub Pages limit is 1 GB; keep room
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
@@ -1364,6 +1369,30 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_vodhq_v", 0) < 1:   # one time: VOD clips were saved blocky -> download again at full quality
+        st["redo_vodhq_v"] = 1
+        n_re = 0
+        for cid, c in clips.items():
+            m = re.match(r"vod(\d+)_(\d+)$", cid)
+            if not m or c["status"] != "new" or NOW - parse(c.get("created") or c.get("found") or iso(NOW)) > timedelta(hours=10):
+                continue
+            a = float(m.group(2)); dur = float(c.get("seconds") or 20) - 2
+            try:
+                fetch_link_section(f"https://www.twitch.tv/videos/{m.group(1)}", a, a + max(8.0, dur), RAW / f"{cid}.mp4", Path(tempfile.mkdtemp()))
+                n_re += 1
+            except Exception as e:  # noqa: BLE001
+                c.update(status="skip", skip_reason="old blocky download, couldn't get it again")
+                log(f"re-download failed {cid}: {str(e)[:120]}")
+                continue
+            for k in ("final_hash", "clean_v", "hd", "hd_cam", "cam_used"):
+                c.pop(k, None)
+            c["hd_sfx"] = "_q2"
+        for c in clips.values():   # every other queued clip: re-upscale its webcam from the full-detail source
+            if c["status"] == "new" and not c.get("hd_sfx"):
+                for k in ("final_hash", "clean_v", "hd", "hd_cam"):
+                    c.pop(k, None)
+                c["hd_sfx"] = "_q2"
+        log(f"re-downloaded {n_re} VOD clips at full quality")
     if st.get("redo_wholecam_v", 0) < 1:   # one time: re-frame queued clips with the whole webcam (less zoom = sharper)
         st["redo_wholecam_v"] = 1
         for c in clips.values():
@@ -1524,7 +1553,7 @@ def main() -> None:
                 ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + c.get("layout", "")).encode()).hexdigest()[:10]
                 need_f = c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists()
                 need_c = c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists()
-                if (CAMHD / f"{cid}.mp4").exists() and not c.get("hd"):   # AI-upscaled webcam came back: re-make
+                if (CAMHD / f"{hd_key(cid, c)}.mp4").exists() and not c.get("hd"):   # AI-upscaled webcam came back: re-make
                     need_f = need_c = True
                 if need_f or need_c:
                     jobs.append((cid, raw, hh, ch, need_f, need_c))
@@ -1628,15 +1657,15 @@ def main() -> None:
                 log(f"skipped {cid}: no steady face on camera")
                 return job
             cam = fc or cam
-        hd = CAMHD / f"{cid}.mp4"
+        hd = CAMHD / f"{hd_key(cid, c)}.mp4"
         cam_video = hd if (lay == "split" and hd.exists() and c.get("hd_cam") == cam) else None
         if lay == "split" and cam and not cam_video:
             try:   # small webcam source for the AI upscaler (runs on its own server, comes back in a later run)
                 CAMSRC.mkdir(exist_ok=True)
                 x, y, w, h = [float(v) for v in cam.split(",")]
                 ff("-i", str(raw), "-vf", f"crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{TOP_H}/1080)':x=iw*{x}:"
-                   f"y='ih*{y}+(ih*{h}-oh)*0.1',scale='min(270,iw)':-2:flags=area,fps=30",
-                   "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "12", str(CAMSRC / f"{cid}.mp4"))
+                   f"y='ih*{y}+(ih*{h}-oh)*0.1',scale='min(480,iw)':-2:flags=area,fps=30",   # full detail (was cut to 270 px)
+                   "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "12", str(CAMSRC / f"{hd_key(cid, c)}.mp4"))
                 c["hd_cam"] = cam
             except Exception as e:  # noqa: BLE001
                 log(f"webcam source for upscaling failed {cid}: {e}")
@@ -1735,8 +1764,9 @@ def main() -> None:
 
     # 4d2. webcam sources still waiting for the upscaler: only clips that are queued and not upscaled yet
     if CAMSRC.exists():
+        by_key = {hd_key(k, v): v for k, v in clips.items()}
         for f in CAMSRC.glob("*.mp4"):
-            c = clips.get(f.stem)
+            c = by_key.get(f.stem)
             if not c or c["status"] != "new" or c.get("hd"):
                 f.unlink(missing_ok=True)
 
