@@ -688,6 +688,15 @@ def main() -> None:
         handle_requests(ctl, set(by_id), posted_ids)
         recs.update({f.stem: rj(f, {}) for f in (P / "posted").glob("*.json") if f.stem not in recs})
         blocked = blocked_ids()
+        # a clip Nicholas asked to remake (open "layout:" or "edit:" tap) isn't posted until the new version is done —
+        # otherwise the old version could go out in the next slot
+        try:
+            for it in issues("open", 24):
+                m = re.match(r"^(?:layout|edit|redo):\s*(\S+)", it["title"].strip(), re.I)
+                if m:
+                    blocked.add(next((k for k in by_id if k == m.group(1) or k.startswith(m.group(1))), m.group(1)))
+        except Exception as e:  # noqa: BLE001
+            log(f"couldn't read remake taps: {e}")
     else:
         blocked = set()
     blocked |= blocked_extra
