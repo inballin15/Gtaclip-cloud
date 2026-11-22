@@ -1,145 +1,179 @@
 {
  "insights": {
-  "updated": "2026-11-22T15:35:58Z",
-  "videos": 21,
+  "updated": "2026-11-22T17:37:02Z",
+  "videos": 24,
   "v": 3,
   "findings": [
    {
-    "feature": "streamer",
-    "value": "Clix",
-    "x": 0.37,
-    "n": 5
-   },
-   {
     "feature": "has a number",
     "value": "no",
-    "x": 2.26,
+    "x": 2.59,
     "n": 4
+   },
+   {
+    "feature": "streamer",
+    "value": "Clix",
+    "x": 0.42,
+    "n": 5
    },
    {
     "feature": "streamer",
     "value": "?",
-    "x": 1.76,
+    "x": 1.86,
     "n": 8
    },
    {
-    "feature": "CAPS words",
-    "value": "4-6",
-    "x": 0.58,
+    "feature": "hook style",
+    "value": "formula",
+    "x": 0.54,
     "n": 4
    },
    {
-    "feature": "hook length",
-    "value": "long (90+)",
-    "x": 0.59,
+    "feature": "style:len",
+    "value": "normal",
+    "x": 0.54,
     "n": 4
    },
    {
     "feature": "CAPS words",
     "value": "0-1",
-    "x": 1.69,
+    "x": 1.8,
     "n": 10
+   },
+   {
+    "feature": "style:cam",
+    "value": "small",
+    "x": 0.56,
+    "n": 3
+   },
+   {
+    "feature": "style:box",
+    "value": "white",
+    "x": 0.56,
+    "n": 4
+   },
+   {
+    "feature": "clip length",
+    "value": "23 s+",
+    "x": 0.56,
+    "n": 4
    },
    {
     "feature": "posted",
     "value": "midday (11-15)",
-    "x": 1.65,
+    "x": 1.73,
     "n": 5
    },
    {
     "feature": "emotion word",
-    "value": "SHOCKED",
-    "x": 0.63,
+    "value": "STUNNED",
+    "x": 0.59,
+    "n": 3
+   },
+   {
+    "feature": "style:hooklen",
+    "value": "short",
+    "x": 0.61,
+    "n": 3
+   },
+   {
+    "feature": "hook length",
+    "value": "long (90+)",
+    "x": 0.62,
+    "n": 4
+   },
+   {
+    "feature": "CAPS words",
+    "value": "4-6",
+    "x": 0.62,
     "n": 4
    },
    {
     "feature": "CAPS words",
     "value": "2-3",
-    "x": 0.64,
-    "n": 7
+    "x": 0.67,
+    "n": 10
    },
    {
     "feature": "posted",
     "value": "morning (7-11)",
-    "x": 0.7,
+    "x": 0.73,
     "n": 5
+   },
+   {
+    "feature": "emotion word",
+    "value": "SHOCKED",
+    "x": 0.75,
+    "n": 4
    },
    {
     "feature": "hook length",
     "value": "short (<60)",
-    "x": 1.33,
-    "n": 12
+    "x": 1.22,
+    "n": 15
    },
    {
     "feature": "hook length",
     "value": "medium (60-90)",
-    "x": 0.77,
+    "x": 0.82,
     "n": 5
    },
    {
     "feature": "has a number",
     "value": "yes",
     "x": 0.83,
-    "n": 17
+    "n": 20
    },
    {
     "feature": "emotion word",
     "value": "none",
-    "x": 1.14,
+    "x": 1.2,
     "n": 15
+   },
+   {
+    "feature": "has 'FIRST'",
+    "value": "yes",
+    "x": 0.84,
+    "n": 3
    },
    {
     "feature": "hook style",
     "value": "unknown",
-    "x": 1.1,
+    "x": 1.17,
     "n": 19
    },
    {
-    "feature": "posted",
-    "value": "evening (15-19)",
-    "x": 0.91,
-    "n": 10
-   },
-   {
-    "feature": "has 'FIRST'",
-    "value": "no",
-    "x": 1.01,
-    "n": 19
-   },
-   {
-    "feature": "question",
-    "value": "no",
-    "x": 1.0,
-    "n": 21
+    "feature": "streamer",
+    "value": "Lacy",
+    "x": 1.17,
+    "n": 4
    }
   ],
-  "guidance": [
-   "DO: hook length = short (<60) (1.33x views, 12 videos)"
-  ],
+  "guidance": [],
   "weights": {
-   "formula": 0.404,
-   "news": 0.162,
-   "quote": 0.108,
-   "question": 0.108,
-   "lowcaps": 0.217
+   "formula": 0.402,
+   "news": 0.165,
+   "quote": 0.104,
+   "question": 0.11,
+   "lowcaps": 0.22
   },
   "style_weights": {
    "box": {
-    "white": 0.578,
-    "black": 0.203,
-    "outline": 0.219
+    "white": 0.561,
+    "black": 0.212,
+    "outline": 0.227
    },
    "cam": {
-    "small": 0.262,
-    "medium": 0.738
+    "small": 0.291,
+    "medium": 0.709
    },
    "len": {
-    "short": 0.394,
-    "normal": 0.606
+    "short": 0.386,
+    "normal": 0.614
    },
    "hooklen": {
-    "tiny": 0.289,
-    "short": 0.711
+    "tiny": 0.297,
+    "short": 0.703
    },
    "start": {
     "fast": 0.7,
@@ -149,7 +183,7 @@
   "top": [
    {
     "hook": "Speed found him",
-    "views": 1253
+    "views": 1249
    },
    {
     "hook": "Marlon can't handle a night in GTA 6",
@@ -169,29 +203,29 @@
    }
   ],
   "style_counts": {
-   "formula": 2,
+   "formula": 4,
    "news": 0,
-   "quote": 0,
+   "quote": 1,
    "question": 0,
    "lowcaps": 0
   },
   "style_tested": {
    "box": {
-    "white": 1,
+    "white": 4,
     "black": 1,
     "outline": 0
    },
    "cam": {
-    "small": 2,
-    "medium": 0
+    "small": 3,
+    "medium": 2
    },
    "len": {
-    "short": 0,
-    "normal": 2
+    "short": 1,
+    "normal": 4
    },
    "hooklen": {
-    "tiny": 1,
-    "short": 1
+    "tiny": 2,
+    "short": 3
    },
    "start": {
     "fast": 0,
@@ -199,6 +233,16 @@
    }
   },
   "feed": [
+   {
+    "at": "2026-11-22T17:37:02Z",
+    "kind": "data",
+    "text": "judged 24 videos (was 21)"
+   },
+   {
+    "at": "2026-11-22T17:37:02Z",
+    "kind": "dropped",
+    "text": "DO: hook length = short (<60) (1.33x views, 12 videos)"
+   },
    {
     "at": "2026-11-22T15:35:58Z",
     "kind": "data",
@@ -241,12 +285,12 @@
    }
   ]
  },
- "updated": "2026-11-22T17:31:59Z",
+ "updated": "2026-11-22T17:37:02Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-22T18:07:00Z",
- "up_next": null,
+ "up_next": "CharmingExquisiteTardigradeTooSpicy--vJfpu3JP6OieEXA",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7711036861694725390",
@@ -266,7 +310,7 @@
    "first_seen": "2026-11-22T13:45:18Z",
    "text": "xQc furious after GTA 6 crash xQc GTA 6 stream highlight 🎥 @xqc #xQc #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 256,
    "clip": "HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip",
    "campaign": "",
@@ -278,7 +322,7 @@
    "first_seen": "2026-11-22T04:41:02Z",
    "text": "Kai Cenat stunned that NPCs remembered him 🎥 @kaicenat #KaiCenat #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 98,
    "clip": "vod2936683310_15560",
    "campaign": "Kai",
@@ -290,8 +334,8 @@
    "first_seen": "2026-11-22T04:41:02Z",
    "text": "Kai Cenat shocked seeing ufo in GTA 6 @kaicenat#KaiCenat #GTA6 #GTAVI #gaming #fyp ",
    "published": "2026-11-22T04:36:29+00:00",
-   "checked": "2026-11-22T17:26:59Z",
-   "views": 1225,
+   "checked": "2026-11-22T17:37:02Z",
+   "views": 1226,
    "likes": 18,
    "clip": "vod2936683310_11535",
    "campaign": "Kai",
@@ -303,7 +347,7 @@
    "first_seen": "2026-11-22T02:14:45Z",
    "text": "Why is Clix FURIOUS at his payout? 🎥 @clix #Clix #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 115,
    "clip": "vod2936385310_19974",
    "campaign": "Clix",
@@ -315,7 +359,7 @@
    "first_seen": "2026-11-22T01:14:16Z",
    "text": "Lacy DISGUSTS chat with food take 🎥 @lacy #Lacy #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 83,
    "clip": "vod2936518555_14908",
    "campaign": "Lacy",
@@ -339,7 +383,7 @@
    "first_seen": "2026-11-21T23:18:50Z",
    "text": "Lacy STUNNED fans DELETING 90 hours of GTA 6 progress 🎥 @lacy #Lacy #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 112,
    "clip": "CredulousTsundereSalsifyWow-9zosjTsfZF6ahQfl",
    "campaign": "Lacy",
@@ -351,7 +395,7 @@
    "first_seen": "2026-11-21T22:17:40Z",
    "text": "Joe Bartolozzi STUNNED finding first GTA 6 shortcut 🎥 @joe_bartolozzi #JoeBartolozzi #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 106,
    "clip": "LivelySaltyCrabsKreygasm-SSJloq0S-nzw0tzb",
    "campaign": "",
@@ -363,7 +407,7 @@
    "first_seen": "2026-11-21T22:27:49Z",
    "text": "Lacy STUNNED by 90 HOUR restart #Shorts Lacy STUNNED by 90 HOUR restart\n\nCredit: Lacy (https://www.twitch.tv/lacy)\n\n#Lacy #GTA6 #GTAVI #gaming #Shorts",
    "published": "2026-11-21T22:08:27+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 2,
    "likes": 0,
    "clip": "PlayfulTriumphantWalletTinyFace-22B9lCIYz9kQ9j5O",
@@ -376,7 +420,7 @@
    "first_seen": "2026-11-21T21:17:24Z",
    "text": "Clix SHOCKED by REALISTIC bird flight in GTA 6 🎥 @clix #Clix #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 89,
    "clip": "vod2934996320_93424",
    "campaign": "Clix",
@@ -388,7 +432,7 @@
    "first_seen": "2026-11-21T21:27:03Z",
    "text": "Clix SHOCKED he TRICKED police with empty boat #Shorts Clix SHOCKED he TRICKED police with empty boat\n\nCredit: Clix (https://www.twitch.tv/clix)\n\n#Clix #GTA6 #GTAVI #gaming #Shorts",
    "published": "2026-11-21T21:07:49+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 2,
    "likes": 0,
    "clip": "vod2934996320_93392",
@@ -401,7 +445,7 @@
    "first_seen": "2026-11-21T01:12:30Z",
    "text": "xQc is SHOCKED after seeing a boat LAUNCH into the air in GTA 6 🎥 @xqc #xQc #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 211,
    "clip": "EncouragingFlaccidBobaWutFace-wXF5gAfA2PxaTMVU",
    "campaign": "",
@@ -413,7 +457,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "IShowSpeed LOSES IT after ACCIDENTALLY deleting his ENTIRE GTA 6 save file 🎥 @ishowspeed #IShowSpeed #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 133,
    "clip": "IgnorantBraveBananaNononoCat-znG5sU9yfduBEaMi",
    "campaign": "",
@@ -425,7 +469,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "IShowSpeed is SHOCKED seeing a LEGENDARY GTA IV CHARACTER appear in GTA 6 🎥 @ishowspeed #IShowSpeed #GTA6 #GTAVI #gaming #fyp",
    "published": "",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 158,
    "clip": "AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO",
    "campaign": "",
@@ -533,8 +577,8 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "Speed found him #gta6 #gtavi #ishowspeed ",
    "published": "2026-11-20T18:36:43+00:00",
-   "checked": "2026-11-22T17:26:59Z",
-   "views": 1253,
+   "checked": "2026-11-22T17:37:02Z",
+   "views": 1249,
    "likes": 22,
    "clip": "",
    "campaign": "",
@@ -546,7 +590,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "Speed found the hulk in gta #gta6 #gtavi #ishowspeed ",
    "published": "2026-11-19T15:41:31+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 2,
    "likes": 0,
    "clip": "",
@@ -559,7 +603,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "Little sushi night for Marlon #gta6 #marlon #gtavi ",
    "published": "2026-11-19T15:06:46+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 5,
    "likes": 0,
    "clip": "",
@@ -572,7 +616,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "IShowSpeed tried his first robbery in GTA 6 #Shorts IShowSpeed tried his first robbery in GTA 6\n\nCredit: IShowSpeed (https://www.twitch.tv/ishowspeed)\n\n#IShowSpeed #GTA6 #GTAVI #Shorts",
    "published": "2026-11-18T17:46:16+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 1,
    "likes": 0,
    "clip": "",
@@ -585,7 +629,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "GTA 6 cops spawn out of NOWHERE on Clix 😭 #GTA6 #Shorts GTA 6 cops really just teleport in 😭🚔 #Clix #GTA6 #Shorts",
    "published": "2026-11-18T16:37:34+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 1,
    "likes": 0,
    "clip": "",
@@ -598,7 +642,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "Clix had a ROAD RAGE moment in GTA 6 #Shorts Clix had a road rage moment in GTA 6\n\nCredit: Clix (https://www.twitch.tv/clix)\n\n#Clix #GTA6 #GTAVI #Shorts",
    "published": "2026-11-18T15:48:48+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 0,
    "likes": 0,
    "clip": "",
@@ -611,7 +655,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "Lacy found the FIRST shoe store in GTA 6 #Shorts Lacy found the first shoe store in GTA 6\n\nCredit: Lacy (https://www.twitch.tv/lacy)\n\n#Lacy #GTA6 #GTAVI #Shorts",
    "published": "2026-11-18T14:45:35+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 17,
    "likes": 0,
    "clip": "",
@@ -624,7 +668,7 @@
    "first_seen": "2026-11-20T22:22:00Z",
    "text": "Clix refuses to dive in GTA 6 waters #Shorts Clix refuses to dive in GTA 6 waters\n\nCredit: Clix (https://www.twitch.tv/clix)\n\n#Clix #GTA6 #GTAVI #Shorts",
    "published": "2026-11-18T14:05:43+00:00",
-   "checked": "2026-11-22T17:26:59Z",
+   "checked": "2026-11-22T17:37:02Z",
    "views": 5,
    "likes": 0,
    "clip": "",
@@ -632,7 +676,7 @@
    "streamer": ""
   }
  ],
- "videos_checked": "2026-11-22T17:26:59Z",
+ "videos_checked": "2026-11-22T17:37:02Z",
  "buffer_ok": true,
  "buffer_error": "",
  "buffer_off": false,
@@ -682,7 +726,7 @@
  },
  "ai_off": false,
  "channel_check": {
-  "at": "2026-11-22T17:26:59Z",
+  "at": "2026-11-22T17:37:02Z",
   "youtube": "ok",
   "tiktok": "ok"
  },
@@ -1921,6 +1965,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T17:31:59Z",
- "log": []
+ "stats_updated": "2026-11-22T17:37:02Z",
+ "log": [
+  "[17:37:04Z] hook learner: 24 videos, 0 lessons"
+ ]
 }
