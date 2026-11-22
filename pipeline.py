@@ -355,6 +355,12 @@ def _faces(frame, neighbors=5):
             W = g.shape[1]
             for (x, y, w, h) in c.detectMultiScale(flipped, 1.08, neighbors, minSize=(30, 30)):
                 out.append((W - x - w, y, w, h))
+    # the old (Haar) detectors miss faces under headphones, durags, hats or at an angle — so webcams like
+    # YourRAGE's and ohnePixel's were thrown out as "no webcam found". Add the modern AI detector's faces too.
+    try:
+        out += [(int(x), int(y), int(w), int(h)) for (x, y, w, h, sc) in _yunet_faces(frame, 0.7) if w >= 24]
+    except Exception:  # noqa: BLE001
+        pass
     return out
 
 
