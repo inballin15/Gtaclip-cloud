@@ -259,6 +259,16 @@ nav .ind{transition:transform .45s var(--spring),width .45s var(--spring)!import
 .gp{display:flex;align-items:center;gap:8px;margin:12px 0 6px}.gpl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
 .gprow{display:flex;gap:8px;margin:6px 0 8px}.gpin{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid var(--line,#ffffff20);background:var(--p2);color:var(--fg);font-size:15px}
 .btn.paid{background:linear-gradient(135deg,#ffd76a33,#ff4d9433);border-color:#ffd76a66;color:#ffe39a}
+.card.ai{border-color:#8b5cff55;background:linear-gradient(180deg,#8b5cff14,#ffffff04)}
+.lessons li{display:block}.lessons .ln{color:var(--mut);font-size:12px}
+.test{margin:10px 0}.th2{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}.th2 b{font-size:14px}.th2 .mut{font-size:12.5px}
+.stack{display:flex;gap:3px;height:26px;border-radius:9px;overflow:hidden}
+.stack .seg{display:flex;align-items:center;justify-content:center;min-width:0;font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;transition:flex-grow .8s var(--ease,ease)}
+.seg.s0{background:#8b5cff;color:#fff}.seg.s1{background:#8b5cff70;color:#fff}.seg.s2{background:#8b5cff45}.seg.s3{background:#8b5cff30}.seg.s4{background:#8b5cff22}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:12px;color:var(--mut)}.legend span{display:flex;align-items:center;gap:5px}.legend .dot{width:8px;height:8px;border-radius:3px;display:inline-block}
+.dot.s0{background:#8b5cff}.dot.s1{background:#8b5cff70}.dot.s2{background:#8b5cff45}.dot.s3{background:#8b5cff30}.dot.s4{background:#8b5cff22}
+.feed{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}.feed>div{flex:1}
+.feed .fd{flex:0 0 8px;height:8px;border-radius:50%;background:var(--mut)}.feed.new .fd{background:var(--green)}.feed.dropped .fd{background:var(--red)}.feed.shift .fd{background:#8b5cff}
 </style>
 </head>
 <body>
@@ -599,29 +609,61 @@ function openPostNow(r) {
   sheet('Post now', [el('div', 'hook', r.hook || ''), mk('TikTok + YouTube', 'both', 'go'), mk('TikTok only', 'tiktok', 'tt'), mk('YouTube only', 'youtube', 'yt')]);
 }
 function learnerCard() {
-  const I = (L && L.insights) || {}; const c = el('div', 'card'); c.append(el('h2', null, 'Dynamic model · what gets views'));
-  if (!I.updated) { c.append(el('div', 'mut', 'Starts learning after the poster\'s next check.')); return c; }
-  c.append(el('div', 'mut', `${I.videos || 0} videos judged (18 h+ old) · updated ${ago(I.updated)}${I.note ? ' · ' + I.note : ''}`));
-  if ((I.guidance || []).length) { const ul = el('ul', 'lessons'); for (const g of I.guidance) ul.append(el('li', /^AVOID/.test(g) ? 'bad' : 'good', g.replace(/^(DO|AVOID): /, (m, k) => k === 'DO' ? '✓ ' : '✗ '))); c.append(el('div', 'sub', 'What the AI is told'), ul); }
-  else c.append(el('div', 'mut', 'No clear winners yet — needs more videos. Hooks use the proven formula meanwhile.'));
-  const W = I.weights || {}; const NAMES2 = { formula: 'Proven formula', news: 'Breaking news', quote: 'Their own words', question: 'Question', lowcaps: 'Calm spelling' };
-  c.append(el('div', 'sub', 'Hook styles being tested (share of new clips)'));
-  for (const [k, w] of Object.entries(W).sort((a, b) => b[1] - a[1])) { const r = el('div', 'brow'); const bg = el('div', 'bbg'); const fg = el('div', 'bfg'); bg.append(fg); r.append(el('span', null, NAMES2[k] || k), bg, el('span', 'mut', `${Math.round(w * 100)}%${I.style_counts && I.style_counts[k] ? ' · ' + I.style_counts[k] + ' vids' : ''}`)); c.append(r); requestAnimationFrame(() => requestAnimationFrame(() => { fg.style.width = (w * 100) + '%'; })); }
-  const SW = I.style_weights || {}; const ST = I.style_tested || {};
-  const DIMN = { box: 'Caption box', cam: 'Webcam size', len: 'Clip length', hooklen: 'Hook length' };
-  const ARMN = { white: 'White', black: 'Black', outline: 'Outline', small: 'Smaller', medium: 'Standard', normal: '~18 s', tiny: 'Very short' };
-  if (Object.keys(SW).length) {
-    c.append(el('div', 'sub', 'Clip style tests (share of new clips)'));
-    for (const [dim, arms] of Object.entries(SW)) {
-      const row = el('div', 'stylerow'); row.append(el('b', null, DIMN[dim] || dim));
-      const chips = el('div', 'chips2');
-      const best = Object.entries(arms).sort((a, b) => b[1] - a[1])[0][0];
-      for (const [a, w] of Object.entries(arms)) { const n = (ST[dim] || {})[a]; chips.append(el('span', 'pill' + (a === best ? ' up' : ''), `${a === 'short' ? (dim === 'len' ? '~12 s' : 'Short') : (ARMN[a] || a)} ${Math.round(w * 100)}%${n ? ' · ' + n : ''}`)); }
-      row.append(chips); c.append(row);
+  const I = (L && L.insights) || {}; const c = el('div', 'card ai');
+  c.append(el('h2', null, 'What the AI is learning'));
+  if (!I.updated) { c.append(el('div', 'mut', 'Starts after the poster\'s next check.')); return c; }
+  const nextAt = new Date(new Date(I.updated).getTime() + 2 * 3600e3);
+  c.append(el('div', 'mut', `Learned from ${I.videos || 0} of your videos · updated ${ago(I.updated)} · next check ${fmtLeft(nextAt - Date.now())}`));
+  // ---- plain-English lessons
+  const PH = {
+    'hook length': { 'short (<60)': 'Short hooks (under 60 letters)', 'medium (60-90)': 'Medium hooks (60–90 letters)', 'long (90+)': 'Long hooks (90+ letters)' },
+    'CAPS words': { '0-1': 'Hooks with little or no ALL CAPS', '2-3': 'Hooks with 2–3 ALL-CAPS words', '4-6': 'Hooks with 4–6 ALL-CAPS words', '7+': 'Hooks that are mostly ALL CAPS' },
+    'has a number': { yes: 'Hooks with a number in them', no: 'Hooks without a number' },
+    "has 'FIRST'": { yes: 'Hooks that say "first"', no: 'Hooks without "first"' },
+    question: { yes: 'Question hooks', no: 'Hooks that aren\'t questions' },
+  };
+  const say = (g) => {
+    const m = /^(DO|AVOID): (.+?) = (.+?) \(([\d.]+)x views, (\d+) videos\)/.exec(g); if (!m) return null;
+    const [, kind, f, v, x, n] = m; const X = parseFloat(x);
+    const who = (PH[f] && PH[f][v]) || (f === 'emotion word' ? (v === 'none' ? 'Hooks with no emotion word' : `Hooks using "${v}"`) : `${f}: ${v}`);
+    return { good: kind === 'DO', text: kind === 'DO' ? `${who} get ${X.toFixed(1)}× the views` : `${who} get ${Math.round((1 - X) * 100)}% fewer views`, n };
+  };
+  const ls2 = (I.guidance || []).map(say).filter((x) => x && +x.n >= 4);   // too few videos = not a real lesson yet
+  const good = ls2.filter((x) => x.good), bad = ls2.filter((x) => !x.good);
+  const list = (title, arr, cls) => { if (!arr.length) return; c.append(el('div', 'sub', title)); const u = el('ul', 'lessons'); for (const x of arr) { const li = el('li', cls); li.append(document.createTextNode(x.text), el('span', 'ln', ` · ${x.n} videos`)); u.append(li); } c.append(u); };
+  list('✓ What\'s working', good, 'good'); list('✗ What to avoid', bad, 'bad');
+  if (!ls2.length) c.append(el('div', 'mut', 'No clear patterns yet — it needs a few more videos that are at least 18 hours old.'));
+  // ---- what it's testing + who's ahead
+  c.append(el('div', 'sub', 'Testing on new clips'));
+  const TESTS = [
+    ['Hook style', I.weights, I.style_counts, { lowcaps: 'Natural', formula: 'Classic CAPS', news: 'Breaking news', quote: 'Their own words', question: 'Question' }],
+    ['Caption box', (I.style_weights || {}).box, (I.style_tested || {}).box, { white: 'White', black: 'Black', outline: 'Outline' }],
+    ['Webcam size', (I.style_weights || {}).cam, (I.style_tested || {}).cam, { medium: 'Standard', small: 'Smaller' }],
+    ['Clip length', (I.style_weights || {}).len, (I.style_tested || {}).len, { short: '~12 s', normal: '~18 s' }],
+    ['Hook length', (I.style_weights || {}).hooklen, (I.style_tested || {}).hooklen, { tiny: 'Very short', short: 'Short' }],
+  ];
+  for (const [name, W, N, names] of TESTS) {
+    if (!W) continue;
+    const arms = Object.entries(W).sort((a, b) => b[1] - a[1]); const tested = Object.values(N || {}).reduce((a, b) => a + b, 0);
+    const row = el('div', 'test'); const hd = el('div', 'th2'); hd.append(el('b', null, name), el('span', 'mut', tested >= 4 ? `leading: ${names[arms[0][0]] || arms[0][0]}` : `gathering data (${tested} judged)`)); row.append(hd);
+    const bar = el('div', 'stack'); arms.forEach(([a, w], k) => { const seg = el('span', 'seg s' + k, w >= 0.3 ? names[a] || a : ''); seg.style.flexGrow = Math.max(0.0001, w); bar.append(seg); });
+    const lg = el('div', 'legend'); arms.forEach(([a, w], k) => { const it = el('span', null); it.append(el('i', 'dot s' + k), document.createTextNode(`${names[a] || a} ${Math.round(w * 100)}%`)); lg.append(it); });
+    row.append(bar, lg); c.append(row);
+  }
+  c.append(el('div', 'mut', 'Bars = how many new clips get each option. Winners get more; the others keep a few tries in case tastes change.'));
+  // ---- running feed
+  const F = I.feed || [];
+  if (F.length) {
+    c.append(el('div', 'sub', 'Latest updates'));
+    const DIM = { box: 'caption box', cam: 'webcam size', len: 'clip length', hooklen: 'hook length' };
+    for (const e of F.slice(0, 8)) {
+      let t = e.text;
+      if (e.kind === 'new' || e.kind === 'dropped') { const x = say(e.text); t = (e.kind === 'new' ? 'Learned: ' : 'No longer true: ') + (x ? x.text : e.text); }
+      else if (e.kind === 'shift') { const [d, rest] = e.text.split(': '); t = `Now favoring ${rest.split(' -> ')[1]} for ${DIM[d] || d}`; }
+      else if (e.kind === 'data') t = e.text.replace('judged', 'Judged');
+      const r = el('div', 'feed ' + e.kind); r.append(el('span', 'fd'), el('div', null, t), el('span', 'mut', ago(e.at))); c.append(r);
     }
   }
-  const F = (I.findings || []).filter((f) => f.n >= 3 && (f.x >= 1.15 || f.x <= 0.87)).slice(0, 6);
-  if (F.length) { c.append(el('div', 'sub', 'Biggest differences')); for (const f of F) { const r = el('div', 'row'); r.style.margin = '4px 0'; r.append(el('span', 'pill ' + (f.x >= 1 ? 'up' : 'down'), (f.x >= 1 ? '▲ ' : '▼ ') + f.x + '×'), el('span', 'mut', `${f.feature}: ${f.value} (${f.n} videos)`)); c.append(r); } }
   return c;
 }
 function platState(p, s) {
@@ -1294,6 +1336,7 @@ function renderToday(v, ql) {
 }
 function renderResults(v, ql) {
   renderStats(v, ql);
+  { const ai = v.querySelector('.card.ai'); if (ai) v.insertBefore(ai, v.firstChild); }
   const kp = v.querySelector('.kpis'); if (kp) kp.querySelectorAll('.n').forEach((n) => n.setAttribute('data-count', ''));
   const V = videos(); const c2 = el('div', 'card'); const h = el('div', 'hrow'); h.append(el('h2', null, `All videos · ${V.length}`), el('span', 'mut', L && L.videos_checked ? `views ${ago(L.videos_checked)}` : '')); h.lastChild.style.marginLeft = 'auto'; c2.append(h);
   if (!V.length) c2.append(el('div', 'empty', 'Your TikTok and YouTube videos show up here with live views.'));

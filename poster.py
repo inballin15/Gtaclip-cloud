@@ -916,7 +916,27 @@ def main() -> None:
     try:
         import learn
         if not insights.get("updated") or NOW - parse(insights["updated"]) >= timedelta(hours=2):
+            prev = insights
             insights = learn.learn(list(rj(CHANNEL, {}).values()), recs, NOW)
+            # running feed of what changed, so the site can show the learner's progress over time
+            feed = list(prev.get("feed") or [])
+            old_g, new_g = set(prev.get("guidance") or []), set(insights.get("guidance") or [])
+            key = lambda g: g.split(" (")[0]   # same lesson, new numbers -> not "new"
+            old_k = {key(g) for g in old_g}
+            for g in insights.get("guidance") or []:
+                if key(g) not in old_k:
+                    feed.insert(0, {"at": iso(NOW), "kind": "new", "text": g})
+            for g in old_g:
+                if key(g) not in {key(x) for x in new_g}:
+                    feed.insert(0, {"at": iso(NOW), "kind": "dropped", "text": g})
+            for dim, arms in (insights.get("style_weights") or {}).items():
+                was = (prev.get("style_weights") or {}).get(dim) or {}
+                lead, lead_was = max(arms, key=arms.get), (max(was, key=was.get) if was else None)
+                if lead_was and lead != lead_was:
+                    feed.insert(0, {"at": iso(NOW), "kind": "shift", "text": f"{dim}: {lead_was} -> {lead}"})
+            if (insights.get("videos") or 0) != (prev.get("videos") or 0):
+                feed.insert(0, {"at": iso(NOW), "kind": "data", "text": f"judged {insights.get('videos')} videos (was {prev.get('videos') or 0})"})
+            insights["feed"] = feed[:30]
             wj(P / "insights.json", insights)
             log(f"hook learner: {insights.get('videos')} videos, {len(insights.get('guidance', []))} lessons")
     except Exception as e:  # noqa: BLE001
