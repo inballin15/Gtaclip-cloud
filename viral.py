@@ -248,6 +248,8 @@ HOOK_STYLE = (
     "Real examples: 'Kai Cenat LOSES IT over Rakai stuck on mission 1' / 'IShowSpeed SHOCKED seeing the HULK in GTA 6' / "
     "'Kai FURIOUS that NPCs REMEMBERED him' / 'Lacy realizes you can't steal cars anymore' / "
     "'Clix CRYING after Jason dies'.\n"
+    "SEARCH: name the concrete thing people would search for (our best video was found by search: 'first shoe store "
+    "in GTA 6') - a place, item, character, mission or 'first ...', plus the game name when it fits.\n"
     "Rules: SHORT - 25-60 characters, at most 10 words, one line of thought (1-2 lines on screen); cut every word "
     "that isn't needed (no 'during his marathon', 'in this intense moment', 'that he thought it was'); 2-4 CAPS words "
     "on the emotion and the key fact; one specific detail (Lucia, Jason, Vice City, a number, hours played, a first); "

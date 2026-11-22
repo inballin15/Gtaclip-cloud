@@ -299,14 +299,32 @@ POSTS_LITE = """query Posts($input: PostsInput!, $first: Int) {
 }"""
 
 
+_KEEP_CAPS = re.compile(r"^(GTA|GTAVI|NPC|NPCS|NPCs|SWAT|FBI|CEO|USA|UK|VI|IV|V|OG|POV|AI|\d+)$")
+
+
+def natural(t: str) -> str:
+    """'Lacy LOSES IT over EXPENSIVE furniture' -> 'Lacy loses it over expensive furniture' (reads like a search)."""
+    out = []
+    for w in (t or "").split():
+        core = re.sub(r"[^A-Za-z0-9]", "", w)
+        out.append(w.lower() if len(core) > 1 and core.isupper() and not _KEEP_CAPS.match(core) else w)
+    return re.sub(r"\bnpcs\b", "NPCs", " ".join(out), flags=re.I)
+
+
 def texts(c: dict) -> tuple[str, str, str]:
+    """Captions written for SEARCH too: our best TikTok got 78% of its views from people searching
+    ('gta 6 shoe store'), so every caption carries the plain sentence + streamer + game keywords."""
     hook = (c.get("hook") or c.get("title") or "").strip()
     login, streamer, tag = c.get("login", ""), c.get("streamer", ""), c.get("tag", "")
     cap = (c.get("caption") or "").strip()
     tags = c.get("topic_tags") or "#GTA6 #GTAVI #gaming"
-    tt = cap or f"{hook}\n\n🎥 @{login}\n\n{tag} {tags} #fyp".strip()
-    yt = cap or f"{hook}\n\nCredit: {streamer} (https://www.twitch.tv/{login})\n\n{tag} {tags} #Shorts".strip()
-    title = (hook[:88] + " #Shorts").strip()
+    game = ((c.get("topic") or {}).get("name") if isinstance(c.get("topic"), dict) else c.get("topic")) or "GTA 6"
+    plain = natural(hook)
+    kw = f"{streamer} {game} stream highlight" if streamer else f"{game} highlight"
+    tt = cap or f"{plain}\n\n{kw} 🎥 @{login}\n\n{tag} {tags} #fyp".strip()
+    yt = cap or f"{plain}\n\n{kw}. Credit: {streamer} (https://www.twitch.tv/{login})\n\n{tag} {tags} #Shorts".strip()
+    title = plain if game.lower().replace(" ", "") in plain.lower().replace(" ", "") else f"{plain} | {streamer} {game}".strip(" |")
+    title = (title[:88] + " #Shorts").strip()
     return tt, yt, title
 
 
