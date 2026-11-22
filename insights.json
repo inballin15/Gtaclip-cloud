@@ -1,23 +1,23 @@
 {
- "updated": "2026-11-22T00:34:26Z",
+ "updated": "2026-11-22T02:35:09Z",
  "videos": 19,
  "findings": [
   {
    "feature": "has a number",
    "value": "no",
-   "x": 3.54,
+   "x": 3.77,
    "n": 3
   },
   {
    "feature": "streamer",
    "value": "Clix",
-   "x": 0.32,
+   "x": 0.31,
    "n": 3
   },
   {
    "feature": "hook length",
    "value": "long (90+)",
-   "x": 0.53,
+   "x": 0.51,
    "n": 4
   },
   {
@@ -29,37 +29,37 @@
   {
    "feature": "posted",
    "value": "morning (7-11)",
-   "x": 0.63,
+   "x": 0.61,
    "n": 5
   },
   {
    "feature": "streamer",
    "value": "?",
-   "x": 1.56,
+   "x": 1.59,
    "n": 8
   },
   {
    "feature": "hook length",
    "value": "short (<60)",
-   "x": 1.52,
+   "x": 1.55,
    "n": 10
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 1.52,
+   "x": 1.55,
    "n": 10
   },
   {
    "feature": "posted",
    "value": "midday (11-15)",
-   "x": 1.41,
+   "x": 1.47,
    "n": 5
   },
   {
    "feature": "CAPS words",
    "value": "2-3",
-   "x": 0.71,
+   "x": 0.69,
    "n": 5
   },
   {
@@ -71,7 +71,7 @@
   {
    "feature": "has a number",
    "value": "yes",
-   "x": 0.79,
+   "x": 0.78,
    "n": 16
   },
   {
@@ -81,16 +81,16 @@
    "n": 8
   },
   {
+   "feature": "has 'FIRST'",
+   "value": "no",
+   "x": 1.03,
+   "n": 17
+  },
+  {
    "feature": "emotion word",
    "value": "none",
    "x": 1.03,
    "n": 15
-  },
-  {
-   "feature": "has 'FIRST'",
-   "value": "no",
-   "x": 1.02,
-   "n": 17
   },
   {
    "feature": "hook style",
@@ -106,14 +106,14 @@
   }
  ],
  "guidance": [
-  "DO: has a number = no (3.54x views, 3 videos)",
-  "AVOID: hook length = long (90+) (0.53x views, 4 videos)",
+  "DO: has a number = no (3.77x views, 3 videos)",
+  "AVOID: hook length = long (90+) (0.51x views, 4 videos)",
   "AVOID: CAPS words = 4-6 (0.54x views, 4 videos)",
-  "DO: hook length = short (<60) (1.52x views, 10 videos)",
-  "DO: CAPS words = 0-1 (1.52x views, 10 videos)",
-  "AVOID: CAPS words = 2-3 (0.71x views, 5 videos)",
+  "DO: hook length = short (<60) (1.55x views, 10 videos)",
+  "DO: CAPS words = 0-1 (1.55x views, 10 videos)",
+  "AVOID: CAPS words = 2-3 (0.69x views, 5 videos)",
   "AVOID: hook length = medium (60-90) (0.71x views, 5 videos)",
-  "AVOID: has a number = yes (0.79x views, 16 videos)"
+  "AVOID: has a number = yes (0.78x views, 16 videos)"
  ],
  "weights": {
   "formula": 0.25,
@@ -144,7 +144,7 @@
  "top": [
   {
    "hook": "Speed found him",
-   "views": 908
+   "views": 1235
   },
   {
    "hook": "Marlon can't handle a night in GTA 6",
@@ -152,7 +152,7 @@
   },
   {
    "hook": "Lacy stalking in gta 6",
-   "views": 336
+   "views": 337
   },
   {
    "hook": "Adapt tries texting and driving in GTA 6",
