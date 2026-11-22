@@ -409,7 +409,12 @@ function queueList() {
 }
 const videos = () => (L && L.videos) || [];
 const subKey = (v) => v.link;
-function toSubmit() { return videos().filter((v) => CR[v.campaign] && !submitted[subKey(v)]); }
+// submitted to Content Rewards? — saved by the poster so every device knows (this device's taps count right away)
+const isSub = (link) => !!(submitted[link] || (L && L.submitted && L.submitted[link]));
+async function markSub(link, clip) {
+  submitted[link] = Date.now(); ls.set('gc-submitted', submitted); lastSig = ''; render();
+  if (await ghTap(`paid: ${link}${clip ? ' ' + clip : ''}`)) toast('Marked submitted'); }
+function toSubmit() { return videos().filter((v) => CR[v.campaign] && !isSub(subKey(v))); }
 function slotPlan() {
   const now = new Date(); const day = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const offset = now - day; const act = (L && L.budget && L.budget.active) || SLOTS; return act.map(([h, m]) => { const d = new Date(day); d.setHours(h, m, 0, 0); return new Date(+d + offset); });
@@ -710,6 +715,7 @@ function linksFor(r) {
   for (const v of videos()) if (v.clip === r.id) out.set(v.link, v.service);
   const p = posts()[r.id]; if (p) for (const sv of ['tiktok', 'youtube']) if (p[sv]) out.set(p[sv], sv);
   for (const l of myLinks[r.id] || []) out.set(l, /youtu/.test(l) ? 'youtube' : 'tiktok');
+  for (const [l, o] of Object.entries((L && L.submitted) || {})) if (o.clip === r.id && !out.has(l)) out.set(l, /youtu/.test(l) ? 'youtube' : 'tiktok');
   return [...out.entries()];
 }
 function openGetPaid(r) {
@@ -718,10 +724,10 @@ function openGetPaid(r) {
   nodes.push(el('div', 'mut', camp && CR[camp] ? `Campaign: ${camp} — copy your video link, Content Rewards opens, paste it in, then tap ✓.`
     : `${r.streamer || 'This streamer'} has no paid campaign saved — it opens Content Rewards so you can pick one.`));
   const goSubmit = (link) => { copy(link, 'Link'); setTimeout(() => window.open(url, '_blank', 'noopener'), 150); };
-  const mark = (link) => { submitted[link] = Date.now(); ls.set('gc-submitted', submitted); toast('Marked submitted'); lastSig = ''; render(); };
+  const mark = (link) => markSub(link, r.id);
   const L2 = linksFor(r);
   for (const [link, sv] of L2) {
-    const row = el('div', 'gp'); const done = !!submitted[link];
+    const row = el('div', 'gp'); const done = isSub(link);
     row.append(el('span', 'pill ' + (sv === 'tiktok' ? 'tt' : 'yt'), PN[sv] || sv), el('span', 'mut gpl', link.replace(/^https?:\/\/(www\.)?/, '')));
     const b1 = el('button', 'big go', done ? 'Submitted ✓ — submit again' : 'Copy link + open Content Rewards'); b1.onclick = () => goSubmit(link);
     const b2 = el('button', 'btn', done ? 'Submitted ✓' : 'Mark submitted ✓'); b2.disabled = done; b2.onclick = () => { mark(link); closeSheet(); };
@@ -762,7 +768,8 @@ function clipCard(r, st) {
   if (!r.nowing) { const pn = el('button', 'btn pink', 'Post now'); pn.onclick = () => openPostNow(r); btns.append(pn); }
   const dl = el('button', 'btn cyan', variant === 'clean' ? '⬇ Save (no caption)' : '⬇ Save'); dl.onclick = () => saveVideo(r, dl);
   const ed = el('button', 'btn', '✎ Edit'); ed.onclick = () => openEditor(r);
-  const gp = el('button', 'btn' + (CR[campOf(r)] ? ' paid' : ''), '$ Get paid'); gp.onclick = () => openGetPaid(r);
+  const subd = linksFor(r).some(([l]) => isSub(l));
+  const gp = el('button', 'btn' + (CR[campOf(r)] && !subd ? ' paid' : ''), subd ? '✓ Submitted' : '$ Get paid'); gp.onclick = () => openGetPaid(r);
   const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, ed, gp, mb); b.append(btns);
   const more = el('div', 'more'); const mi = el('div'); const mbt = el('div', 'btns');
   const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
@@ -1110,14 +1117,14 @@ function videoRow(x, submitMode) {
   const rw = el('div', 'vrow');
   const t = el('div', 't'); const top = el('div', null, (x.text || '').replace(/#\S+/g, '').trim() || '(no caption)');
   const sub = el('div', 'row'); sub.append(el('span', 'pill ' + (x.service === 'tiktok' ? 'tt' : 'yt'), x.service === 'tiktok' ? 'TikTok' : 'YouTube'));
-  if (CR[x.campaign]) sub.append(el('span', 'pill paid', '$ ' + x.campaign));
+  if (CR[x.campaign]) sub.append(el('span', 'pill paid', isSub(x.link) ? '✓ Submitted' : '$ ' + x.campaign));
   sub.append(el('span', 'mut', x.published ? ago(x.published) : ''));
   t.append(top, sub); rw.append(t);
   const n = el('div', 'num'); n.append(document.createTextNode(x.views != null ? fmt(x.views) : '—'), el('small', null, x.likes != null ? `${fmt(x.likes)} likes` : 'views')); rw.append(n);
   const bt = el('div', 'btns'); bt.style.flexDirection = 'column';
   if (submitMode) {
     const sb = el('button', 'btn pink', 'Submit'); sb.onclick = () => { copy(x.link, 'Link'); window.open(CR[x.campaign], '_blank', 'noopener'); };
-    const ok = el('button', 'btn', '✓'); ok.setAttribute('aria-label', 'Mark submitted'); ok.onclick = () => { submitted[subKey(x)] = Date.now(); ls.set('gc-submitted', submitted); toast('Marked submitted'); lastSig = ''; render(); };
+    const ok = el('button', 'btn', '✓'); ok.setAttribute('aria-label', 'Mark submitted'); ok.onclick = () => markSub(subKey(x), x.clip || '');
     bt.append(sb, ok);
   } else {
     const op = el('a', 'btn ghost', 'Open'); op.href = x.link; op.target = '_blank'; op.rel = 'noopener'; bt.append(op);

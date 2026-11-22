@@ -180,6 +180,8 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             kind = "split"
         elif tl.startswith("youpost:"):
             kind = "youpost"
+        elif tl.startswith("paid:"):
+            kind = "paid"
         if not kind:
             continue  # skip:/edit: belong to the render pipeline
         if age_min > REQUEST_MAX_AGE_MIN:
@@ -205,6 +207,18 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
                        if sv in yp else f"{sv.title()}: back to automatic uploads.")
                 close_issue(it["number"], msg)
                 log(msg)
+            continue
+        if kind == "paid":   # Nicholas submitted this video link to Content Rewards (remembered on every device)
+            m = re.match(r"^paid:\s*(https?://\S+)(?:\s+(\S+))?", t, re.I)
+            if m:
+                sub = ctl.setdefault("submitted", {})
+                sub[m.group(1)] = {"at": iso(NOW), "clip": m.group(2) or ""}
+                if len(sub) > 600:   # keep the newest 600
+                    ctl["submitted"] = dict(sorted(sub.items(), key=lambda kv: kv[1]["at"])[-600:])
+                close_issue(it["number"], "Marked as submitted to Content Rewards.")
+                log(f"submitted for pay: {m.group(1)}")
+            else:
+                close_issue(it["number"], "Couldn't read the link in that tap.")
             continue
         if kind == "split":
             ctl["split"] = "off" not in tl
@@ -982,7 +996,7 @@ def main() -> None:
                          reverse=True)[:80],
         "videos_checked": ctl.get("manual_check", ""),
         "buffer_ok": buffer_ok, "buffer_error": buffer_err, "buffer_off": bool(ctl.get("buffer_off")),
-        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "you_post": ctl.get("you_post", []), "yt_per_day": YT_PER_DAY, "budget": {**BUDGET, "active": [list(x) for x in ACTIVE_SLOTS]}, "cooldown": ctl.get("cooldown", {}),
+        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "you_post": ctl.get("you_post", []), "yt_per_day": YT_PER_DAY, "submitted": ctl.get("submitted", {}), "budget": {**BUDGET, "active": [list(x) for x in ACTIVE_SLOTS]}, "cooldown": ctl.get("cooldown", {}),
         "ai_off": bool(ctl.get("ai_off")),
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
