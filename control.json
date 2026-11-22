@@ -49,17 +49,17 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-22T18:27:34Z",
- "stats_at": "2026-11-22T18:07:21Z",
+ "stats_at": "2026-11-22T18:32:35Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-22",
-  "used": 10,
+  "used": 11,
   "cap": 28,
   "slots": 6,
-  "remain30": 766,
-  "reset30": "2026-12-18T22:03:26Z",
-  "remain24": 591
+  "remain30": 765,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 590
  },
  "yt_verified_v": 1
 }
