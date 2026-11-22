@@ -190,12 +190,12 @@
    }
   }
  },
- "updated": "2026-11-22T00:19:16Z",
+ "updated": "2026-11-22T00:24:03Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-22T01:07:00Z",
- "up_next": "vod2936518555_10022",
+ "up_next": "vod2936518555_11132",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7710781237085965582",
@@ -1541,8 +1541,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T00:19:16Z",
- "log": [
-  "[00:19:18Z] spotted your tiktok post of vod2936683310_866: https://www.tiktok.com/@gtaclip96/video/7710781237085965582"
- ]
+ "stats_updated": "2026-11-22T00:24:03Z",
+ "log": []
 }
