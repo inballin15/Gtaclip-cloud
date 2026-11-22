@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-22T11:34:30Z",
+ "updated": "2026-11-22T13:35:42Z",
  "videos": 19,
  "v": 3,
  "findings": [
   {
    "feature": "has a number",
    "value": "no",
-   "x": 3.77,
+   "x": 3.78,
    "n": 3
   },
   {
@@ -24,7 +24,7 @@
   {
    "feature": "CAPS words",
    "value": "4-6",
-   "x": 0.53,
+   "x": 0.54,
    "n": 4
   },
   {
@@ -143,7 +143,7 @@
  "top": [
   {
    "hook": "Speed found him",
-   "views": 1244
+   "views": 1250
   },
   {
    "hook": "Marlon can't handle a night in GTA 6",
