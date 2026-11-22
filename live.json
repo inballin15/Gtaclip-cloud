@@ -226,12 +226,12 @@
    }
   ]
  },
- "updated": "2026-11-22T13:35:42Z",
+ "updated": "2026-11-22T13:40:15Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-22T13:37:00Z",
- "up_next": "HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip",
+ "next_slot": "2026-11-22T16:37:00Z",
+ "up_next": "NiceEnergeticGoldfishTheThing-caQv2A0rI8_K5xAi",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7710848913573432590",
@@ -602,12 +602,12 @@
  "you_post": [],
  "budget": {
   "day": "2026-11-22",
-  "used": 1,
+  "used": 3,
   "cap": 28,
   "slots": 6,
-  "remain30": 775,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 575,
+  "remain30": 773,
+  "reset30": "2026-12-18T22:03:25Z",
+  "remain24": 598,
   "active": [
    [
     8,
@@ -677,6 +677,42 @@
   "LovelyImportantAlfalfaLitty-TvWeJzP9zG95rT47"
  ],
  "posts": {
+  "HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip": {
+   "id": "HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip",
+   "hook": "xQc FURIOUS after GTA 6 CRASH",
+   "streamer": "xQc",
+   "login": "xqc",
+   "campaign": "",
+   "tag": "#xQc",
+   "caption": "",
+   "why": "8:37 AM slot",
+   "posted_at": "2026-11-22T13:40:15Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip_final.mp4?v=0a3883dbe1&r=1795344706",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b02f0c0d864a01105c866d2",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "formula",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "len": "short",
+    "hooklen": "tiny",
+    "start": "fast"
+   },
+   "viral": 78,
+   "seconds": 29
+  },
   "vod2936683310_11535": {
    "id": "vod2936683310_11535",
    "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
@@ -1775,8 +1811,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T13:35:42Z",
+ "stats_updated": "2026-11-22T13:40:15Z",
  "log": [
-  "[13:35:45Z] hook learner: 19 videos, 2 lessons"
+  "[13:40:16Z] posting HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip (8:37 AM slot) to tiktok: xQc FURIOUS after GTA 6 CRASH",
+  "[13:40:26Z]   tiktok: uploading "
  ]
 }
