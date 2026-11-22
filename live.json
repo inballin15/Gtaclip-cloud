@@ -191,12 +191,12 @@
    }
   }
  },
- "updated": "2026-11-22T04:41:02Z",
+ "updated": "2026-11-22T04:46:50Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-22T21:07:00Z",
- "up_next": "vod2936683310_15668",
+ "up_next": "EnticingGenerousMageSMOrc-mBGh70-dRP9hfCfY",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7710848913573432590",
@@ -644,8 +644,7 @@
   "OddUgliestJayRedCoat-SgV1vQml-egeE0wc",
   "RudeEagerDootCmonBruh-Ab0i8Pkt9JAJGFJn",
   "SparklingFinePresidentSeemsGood-i4qRk8rHPoDEryWW",
-  "vod2936385310_22319",
-  "vod2936518555_17834"
+  "vod2936385310_22319"
  ],
  "posts": {
   "vod2936683310_11535": {
@@ -1732,9 +1731,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T04:41:02Z",
- "log": [
-  "[04:41:04Z] spotted your youtube post of vod2936683310_11535: https://youtube.com/shorts/bj-AcEd6wTU",
-  "[04:41:04Z] spotted your tiktok post of vod2936683310_15560: https://www.tiktok.com/@gtaclip96/video/7710848913573432590"
- ]
+ "stats_updated": "2026-11-22T04:46:50Z",
+ "log": []
 }
