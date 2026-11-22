@@ -1,13 +1,18 @@
 {
  "paused": false,
  "postnow": [],
- "last_slot": "2026-11-21T23:07:00Z",
+ "last_slot": "2026-11-22T00:07:00Z",
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
  },
  "errors": [
+  {
+   "at": "2026-11-22T00:09:20Z",
+   "id": "vod2936518555_10022",
+   "error": "LimitReachedError: You have already scheduled the maximum number of posts YouTube allows in a day (2). Please consider scheduling this post for another day."
+  },
   {
    "at": "2026-11-21T23:08:23Z",
    "id": "SolidCarefulKoupreyOSfrog-QNsSAS5-8koUh_1n",
@@ -37,17 +42,17 @@
  "yt_channel": "UCtxm_iDQ0Y7baG2mwrGGcSg",
  "yt_check": "ok",
  "tt_check": "ok",
- "manual_check": "2026-11-21T23:58:30Z",
- "stats_at": "2026-11-21T23:33:47Z",
+ "manual_check": "2026-11-22T00:09:20Z",
+ "stats_at": "2026-11-22T00:09:20Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-21",
-  "used": 13,
+  "used": 16,
   "cap": 30,
   "slots": 6,
-  "remain30": 786,
+  "remain30": 783,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 586
+  "remain24": 583
  }
 }

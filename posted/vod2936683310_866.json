@@ -1,0 +1,35 @@
+{
+ "id": "vod2936683310_866",
+ "hook": "Why is Kai Cenat SHOCKED by GTA 6?",
+ "streamer": "Kai Cenat",
+ "login": "kaicenat",
+ "campaign": "Kai",
+ "tag": "#KaiCenat",
+ "caption": "",
+ "why": "7:07 PM slot",
+ "posted_at": "2026-11-22T00:09:20Z",
+ "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936683310_866_final.mp4?v=d4202de236&r=1795305529",
+ "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936683310_866.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "uploading",
+   "buffer_id": "6b0232b3c72676f5e9eecd35",
+   "error": ""
+  }
+ },
+ "platforms": [
+  "tiktok"
+ ],
+ "hook_kind": "ai",
+ "hook_variant": "question",
+ "style": {
+  "box": "black",
+  "cam": "medium",
+  "len": "normal",
+  "hooklen": "tiny"
+ },
+ "viral": 80,
+ "seconds": 22
+}
