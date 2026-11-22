@@ -396,7 +396,7 @@ def ai_rank(clips: list[dict], log=print, streamer: str = "") -> list[dict]:
 
 def cut(src: Path, start: float, end: float, out: Path) -> None:
     subprocess.run([FF, "-y", "-loglevel", "error", "-ss", f"{start:.2f}", "-i", str(src), "-t", f"{end - start:.2f}",
-                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-c:a", "aac", "-b:a", "160k",
+                    "-c:v", "libx264", "-preset", "fast", "-crf", "13", "-c:a", "aac", "-b:a", "160k",
                     "-movflags", "+faststart", str(out)], check=True)
 
 

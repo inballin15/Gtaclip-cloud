@@ -985,7 +985,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         inputs = ["-i", str(raw)] + extra
         flt = base + ",format=yuv420p[out]"
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
-       "-c:v", "libx264", "-preset", "fast", "-crf", "19", "-maxrate", "8000k", "-bufsize", "16M", "-r", "30",
+       "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-maxrate", "12000k", "-bufsize", "24M", "-r", "30",
        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
 
 
@@ -1031,7 +1031,7 @@ def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path)
     info = {}
     for attempt in range(3):     # Twitch sometimes leaves the 1080p "Source" out for a live stream: ask again
         with yt_dlp.YoutubeDL({"quiet": True, "noprogress": True, "noplaylist": True,
-                               "format": "best[height<=1080][vcodec!=none]/bestvideo[height<=1080]+bestaudio/best",
+                               "format": "best[vcodec!=none]/bestvideo+bestaudio/best",   # best offered (1440p too)
                                "format_sort": ["res", "fps", "tbr"]}) as y:
             info = y.extract_info(url, download=False)
         hh = info.get("height") or max([f.get("height") or 0 for f in info.get("requested_formats") or []] or [0])
@@ -1045,7 +1045,7 @@ def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path)
         hdr = "".join(f"{k}: {v}\r\n" for k, v in (f.get("http_headers") or {}).items())
         args += (["-headers", hdr] if hdr else []) + ["-ss", f"{max(0.0, start - 1):.2f}", "-i", f["url"]]
     maps = ["-map", "0:v:0", "-map", ("1:a:0" if len(fmts) > 1 else "0:a:0?")]
-    ff(*args, *maps, "-t", f"{(end - start) + 2:.2f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "16",
+    ff(*args, *maps, "-t", f"{(end - start) + 2:.2f}", "-c:v", "libx264", "-preset", "fast", "-crf", "13",
        "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(raw))
     h = info.get("height") or (fmts[0].get("height") if fmts else None)
     log(f"[download] VOD section {info.get('format_id')} {info.get('width')}x{h} -> H.264 full quality")
@@ -1779,7 +1779,7 @@ def main() -> None:
                 vf = f"trim=start={a0}:end={b0},setpts=(PTS-STARTPTS)/{sp:.3f}"
                 af = f"atrim=start={a0}:end={b0},asetpts=PTS-STARTPTS,atempo={sp:.3f}"
                 ff("-i", str(raw), "-filter_complex", f"[0:v]{vf}[v];[0:a]{af}[a]", "-map", "[v]", "-map", "[a]",
-                   "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-c:a", "aac", "-b:a", "160k", str(out_t))
+                   "-c:v", "libx264", "-preset", "fast", "-crf", "13", "-c:a", "aac", "-b:a", "160k", str(out_t))
                 raw = out_t
             except Exception as e:  # noqa: BLE001
                 log(f"trim/speed skipped {cid}: {e}")
