@@ -285,12 +285,12 @@
    }
   ]
  },
- "updated": "2026-11-22T18:07:21Z",
+ "updated": "2026-11-22T18:12:25Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-22T21:07:00Z",
- "up_next": null,
+ "up_next": "SmoothRichNewtShazBotstix-miX2CgBm4H8BwXs8",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7711036861694725390",
@@ -2001,9 +2001,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T18:07:21Z",
- "log": [
-  "[18:07:23Z] posting CharmingExquisiteTardigradeTooSpicy--vJfpu3JP6OieEXA (1:07 PM slot) to tiktok: IShowSpeed accidentally deletes his GTA 6 save",
-  "[18:07:34Z]   tiktok: uploading "
- ]
+ "stats_updated": "2026-11-22T18:12:25Z",
+ "log": []
 }
