@@ -850,9 +850,9 @@ def _caption_line_top(fr, cam: str) -> float | None:
     H, W = fr.shape[:2]
     y0, x0, x1 = int(H * 0.6), int(W * 0.08), int(W * 0.92)
     hsv = cv2.cvtColor(fr[y0:, x0:x1], cv2.COLOR_BGR2HSV)
-    white = cv2.inRange(hsv, (0, 0, 225), (180, 50, 255))
+    white = cv2.inRange(hsv, (0, 0, 185), (180, 60, 255))     # white / light-grey letters
     black = cv2.inRange(hsv, (0, 0, 0), (180, 255, 45))
-    edge = cv2.bitwise_and(white, cv2.dilate(black, np.ones((5, 5), np.uint8)))   # white touching a black outline
+    edge = cv2.bitwise_and(white, cv2.dilate(black, np.ones((5, 5), np.uint8)))   # letters touching a black outline
     if cam:   # never count the webcam overlay
         cx, cy, cw, ch = [float(v) for v in cam.split(",")]
         a0, a1 = max(0, int(cy * H) - y0), max(0, int((cy + ch) * H) - y0)
@@ -905,6 +905,17 @@ def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
         return 0.0
 
 
+def _cam_fit(raw: Path, w: float, h: float, T: int, max_up: float) -> tuple[int, int]:
+    """Size of the whole webcam box inside the 1080 x T strip: as large as fits, but never more than max_up x its real
+    pixel size (stretching further only adds blur). Even numbers for the encoder."""
+    cap = cv2.VideoCapture(str(raw))
+    W, H = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1920, cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1080
+    cap.release()
+    bw, bh = max(2.0, w * W), max(2.0, h * H)
+    k = min(1080 / bw, T / bh, max_up)
+    return int(bw * k) // 2 * 2, int(bh * k) // 2 * 2
+
+
 def _cam_fg_top(raw: Path, w: float, h: float) -> int:
     """Top edge of the full-width webcam in the cam-only layout (it sits centred on the 1080x1920 frame)."""
     cap = cv2.VideoCapture(str(raw))
@@ -937,14 +948,15 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         base = ("[0:v]split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
                 "boxblur=20:2,setsar=1[bg];[b]scale=1080:-2,setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
     else:
+        # webcam: the WHOLE webcam box (nothing cropped off), only as big as its pixels allow so it stays sharp
+        # (max ~3.6x with the AI-upscaled webcam, 2.8x without), centred on a blurred copy of itself
+        fw, fh = _cam_fit(raw, w, h, T, 3.6 if cam_video else 2.8)
         base = (
             f"[0:v]split=2[a][b];"
-            # webcam: a wide strip, ~1/3 of the screen (cam boxes taller than that lose a little top/bottom,
-            # cut so the face stays in the upper-middle)
-            f"[a]crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{T}/1080)':x=iw*{x}:y='ih*{y}+(ih*{h}-oh)*0.1',"
-            # small webcams get blown up ~4-5x: light denoise first, sharp (lanczos) scaling, then sharpen
-            f"hqdn3d=1.5:1.5:3:3,scale=1080:{T}:force_original_aspect_ratio=increase:flags=lanczos,"
-            f"crop=1080:{T},unsharp=5:5:1.0:5:5:0.0,setsar=1[top];"
+            f"[a]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,setsar=1,split=2[ca][cb];"
+            f"[ca]scale=1080:{T}:force_original_aspect_ratio=increase,crop=1080:{T},boxblur=24:2,eq=brightness=-0.14,setsar=1[cbg];"
+            f"[cb]scale={fw}:{fh}:flags=lanczos,unsharp=5:5:0.7:5:5:0.0,setsar=1[cfg];"
+            f"[cbg][cfg]overlay=(W-w)/2:(H-h)/2[top];"
             + (f"[b]split=2[b1][b2];[b2]crop=iw:ih*0.15:0:ih*{-cut},boxblur=luma_radius=40:luma_power=3:chroma_radius=18:chroma_power=3[bl];"
                f"[b1][bl]overlay=0:main_h*{-cut}[bb];" if cut < 0 else "") +
             f"[{'bb' if cut < 0 else 'b'}]crop=iw*{1 - max(CAPTION_CUT, cut, 0)}:ih*{1 - max(CAPTION_CUT, cut, 0)}:(iw-ow)/2:0,"
@@ -954,11 +966,12 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             f"[top][bot]vstack=inputs=2"
         )
     extra = ["-i", str(cam_video)] if (cam_video and layout == "cam") else []
-    if cam_video and layout == "split":   # AI-upscaled webcam strip (made on its own server) replaces the stretched one
+    if cam_video and layout == "split":   # AI-upscaled webcam (made on its own server) replaces the plain one
         ci = 2 if hook else 1
         a_end = base.index("[top];") + len("[top];")
-        base = (f"[0:v]copy[b];[{ci}:v]scale=1080:{T}:force_original_aspect_ratio=increase:flags=lanczos,"
-                f"crop=1080:{T},setsar=1[top];" + base[a_end:])
+        base = (f"[0:v]copy[b];[{ci}:v]setsar=1,split=2[ca][cb];"
+                f"[ca]scale=1080:{T}:force_original_aspect_ratio=increase,crop=1080:{T},boxblur=24:2,eq=brightness=-0.14,setsar=1[cbg];"
+                f"[cb]scale={fw}:{fh}:flags=lanczos,setsar=1[cfg];[cbg][cfg]overlay=(W-w)/2:(H-h)/2[top];" + base[a_end:])
         extra = ["-i", str(cam_video)]
     if hook:
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"), hook_style, hook_scale)
@@ -1455,6 +1468,13 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_wholebox_v", 0) < 1:   # one time: whole webcam box, sized to stay sharp, for every queued clip
+        st["redo_wholebox_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new":
+                for k in ("final_hash", "clean_v", "hd", "hd_cam"):
+                    c.pop(k, None)
+                c["hd_sfx"] = (c.get("hd_sfx") or "") + "_w"
     if st.get("redo_natural_cam_v", 0) < 1:   # one time: every queued webcam re-upscaled with the natural (less waxy) setting
         st["redo_natural_cam_v"] = 1
         for c in clips.values():
@@ -1836,17 +1856,16 @@ def main() -> None:
                 if not c.get("hd_sfx", "").endswith("_c"):
                     c["hd_sfx"] = c.get("hd_sfx", "") + "_c"
                 log(f"no gameplay in {cid} but a strong moment: webcam-only TikTok video")
-            else:
-                cam = fc or cam
+            # (the whole webcam box is shown now - no more zooming in on the face)
         hd = CAMHD / f"{hd_key(cid, c)}.mp4"
         cam_video = hd if (lay in ("split", "cam") and hd.exists() and c.get("hd_cam") == cam) else None
         if lay in ("split", "cam") and cam and not cam_video:
             try:   # small webcam source for the AI upscaler (runs on its own server, comes back in a later run)
                 CAMSRC.mkdir(exist_ok=True)
                 x, y, w, h = [float(v) for v in cam.split(",")]
-                crop_h = f"ih*{h}" if lay == "cam" else f"'min(ih*{h},iw*{w}*{TOP_H}/1080)'"   # cam-only: whole box
+                crop_h = f"ih*{h}"   # the whole webcam box (split and cam-only layouts both show all of it)
                 ff("-i", str(raw), "-vf", f"crop=w=iw*{w}:h={crop_h}:x=iw*{x}:"
-                   f"y='ih*{y}+(ih*{h}-oh)*0.1',scale='min(480,iw)':-2:flags=area,fps=30",   # full detail (was cut to 270 px)
+                   f"y=ih*{y},scale='min(480,iw)':-2:flags=area,fps=30",   # full detail (was cut to 270 px)
                    "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "12", str(CAMSRC / f"{hd_key(cid, c)}.mp4"))
                 c["hd_cam"] = cam
             except Exception as e:  # noqa: BLE001
