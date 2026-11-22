@@ -905,6 +905,15 @@ def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
         return 0.0
 
 
+def _cam_fg_top(raw: Path, w: float, h: float) -> int:
+    """Top edge of the full-width webcam in the cam-only layout (it sits centred on the 1080x1920 frame)."""
+    cap = cv2.VideoCapture(str(raw))
+    W, H = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1920, cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1080
+    cap.release()
+    fg_h = min(1920, 1080 * (h * H) / max(1, w * W))
+    return int((1920 - fg_h) / 2)
+
+
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
                  layout: str = "split", cut: float = 0.0, cam_video: Path | None = None,
                  hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0,
@@ -917,6 +926,13 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         fx = float(layout.split(":")[1]) if ":" in layout else 0.5
         base = (f"[0:v]crop=w=ih*9/16/{zoom:.3f}:h=ih/{zoom:.3f}:x='min(max(iw*{fx}-ow/2,0),iw-ow)':y='(ih-oh)/2',"
                 f"scale=1080:1920:flags=lanczos,unsharp=3:3:0.4:3:3:0.0,setsar=1")
+    elif layout == "cam":
+        src = (f"[{2 if hook else 1}:v]setsar=1" if cam_video else
+               f"[0:v]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.5:1.5:3:3,setsar=1")
+        base = (src + ",split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
+                "boxblur=30:2,eq=brightness=-0.12,setsar=1[bg];[b]scale=1080:-2:flags=lanczos,"
+                + ("" if cam_video else "unsharp=5:5:0.8:5:5:0.0,") +
+                "setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
     elif layout == "full":
         base = ("[0:v]split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
                 "boxblur=20:2,setsar=1[bg];[b]scale=1080:-2,setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
@@ -937,7 +953,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
-    extra = []
+    extra = ["-i", str(cam_video)] if (cam_video and layout == "cam") else []
     if cam_video and layout == "split":   # AI-upscaled webcam strip (made on its own server) replaces the stretched one
         ci = 2 if hook else 1
         a_end = base.index("[top];") + len("[top];")
@@ -949,6 +965,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         inputs = ["-i", str(raw), "-i", png] + extra
         oy = (f"H*{hook_y:.3f}-h/2" if hook_y is not None                              # your own spot (editor)
               else "(H-h)/2" if layout == "full" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
+              else f"'max(150,{_cam_fg_top(raw, w, h)}-h-28)'" if layout == "cam"           # cam: just above the webcam
               else f"{T}-h*0.2")                                                   # split: on the line
         flt = base + f"[st];[st][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]"
     else:
@@ -1430,6 +1447,12 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_camonly_v", 0) < 1:   # one time: black-screen clips skipped earlier get the webcam-only treatment
+        st["redo_camonly_v"] = 1
+        for c in clips.values():
+            if c.get("skip_reason") == "no gameplay on screen (black screen)" \
+                    and NOW - parse(c.get("created") or c.get("found") or iso(NOW)) < timedelta(hours=9):
+                c.update(status="new"); c.pop("skip_reason", None); c.pop("final_hash", None)
     if st.get("redo_captions_v", 0) < 1:   # one time: re-check every queued clip with the new caption finder
         st["redo_captions_v"] = 1
         for c in clips.values():
@@ -1677,10 +1700,15 @@ def main() -> None:
         sty = c.get("style") or {}
         if not c.get("asis"):
             raw = best_part(raw, cid, tmp, c)
-        if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and gameplay_is_black(raw, c.get("cam") or ""):
-            c.update(status="skip", skip_reason="no gameplay on screen (black screen)")
-            log(f"skipped {cid}: the stream showed a black screen, no gameplay")
-            return job
+        if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and c.get("cam") \
+                and (c.get("cam_only") or gameplay_is_black(raw, c.get("cam") or "")):
+            vs = c.get("viral")
+            if c.get("cam_only") or (c.get("viral_verdict") != "skip" and (vs is None or vs >= 60)):
+                c["cam_only"] = True       # viral moment with no game on screen: the webcam is the whole video
+            else:
+                c.update(status="skip", skip_reason="no gameplay on screen (black screen)")
+                log(f"skipped {cid}: the stream showed a black screen, no gameplay")
+                return job
         _ul = c.get("user_layout") or {}
         if _ul.get("trim") or (_ul.get("speed") or 1) > 1.01:   # your trim / speed from the editor
             try:
@@ -1762,14 +1790,21 @@ def main() -> None:
                 c.update(status="skip", skip_reason="no one steady in the webcam (away / camera off)")
                 log(f"skipped {cid}: no steady face on camera")
                 return job
-            cam = fc or cam
+            if c.get("cam_only") and auto:
+                lay = "cam"                   # whole webcam, full width, on a blurred copy of itself (9:16)
+                if not c.get("hd_sfx", "").endswith("_c"):
+                    c["hd_sfx"] = c.get("hd_sfx", "") + "_c"
+                log(f"no gameplay in {cid} but a strong moment: webcam-only TikTok video")
+            else:
+                cam = fc or cam
         hd = CAMHD / f"{hd_key(cid, c)}.mp4"
-        cam_video = hd if (lay == "split" and hd.exists() and c.get("hd_cam") == cam) else None
-        if lay == "split" and cam and not cam_video:
+        cam_video = hd if (lay in ("split", "cam") and hd.exists() and c.get("hd_cam") == cam) else None
+        if lay in ("split", "cam") and cam and not cam_video:
             try:   # small webcam source for the AI upscaler (runs on its own server, comes back in a later run)
                 CAMSRC.mkdir(exist_ok=True)
                 x, y, w, h = [float(v) for v in cam.split(",")]
-                ff("-i", str(raw), "-vf", f"crop=w=iw*{w}:h='min(ih*{h},iw*{w}*{TOP_H}/1080)':x=iw*{x}:"
+                crop_h = f"ih*{h}" if lay == "cam" else f"'min(ih*{h},iw*{w}*{TOP_H}/1080)'"   # cam-only: whole box
+                ff("-i", str(raw), "-vf", f"crop=w=iw*{w}:h={crop_h}:x=iw*{x}:"
                    f"y='ih*{y}+(ih*{h}-oh)*0.1',scale='min(480,iw)':-2:flags=area,fps=30",   # full detail (was cut to 270 px)
                    "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "12", str(CAMSRC / f"{hd_key(cid, c)}.mp4"))
                 c["hd_cam"] = cam
