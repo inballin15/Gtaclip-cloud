@@ -1,0 +1,43 @@
+name: diag (temporary - no webcam found check)
+on: workflow_dispatch
+permissions: { contents: write }
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q -r requirements.txt
+      - run: |
+          mkdir -p /tmp/out
+          python3 - <<'PY'
+          import yt_dlp, pathlib, subprocess, pipeline, cv2
+          from yt_dlp.downloader.external import FFmpegFD
+          print("FFMPEG_FOR_YTDLP", FFmpegFD.available())
+          out = pathlib.Path("/tmp/out")
+          jobs = [("lacy1", "https://www.twitch.tv/videos/2936518555", 72979),
+                  ("lacy2", "https://www.twitch.tv/videos/2936518555", 72915),
+                  ("rage1", "https://www.twitch.tv/yourragegaming/clip/ThankfulExcitedSalamanderBibleThump-eo1RkyWMfTp1JS5w", None),
+                  ("rage2", "https://www.twitch.tv/yourragegaming/clip/RockyEasySushiPipeHype-yUHeeluG6u5_HQro", None),
+                  ("ohne1", "https://www.twitch.tv/ohnepixel/clip/CallousFunnyRatKevinTurtle--_MgfukUR67gaOD9", None)]
+          for name, url, t in jobs:
+              try:
+                  f = out / f"{name}.mp4"
+                  if t is not None:
+                      pipeline.fetch_link_section(url, t, t + 8, f, pathlib.Path("/tmp"))
+                  else:
+                      with yt_dlp.YoutubeDL({"quiet": True, "outtmpl": str(f), "format": "best"}) as y:
+                          y.download([url])
+                  dur = pipeline.duration_of(f)
+                  fr = pipeline._frames(f, [dur * p for p in (0.2, 0.5, 0.8)])
+                  for i, x in enumerate(fr):
+                      cv2.imwrite(str(out / f"{name}_{i}.jpg"), cv2.resize(x, (640, 360)))
+                  print("RESULT", name, round(dur, 1), "face:", pipeline._best_face(fr), "| cam:", pipeline._find_cam_info(f, dur, None)[:2])
+                  f.unlink()
+              except Exception as e:
+                  print("ERR", name, repr(e)[:300])
+          PY
+      - run: |
+          cd /tmp/out && git init -q && git checkout -q -b diag4 && git add . && git -c user.name=diag -c user.email=d@d commit -qm diag
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" diag4

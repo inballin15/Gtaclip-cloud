@@ -41,6 +41,17 @@ from render_hook import strip_emoji
 
 ROOT = Path(__file__).resolve().parent
 FF = imageio_ffmpeg.get_ffmpeg_exe()
+# yt-dlp only recognises a binary literally named "ffmpeg" (imageio's is "ffmpeg-linux-x86_64-v…"), so give it one.
+# Without this, partial downloads (YouTube VODs like YourRAGE's) failed with "ffmpeg is not installed".
+FF_DIR = Path(tempfile.gettempdir()) / "gtaclip-ffmpeg"
+try:
+    FF_DIR.mkdir(exist_ok=True)
+    if not (FF_DIR / "ffmpeg").exists():
+        (FF_DIR / "ffmpeg").symlink_to(FF)
+    FF_YTDLP = str(FF_DIR)
+    os.environ["PATH"] = f"{FF_DIR}{os.pathsep}{os.environ.get('PATH', '')}"   # yt-dlp's section check looks on PATH
+except Exception:  # noqa: BLE001
+    FF_YTDLP = FF
 STATE_DIR = Path(os.environ.get("STATE_DIR", ROOT / "_state"))
 POSTED_DIR = Path(os.environ.get("POSTED_DIR", ROOT / "_posted"))
 SITE = Path(os.environ.get("SITE_OUT", ROOT / "_site"))
@@ -1051,7 +1062,7 @@ def fetch_link_audio(url: str, section, tmp: Path) -> tuple[Path, float, str]:
         parts = re.split(r"\s*[-–to]+\s*", str(section).strip())
         a, b = _secs(parts[0]), _secs(parts[1]) if len(parts) > 1 else None
     opts = {"format": "bestaudio/best", "outtmpl": str(tmp / "linkaudio.%(ext)s"), "quiet": True,
-            "noprogress": True, "noplaylist": True, "ffmpeg_location": FF}
+            "noprogress": True, "noplaylist": True, "ffmpeg_location": FF_YTDLP}
     if a is not None:
         opts["download_ranges"] = download_range_func(None, [(a, b if b else a + 4 * 3600)])
     with yt_dlp.YoutubeDL(opts) as y:
