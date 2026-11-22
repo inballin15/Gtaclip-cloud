@@ -241,12 +241,12 @@
    }
   ]
  },
- "updated": "2026-11-22T16:36:38Z",
+ "updated": "2026-11-22T16:41:42Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-22T16:37:00Z",
- "up_next": "vod2936518555_42316",
+ "next_slot": "2026-11-22T18:07:00Z",
+ "up_next": "vod2936518555_42138",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7710990011201555742",
@@ -631,12 +631,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-22",
-  "used": 4,
+  "used": 7,
   "cap": 28,
   "slots": 6,
-  "remain30": 772,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 597,
+  "remain30": 769,
+  "reset30": "2026-12-18T22:03:17Z",
+  "remain24": 594,
   "active": [
    [
     8,
@@ -705,6 +705,78 @@
   "LovelyImportantAlfalfaLitty-TvWeJzP9zG95rT47"
  ],
  "posts": {
+  "vod2936518555_42316": {
+   "id": "vod2936518555_42316",
+   "hook": "Lacy SHOCKED by STEALTH mission",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "campaign": "Lacy",
+   "tag": "#Lacy",
+   "caption": "",
+   "why": "11:37 AM slot",
+   "posted_at": "2026-11-22T16:41:42Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936518555_42316_final.mp4?v=00e2550b8e&r=1795338652",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936518555_42316.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b031b48c72676f5e943c538",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "quote",
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "len": "normal",
+    "hooklen": "tiny",
+    "start": "fast"
+   },
+   "viral": 90,
+   "seconds": 21
+  },
+  "LittleTallHummingbirdTwitchRPG-aZDk6gYfud9r2-1M": {
+   "id": "LittleTallHummingbirdTwitchRPG-aZDk6gYfud9r2-1M",
+   "hook": "Lacy STUNNED seeing CALL OF DUTY character",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "campaign": "Lacy",
+   "tag": "#Lacy",
+   "caption": "",
+   "why": "11:37 AM slot",
+   "posted_at": "2026-11-22T16:41:42Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/LittleTallHummingbirdTwitchRPG-aZDk6gYfud9r2-1M_final.mp4?v=c06bdb1722&r=1795353176",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/LittleTallHummingbirdTwitchRPG-aZDk6gYfud9r2-1M.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "youtube": {
+     "state": "uploading",
+     "buffer_id": "6b031b52d864a01105dbaa5f",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "youtube"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "quote",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "len": "normal",
+    "hooklen": "tiny",
+    "start": "setup"
+   },
+   "viral": 88,
+   "seconds": 29
+  },
   "HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip": {
    "id": "HumbleAlertTireKreygasm-GYLDtKCVKOLSM8Ip",
    "hook": "xQc FURIOUS after GTA 6 CRASH",
@@ -1215,8 +1287,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 209,
-   "likes": 3,
+   "views": 1225,
+   "likes": 18,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -1481,7 +1553,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1237,
+   "views": 1253,
    "likes": 22,
    "comments": 0,
    "shares": 0,
@@ -1853,6 +1925,11 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T16:36:38Z",
- "log": []
+ "stats_updated": "2026-11-22T16:41:42Z",
+ "log": [
+  "[16:41:43Z] posting vod2936518555_42316 (11:37 AM slot) to tiktok: Lacy SHOCKED by STEALTH mission",
+  "[16:41:54Z]   tiktok: uploading ",
+  "[16:41:54Z] posting LittleTallHummingbirdTwitchRPG-aZDk6gYfud9r2-1M (11:37 AM slot) to youtube: Lacy STUNNED seeing CALL OF DUTY character",
+  "[16:41:56Z]   youtube: uploading "
+ ]
 }

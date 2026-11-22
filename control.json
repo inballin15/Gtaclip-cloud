@@ -1,7 +1,7 @@
 {
  "paused": false,
  "postnow": [],
- "last_slot": "2026-11-22T13:37:00Z",
+ "last_slot": "2026-11-22T16:37:00Z",
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
   "tiktok": "2026-11-19T22:49:33Z"
@@ -42,17 +42,17 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-22T16:36:38Z",
- "stats_at": "2026-11-22T14:05:27Z",
+ "stats_at": "2026-11-22T16:41:42Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-22",
-  "used": 4,
+  "used": 7,
   "cap": 28,
   "slots": 6,
-  "remain30": 772,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 597
+  "remain30": 769,
+  "reset30": "2026-12-18T22:03:17Z",
+  "remain24": 594
  },
  "yt_verified_v": 1
 }
