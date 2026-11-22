@@ -330,9 +330,12 @@ def texts(c: dict) -> tuple[str, str, str]:
 
 COOLDOWN_RE = re.compile(r"24 hours|daily video upload limit|daily posting limit|large number of posts|rate limit|too many"
                          r"|maximum number of posts", re.I)
-# Buffer lets this YouTube channel take only 2 posts a day: use them at the best times, TikTok keeps every slot
-YT_PER_DAY = 2
-YT_PREF = {(13, 7), (19, 7)}
+# YouTube daily cap. The channel is verified (Nov 22), so try 4 a day; if Buffer still answers
+# "maximum number of posts", the poster drops back to 2 on its own (ctl["yt_per_day"]).
+YT_TRY = 4
+YT_PREFS = {2: {(13, 7), (19, 7)}, 4: {(11, 37), (13, 7), (16, 7), (19, 7)}}
+YT_PER_DAY = YT_TRY
+YT_PREF = YT_PREFS[4]
 
 
 def create(service: str, c: dict) -> dict:
@@ -649,6 +652,13 @@ def main() -> None:
         ctl = {"paused": True, "postnow": [], "last_slot": ""}
     ctl.setdefault("postnow", [])
     ctl.setdefault("last_slot", "")
+    global YT_PER_DAY, YT_PREF
+    if not ctl.get("yt_verified_v"):   # channel verified + refreshed in Buffer (Nov 22): lift the old 2/day pause once
+        ctl["yt_verified_v"] = 1
+        ctl.pop("yt_per_day", None)
+        ctl.get("cooldown", {}).pop("youtube", None)
+    YT_PER_DAY = 2 if ctl.get("yt_per_day", YT_TRY) <= 2 else YT_TRY
+    YT_PREF = YT_PREFS[YT_PER_DAY]
     recs: dict[str, dict] = {f.stem: rj(f, {}) for f in sorted((P / "posted").glob("*.json"))}
     posted_ids = set(recs)
 
@@ -759,7 +769,7 @@ def main() -> None:
                     left_slots = sum(1 for t in slots_today() if t >= slot)
                     st_hm = (slot.astimezone(ET).hour, slot.astimezone(ET).minute)
                     if yt_today >= YT_PER_DAY or (st_hm not in YT_PREF and left_slots > YT_PER_DAY - yt_today):
-                        continue   # save YouTube's 2 daily posts for the best slots (no wasted Buffer request)
+                        continue   # save YouTube's daily posts for the best slots (no wasted Buffer request)
                 last_sv = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)
                                 if sv in (r.get("platforms") or ["tiktok", "youtube"])), "")
                 cand = (next((r for r in ok[:6] if r["id"] not in used and r.get("streamer") != last_sv), None)
@@ -861,6 +871,9 @@ def main() -> None:
                     if "24 hours" in st["error"]:
                         until = iso(NOW + timedelta(hours=24))
                     elif "maximum number of posts" in st["error"]:   # per-day cap: wait for the next day (ET)
+                        if s == "youtube" and ctl.get("yt_per_day", YT_TRY) > 2:
+                            ctl["yt_per_day"] = 2   # verification didn't lift Buffer's cap: back to 2 a day
+                            log("YouTube still capped by Buffer — dropping back to 2 posts a day")
                         nxt = (NOW.astimezone(ET) + timedelta(days=1)).replace(hour=0, minute=5, second=0, microsecond=0)
                         until = iso(nxt.astimezone(timezone.utc))
                     elif "daily posting limit" in st["error"]:  # Buffer's rolling 24 h limit: try again in 3 h
@@ -969,7 +982,7 @@ def main() -> None:
                          reverse=True)[:80],
         "videos_checked": ctl.get("manual_check", ""),
         "buffer_ok": buffer_ok, "buffer_error": buffer_err, "buffer_off": bool(ctl.get("buffer_off")),
-        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "you_post": ctl.get("you_post", []), "budget": {**BUDGET, "active": [list(x) for x in ACTIVE_SLOTS]}, "cooldown": ctl.get("cooldown", {}),
+        "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "you_post": ctl.get("you_post", []), "yt_per_day": YT_PER_DAY, "budget": {**BUDGET, "active": [list(x) for x in ACTIVE_SLOTS]}, "cooldown": ctl.get("cooldown", {}),
         "ai_off": bool(ctl.get("ai_off")),
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
