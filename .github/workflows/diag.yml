@@ -1,47 +1,20 @@
-name: diag (temporary - webcam quality test)
+name: diag (temporary - VOD formats)
 on: workflow_dispatch
-permissions: { contents: write }
 jobs:
   d:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
+      - run: pip install -q yt-dlp
       - run: |
-          pip install -q -r requirements.txt
-          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
-          mkdir -p models_sr out
-          curl -sL -o models_sr/x4v3.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-x4v3.pth
-          curl -sL -o models_sr/wdn.pth https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-wdn-x4v3.pth
-      - run: |
+          for v in 2936518555 2936683310 2935059680; do echo "=== $v"; yt-dlp -F "https://www.twitch.tv/videos/$v" 2>&1 | grep -vE "^\[|^ID|^-" | head -14; done
           python3 - <<'PY'
-          import pathlib, cv2, numpy as np, torch, pipeline, enhance_cam
-          raw = pathlib.Path("/tmp/raw.mp4")
-          pipeline.fetch_link_section("https://www.twitch.tv/videos/2936518555", 16595, 16601, raw, pathlib.Path("/tmp"))
-          fr = pipeline._frames(raw, [3.0])[0]; H, W = fr.shape[:2]; print("source", W, "x", H)
-          x, y, w, h = 0.0531, 0.0727, 0.1556, 0.1721
-          c = fr[int(y*H):int((y+h)*H), int(x*W):int((x+w)*W)].copy(); print("webcam crop", c.shape)
-          cv2.imwrite("out/0_native.png", c)
-          def up(img, d):
-              m = enhance_cam.load("models_sr", d)
-              t = torch.from_numpy(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)).permute(2,0,1).float().div(255)[None]
-              with torch.inference_mode(): o = m(t).clamp(0,1).mul(255).round().byte()[0].permute(1,2,0).numpy()
-              return cv2.cvtColor(o, cv2.COLOR_RGB2BGR)
-          def fit(img): return cv2.resize(img, (1080, int(img.shape[0]*1080/img.shape[1])), interpolation=cv2.INTER_LANCZOS4)
-          lz = fit(c)
-          A, B, C = fit(up(c, 0.5)), fit(up(c, 0.85)), fit(up(c, 1.0))
-          cv2.imwrite("out/A_current.jpg", A, [cv2.IMWRITE_JPEG_QUALITY, 95])
-          cv2.imwrite("out/B_detail.jpg", B, [cv2.IMWRITE_JPEG_QUALITY, 95])
-          cv2.imwrite("out/C_fulldetail.jpg", C, [cv2.IMWRITE_JPEG_QUALITY, 95])
-          bl = cv2.GaussianBlur(lz, (0, 0), 1.2); D = cv2.addWeighted(lz, 1.6, bl, -0.6, 0)
-          cv2.imwrite("out/D_lanczos_sharp.jpg", D, [cv2.IMWRITE_JPEG_QUALITY, 95])
-          E = cv2.addWeighted(B, 0.75, lz, 0.25, 0); n = np.random.default_rng(1).normal(0, 3.0, E.shape)
-          E = np.clip(E.astype(np.float32) + n, 0, 255).astype(np.uint8)
-          cv2.imwrite("out/E_detail_texture.jpg", E, [cv2.IMWRITE_JPEG_QUALITY, 95])
-          for n_, im in [("A", A), ("B", B), ("C", C), ("D", D), ("E", E)]:
-              g = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY); print("sharpness", n_, round(cv2.Laplacian(g, cv2.CV_64F).var(), 1))
+          import yt_dlp
+          for v in ("2936518555", "2936683310"):
+              with yt_dlp.YoutubeDL({"quiet": True}) as y:
+                  info = y.extract_info(f"https://www.twitch.tv/videos/{v}", download=False)
+              print("LIVE?", v, info.get("is_live"), info.get("was_live"), info.get("live_status"))
+              for f in info["formats"]:
+                  print("FMT", v, f.get("format_id"), f.get("height"), f.get("fps"), f.get("tbr"), f.get("quality"), f.get("format_note"))
           PY
-      - run: |
-          git config user.name diag; git config user.email diag@x
-          git checkout -q --orphan diag3 && git rm -rqf --cached . && git add -f out && git commit -qm diag && git push -qf origin diag3
