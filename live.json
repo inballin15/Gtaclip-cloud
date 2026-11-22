@@ -226,7 +226,7 @@
    }
   ]
  },
- "updated": "2026-11-22T08:32:38Z",
+ "updated": "2026-11-22T08:37:54Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -602,12 +602,12 @@
  "you_post": [],
  "budget": {
   "day": "2026-11-22",
-  "used": 0,
+  "used": 1,
   "cap": 28,
   "slots": 6,
-  "remain30": 776,
-  "reset30": "2026-12-18T22:03:14Z",
-  "remain24": 576,
+  "remain30": 775,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 575,
   "active": [
    [
     8,
@@ -1133,6 +1133,20 @@
  },
  "stats": [
   {
+   "service": "youtube",
+   "link": "https://www.youtube.com/shorts/bj-AcEd6wTU",
+   "sent": "2026-11-22T04:36:29.000Z",
+   "hook": "",
+   "clip": "",
+   "streamer": "",
+   "views": 209,
+   "likes": 3,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
    "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7710812219398769934",
    "sent": "2026-11-22T02:10:32.402Z",
@@ -1195,7 +1209,7 @@
    "hook": "Lacy STUNNED by 90 HOUR restart",
    "clip": "PlayfulTriumphantWalletTinyFace-22B9lCIYz9kQ9j5O",
    "streamer": "Lacy",
-   "views": 0,
+   "views": 2,
    "likes": 0,
    "comments": 0,
    "shares": 0,
@@ -1223,7 +1237,7 @@
    "hook": "Clix SHOCKED he TRICKED police with empty boat",
    "clip": "vod2934996320_93392",
    "streamer": "Clix",
-   "views": 0,
+   "views": 1,
    "likes": 0,
    "comments": 0,
    "shares": 0,
@@ -1391,8 +1405,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 0,
-   "likes": 0,
+   "views": 1237,
+   "likes": 22,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -1763,6 +1777,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T08:32:38Z",
+ "stats_updated": "2026-11-22T08:37:54Z",
  "log": []
 }
