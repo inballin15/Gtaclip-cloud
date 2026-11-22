@@ -487,6 +487,9 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                       f"What they said / stream title: {context[:600] or '(nothing)'}\n"
                       "1) Is there any nudity (bare breasts, genitals, bare buttocks, even in-game), sexual activity, "
                       "strip-club dancing, drug use, or graphic gore? ok=false means it must not be posted.\n"
+                      "Also ok=false if the streamer is away: their own camera shows an empty chair / empty room while "
+                      "the only person on screen is a guest in a different, smaller webcam window. (A clip of the channel "
+                      "owner must show the channel owner.)\n"
                       "2) Write the on-screen hook about what ACTUALLY happens in these frames and what was said. "
                       + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style(variant) +
                       "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\"}."}]
