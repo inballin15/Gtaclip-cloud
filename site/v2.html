@@ -256,6 +256,9 @@ nav .ind{transition:transform .45s var(--spring),width .45s var(--spring)!import
 @keyframes vt-in-back{from{opacity:0;transform:translateX(-24px)}}
 .kpi .n{font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.gp{display:flex;align-items:center;gap:8px;margin:12px 0 6px}.gpl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
+.gprow{display:flex;gap:8px;margin:6px 0 8px}.gpin{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid var(--line,#ffffff20);background:var(--p2);color:var(--fg);font-size:15px}
+.btn.paid{background:linear-gradient(135deg,#ffd76a33,#ff4d9433);border-color:#ffd76a66;color:#ffe39a}
 </style>
 </head>
 <body>
@@ -653,6 +656,46 @@ function renderQueue(v, ql) {
   });
 }
 const vidOf = (r) => (variant === 'clean' && r.clean) ? r.clean : r.final;
+
+// ---------------------------------------------------------------- get paid (Content Rewards) for one clip
+const CAMP_OF = { 'Kai Cenat': 'Kai', Kai: 'Kai', Lacy: 'Lacy', Clix: 'Clix', YourRAGE: 'YourRAGE', YourRAGEGaming: 'YourRAGE' };
+let myLinks = ls.get('gc-mylinks', {});
+function campOf(r) { return r.campaign || CAMP_OF[r.streamer] || ''; }
+function linksFor(r) {
+  const out = new Map();
+  for (const v of videos()) if (v.clip === r.id) out.set(v.link, v.service);
+  const p = posts()[r.id]; if (p) for (const sv of ['tiktok', 'youtube']) if (p[sv]) out.set(p[sv], sv);
+  for (const l of myLinks[r.id] || []) out.set(l, /youtu/.test(l) ? 'youtube' : 'tiktok');
+  return [...out.entries()];
+}
+function openGetPaid(r) {
+  const camp = campOf(r); const url = CR[camp] || 'https://contentrewards.com/';
+  const nodes = [el('div', 'hook', r.hook || '')];
+  nodes.push(el('div', 'mut', camp && CR[camp] ? `Campaign: ${camp} — copy your video link, Content Rewards opens, paste it in, then tap ✓.`
+    : `${r.streamer || 'This streamer'} has no paid campaign saved — it opens Content Rewards so you can pick one.`));
+  const goSubmit = (link) => { copy(link, 'Link'); setTimeout(() => window.open(url, '_blank', 'noopener'), 150); };
+  const mark = (link) => { submitted[link] = Date.now(); ls.set('gc-submitted', submitted); toast('Marked submitted'); lastSig = ''; render(); };
+  const L2 = linksFor(r);
+  for (const [link, sv] of L2) {
+    const row = el('div', 'gp'); const done = !!submitted[link];
+    row.append(el('span', 'pill ' + (sv === 'tiktok' ? 'tt' : 'yt'), PN[sv] || sv), el('span', 'mut gpl', link.replace(/^https?:\/\/(www\.)?/, '')));
+    const b1 = el('button', 'big go', done ? 'Submitted ✓ — submit again' : 'Copy link + open Content Rewards'); b1.onclick = () => goSubmit(link);
+    const b2 = el('button', 'btn', done ? 'Submitted ✓' : 'Mark submitted ✓'); b2.disabled = done; b2.onclick = () => { mark(link); closeSheet(); };
+    nodes.push(row, b1, b2);
+  }
+  // posted it yourself? paste the link once — it's remembered for this clip
+  const inp = el('input', 'gpin'); inp.type = 'url'; inp.placeholder = L2.length ? 'Another link? Paste it here' : 'Paste your TikTok / YouTube link';
+  const ps = el('button', 'btn', 'Paste'); ps.onclick = async () => { try { inp.value = (await navigator.clipboard.readText()).trim(); } catch { inp.focus(); } };
+  const pr = el('div', 'gprow'); pr.append(inp, ps);
+  const go = el('button', 'big ' + (L2.length ? '' : 'go'), 'Save link + open Content Rewards');
+  go.onclick = () => {
+    const l = (inp.value || '').trim(); if (!/^https?:\/\/\S*(tiktok|youtu)/i.test(l)) { toast('Paste a TikTok or YouTube link first'); inp.focus(); return; }
+    myLinks[r.id] = [...new Set([...(myLinks[r.id] || []), l])]; ls.set('gc-mylinks', myLinks); goSubmit(l); closeSheet();
+  };
+  nodes.push(el('div', 'sub', L2.length ? 'Or add a link' : 'Posted it yourself?'), pr, go);
+  sheet(camp && CR[camp] ? `Get paid · ${camp}` : 'Get paid', nodes);
+}
+
 function clipCard(r, st) {
   const c = el('div', 'clip' + (r.nowing ? ' now' : '')); c.id = 'c-' + r.id;
   const vb = el('div', 'vbox'); vb.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
@@ -675,7 +718,8 @@ function clipCard(r, st) {
   if (!r.nowing) { const pn = el('button', 'btn pink', 'Post now'); pn.onclick = () => openPostNow(r); btns.append(pn); }
   const dl = el('button', 'btn cyan', variant === 'clean' ? '⬇ Save (no caption)' : '⬇ Save'); dl.onclick = () => saveVideo(r, dl);
   const ed = el('button', 'btn', '✎ Edit'); ed.onclick = () => openEditor(r);
-  const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, ed, mb); b.append(btns);
+  const gp = el('button', 'btn' + (CR[campOf(r)] ? ' paid' : ''), '$ Get paid'); gp.onclick = () => openGetPaid(r);
+  const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, ed, gp, mb); b.append(btns);
   const more = el('div', 'more'); const mi = el('div'); const mbt = el('div', 'btns');
   const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
   const hk = el('button', 'btn', 'Edit hook'); hk.onclick = () => openHookEdit(r);
@@ -1187,7 +1231,7 @@ function yourTurnCard(ql) {
     const sv1 = el('button', 'btn pink', 'Save + copy'); sv1.onclick = () => saveVideo(r, sv1, 'final');
     const sv2 = el('button', 'btn', r.clean ? 'No caption' : 'No caption (making…)'); sv2.disabled = !r.clean; sv2.onclick = () => saveVideo(r, sv2, 'clean');
     const op = el('a', 'btn', 'Open app'); op.href = sv === 'tiktok' ? 'https://www.tiktok.com/upload' : 'https://studio.youtube.com'; op.target = '_blank'; op.rel = 'noopener';
-    const ok = el('button', 'btn ok', 'Posted ✓'); ok.onclick = async () => { ok.disabled = true; if (await ghTap(`manual: ${r.id} ${sv}`)) toast(`Marked posted on ${PN[sv]} — it's tracked for views & submitting`); lastSig = ''; render(); };
+    const ok = el('button', 'btn ok', 'Posted ✓'); ok.onclick = async () => { ok.disabled = true; if (await ghTap(`manual: ${r.id} ${sv}`)) { toast(`Marked posted on ${PN[sv]}`); openGetPaid(r); } lastSig = ''; render(); };
     bt.append(sv1, sv2, op, ok); body.append(bt); it.append(th, body); c.append(it);
   }
   return c;
