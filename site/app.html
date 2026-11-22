@@ -147,6 +147,10 @@ nav button b:empty{display:none}
 .grab{width:40px;height:5px;border-radius:3px;background:#ffffff30;margin:2px auto 4px;flex:none}
 .shead{display:flex;align-items:center;gap:8px}.shead h2{margin:0;font-size:17px}.shead .btn{margin-left:auto}
 .note{font-size:13px;padding:10px 12px;border-radius:14px;background:#29e3ff12;border:1px solid #29e3ff35}
+.jobbar{margin:8px 0;padding:10px 12px;border-radius:14px;background:#29e3ff12;border:1px solid #29e3ff35}
+.jobbar .jl{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px}.jobbar .jl b{font-variant-numeric:tabular-nums}
+.jobbar .jt{height:8px;border-radius:8px;background:#ffffff14;overflow:hidden}.jobbar .jf{height:100%;border-radius:8px;background:linear-gradient(90deg,#29e3ff,#ff3d8b);transition:width .9s ease}
+.jobbar.ok{background:#2ee59d18;border-color:#2ee59d55}.jobbar.ok .jf{background:#2ee59d}.jobbar.bad{background:#ff6b6b18;border-color:#ff6b6b55}.jobbar.bad .jf{background:#ff6b6b}
 .note.warn{background:#f5b54418;border-color:#f5b54455}.note.bad{background:#ff6b6b18;border-color:#ff6b6b55}.note.good{background:#2ee59d18;border-color:#2ee59d55}
 .in input,.in select,.in textarea{width:100%;font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 11px}
 .in textarea{min-height:100px;resize:vertical}
@@ -350,13 +354,117 @@ async function ghTap(title, body = '') {
     return true;
   } catch (e) { toast('No connection — try again'); return false; }
 }
+// ---------------------------------------------------------------- quick edits + real progress bars
+let EDITS = ls.get('gc-edits', {});
+let JOBS = ls.get('gc-jobs', {});   // clip id -> { kind: 'text' | 'remake', at, pct, label, done, failed }
+const saveJobs = () => ls.set('gc-jobs', JOBS);
+function applyEdits(q) {   // newest quick text edit wins until the clip is fully re-made again
+  for (const r of (q && q.ready) || []) {
+    const e = EDITS[r.id]; if (!e || !(e.at > (r.rendered || 0))) continue;
+    if (e.hook) r.hook = e.hook; if (e.caption != null) r.caption = e.caption;
+    if (e.video) { r.final = e.video + '?e=' + e.at; r.final_abs = PAGES + e.video; }
+  }
+}
+async function refreshEdits() {
+  try {
+    const key = ghKey();
+    EDITS = key ? await getJSON(`https://api.github.com/repos/${REPO}/contents/edits.json?ref=edits&t=${Date.now()}`, { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github.raw+json' })
+      : await getJSON(`https://raw.githubusercontent.com/${REPO}/edits/edits.json?t=${Date.now()}`);
+    ls.set('gc-edits', EDITS);
+  } catch (e) { /* none yet */ }
+  applyEdits(Q);
+}
+function startJob(id, kind) { JOBS[id] = { kind, at: Date.now(), pct: 2, label: 'Sending your edit…' }; saveJobs(); pollJobs(); }
+async function quickText(r, t) {
+  if (!(await ghTap('text: ' + r.id, JSON.stringify(t)))) return false;
+  startJob(r.id, 'text'); toast('Saved — putting your text on the video'); lastSig = ''; render(); return true;
+}
+function jobBar(id) {
+  const j = JOBS[id]; const w = el('div', 'jobbar' + (j.failed ? ' bad' : j.done ? ' ok' : ''));
+  const t = el('div', 'jl'); t.append(el('span', null, j.label || ''), el('b', null, j.failed ? '' : `${Math.floor(j.pct)}%`));
+  const tr = el('div', 'jt'); const f = el('div', 'jf'); f.style.width = `${j.failed ? 100 : j.pct}%`; tr.append(f); w.append(t, tr);
+  w.dataset.job = id; return w;
+}
+function paintJobs() {   // update the bars in place (no full re-render every few seconds)
+  for (const n of document.querySelectorAll('[data-job]')) { const j = JOBS[n.dataset.job]; if (!j) { n.remove(); continue; }
+    n.className = 'jobbar' + (j.failed ? ' bad' : j.done ? ' ok' : ''); n.querySelector('.jl span').textContent = j.label;
+    n.querySelector('.jl b').textContent = j.failed ? '' : `${Math.floor(j.pct)}%`; n.querySelector('.jf').style.width = `${j.failed ? 100 : j.pct}%`; }
+}
+// a stage's share of the bar + how long it usually takes (s): inside a stage the bar moves with the clock,
+// but never past the stage's end until GitHub says that stage really finished
+const STAGES = {
+  text: [['queued', 'Starting…', 0, 8, 12], ['Getting your clip', 'Getting your clip', 8, 20, 8], ['Getting ready', 'Getting ready', 20, 42, 15],
+    ['Adding your text', 'Adding your text', 42, 78, 25], ['Saving', 'Saving', 78, 88, 8], ['pages', 'Putting it on the site', 88, 99, 40]],
+  remake: [['queued', 'Waiting for the clip maker', 0, 10, 60], ['load', 'Loading your clip', 10, 22, 40], ['pipeline', 'Re-making the video', 22, 86, 300],
+    ['publish', 'Saving', 86, 93, 40], ['pages', 'Putting it on the site', 93, 99, 40]] };
+const stagePct = (kind, i, since) => { const [, , a, b, secs] = STAGES[kind][i]; return a + (b - a) * Math.min(0.95, (Date.now() - since) / 1000 / secs); };
+let polling = false;
+async function pollJobs() {
+  if (polling) return; polling = true;
+  try {
+    while (Object.values(JOBS).some((j) => !j.done && !j.failed)) {
+      await stepJobs(); paintJobs(); await new Promise((res) => setTimeout(res, 2500));
+    }
+  } finally { polling = false; }
+}
+async function stepJobs() {
+  const h = ghKey() ? authH() : { Accept: 'application/vnd.github+json' };
+  let runs = [];
+  try { runs = (await getJSON(`https://api.github.com/repos/${REPO}/actions/runs?per_page=20&t=${Date.now()}`, h)).workflow_runs || []; } catch (e) { return; }
+  const after = (r, t) => new Date(r.created_at) >= new Date(t - 15000);
+  for (const [id, j] of Object.entries(JOBS)) {
+    if (j.done || j.failed) { if (Date.now() - (j.end || j.at) > 8000) { delete JOBS[id]; saveJobs(); lastSig = ''; render(); } continue; }
+    if (Date.now() - j.at > 40 * 60000) { Object.assign(j, { failed: true, label: 'Taking too long — check back soon', end: Date.now() }); continue; }
+    if (j.kind === 'text') {
+      const run = runs.find((r) => r.name === 'quick edit' && after(r, j.at));
+      if (!run) { j.pct = Math.max(j.pct, stagePct('text', 0, j.at)); j.label = 'Starting…'; continue; }
+      if (run.status === 'completed' && run.conclusion !== 'success') { Object.assign(j, { failed: true, label: 'The edit failed — try again', end: Date.now() }); continue; }
+      if (run.status !== 'completed') {
+        let steps = []; try { steps = ((await getJSON(`https://api.github.com/repos/${REPO}/actions/runs/${run.id}/jobs?t=${Date.now()}`, h)).jobs || [])[0]?.steps || []; } catch (e) { /* */ }
+        const names = STAGES.text.map((s) => s[0]); const cur = steps.find((x) => x.status === 'in_progress');
+        let i = cur ? names.indexOf(cur.name) : -1;
+        if (i < 0) { const doneI = steps.filter((x) => x.status === 'completed').map((x) => names.indexOf(x.name)).filter((n) => n > 0);
+          i = run.status === 'queued' ? 0 : doneI.length ? Math.min(4, Math.max(...doneI) + 1) : 1; }
+        const since = cur && cur.started_at ? new Date(cur.started_at).getTime() : new Date(run.run_started_at || run.created_at).getTime();
+        j.pct = Math.max(j.pct, stagePct('text', i, since)); j.label = STAGES.text[i][1]; continue;
+      }
+      // the edit is made — did it go the quick way, or did it need a full re-make?
+      await refreshEdits(); await refreshLive();
+      const e = EDITS[id];
+      if (!(e && e.at * 1000 >= j.at - 20000)) {
+        if (openIssues.some((t) => t === 'edit: ' + id || t === 'layout: ' + id)) { Object.assign(j, { kind: 'remake', at: Date.now(), pct: 10, label: 'Needs a full re-make' }); saveJobs(); }
+        continue;
+      }
+      if (!e.video) { Object.assign(j, { done: true, pct: 100, label: 'Done ✓', end: Date.now() }); toast('Caption saved ✓'); continue; }
+      const pg = runs.find((r) => r.name === 'pages build and deployment' && new Date(r.created_at) >= new Date(run.updated_at) - 60000);
+      if (pg && pg.status === 'completed') { Object.assign(j, { done: true, pct: 100, label: 'Done ✓ — your new video is ready', end: Date.now() }); toast('Edit done ✓'); applyEdits(Q); lastSig = ''; render(); continue; }
+      j.pct = Math.max(j.pct, stagePct('text', 5, new Date(run.updated_at).getTime())); j.label = STAGES.text[5][1];
+    } else {
+      await refreshQueue(); applyEdits(Q);
+      const r = (Q.ready || []).find((x) => x.id === id);
+      if (r && (r.rendered || 0) * 1000 > j.at && r.final) {
+        const pg = runs.find((x) => x.name === 'pages build and deployment' && new Date(x.created_at) >= new Date(r.rendered * 1000));
+        if (!pg || pg.status === 'completed') { Object.assign(j, { done: true, pct: 100, label: 'Done ✓ — your new video is ready', end: Date.now() }); toast('Re-make done ✓'); lastSig = ''; render(); continue; }
+        j.pct = Math.max(j.pct, stagePct('remake', 4, new Date(pg.created_at).getTime())); j.label = STAGES.remake[4][1]; continue;
+      }
+      const run = runs.find((x) => x.name.startsWith('gtaclip pipeline') && x.status !== 'completed' && after(x, j.at))
+        || runs.find((x) => x.name.startsWith('gtaclip pipeline') && x.status === 'in_progress');
+      if (!run || run.status === 'queued' || !after(run, j.at)) { j.pct = Math.max(j.pct, stagePct('remake', 0, j.at)); j.label = run && run.status === 'in_progress' ? 'Waiting for the clip maker to finish its current run' : STAGES.remake[0][1]; continue; }
+      let steps = []; try { steps = ((await getJSON(`https://api.github.com/repos/${REPO}/actions/runs/${run.id}/jobs?t=${Date.now()}`, h)).jobs || [])[0]?.steps || []; } catch (e) { /* */ }
+      const cur = steps.find((x) => x.status === 'in_progress');
+      const i = !cur ? 1 : cur.name === 'pipeline' ? 2 : cur.name.startsWith('publish') ? 3 : cur.name.startsWith('save log') ? 3 : 1;
+      j.pct = Math.max(j.pct, stagePct('remake', i, cur && cur.started_at ? new Date(cur.started_at).getTime() : Date.now())); j.label = STAGES.remake[i][1];
+    }
+  }
+  saveJobs();
+}
 async function refreshQueue() {
   try {
     const q = await getJSON(PAGES + 'queue.json?t=' + Date.now());
     if (q.site_build && !DEV && q.site_build !== BUILD && !sessionStorage.getItem('rl-' + q.site_build) && location.pathname.endsWith('/')) {
       sessionStorage.setItem('rl-' + q.site_build, '1'); location.reload(); return;
     }
-    Q = q; ls.set('gc-cache-q', { ...q, ready: (q.ready || []).slice(0, 40) });
+    Q = q; applyEdits(Q); ls.set('gc-cache-q', { ...q, ready: (q.ready || []).slice(0, 40) });
   } catch (e) { /* keep last */ }
 }
 async function refreshLive() {
@@ -762,7 +870,8 @@ function clipCard(r, st) {
   const meta = el('div', 'row'); meta.append(badge(st), el('span', 'mut', `${r.seconds || '?'}s · ${r.created ? ago(r.created) : ''}`)); b.append(meta);
   b.append(el('div', 'hook', r.hook || ''));
   if (r.viral_why) b.append(el('div', 'why', r.viral_why));
-  if (isPending('edit: ' + r.id) || isPending('layout: ' + r.id)) b.append(el('div', 'note warn', 'Re-making this video with your changes… (a few minutes)'));
+  if (JOBS[r.id]) b.append(jobBar(r.id));
+  else if (isPending('edit: ' + r.id) || isPending('layout: ' + r.id)) b.append(el('div', 'note warn', 'Re-making this video with your changes…'));
   else if (r.pic_ok == null && !(L && L.ai_off)) b.append(el('div', 'note', 'Waiting for the AI picture check — it won\'t auto-post until it passes.'));
   const btns = el('div', 'btns');
   if (!r.nowing) { const pn = el('button', 'btn pink', 'Post now'); pn.onclick = () => openPostNow(r); btns.append(pn); }
@@ -803,7 +912,11 @@ function openHookEdit(r) {
   const hi = el('input'); hi.value = r.hook || ''; hi.maxLength = 120;
   const ci = el('textarea'); ci.placeholder = 'Leave empty for the automatic caption'; ci.value = r.caption || '';
   const sv = el('button', 'big go', 'Save & re-make video');
-  sv.onclick = async () => { sv.disabled = true; if (await ghTap('edit: ' + r.id, `hook: ${hi.value.trim()}\ncaption: ${ci.value.trim()}`)) { toast('Saved — the video is being re-made'); closeSheet(); } sv.disabled = false; };
+  sv.textContent = 'Save';
+  sv.onclick = async () => { sv.disabled = true; const t = {};
+    if (hi.value.trim() && hi.value.trim() !== (r.hook || '').trim()) t.hook = hi.value.trim();
+    if (ci.value.trim() !== (r.caption || '').trim()) t.caption = ci.value.trim();
+    if (!Object.keys(t).length || await quickText(r, t)) closeSheet(); sv.disabled = false; };
   sheet('Edit hook & caption', [el('label', null, 'Hook (text on the video)'), hi, el('label', null, 'Caption (TikTok / YouTube description)'), ci, sv]);
 }
 
@@ -992,7 +1105,23 @@ function openEditor(r) {
     if (S.trim) out.trim = S.trim;
     if (S.hook.trim() && S.hook.trim() !== (r.hook || '').trim()) out.hook = S.hook.trim();
     if (S.caption.trim() !== (r.caption || '').trim()) out.caption = S.caption.trim();
-    if (await ghTap('layout: ' + r.id, JSON.stringify(out))) { ls.set(draftKey, null); toast('Saved — re-making the video (a few minutes). It auto-posts with your edits.'); close(); lastSig = ''; render(); }
+    // only words / text box changed? → quick edit (about a minute) instead of a full re-make
+    const b0 = JSON.parse(hist[0]); const near = (a, b) => JSON.stringify(a) === JSON.stringify(b) ||
+      (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) < 0.002));
+    const textOnly = ['mode', 'cam', 'pan', 'zoom', 'irl_x', 'top_h', 'speed', 'trim'].every((k) => near(S[k], b0[k]));
+    if (textOnly) {
+      const t = {};
+      if (S.hook.trim() && S.hook.trim() !== (r.hook || '').trim()) t.hook = S.hook.trim();
+      if (S.caption.trim() !== (r.caption || '').trim()) t.caption = S.caption.trim();
+      if (S.hook_style !== b0.hook_style) t.hook_style = S.hook_style;
+      if (S.hook_y !== b0.hook_y && S.hook_y != null) t.hook_y = +S.hook_y.toFixed(3);
+      if (Math.abs(S.hook_scale - b0.hook_scale) > 0.01) t.hook_scale = +S.hook_scale.toFixed(2);
+      if (!Object.keys(t).length) { ls.set(draftKey, null); close(); return; }
+      if (await quickText(r, t)) { ls.set(draftKey, null); close(); }
+      else { sv.disabled = false; sv.textContent = 'Save'; }
+      return;
+    }
+    if (await ghTap('layout: ' + r.id, JSON.stringify(out))) { ls.set(draftKey, null); startJob(r.id, 'remake'); toast('Saved — re-making the video. Watch the progress bar on the clip.'); close(); lastSig = ''; render(); }
     else { sv.disabled = false; sv.textContent = 'Save'; }
   };
   img.onload = () => { startCam(); drawBox(); sizeCanvas(); };
@@ -1375,7 +1504,8 @@ async function rebootSite() {
 $('reboot').onclick = rebootSite;
 { let h = (location.hash || '').slice(1); h = TAB_ALIAS[h] || h; if (['today', 'clips', 'results'].includes(h)) { tab = h; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === h)); } }
 moveInd(); render();                                   // instant: last visit's data
-Promise.all([refreshQueue(), refreshLive()]).then(() => { lastSig = ''; render(); });
+Promise.all([refreshQueue(), refreshLive(), refreshEdits()]).then(() => { lastSig = ''; render(); pollJobs(); });
+setInterval(refreshEdits, 60000);
 refreshRuns();
 setInterval(refreshRuns, 20000);
 setInterval(checkUploads, 30000);

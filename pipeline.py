@@ -1283,6 +1283,63 @@ def import_vod_clips(st: dict) -> None:
         log(f"vod import {name}: {n} clips")
 
 
+# ---------------------------------------------------------------- quick text edits (quickedit.py, `edits` branch)
+EDITS_DIR = ROOT / "_edits"
+_EDITS: dict = {}
+
+
+def load_edits() -> dict:
+    try:
+        return json.loads((EDITS_DIR / "edits.json").read_text())
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def apply_quick_edits(clips: dict, edits: dict) -> None:
+    """Your quick text edits become the clip's real hook/caption/box (so later re-makes keep them), without
+    triggering a re-make: the edited video already exists on the site."""
+    for cid, e in edits.items():
+        c = clips.get(cid)
+        if not c or e.get("at", 0) <= max(c.get("quick_at", 0), c.get("rendered", 0) or 0):
+            continue
+        if e.get("hook"):
+            c["hook"] = e["hook"]
+            c["hook_by_user"] = True
+        if "caption" in e:
+            c["caption"] = e["caption"]
+        ul = dict(c.get("user_layout") or {})
+        for k in ("hook_style", "hook_y", "hook_scale"):
+            if k in e:
+                ul[k] = e[k]
+        if ul:
+            c["user_layout"] = ul
+        c["quick_at"] = e["at"]
+        if c.get("final_hash"):   # the edited video stands in for the final one: don't re-make it for the new words
+            c["final_hash"] = c["final_v"] = hashlib.sha1((c["hook"] + c.get("cam", "") + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+        log(f"quick edit applied: {cid}")
+
+
+def sync_edit_videos() -> None:
+    """Copy the quick-edited videos onto the site folder, so publishing the site never removes them."""
+    try:
+        if os.environ.get("GITHUB_ACTIONS"):
+            subprocess.run(["bash", "-c", 'rm -rf "$D" && mkdir -p "$D" && git fetch -q --depth=1 origin edits:refs/remotes/origin/edits '
+                            '&& git archive origin/edits | tar -x -C "$D"'], cwd=str(ROOT), env={**os.environ, "D": str(EDITS_DIR)},
+                           timeout=180, check=False)
+        src = EDITS_DIR / "v" / "e"
+        dst = VID / "e"
+        dst.mkdir(parents=True, exist_ok=True)
+        want = {f.name for f in src.glob("*.mp4")} if src.exists() else set()
+        for f in dst.glob("*.mp4"):
+            if f.name not in want:
+                f.unlink()
+        for n in want:
+            if not (dst / n).exists():
+                shutil.copy2(src / n, dst / n)
+    except Exception as e:  # noqa: BLE001
+        log(f"edit videos sync skipped: {e}")
+
+
 def publish_site() -> None:
     """Put the current site folder live now (mid-run), same way the workflow does at the end."""
     if not os.environ.get("GITHUB_ACTIONS"):
@@ -1311,6 +1368,11 @@ git push -qf origin "$c:refs/heads/gh-pages"
 # ---------------------------------------------------------------- main
 def main() -> None:
     st = load_state()
+    try:
+        sync_edit_videos()
+        apply_quick_edits(st.get("clips", {}), load_edits())
+    except Exception as e:  # noqa: BLE001
+        log(f"quick edits not applied: {e}")
     _topic = st.get("topic") or dict(DEFAULT_TOPIC)   # what we're clipping (site's topic search)
     fetch_clips_mod.TOPIC.clear(); fetch_clips_mod.TOPIC.update(_topic)
     import viral as _viral_topic
@@ -1460,6 +1522,9 @@ def main() -> None:
                 log(f"failed {c['url']}: {e}")
 
     def write_queue() -> None:
+        global _EDITS
+        sync_edit_videos()
+        _EDITS = load_edits()
         ready = [dict(id=cid, **{k: v for k, v in c.items() if k not in ("final_hash",)})
                  for cid, c in clips.items() if c["status"] == "new"]
         for r in ready:
@@ -1480,6 +1545,10 @@ def main() -> None:
             r["src"] = f"v/{r['id']}_src.jpg" if (VID / f"{r['id']}_src.jpg").exists() else ""
             r["vposter"] = (f"v/{r['id']}_p.jpg?r={r.get('rendered', '')}" if (VID / f"{r['id']}_p.jpg").exists() else "")
             r["clipped"] = r.get("created")
+            e = _EDITS.get(r["id"])   # newest quick text edit (still newer than the last full re-make)
+            if e and e.get("video") and e.get("at", 0) > (r.get("rendered") or 0) and (VID / "e" / Path(e["video"]).name).exists():
+                r["final"] = e["video"]
+                r["final_abs"] = f"{PAGES}/{e['video']}"
         ready = mix_order(ready)
         for r in ready:
             r["approved"] = bool(r.get("approved"))

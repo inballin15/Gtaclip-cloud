@@ -25,6 +25,10 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent
 P = Path(os.environ.get("POSTED_DIR", ROOT / "_posted"))
 QUEUE = Path(os.environ.get("QUEUE_JSON", "/tmp/queue.json"))
+try:
+    EDITS = json.loads(Path(os.environ.get("EDITS_JSON", "/tmp/edits.json")).read_text())
+except Exception:  # noqa: BLE001
+    EDITS = {}
 REPO = os.environ.get("GITHUB_REPOSITORY", "inballin15/Gtaclip-cloud")
 OWNER = REPO.split("/")[0]
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
@@ -657,6 +661,17 @@ def next_slot(after: datetime | None = None) -> datetime | None:
 # ------------------------------------------------------------------ main
 def main() -> None:
     queue = rj(QUEUE, {"ready": []})
+    # quick text edits (quickedit.py): post the edited video with your words, not the older version
+    for r in queue.get("ready", []):
+        e = EDITS.get(r["id"])
+        if e and e.get("at", 0) > (r.get("rendered") or 0):
+            if e.get("video"):
+                r["final"] = e["video"]
+                r["final_abs"] = f"https://inballin15.github.io/Gtaclip-cloud/{e['video']}"
+            if e.get("hook"):
+                r["hook"] = e["hook"]
+            if "caption" in e:
+                r["caption"] = e["caption"]
     ready = [r for r in queue.get("ready", []) if r.get("final_abs")]
     by_id = {r["id"]: r for r in queue.get("ready", [])}
     blocked_extra: set[str] = set()
@@ -692,7 +707,7 @@ def main() -> None:
         # otherwise the old version could go out in the next slot
         try:
             for it in issues("open", 24):
-                m = re.match(r"^(?:layout|edit|redo):\s*(\S+)", it["title"].strip(), re.I)
+                m = re.match(r"^(?:layout|edit|redo|text):\s*(\S+)", it["title"].strip(), re.I)
                 if m:
                     blocked.add(next((k for k in by_id if k == m.group(1) or k.startswith(m.group(1))), m.group(1)))
         except Exception as e:  # noqa: BLE001

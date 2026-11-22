@@ -21,7 +21,7 @@ permissions:
 jobs:
   run:
     # issues: only the repo owner's "skip:" / "edit:" requests
-    if: github.event_name != 'issues' || ((startsWith(github.event.issue.title, 'skip:') || startsWith(github.event.issue.title, 'edit:') || startsWith(github.event.issue.title, 'upload:')) && github.event.issue.user.login == github.repository_owner)
+    if: github.event_name != 'issues' || ((startsWith(github.event.issue.title, 'skip:') || startsWith(github.event.issue.title, 'edit:') || startsWith(github.event.issue.title, 'layout:') || startsWith(github.event.issue.title, 'upload:')) && github.event.issue.user.login == github.repository_owner)
     runs-on: ubuntu-latest
     timeout-minutes: 150
     steps:
@@ -72,6 +72,9 @@ jobs:
           cp -r site/. _site/ && touch _site/.nojekyll
           b=$(git hash-object site/app.html | cut -c1-10); sed -i "s/__BUILD__/$b/" _site/*.html
           python3 -c "import json,sys;p='_site/queue.json';d=json.load(open(p));d['site_build']=sys.argv[1];json.dump(d,open(p,'w'),indent=1,ensure_ascii=False)" "$b" || true
+          # quick text edits finished during this run: keep their videos on the site
+          rm -rf /tmp/ed && mkdir -p /tmp/ed _site/v/e
+          if git fetch -q --depth=1 origin edits:refs/remotes/origin/edits 2>/dev/null; then git archive origin/edits | tar -x -C /tmp/ed; cp -n /tmp/ed/v/e/*.mp4 _site/v/e/ 2>/dev/null || true; fi
           publish () {  # dir branch  (fresh commit; unchanged videos aren't uploaded again)
             export GIT_INDEX_FILE=/tmp/idx-$2; rm -f "$GIT_INDEX_FILE"
             git --work-tree="$1" add -A

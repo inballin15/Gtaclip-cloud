@@ -1,0 +1,50 @@
+name: quick edit
+# Your text changes on a clip, in about a minute (no full re-make). The site sends a "text: <clip id>" tap.
+on:
+  issues:
+    types: [opened]
+permissions:
+  contents: write
+  issues: write
+  actions: write
+concurrency:
+  group: quickedit
+  cancel-in-progress: false
+jobs:
+  edit:
+    if: startsWith(github.event.issue.title, 'text:') && github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Getting your clip
+        uses: actions/checkout@v4
+        with: { ref: main, sparse-checkout: "quickedit.py\nrender_hook.py\nfonts", sparse-checkout-cone-mode: false }
+      - name: Getting ready
+        shell: bash
+        run: |
+          pip install -q --disable-pip-version-check pillow imageio-ffmpeg &
+          git fetch -q --depth=1 origin state:refs/remotes/origin/state
+          git show origin/state:state.json > /tmp/state.json
+          if git fetch -q --depth=1 origin edits:refs/remotes/origin/edits 2>/dev/null; then
+            git worktree add -q -B edits /tmp/edits origin/edits
+          else
+            git worktree add -q --orphan -b edits /tmp/edits 2>/dev/null || { mkdir -p /tmp/edits && cd /tmp/edits && git init -q && git checkout -q -b edits; }
+          fi
+          wait
+      - name: Adding your text
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_JSON: ${{ toJSON(github.event.issue) }}
+        run: python quickedit.py
+      - name: Saving
+        shell: bash
+        run: |
+          [ -f /tmp/qe_done ] || exit 0
+          cd /tmp/edits
+          git config user.name gtaclip-bot; git config user.email gtaclip-bot@users.noreply.github.com
+          git add -A && git commit -qm "quick edit $(cat /tmp/qe_done)" || exit 0
+          for i in 1 2 3 4; do git push -q origin HEAD:edits && break
+            git fetch -q origin edits && git rebase -q -X theirs origin/edits || true; sleep $((i*2)); done
+          gh issue close ${{ github.event.issue.number }} -R ${{ github.repository }} -c "Done — your text is on the video (no full re-make needed)."
+        env:
+          GH_TOKEN: ${{ github.token }}
