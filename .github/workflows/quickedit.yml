@@ -21,15 +21,14 @@ jobs:
         with: { ref: main, sparse-checkout: "quickedit.py\nrender_hook.py\nfonts", sparse-checkout-cone-mode: false }
       - name: Getting ready
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           pip install -q --disable-pip-version-check pillow imageio-ffmpeg &
           git fetch -q --depth=1 origin state:refs/remotes/origin/state
           git show origin/state:state.json > /tmp/state.json
-          if git fetch -q --depth=1 origin edits:refs/remotes/origin/edits 2>/dev/null; then
-            git worktree add -q -B edits /tmp/edits origin/edits
-          else
-            git worktree add -q --orphan -b edits /tmp/edits 2>/dev/null || { mkdir -p /tmp/edits && cd /tmp/edits && git init -q && git checkout -q -b edits; }
-          fi
+          U="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git clone -q --depth 1 --branch edits "$U" /tmp/edits 2>/dev/null || { mkdir -p /tmp/edits && cd /tmp/edits && git init -q -b edits && git remote add origin "$U"; }
           wait
       - name: Adding your text
         env:
@@ -43,8 +42,9 @@ jobs:
           cd /tmp/edits
           git config user.name gtaclip-bot; git config user.email gtaclip-bot@users.noreply.github.com
           git add -A && git commit -qm "quick edit $(cat /tmp/qe_done)" || exit 0
-          for i in 1 2 3 4; do git push -q origin HEAD:edits && break
-            git fetch -q origin edits && git rebase -q -X theirs origin/edits || true; sleep $((i*2)); done
+          ok=0; for i in 1 2 3 4; do git push -q origin HEAD:edits && { ok=1; break; }
+            git pull -q --rebase -X theirs origin edits || true; sleep $((i*2)); done
+          [ $ok = 1 ] || exit 1
           gh issue close ${{ github.event.issue.number }} -R ${{ github.repository }} -c "Done — your text is on the video (no full re-make needed)."
         env:
           GH_TOKEN: ${{ github.token }}
