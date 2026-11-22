@@ -777,9 +777,39 @@ def cam_has_face(path: Path, cam: str) -> bool:
         return True   # can't tell -> don't throw the clip away
 
 
-def cam_without_chat(path: Path, cam: str, chat_layout: bool = False) -> str:
+def cam_without_chat(path: Path, cam: str, chat_layout: bool = False, known: dict | None = None) -> str:
     """Some streamers (Kai) have chat scrolling over the bottom of their webcam. Find where that text band starts
-    and end the webcam box above it, so no chat shows between the face and the gameplay."""
+    and end the webcam box above it, so no chat shows between the face and the gameplay.
+    known = {box: "x,y,w,h", at: 0.59}: where the chat panel starts in that streamer's usual webcam box; used when
+    the panel can't be seen (chat over a bright game menu), never through the face."""
+    out = _cam_without_chat(path, cam, chat_layout)
+    if out != cam or not (chat_layout and known and known.get("box") and known.get("at")):
+        return out
+    try:
+        kb = [float(v) for v in str(known["box"]).split(",")]
+        x, y, w, h = [float(v) for v in cam.split(",")]
+        if max(abs(a - b) for a, b in zip(kb, (x, y, w, h))) > 0.01:
+            return cam
+        cap = cv2.VideoCapture(str(path))
+        dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+        cap.release()
+        need = 0.0
+        for fr in _frames(path, [max(0.5, dur * p) for p in (0.15, 0.3, 0.45, 0.6, 0.75, 0.9)]):
+            H, W = fr.shape[:2]
+            c = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+            fs = _yunet_faces(cv2.resize(c, None, fx=2, fy=2), 0.6)
+            if fs:
+                f = max(fs, key=lambda f: f[4])
+                need = max(need, (f[1] + f[3] * 1.12) / (c.shape[0] * 2))
+        at = float(known["at"])
+        if need > at + 0.04:
+            return cam
+        return f"{x:.4f},{y:.4f},{w:.4f},{h * max(0.5, at, need):.4f}"
+    except Exception:  # noqa: BLE001
+        return cam
+
+
+def _cam_without_chat(path: Path, cam: str, chat_layout: bool = False) -> str:
     try:
         x, y, w, h = [float(v) for v in cam.split(",")]
         cap = cv2.VideoCapture(str(path))
@@ -1529,8 +1559,8 @@ def main() -> None:
         for c in clips.values():
             if c["status"] == "new":
                 c.pop("final_hash", None); c.pop("clean_v", None)
-    if st.get("redo_kaichat_v", 0) < 4:   # one time: Kai's chat strip came back (dark shirt read as the chat panel) -> re-frame
-        st["redo_kaichat_v"] = 4
+    if st.get("redo_kaichat_v", 0) < 5:   # one time: Kai's chat strip came back (dark shirt / bright menu behind chat) -> re-frame
+        st["redo_kaichat_v"] = 5
         for c in clips.values():
             if c["status"] == "new" and CFG["streamers"].get(c.get("login", ""), {}).get("chat_on_cam") and not (c.get("user_layout") or {}).get("cam"):
                 for k in ("final_hash", "clean_v", "hd", "hd_cam"):
@@ -1848,7 +1878,8 @@ def main() -> None:
             lay = f"irl:{c['irl_x']:.3f}"
             log(f"no gameplay in {cid}: full-screen shot on the streamer")
         if lay == "split" and cam and not ul.get("cam"):
-            cam2 = cam_without_chat(raw, cam, bool(CFG["streamers"].get(c.get("login", ""), {}).get("chat_on_cam")))
+            scfg = CFG["streamers"].get(c.get("login", ""), {})
+            cam2 = cam_without_chat(raw, cam, bool(scfg.get("chat_on_cam")), scfg.get("chat_cut"))
             if cam2 != cam:
                 log(f"chat over the webcam in {cid}: webcam box ends above it")
                 cam = cam2
