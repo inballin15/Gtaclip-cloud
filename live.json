@@ -241,7 +241,7 @@
    }
   ]
  },
- "updated": "2026-11-22T17:06:50Z",
+ "updated": "2026-11-22T17:11:49Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1921,9 +1921,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T17:06:50Z",
- "log": [
-  "[17:06:52Z] youtube limit hit — pausing youtube uploads until 2026-11-22T20:06:50Z",
-  "[17:06:52Z] LittleTallHummingbirdTwitchRPG-aZDk6gYfud9r2-1M failed everywhere — back in the queue"
- ]
+ "stats_updated": "2026-11-22T17:11:49Z",
+ "log": []
 }
