@@ -1,78 +1,78 @@
 {
  "insights": {
-  "updated": "2026-11-21T22:33:25Z",
+  "updated": "2026-11-22T00:34:26Z",
   "videos": 19,
   "findings": [
    {
     "feature": "has a number",
     "value": "no",
-    "x": 3.03,
+    "x": 3.54,
     "n": 3
    },
    {
     "feature": "streamer",
     "value": "Clix",
-    "x": 0.35,
+    "x": 0.32,
     "n": 3
-   },
-   {
-    "feature": "CAPS words",
-    "value": "4-6",
-    "x": 0.55,
-    "n": 4
    },
    {
     "feature": "hook length",
     "value": "long (90+)",
-    "x": 0.59,
+    "x": 0.53,
     "n": 4
+   },
+   {
+    "feature": "CAPS words",
+    "value": "4-6",
+    "x": 0.54,
+    "n": 4
+   },
+   {
+    "feature": "posted",
+    "value": "morning (7-11)",
+    "x": 0.63,
+    "n": 5
    },
    {
     "feature": "streamer",
     "value": "?",
-    "x": 1.49,
+    "x": 1.56,
     "n": 8
    },
    {
     "feature": "hook length",
     "value": "short (<60)",
-    "x": 1.45,
+    "x": 1.52,
     "n": 10
    },
    {
     "feature": "CAPS words",
     "value": "0-1",
-    "x": 1.45,
+    "x": 1.52,
     "n": 10
    },
    {
     "feature": "posted",
-    "value": "morning (7-11)",
-    "x": 0.69,
-    "n": 5
-   },
-   {
-    "feature": "hook length",
-    "value": "medium (60-90)",
-    "x": 0.73,
+    "value": "midday (11-15)",
+    "x": 1.41,
     "n": 5
    },
    {
     "feature": "CAPS words",
     "value": "2-3",
-    "x": 0.76,
+    "x": 0.71,
     "n": 5
    },
    {
-    "feature": "posted",
-    "value": "midday (11-15)",
-    "x": 1.29,
+    "feature": "hook length",
+    "value": "medium (60-90)",
+    "x": 0.71,
     "n": 5
    },
    {
     "feature": "has a number",
     "value": "yes",
-    "x": 0.81,
+    "x": 0.79,
     "n": 16
    },
    {
@@ -90,7 +90,7 @@
    {
     "feature": "has 'FIRST'",
     "value": "no",
-    "x": 1.01,
+    "x": 1.02,
     "n": 17
    },
    {
@@ -107,13 +107,14 @@
    }
   ],
   "guidance": [
-   "DO: has a number = no (3.03x views, 3 videos)",
-   "AVOID: CAPS words = 4-6 (0.55x views, 4 videos)",
-   "AVOID: hook length = long (90+) (0.59x views, 4 videos)",
-   "DO: hook length = short (<60) (1.45x views, 10 videos)",
-   "DO: CAPS words = 0-1 (1.45x views, 10 videos)",
-   "AVOID: hook length = medium (60-90) (0.73x views, 5 videos)",
-   "AVOID: CAPS words = 2-3 (0.76x views, 5 videos)"
+   "DO: has a number = no (3.54x views, 3 videos)",
+   "AVOID: hook length = long (90+) (0.53x views, 4 videos)",
+   "AVOID: CAPS words = 4-6 (0.54x views, 4 videos)",
+   "DO: hook length = short (<60) (1.52x views, 10 videos)",
+   "DO: CAPS words = 0-1 (1.52x views, 10 videos)",
+   "AVOID: CAPS words = 2-3 (0.71x views, 5 videos)",
+   "AVOID: hook length = medium (60-90) (0.71x views, 5 videos)",
+   "AVOID: has a number = yes (0.79x views, 16 videos)"
   ],
   "weights": {
    "formula": 0.25,
@@ -143,16 +144,16 @@
   },
   "top": [
    {
+    "hook": "Speed found him",
+    "views": 908
+   },
+   {
     "hook": "Marlon can't handle a night in GTA 6",
     "views": 532
    },
    {
-    "hook": "Speed found him",
-    "views": 433
-   },
-   {
     "hook": "Lacy stalking in gta 6",
-    "views": 335
+    "views": 336
    },
    {
     "hook": "Adapt tries texting and driving in GTA 6",
@@ -190,7 +191,7 @@
    }
   }
  },
- "updated": "2026-11-22T00:29:25Z",
+ "updated": "2026-11-22T00:34:26Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -517,12 +518,12 @@
  "you_post": [],
  "budget": {
   "day": "2026-11-21",
-  "used": 16,
+  "used": 17,
   "cap": 30,
   "slots": 6,
-  "remain30": 783,
+  "remain30": 782,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 583,
+  "remain24": 582,
   "active": [
    [
     16,
@@ -603,11 +604,11 @@
    "posted_at": "2026-11-22T00:09:20Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936683310_866_final.mp4?v=d4202de236&r=1795305529",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936683310_866.jpg",
-   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710781237085965582",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7710781237085965582",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b0232b3c72676f5e9eecd35",
      "error": ""
     }
@@ -952,6 +953,20 @@
   }
  },
  "stats": [
+  {
+   "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7710781237085965582",
+   "sent": "2026-11-22T00:10:04.184Z",
+   "hook": "Why is Kai Cenat SHOCKED by GTA 6?",
+   "clip": "vod2936683310_866",
+   "streamer": "Kai Cenat",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
   {
    "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7710765467274611982",
@@ -1541,6 +1556,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T00:29:25Z",
- "log": []
+ "stats_updated": "2026-11-22T00:34:26Z",
+ "log": [
+  "[00:34:27Z] hook learner: 19 videos, 8 lessons"
+ ]
 }

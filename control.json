@@ -43,16 +43,16 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-22T00:29:25Z",
- "stats_at": "2026-11-22T00:09:20Z",
+ "stats_at": "2026-11-22T00:34:26Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-21",
-  "used": 16,
+  "used": 17,
   "cap": 30,
   "slots": 6,
-  "remain30": 783,
+  "remain30": 782,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 583
+  "remain24": 582
  }
 }
