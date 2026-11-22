@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-22T02:35:09Z",
+  "updated": "2026-11-22T04:36:13Z",
   "videos": 19,
   "findings": [
    {
@@ -153,7 +153,7 @@
    },
    {
     "hook": "Lacy stalking in gta 6",
-    "views": 337
+    "views": 340
    },
    {
     "hook": "Adapt tries texting and driving in GTA 6",
@@ -191,7 +191,7 @@
    }
   }
  },
- "updated": "2026-11-22T04:30:58Z",
+ "updated": "2026-11-22T04:36:13Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1685,6 +1685,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T04:30:58Z",
- "log": []
+ "stats_updated": "2026-11-22T04:36:13Z",
+ "log": [
+  "[04:36:14Z] hook learner: 19 videos, 8 lessons"
+ ]
 }
