@@ -5,6 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Clip HQ</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#08080d">
 <style>
 :root{--bg:#08080d;--p1:#13131c;--p2:#1b1b27;--p3:#242434;--line:#ffffff12;--fg:#f5f5fa;--mut:#9898ad;--pink:#ff3d8b;--cyan:#29e3ff;--green:#2ee59d;--amber:#f5b544;--red:#ff6b6b;
@@ -191,6 +192,70 @@ nav button b:empty{display:none}
 .edx-trim .h{position:absolute;top:-4px;bottom:-4px;width:22px;margin-left:-11px;border-radius:7px;background:var(--cyan);touch-action:none}
 @media (min-width:760px){.ed{grid-template-columns:220px 1fr}.edprev{position:sticky;top:0;align-self:start}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ================= v2 design ================= */
+:root{--bg:#07070b;--p1:#111118;--p2:#181822;--p3:#22222e;--line:#ffffff10;--fg:#f4f4f8;--mut:#8e8ea3;
+  --pink:#ff4d94;--violet:#8b5cff;--cyan:#2fe0ff;--green:#34e3a0;--amber:#ffb84a;--red:#ff6470;
+  --r:22px;--ease:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.56,.64,1)}
+html,body{background:radial-gradient(1200px 600px at 80% -10%,#2a1640 0%,transparent 60%),radial-gradient(900px 500px at -10% 10%,#0d2b3a 0%,transparent 55%),var(--bg);background-attachment:fixed;font-size:15.5px}
+header{background:linear-gradient(#07070bee 60%,#07070b00);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px)}
+.logo{border-radius:12px;background:conic-gradient(from 200deg,var(--pink),var(--violet),var(--cyan),var(--pink));box-shadow:0 6px 24px #8b5cff55}
+header h1{font-size:19px;font-weight:800;letter-spacing:-.4px}
+main{padding:6px 16px calc(110px + env(safe-area-inset-bottom))}
+.card,.hero2{background:linear-gradient(180deg,#ffffff0a,#ffffff04);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 14px;box-shadow:0 10px 30px #0006, inset 0 1px 0 #ffffff0d}
+.card h2{font-size:17px;font-weight:800;letter-spacing:-.2px;margin:0 0 6px}
+.view>*{animation:rise .55s var(--ease) both;animation-delay:calc(var(--i,0) * 45ms)}
+.view.still>*{animation:none}
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+button,.btn,a.btn{transition:transform .25s var(--spring),background .2s,opacity .2s}
+button:active,.btn:active{transform:scale(.95)}
+.big{border-radius:16px;min-height:52px;font-weight:800;font-size:16px;letter-spacing:-.1px}
+.big.go{background:linear-gradient(135deg,var(--green),#20c5ff);color:#04110b;border:0;box-shadow:0 10px 26px #34e3a040}
+.big.stop{background:#ff647022;color:#ff9aa1;border:1px solid #ff647055}
+/* hero */
+.hero2{position:relative;overflow:hidden}
+.hero2.on::before{content:"";position:absolute;inset:-40% -20% auto auto;width:260px;height:260px;background:radial-gradient(closest-side,#34e3a033,transparent);filter:blur(6px);animation:drift 9s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(-40px,30px)}}
+.hero2 .st{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--mut);font-size:13.5px;text-transform:uppercase;letter-spacing:.06em}
+.hero2 .next{display:flex;align-items:baseline;gap:10px;margin:10px 0 12px;flex-wrap:wrap}
+.hero2 .next .lbl{color:var(--mut);font-size:14px}
+.hero2 .next b{font-size:40px;letter-spacing:-1.2px;line-height:1;background:linear-gradient(90deg,#fff,#c9c3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero2 .next .left{font-size:14px;font-weight:700;color:var(--green)}
+.gauge{margin:4px 0 14px}.gauge .bbg{height:6px}.gauge .mut{font-size:12.5px;margin-top:6px}
+/* your turn */
+.turn{border-color:#ff4d9455;background:linear-gradient(180deg,#ff4d9414,#ffffff04)}
+.tit{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.tit:first-of-type{border-top:0}
+.tit .th{flex:0 0 66px;height:118px;border-radius:12px;background:#000 center/cover;box-shadow:0 6px 16px #0008}
+.tit .tb{min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
+.tit .tb>.pill{align-self:flex-start}
+.tit .h{font-weight:700;font-size:14.5px;line-height:1.3}
+.tbtn{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}.tbtn .btn{padding:8px 11px;font-size:13px}
+.more{width:100%;margin-top:10px;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--p2);font-weight:700;color:var(--mut)}
+.btn.ok{background:#34e3a022;color:#7dffc4;border-color:#34e3a055}
+/* who posts */
+.who{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.who .wl{font-weight:800}.who .wl.tt{color:#5ff3f0}.who .wl.yt{color:#ff7b7b}
+.seg2{display:flex;background:var(--p3);border-radius:12px;padding:3px;gap:3px}
+.seg2 button{border:0;background:none;padding:7px 16px;border-radius:9px;font-weight:700;color:var(--mut);font-size:13.5px}
+.seg2 button[aria-pressed="true"]{background:#fff;color:#000;box-shadow:0 2px 8px #0006}
+/* nav: floating glass pill */
+nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(420px,calc(100% - 28px));bottom:calc(12px + env(safe-area-inset-bottom))!important;border-radius:24px!important;background:#16161fcc!important;backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);border:1px solid #ffffff14!important;box-shadow:0 16px 40px #000a}
+nav button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:700}
+nav .i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-selected="true"] .i{stroke:#fff}
+nav .ind{transition:transform .45s var(--spring),width .45s var(--spring)!important;border-radius:18px!important;background:linear-gradient(135deg,#ff4d9440,#8b5cff40)!important}
+/* sheets spring up */
+.sheet .in{transition:transform .5s var(--spring)!important;border-radius:26px 26px 0 0!important}
+.sheet.open{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+/* tab change: slide + fade (View Transitions) */
+::view-transition-old(root){animation:vt-out .22s var(--ease) both}
+::view-transition-new(root){animation:vt-in .38s var(--ease) both}
+[data-dir="back"]::view-transition-new(root){animation-name:vt-in-back}
+@keyframes vt-out{to{opacity:0;transform:scale(.985)}}
+@keyframes vt-in{from{opacity:0;transform:translateX(24px)}}
+@keyframes vt-in-back{from{opacity:0;transform:translateX(-24px)}}
+.kpi .n{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .gp{display:flex;align-items:center;gap:8px;margin:12px 0 6px}.gpl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
 .gprow{display:flex;gap:8px;margin:6px 0 8px}.gpin{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid var(--line,#ffffff20);background:var(--p2);color:var(--fg);font-size:15px}
 .btn.paid{background:linear-gradient(135deg,#ffd76a33,#ff4d9433);border-color:#ffd76a66;color:#ffe39a}
@@ -205,10 +270,9 @@ nav button b:empty{display:none}
 <main id="main"></main>
 <nav id="nav" role="tablist">
   <span class="ind" id="ind"></span>
-  <button data-tab="home" aria-selected="true"><span class="i">⌂</span>Home</button>
-  <button data-tab="queue" aria-selected="false"><span class="i">▶</span>Queue<b id="qcount"></b></button>
-  <button data-tab="posted" aria-selected="false"><span class="i">✓</span>Posted<b id="pcount"></b></button>
-  <button data-tab="stats" aria-selected="false"><span class="i">▤</span>Stats</button>
+  <button data-tab="today" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/></svg>Today<b id="pcount"></b></button>
+  <button data-tab="clips" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="3"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg>Clips<b id="qcount"></b></button>
+  <button data-tab="results" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M5 19V11M12 19V5M19 19v-6"/></svg>Results</button>
 </nav>
 <div class="sheet" id="sheet"><div class="in" id="sheetin"></div></div>
 <div class="toast" id="toast"></div>
@@ -251,7 +315,8 @@ let pend = ls.get('gc-pending', {});
 let submitted = ls.get('gc-submitted', {});
 let uploads = ls.get('gc-uploads', []);
 let variant = ls.get('gc-variant', 'final');
-let tab = 'home';
+let tab = 'today';
+const TAB_ALIAS = { home: 'today', queue: 'clips', posted: 'results', stats: 'results' };
 let RUNS = [], RUNSTEP = {}, runsAt = 0;
 const savePend = () => ls.set('gc-pending', pend);
 const saveUploads = () => ls.set('gc-uploads', uploads.slice(0, 10));
@@ -317,7 +382,7 @@ async function refreshRuns() {
       RUNSTEP[cur.id] = now ? (N[now.name] || 'starting up') : 'starting up';
     }
   } catch (e) { /* keep last */ }
-  if (tab === 'home' || tab === 'stats') render();
+  if (tab === 'today' || tab === 'results') render();
 }
 
 // ---------------------------------------------------------------- derived data
@@ -354,7 +419,7 @@ let lastSig = '';
 function render() {
   const ql = queueList();
   $('qcount').textContent = ql.filter((r) => r.final).length || '';
-  $('pcount').textContent = toSubmit().length || '';
+  $('pcount').textContent = (toSubmit().length + yourTurn(ql).length) || '';
   const age = L ? (Date.now() - new Date(L.updated)) / 60000 : 99;
   $('dot').className = 'dot' + (!L ? ' bad' : age > 15 ? ' warn' : '');
   $('livetxt').textContent = L ? `updated ${ago(L.updated)}` : 'connecting…';
@@ -363,11 +428,13 @@ function render() {
   if (sig === lastSig) return; lastSig = sig;
   const m = $('main'); const scroll = window.scrollY;
   const v = el('div', 'view');
-  ({ home: renderHome, queue: renderQueue, posted: renderPosted, stats: renderStats })[tab](v, ql);
+  ({ today: renderToday, clips: renderQueue, results: renderResults })[tab](v, ql);
+  [...v.children].forEach((n, i) => n.style.setProperty('--i', Math.min(i, 10)));
   // keep playing videos playing
   const playing = m.querySelector('video:not([paused])');
-  if (playing && tab === 'queue' && !playing.paused) return;
-  m.replaceChildren(v); if (m.dataset.tab === tab) { v.style.animation = 'none'; window.scrollTo(0, scroll); }
+  if (playing && tab === 'clips' && !playing.paused) return;
+  const same = m.dataset.tab === tab;
+  m.replaceChildren(v); if (same) { v.classList.add('still'); window.scrollTo(0, scroll); } else countUp(v);
   m.dataset.tab = tab;
 }
 
@@ -1113,13 +1180,136 @@ function openBufferHelp() {
     Object.assign(el('a', 'btn cyan', 'Open GitHub secrets'), { href: `https://github.com/${REPO}/settings/secrets/actions/new`, target: '_blank' })]);
 }
 
+
+// ================================================================ v2: TODAY / RESULTS
+function fmtLeft(ms) { if (ms <= 0) return 'now'; const m = Math.round(ms / 60000); if (m < 60) return `in ${m} min`; const h = Math.floor(m / 60); return `in ${h} h ${m % 60} min`; }
+function tickToday() { document.querySelectorAll('[data-at]').forEach((n) => { n.textContent = fmtLeft(new Date(n.dataset.at) - Date.now()); }); }
+function countUp(root) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  root.querySelectorAll('[data-count]').forEach((n) => {
+    const txt = n.textContent; const m = /^([\d.,]+)(.*)$/.exec(txt); if (!m) return;
+    const end = parseFloat(m[1].replace(/,/g, '')); const dec = (m[1].split('.')[1] || '').length; const t0 = performance.now();
+    const step = (t) => { const p = Math.min(1, (t - t0) / 700); const e = 1 - Math.pow(1 - p, 3); n.textContent = (end * e).toFixed(dec) + m[2]; if (p < 1) requestAnimationFrame(step); else n.textContent = txt; };
+    requestAnimationFrame(step);
+  });
+}
+const youPost = () => (L && L.you_post) || [];
+function yourTurn(ql) {
+  // clips waiting for YOU on the platforms you post yourself: the best ready ones that platform hasn't had
+  const P = posts(); const out = [];
+  for (const sv of youPost()) {
+    const auto = lanes(ql); const taken = new Set(['tiktok', 'youtube'].filter((x) => x !== sv && auto[x] && auto[x].next).map((x) => auto[x].next.id));
+    ql.filter((r) => r.final && !r.nowing && !taken.has(r.id) && !(P[r.id] && plats(P[r.id]).includes(sv)) && !isPending(`manual: ${r.id} ${sv}`))
+      .slice(0, 3).forEach((r) => out.push({ r, sv }));
+  }
+  return out;
+}
+function whoPostsCard() {
+  const c = el('div', 'card'); const h = el('div', 'hrow'); h.append(el('h2', null, 'Who posts')); c.append(h);
+  c.append(el('div', 'mut', 'Auto = uploaded for you on the schedule. You = clips line up below, you post them in the app (trending sounds, native upload).'));
+  for (const sv of ['tiktok', 'youtube']) {
+    const row = el('div', 'who'); row.append(el('span', 'wl ' + (sv === 'tiktok' ? 'tt' : 'yt'), PN[sv]));
+    const seg = el('div', 'seg2'); const mine = youPost().includes(sv); const pend = isPending('youpost: ' + sv);
+    for (const [label, val] of [['Auto', false], ['You', true]]) {
+      const b = el('button', null, label); b.setAttribute('aria-pressed', String(mine === val)); b.disabled = pend;
+      b.onclick = async () => { if (mine === val) return; b.textContent = '…'; if (await ghTap(`youpost: ${sv} ${val ? 'on' : 'off'}`)) toast(val ? `${PN[sv]}: you'll post these yourself` : `${PN[sv]}: back to automatic`); lastSig = ''; render(); };
+      seg.append(b);
+    }
+    row.append(seg); c.append(row);
+  }
+  return c;
+}
+function yourTurnCard(ql) {
+  const items = yourTurn(ql); if (!youPost().length) return null;
+  const c = el('div', 'card turn'); c.append(el('h2', null, items.length ? `Your turn · ${items.length}` : 'Your turn'));
+  if (!items.length) { c.append(el('div', 'mut', 'Nothing waiting — new clips show up here as they finish.')); return c; }
+  c.append(el('div', 'mut', '1 Save (with the hook on the video, or No caption) — the caption text is copied too → 2 post it in the app → 3 tap Posted.'));
+  for (const { r, sv } of items) {
+    const it = el('div', 'tit'); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
+    const body = el('div', 'tb'); body.append(el('span', 'pill ' + (sv === 'tiktok' ? 'tt' : 'yt'), PN[sv]), el('div', 'h', r.hook || ''));
+    const bt = el('div', 'tbtn');
+    const sv1 = el('button', 'btn pink', 'Save + copy'); sv1.onclick = () => saveVideo(r, sv1, 'final');
+    const sv2 = el('button', 'btn', r.clean ? 'No caption' : 'No caption (making…)'); sv2.disabled = !r.clean; sv2.onclick = () => saveVideo(r, sv2, 'clean');
+    const op = el('a', 'btn', 'Open app'); op.href = sv === 'tiktok' ? 'https://www.tiktok.com/upload' : 'https://studio.youtube.com'; op.target = '_blank'; op.rel = 'noopener';
+    const ok = el('button', 'btn ok', 'Posted ✓'); ok.onclick = async () => { ok.disabled = true; if (await ghTap(`manual: ${r.id} ${sv}`)) { toast(`Marked posted on ${PN[sv]}`); openGetPaid(r); } lastSig = ''; render(); };
+    bt.append(sv1, sv2, op, ok); body.append(bt); it.append(th, body); c.append(it);
+  }
+  return c;
+}
+function heroCard(ql) {
+  const on = L && !L.paused && !L.buffer_off;
+  const hero = el('div', 'hero2 ' + (on ? 'on' : 'off'));
+  const top = el('div', 'hrow'); const st = el('div', 'st'); st.append(el('span', 'pulse ' + (on ? 'ok' : 'bad')), document.createTextNode(!L ? 'Loading…' : L.buffer_off ? 'Paused — Buffer off' : L.paused ? 'Auto-posting off' : 'Auto-posting on'));
+  top.append(st); hero.append(top);
+  if (on && L.next_slot) {
+    const big = el('div', 'next'); big.append(el('span', 'lbl', 'Next post'), el('b', null, tET(L.next_slot)));
+    const left = el('span', 'left'); left.dataset.at = L.next_slot; left.textContent = fmtLeft(new Date(L.next_slot) - Date.now()); big.append(left); hero.append(big);
+  }
+  const B = L && L.budget;
+  if (B && B.cap != null) {
+    const pct = Math.min(100, Math.round((B.used || 0) / Math.max(1, B.cap) * 100));
+    const g = el('div', 'gauge'); const bar = el('div', 'bbg'); const f = el('div', 'bfg'); bar.append(f); requestAnimationFrame(() => requestAnimationFrame(() => { f.style.width = pct + '%'; }));
+    const auto = ['tiktok', 'youtube'].filter((x) => !youPost().includes(x)).map((x) => PN[x]).join(' + ') || 'nothing (you post both)';
+    g.append(bar, el('div', 'mut', `${B.slots} slots today · auto: ${auto} · Buffer ${B.used || 0}/${B.cap} today · ${B.remain30 ?? '?'} left this month`)); hero.append(g);
+  }
+  if (L && L.buffer_off) { const b = el('button', 'big go', isPending('buffer:') ? 'Turning on…' : 'Turn Buffer back on'); b.disabled = isPending('buffer:'); b.onclick = openBufferSwitch; hero.append(b); }
+  else if (L) {
+    const wantOn = isPending('resume:'), wantOff = isPending('pause:');
+    const b = el('button', 'big ' + (on ? 'stop' : 'go'), wantOn || wantOff ? `Turning ${wantOn ? 'on' : 'off'}…` : on ? 'Stop posting' : 'Start posting'); b.disabled = wantOn || wantOff;
+    b.onclick = async () => { b.disabled = true; b.textContent = 'Sending…'; if (await ghTap(on ? 'pause: posting' : 'resume: posting')) toast(on ? 'Stopping…' : 'Starting…'); lastSig = ''; render(); };
+    hero.append(b);
+  }
+  return hero;
+}
+function comingUpCard(ql) {
+  const ln = lanes(ql); const c = el('div', 'card'); const h = el('div', 'hrow'); h.append(el('h2', null, 'Coming up'));
+  const tg = el('button', 'tog' + (ln.split ? ' on' : ''), isPending('split:') ? '…' : ln.split ? 'Different clips' : 'Same clip'); tg.disabled = isPending('split:');
+  tg.onclick = async () => { tg.disabled = true; if (await ghTap(ln.split ? 'split: off' : 'split: on')) toast(ln.split ? 'Same clip on both' : 'Each platform gets its own clip'); lastSig = ''; render(); };
+  h.append(tg); c.append(h);
+  const g = el('div', 'lanes');
+  for (const sv of ['tiktok', 'youtube']) {
+    const o = ln[sv]; const mine = youPost().includes(sv); const d = el('div', 'lane ' + (sv === 'tiktok' ? 'tt' : 'yt'));
+    d.append(el('div', 'lh', PN[sv]), el('div', 'mut', mine ? 'You post this one' : `${o.count} posted in 24 h`));
+    if (o.next && !mine) { const b = el('button', 'lnext'); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (o.next.vposter || o.next.poster)})`; b.append(th, el('div', 'h', o.next.hook || '')); b.onclick = () => { switchTab('clips'); setTimeout(() => { const n = document.getElementById('c-' + o.next.id); if (n) n.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120); }; d.append(b); }
+    if (o.last) { const r = el('div', 'row'); r.append(badge(platState(o.last, sv)), el('span', 'mut', (o.last.hook || '').slice(0, 50))); d.append(r); }
+    g.append(d);
+  }
+  c.append(g); return c;
+}
+function renderToday(v, ql) {
+  v.append(heroCard(ql));
+  const yt = yourTurnCard(ql); if (yt) v.append(yt);
+  const ts = toSubmit();
+  if (ts.length) {
+    const c = el('div', 'card sub-card'); c.append(el('h2', null, `Submit for pay · ${ts.length}`), el('div', 'mut', 'Submit copies the link and opens Content Rewards. Paste, then tap ✓.'));
+    const all = ls.get('gc-suball', false); for (const x of (all ? ts : ts.slice(0, 3))) c.append(videoRow(x, true));
+    if (ts.length > 3) { const m = el('button', 'more', all ? 'Show less' : `Show all ${ts.length}`); m.onclick = () => { ls.set('gc-suball', !all); lastSig = ''; render(); }; c.append(m); }
+    v.append(c);
+  }
+  v.append(comingUpCard(ql));
+  v.append(whoPostsCard());
+  const recent = Object.values(posts()).filter((x) => Date.now() - new Date(x.posted_at) < 6 * 3600e3).sort((a, b) => (b.posted_at || '').localeCompare(a.posted_at || ''));
+  if (recent.length) { const c = el('div', 'card'); c.append(el('h2', null, 'Just posted')); for (const p of recent.slice(0, 8)) { const rw = el('div', 'vrow'); const t = el('div', 't'); t.append(el('div', null, p.hook), el('div', 'mut', dET(p.posted_at) + (p.manual ? ' · by you' : ''))); const s2 = el('div', 'row'); for (const sv of plats(p)) { const b = badge(platState(p, sv)); b.prepend(document.createTextNode(PN[sv] + ' · ')); s2.append(b); } rw.append(t, s2); c.append(rw); } v.append(c); }
+  v.append(sysLine());
+}
+function renderResults(v, ql) {
+  renderStats(v, ql);
+  const kp = v.querySelector('.kpis'); if (kp) kp.querySelectorAll('.n').forEach((n) => n.setAttribute('data-count', ''));
+  const V = videos(); const c2 = el('div', 'card'); const h = el('div', 'hrow'); h.append(el('h2', null, `All videos · ${V.length}`), el('span', 'mut', L && L.videos_checked ? `views ${ago(L.videos_checked)}` : '')); h.lastChild.style.marginLeft = 'auto'; c2.append(h);
+  if (!V.length) c2.append(el('div', 'empty', 'Your TikTok and YouTube videos show up here with live views.'));
+  for (const x of V.slice(0, 40)) c2.append(videoRow(x, false));
+  const after = v.querySelector('.kpis'); after && after.nextSibling ? v.insertBefore(c2, after.nextSibling.nextSibling) : v.append(c2);
+}
+
 // ---------------------------------------------------------------- tabs + boot
 function moveInd() { const b = document.querySelector(`nav button[data-tab="${tab}"]`); const ind = $('ind'); if (!b) return; ind.style.width = b.offsetWidth + 'px'; ind.style.transform = `translateX(${b.offsetLeft - 5}px)`; }
 function switchTab(t) {
+  t = TAB_ALIAS[t] || t;
   if (t === tab) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-  tab = t; haptic();
-  document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === t));
-  moveInd(); lastSig = ''; $('main').dataset.tab = ''; render(); window.scrollTo(0, 0);
+  const order = ['today', 'clips', 'results']; document.documentElement.dataset.dir = order.indexOf(t) > order.indexOf(tab) ? 'fwd' : 'back';
+  const go = () => { tab = t; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === t)); moveInd(); lastSig = ''; $('main').dataset.tab = ''; render(); window.scrollTo(0, 0); };
+  haptic();
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(go); else go();
 }
 document.querySelectorAll('nav button').forEach((b) => b.onclick = () => switchTab(b.dataset.tab));
 window.addEventListener('resize', moveInd);
@@ -1131,7 +1321,7 @@ async function rebootSite() {
   location.replace(location.pathname + '?v=' + Date.now());
 }
 $('reboot').onclick = rebootSite;
-{ const h = (location.hash || '').slice(1); if (['home', 'queue', 'posted', 'stats'].includes(h)) { tab = h; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === h)); } }
+{ let h = (location.hash || '').slice(1); h = TAB_ALIAS[h] || h; if (['today', 'clips', 'results'].includes(h)) { tab = h; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === h)); } }
 moveInd(); render();                                   // instant: last visit's data
 Promise.all([refreshQueue(), refreshLive()]).then(() => { lastSig = ''; render(); });
 refreshRuns();
@@ -1139,7 +1329,8 @@ setInterval(refreshRuns, 20000);
 setInterval(checkUploads, 30000);
 setInterval(refreshQueue, 45000);
 setInterval(() => { if (Object.keys(pend).length || Date.now() % 30000 < 10000) refreshLive(); }, 10000);
-setInterval(() => { if (tab === 'home') render(); }, 30000);   // "x min ago" labels
+setInterval(() => { if (tab === 'today') tickToday(); }, 1000);
+setInterval(() => { if (tab === 'today') render(); }, 30000);   // "x min ago" labels
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshQueue(); refreshLive(); } });
 </script>
 </body>
