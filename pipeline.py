@@ -633,7 +633,8 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
         db = 20 * np.log10(rms + 1e-9)
         sm = np.convolve(db, np.ones(3) / 3, mode="same")
         p = int(np.argmax(sm[1:-1])) + 1
-        start = float(max(0, p - 2))
+        lead = 4 if (c.get("style") or {}).get("start") == "setup" else 2    # tested by the learner
+        start = float(max(0, p - lead))
         end = float(min(secs, start + keep_s))
         if end - start < 8:                       # moment near the end: keep at least 8 s
             start = float(max(0, end - 8))

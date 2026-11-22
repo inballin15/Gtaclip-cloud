@@ -641,6 +641,7 @@ function learnerCard() {
     ['Webcam size', (I.style_weights || {}).cam, (I.style_tested || {}).cam, { medium: 'Standard', small: 'Smaller' }],
     ['Clip length', (I.style_weights || {}).len, (I.style_tested || {}).len, { short: '~12 s', normal: '~18 s' }],
     ['Hook length', (I.style_weights || {}).hooklen, (I.style_tested || {}).hooklen, { tiny: 'Very short', short: 'Short' }],
+    ['Clip start', (I.style_weights || {}).start, (I.style_tested || {}).start, { fast: 'Right on the moment', setup: 'Short build-up' }],
   ];
   for (const [name, W, N, names] of TESTS) {
     if (!W) continue;
@@ -655,7 +656,7 @@ function learnerCard() {
   const F = I.feed || [];
   if (F.length) {
     c.append(el('div', 'sub', 'Latest updates'));
-    const DIM = { box: 'caption box', cam: 'webcam size', len: 'clip length', hooklen: 'hook length' };
+    const DIM = { box: 'caption box', cam: 'webcam size', len: 'clip length', hooklen: 'hook length', start: 'clip start' };
     for (const e of F.slice(0, 8)) {
       let t = e.text;
       if (e.kind === 'new' || e.kind === 'dropped') { const x = say(e.text); t = (e.kind === 'new' ? 'Learned: ' : 'No longer true: ') + (x ? x.text : e.text); }

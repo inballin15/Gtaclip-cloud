@@ -32,9 +32,11 @@ STYLE_DIMS = {
     "cam": {"small": "smaller webcam (560 px)", "medium": "standard webcam (672 px)"},
     "len": {"short": "punchy ~12 s clip", "normal": "~18 s clip"},
     "hooklen": {"tiny": "very short hook (max ~40 chars)", "short": "short hook (max ~60 chars)"},
+    "start": {"fast": "starts ~2 s before the big moment", "setup": "starts ~4 s before it (a bit of set-up)"},
 }
 STYLE_PRIOR = {"box": {"white": 0.5, "black": 0.25, "outline": 0.25}, "cam": {"small": 0.35, "medium": 0.65},
-               "len": {"short": 0.4, "normal": 0.6}, "hooklen": {"tiny": 0.4, "short": 0.6}}
+               "len": {"short": 0.4, "normal": 0.6}, "hooklen": {"tiny": 0.4, "short": 0.6},
+               "start": {"fast": 0.7, "setup": 0.3}}
 CAM_PX = {"small": 560, "medium": 672}
 
 EMOTIONS = ["LOSES IT", "SHOCKED", "DEVASTATED", "DISAPPOINTED", "FURIOUS", "CRYING", "SCARED", "CONFUSED", "SPEECHLESS",
