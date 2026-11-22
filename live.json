@@ -191,12 +191,12 @@
    }
   }
  },
- "updated": "2026-11-22T03:55:36Z",
+ "updated": "2026-11-22T04:01:04Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-22T21:07:00Z",
- "up_next": "vod2936518555_23795",
+ "up_next": "vod2936683310_11535",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7710812219398769934",
@@ -1691,6 +1691,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T03:55:36Z",
+ "stats_updated": "2026-11-22T04:01:04Z",
  "log": []
 }
