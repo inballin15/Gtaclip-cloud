@@ -1,48 +1,30 @@
 {
- "updated": "2026-11-22T19:38:10Z",
- "videos": 26,
+ "updated": "2026-11-22T21:39:20Z",
+ "videos": 27,
  "v": 3,
  "findings": [
   {
    "feature": "streamer",
    "value": "Clix",
-   "x": 0.43,
-   "n": 5
-  },
-  {
-   "feature": "style:hooklen",
-   "value": "tiny",
-   "x": 0.5,
-   "n": 4
+   "x": 0.47,
+   "n": 6
   },
   {
    "feature": "streamer",
    "value": "?",
-   "x": 1.95,
+   "x": 1.96,
    "n": 8
   },
   {
-   "feature": "has a number",
-   "value": "no",
-   "x": 1.9,
-   "n": 5
-  },
-  {
-   "feature": "style:cam",
-   "value": "medium",
-   "x": 0.54,
-   "n": 4
-  },
-  {
-   "feature": "style:len",
-   "value": "normal",
+   "feature": "style:hooklen",
+   "value": "tiny",
    "x": 0.55,
    "n": 5
   },
   {
    "feature": "posted",
    "value": "midday (11-15)",
-   "x": 1.8,
+   "x": 1.81,
    "n": 5
   },
   {
@@ -52,34 +34,58 @@
    "n": 4
   },
   {
+   "feature": "style:len",
+   "value": "normal",
+   "x": 0.59,
+   "n": 6
+  },
+  {
    "feature": "style:box",
    "value": "white",
-   "x": 0.58,
+   "x": 0.59,
    "n": 5
   },
   {
-   "feature": "clip length",
-   "value": "23 s+",
-   "x": 0.58,
+   "feature": "style:cam",
+   "value": "medium",
+   "x": 0.59,
    "n": 5
   },
   {
-   "feature": "CAPS words",
-   "value": "0-1",
-   "x": 1.71,
-   "n": 11
+   "feature": "has a number",
+   "value": "no",
+   "x": 1.65,
+   "n": 6
+  },
+  {
+   "feature": "style:box",
+   "value": "black",
+   "x": 0.61,
+   "n": 3
   },
   {
    "feature": "style:cam",
    "value": "small",
-   "x": 0.6,
+   "x": 0.61,
    "n": 3
+  },
+  {
+   "feature": "CAPS words",
+   "value": "0-1",
+   "x": 1.62,
+   "n": 12
   },
   {
    "feature": "hook length",
    "value": "long (90+)",
    "x": 0.62,
    "n": 4
+  },
+  {
+   "feature": "clip length",
+   "value": "23 s+",
+   "x": 0.62,
+   "n": 6
   },
   {
    "feature": "emotion word",
@@ -102,20 +108,8 @@
   {
    "feature": "style:hooklen",
    "value": "short",
-   "x": 0.68,
+   "x": 0.69,
    "n": 3
-  },
-  {
-   "feature": "posted",
-   "value": "night (19+)",
-   "x": 0.71,
-   "n": 3
-  },
-  {
-   "feature": "emotion word",
-   "value": "SHOCKED",
-   "x": 0.72,
-   "n": 5
   },
   {
    "feature": "posted",
@@ -124,55 +118,63 @@
    "n": 5
   },
   {
+   "feature": "emotion word",
+   "value": "SHOCKED",
+   "x": 0.73,
+   "n": 5
+  },
+  {
+   "feature": "posted",
+   "value": "night (19+)",
+   "x": 0.74,
+   "n": 4
+  },
+  {
    "feature": "hook style",
    "value": "unknown",
-   "x": 1.23,
+   "x": 1.24,
    "n": 19
   },
   {
    "feature": "emotion word",
    "value": "none",
-   "x": 1.19,
+   "x": 1.2,
    "n": 16
-  },
-  {
-   "feature": "has a number",
-   "value": "yes",
-   "x": 0.86,
-   "n": 21
   },
   {
    "feature": "hook length",
    "value": "short (<60)",
-   "x": 1.16,
-   "n": 17
+   "x": 1.15,
+   "n": 18
   }
  ],
- "guidance": [],
+ "guidance": [
+  "DO: has a number = no (1.65x views, 6 videos)"
+ ],
  "weights": {
-  "formula": 0.414,
+  "formula": 0.415,
   "news": 0.156,
   "quote": 0.107,
-  "question": 0.102,
+  "question": 0.101,
   "lowcaps": 0.222
  },
  "style_weights": {
   "box": {
-   "white": 0.565,
-   "black": 0.204,
-   "outline": 0.232
+   "white": 0.567,
+   "black": 0.202,
+   "outline": 0.231
   },
   "cam": {
    "small": 0.314,
    "medium": 0.686
   },
   "len": {
-   "short": 0.382,
-   "normal": 0.618
+   "short": 0.381,
+   "normal": 0.619
   },
   "hooklen": {
-   "tiny": 0.274,
-   "short": 0.726
+   "tiny": 0.273,
+   "short": 0.727
   },
   "start": {
    "fast": 0.7,
@@ -182,7 +184,7 @@
  "top": [
   {
    "hook": "Speed found him",
-   "views": 1250
+   "views": 1251
   },
   {
    "hook": "Marlon can't handle a night in GTA 6",
@@ -205,25 +207,25 @@
   "formula": 4,
   "news": 1,
   "quote": 1,
-  "question": 1,
+  "question": 2,
   "lowcaps": 0
  },
  "style_tested": {
   "box": {
    "white": 5,
-   "black": 2,
+   "black": 3,
    "outline": 0
   },
   "cam": {
    "small": 3,
-   "medium": 4
+   "medium": 5
   },
   "len": {
    "short": 2,
-   "normal": 5
+   "normal": 6
   },
   "hooklen": {
-   "tiny": 4,
+   "tiny": 5,
    "short": 3
   },
   "start": {
@@ -232,6 +234,16 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-22T21:39:20Z",
+   "kind": "data",
+   "text": "judged 27 videos (was 26)"
+  },
+  {
+   "at": "2026-11-22T21:39:20Z",
+   "kind": "new",
+   "text": "DO: has a number = no (1.65x views, 6 videos)"
+  },
   {
    "at": "2026-11-22T19:38:10Z",
    "kind": "data",
