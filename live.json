@@ -191,11 +191,11 @@
    }
   }
  },
- "updated": "2026-11-22T02:04:45Z",
+ "updated": "2026-11-22T02:09:49Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-22T02:07:00Z",
+ "next_slot": "2026-11-22T21:07:00Z",
  "up_next": "vod2936683310_7069",
  "videos": [
   {
@@ -530,12 +530,12 @@
  "you_post": [],
  "budget": {
   "day": "2026-11-21",
-  "used": 20,
+  "used": 22,
   "cap": 30,
   "slots": 6,
-  "remain30": 779,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 579,
+  "remain30": 777,
+  "reset30": "2026-12-18T22:03:25Z",
+  "remain24": 577,
   "active": [
    [
     16,
@@ -604,6 +604,41 @@
   "LovelyImportantAlfalfaLitty-TvWeJzP9zG95rT47"
  ],
  "posts": {
+  "vod2936385310_19974": {
+   "id": "vod2936385310_19974",
+   "hook": "Why is Clix FURIOUS at his payout?",
+   "streamer": "Clix",
+   "login": "clix",
+   "campaign": "Clix",
+   "tag": "#Clix",
+   "caption": "",
+   "why": "9:07 PM slot",
+   "posted_at": "2026-11-22T02:09:49Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936385310_19974_final.mp4?v=521e9e9ac0&r=1795309743",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936385310_19974.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b024eeed864a011058de214",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "question",
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "len": "normal",
+    "hooklen": "tiny"
+   },
+   "viral": 80,
+   "seconds": 23
+  },
   "vod2936518555_14908": {
    "id": "vod2936518555_14908",
    "hook": "Lacy DISGUSTS chat with food take",
@@ -1617,6 +1652,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T02:04:45Z",
- "log": []
+ "stats_updated": "2026-11-22T02:09:49Z",
+ "log": [
+  "[02:09:50Z] posting vod2936385310_19974 (9:07 PM slot) to tiktok: Why is Clix FURIOUS at his payout?",
+  "[02:10:00Z]   tiktok: uploading "
+ ]
 }

@@ -1,0 +1,35 @@
+{
+ "id": "vod2936385310_19974",
+ "hook": "Why is Clix FURIOUS at his payout?",
+ "streamer": "Clix",
+ "login": "clix",
+ "campaign": "Clix",
+ "tag": "#Clix",
+ "caption": "",
+ "why": "9:07 PM slot",
+ "posted_at": "2026-11-22T02:09:49Z",
+ "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936385310_19974_final.mp4?v=521e9e9ac0&r=1795309743",
+ "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936385310_19974.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "uploading",
+   "buffer_id": "6b024eeed864a011058de214",
+   "error": ""
+  }
+ },
+ "platforms": [
+  "tiktok"
+ ],
+ "hook_kind": "ai",
+ "hook_variant": "question",
+ "style": {
+  "box": "black",
+  "cam": "medium",
+  "len": "normal",
+  "hooklen": "tiny"
+ },
+ "viral": 80,
+ "seconds": 23
+}
