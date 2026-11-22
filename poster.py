@@ -310,7 +310,11 @@ def texts(c: dict) -> tuple[str, str, str]:
     return tt, yt, title
 
 
-COOLDOWN_RE = re.compile(r"24 hours|daily video upload limit|daily posting limit|large number of posts|rate limit|too many", re.I)
+COOLDOWN_RE = re.compile(r"24 hours|daily video upload limit|daily posting limit|large number of posts|rate limit|too many"
+                         r"|maximum number of posts", re.I)
+# Buffer lets this YouTube channel take only 2 posts a day: use them at the best times, TikTok keeps every slot
+YT_PER_DAY = 2
+YT_PREF = {(13, 7), (19, 7)}
 
 
 def create(service: str, c: dict) -> dict:
@@ -717,6 +721,15 @@ def main() -> None:
                     continue   # you post this platform yourself (native upload); the site lines the clips up
                 if cool.get(sv) and parse(cool[sv]) > NOW:
                     continue
+                if sv == "youtube":
+                    day0 = NOW.astimezone(ET).replace(hour=0, minute=0, second=0, microsecond=0)
+                    yt_today = sum(1 for r in recs.values() if "youtube" in (r.get("platforms") or ["tiktok", "youtube"])
+                                   and r.get("posted_at") and parse(r["posted_at"]) >= day0
+                                   and ((r.get("status") or {}).get("youtube") or {}).get("state") != "error")
+                    left_slots = sum(1 for t in slots_today() if t >= slot)
+                    st_hm = (slot.astimezone(ET).hour, slot.astimezone(ET).minute)
+                    if yt_today >= YT_PER_DAY or (st_hm not in YT_PREF and left_slots > YT_PER_DAY - yt_today):
+                        continue   # save YouTube's 2 daily posts for the best slots (no wasted Buffer request)
                 last_sv = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)
                                 if sv in (r.get("platforms") or ["tiktok", "youtube"])), "")
                 cand = (next((r for r in ok[:6] if r["id"] not in used and r.get("streamer") != last_sv), None)
@@ -817,6 +830,9 @@ def main() -> None:
                     changed = True
                     if "24 hours" in st["error"]:
                         until = iso(NOW + timedelta(hours=24))
+                    elif "maximum number of posts" in st["error"]:   # per-day cap: wait for the next day (ET)
+                        nxt = (NOW.astimezone(ET) + timedelta(days=1)).replace(hour=0, minute=5, second=0, microsecond=0)
+                        until = iso(nxt.astimezone(timezone.utc))
                     elif "daily posting limit" in st["error"]:  # Buffer's rolling 24 h limit: try again in 3 h
                         until = iso(NOW + timedelta(hours=3))
                     elif "daily" in st["error"]:  # YouTube's daily limit resets at midnight Pacific
