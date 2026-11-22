@@ -4,7 +4,6 @@
  "last_slot": "2026-11-22T13:37:00Z",
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
-  "youtube": "2026-11-19T18:10:59Z",
   "tiktok": "2026-11-19T22:49:33Z"
  },
  "errors": [
@@ -42,7 +41,7 @@
  "yt_channel": "UCtxm_iDQ0Y7baG2mwrGGcSg",
  "yt_check": "ok",
  "tt_check": "ok",
- "manual_check": "2026-11-22T16:06:16Z",
+ "manual_check": "2026-11-22T16:16:19Z",
  "stats_at": "2026-11-22T14:05:27Z",
  "buffer_wait": "",
  "buffer_off": false,
@@ -54,5 +53,6 @@
   "remain30": 772,
   "reset30": "2026-12-18T22:03:15Z",
   "remain24": 597
- }
+ },
+ "yt_verified_v": 1
 }
