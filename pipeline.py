@@ -863,6 +863,30 @@ def _caption_line_top(fr, cam: str) -> float | None:
     return (rows[0] + y0) / H if len(rows) >= 6 else None
 
 
+def gameplay_is_black(path: Path, cam: str) -> bool:
+    """True when the stream shows no game: everything outside the webcam (and chat corner) is basically black,
+    e.g. between games, capture off, BRB screen. A split clip of that would have a black bottom half."""
+    try:
+        cap = cv2.VideoCapture(str(path))
+        dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+        cap.release()
+        dark = 0
+        frames = _frames(path, [max(0.3, dur * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)])
+        for fr in frames:
+            g = cv2.cvtColor(fr, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            H, W = g.shape
+            mask = np.ones_like(g, dtype=bool)
+            if cam:
+                x, y, w, h = [float(v) for v in cam.split(",")]
+                mask[max(0, int((y - 0.05) * H)):min(H, int((y + h + 0.35) * H)), max(0, int((x - 0.02) * W)):min(W, int((x + w + 0.05) * W))] = False
+            px = g[mask]
+            if px.size and (px < 28).mean() > 0.9:      # 90%+ of the game area is near-black
+                dark += 1
+        return len(frames) >= 3 and dark >= max(3, len(frames) - 1)
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def purple_caption_cut(path: Path, duration: float, cam: str) -> float:
     """Captions burned into the stream (Twitch live captions, GTA subtitles) near the bottom: return the smallest
     bottom crop (fraction) that removes them, or 0 if the clip has none. Only the caption line and a hair more."""
@@ -1653,6 +1677,10 @@ def main() -> None:
         sty = c.get("style") or {}
         if not c.get("asis"):
             raw = best_part(raw, cid, tmp, c)
+        if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and gameplay_is_black(raw, c.get("cam") or ""):
+            c.update(status="skip", skip_reason="no gameplay on screen (black screen)")
+            log(f"skipped {cid}: the stream showed a black screen, no gameplay")
+            return job
         _ul = c.get("user_layout") or {}
         if _ul.get("trim") or (_ul.get("speed") or 1) > 1.01:   # your trim / speed from the editor
             try:
