@@ -1,78 +1,78 @@
 {
- "updated": "2026-11-22T17:37:02Z",
- "videos": 24,
+ "updated": "2026-11-22T19:38:10Z",
+ "videos": 26,
  "v": 3,
  "findings": [
   {
-   "feature": "has a number",
-   "value": "no",
-   "x": 2.59,
+   "feature": "streamer",
+   "value": "Clix",
+   "x": 0.43,
+   "n": 5
+  },
+  {
+   "feature": "style:hooklen",
+   "value": "tiny",
+   "x": 0.5,
    "n": 4
   },
   {
    "feature": "streamer",
-   "value": "Clix",
-   "x": 0.42,
-   "n": 5
-  },
-  {
-   "feature": "streamer",
    "value": "?",
-   "x": 1.86,
+   "x": 1.95,
    "n": 8
   },
   {
-   "feature": "hook style",
-   "value": "formula",
+   "feature": "has a number",
+   "value": "no",
+   "x": 1.9,
+   "n": 5
+  },
+  {
+   "feature": "style:cam",
+   "value": "medium",
    "x": 0.54,
    "n": 4
   },
   {
    "feature": "style:len",
    "value": "normal",
-   "x": 0.54,
-   "n": 4
-  },
-  {
-   "feature": "CAPS words",
-   "value": "0-1",
-   "x": 1.8,
-   "n": 10
-  },
-  {
-   "feature": "style:cam",
-   "value": "small",
-   "x": 0.56,
-   "n": 3
-  },
-  {
-   "feature": "style:box",
-   "value": "white",
-   "x": 0.56,
-   "n": 4
-  },
-  {
-   "feature": "clip length",
-   "value": "23 s+",
-   "x": 0.56,
-   "n": 4
+   "x": 0.55,
+   "n": 5
   },
   {
    "feature": "posted",
    "value": "midday (11-15)",
-   "x": 1.73,
+   "x": 1.8,
    "n": 5
   },
   {
-   "feature": "emotion word",
-   "value": "STUNNED",
-   "x": 0.59,
-   "n": 3
+   "feature": "hook style",
+   "value": "formula",
+   "x": 0.57,
+   "n": 4
   },
   {
-   "feature": "style:hooklen",
-   "value": "short",
-   "x": 0.61,
+   "feature": "style:box",
+   "value": "white",
+   "x": 0.58,
+   "n": 5
+  },
+  {
+   "feature": "clip length",
+   "value": "23 s+",
+   "x": 0.58,
+   "n": 5
+  },
+  {
+   "feature": "CAPS words",
+   "value": "0-1",
+   "x": 1.71,
+   "n": 11
+  },
+  {
+   "feature": "style:cam",
+   "value": "small",
+   "x": 0.6,
    "n": 3
   },
   {
@@ -82,16 +82,40 @@
    "n": 4
   },
   {
+   "feature": "emotion word",
+   "value": "STUNNED",
+   "x": 0.64,
+   "n": 3
+  },
+  {
    "feature": "CAPS words",
    "value": "4-6",
-   "x": 0.62,
+   "x": 0.67,
    "n": 4
   },
   {
    "feature": "CAPS words",
    "value": "2-3",
-   "x": 0.67,
-   "n": 10
+   "x": 0.68,
+   "n": 11
+  },
+  {
+   "feature": "style:hooklen",
+   "value": "short",
+   "x": 0.68,
+   "n": 3
+  },
+  {
+   "feature": "posted",
+   "value": "night (19+)",
+   "x": 0.71,
+   "n": 3
+  },
+  {
+   "feature": "emotion word",
+   "value": "SHOCKED",
+   "x": 0.72,
+   "n": 5
   },
   {
    "feature": "posted",
@@ -100,79 +124,55 @@
    "n": 5
   },
   {
-   "feature": "emotion word",
-   "value": "SHOCKED",
-   "x": 0.75,
-   "n": 4
-  },
-  {
-   "feature": "hook length",
-   "value": "short (<60)",
-   "x": 1.22,
-   "n": 15
-  },
-  {
-   "feature": "hook length",
-   "value": "medium (60-90)",
-   "x": 0.82,
-   "n": 5
-  },
-  {
-   "feature": "has a number",
-   "value": "yes",
-   "x": 0.83,
-   "n": 20
+   "feature": "hook style",
+   "value": "unknown",
+   "x": 1.23,
+   "n": 19
   },
   {
    "feature": "emotion word",
    "value": "none",
-   "x": 1.2,
-   "n": 15
+   "x": 1.19,
+   "n": 16
   },
   {
-   "feature": "has 'FIRST'",
+   "feature": "has a number",
    "value": "yes",
-   "x": 0.84,
-   "n": 3
+   "x": 0.86,
+   "n": 21
   },
   {
-   "feature": "hook style",
-   "value": "unknown",
-   "x": 1.17,
-   "n": 19
-  },
-  {
-   "feature": "streamer",
-   "value": "Lacy",
-   "x": 1.17,
-   "n": 4
+   "feature": "hook length",
+   "value": "short (<60)",
+   "x": 1.16,
+   "n": 17
   }
  ],
  "guidance": [],
  "weights": {
-  "formula": 0.402,
-  "news": 0.165,
-  "quote": 0.104,
-  "question": 0.11,
-  "lowcaps": 0.22
+  "formula": 0.414,
+  "news": 0.156,
+  "quote": 0.107,
+  "question": 0.102,
+  "lowcaps": 0.222
  },
  "style_weights": {
   "box": {
-   "white": 0.561,
-   "black": 0.212,
-   "outline": 0.227
+   "white": 0.565,
+   "black": 0.204,
+   "outline": 0.232
   },
   "cam": {
-   "small": 0.291,
-   "medium": 0.709
+   "small": 0.314,
+   "medium": 0.686
   },
   "len": {
-   "short": 0.386,
-   "normal": 0.614
+   "short": 0.382,
+   "normal": 0.618
   },
   "hooklen": {
-   "tiny": 0.297,
-   "short": 0.703
+   "tiny": 0.274,
+   "short": 0.726
   },
   "start": {
    "fast": 0.7,
@@ -182,7 +182,7 @@
  "top": [
   {
    "hook": "Speed found him",
-   "views": 1249
+   "views": 1250
   },
   {
    "hook": "Marlon can't handle a night in GTA 6",
@@ -203,27 +203,27 @@
  ],
  "style_counts": {
   "formula": 4,
-  "news": 0,
+  "news": 1,
   "quote": 1,
-  "question": 0,
+  "question": 1,
   "lowcaps": 0
  },
  "style_tested": {
   "box": {
-   "white": 4,
-   "black": 1,
+   "white": 5,
+   "black": 2,
    "outline": 0
   },
   "cam": {
    "small": 3,
-   "medium": 2
+   "medium": 4
   },
   "len": {
-   "short": 1,
-   "normal": 4
+   "short": 2,
+   "normal": 5
   },
   "hooklen": {
-   "tiny": 2,
+   "tiny": 4,
    "short": 3
   },
   "start": {
@@ -232,6 +232,11 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-22T19:38:10Z",
+   "kind": "data",
+   "text": "judged 26 videos (was 24)"
+  },
   {
    "at": "2026-11-22T17:37:02Z",
    "kind": "data",
