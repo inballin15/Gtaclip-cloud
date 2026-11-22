@@ -191,11 +191,11 @@
    }
   }
  },
- "updated": "2026-11-22T01:04:05Z",
+ "updated": "2026-11-22T01:09:35Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-22T01:07:00Z",
+ "next_slot": "2026-11-22T02:07:00Z",
  "up_next": "vod2936683310_2687",
  "videos": [
   {
@@ -518,12 +518,12 @@
  "you_post": [],
  "budget": {
   "day": "2026-11-21",
-  "used": 17,
+  "used": 19,
   "cap": 30,
   "slots": 6,
-  "remain30": 782,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 582,
+  "remain30": 780,
+  "reset30": "2026-12-18T22:03:25Z",
+  "remain24": 580,
   "active": [
    [
     16,
@@ -592,6 +592,41 @@
   "LovelyImportantAlfalfaLitty-TvWeJzP9zG95rT47"
  ],
  "posts": {
+  "vod2936518555_14908": {
+   "id": "vod2936518555_14908",
+   "hook": "Lacy DISGUSTS chat with food take",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "campaign": "Lacy",
+   "tag": "#Lacy",
+   "caption": "",
+   "why": "8:07 PM slot",
+   "posted_at": "2026-11-22T01:09:35Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936518555_14908_final.mp4?v=fb10857b35&r=1795309390",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936518555_14908.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b0240d1c72676f5e9f31a98",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "news",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "len": "short",
+    "hooklen": "tiny"
+   },
+   "viral": 80,
+   "seconds": 26
+  },
   "vod2936683310_866": {
    "id": "vod2936683310_866",
    "hook": "Why is Kai Cenat SHOCKED by GTA 6?",
@@ -974,8 +1009,8 @@
    "hook": "Lacy STUNNED fans DELETING 90 hours of GTA 6 progress",
    "clip": "CredulousTsundereSalsifyWow-9zosjTsfZF6ahQfl",
    "streamer": "Lacy",
-   "views": 0,
-   "likes": 0,
+   "views": 104,
+   "likes": 9,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -1002,8 +1037,8 @@
    "hook": "Joe Bartolozzi STUNNED finding first GTA 6 shortcut",
    "clip": "LivelySaltyCrabsKreygasm-SSJloq0S-nzw0tzb",
    "streamer": "Joe_Bartolozzi",
-   "views": 0,
-   "likes": 0,
+   "views": 101,
+   "likes": 7,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -1030,8 +1065,8 @@
    "hook": "Clix SHOCKED by REALISTIC bird flight in GTA 6",
    "clip": "vod2934996320_93424",
    "streamer": "Clix",
-   "views": 0,
-   "likes": 0,
+   "views": 89,
+   "likes": 2,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -1058,7 +1093,7 @@
    "hook": "ohnePixel IPad Kid maxxing brainrot in GTA 6 #ohnePixel #GTA6 #GTAVI #gaming #fyp",
    "clip": "",
    "streamer": "",
-   "views": 262,
+   "views": 264,
    "likes": 18,
    "comments": 0,
    "shares": 0,
@@ -1086,7 +1121,7 @@
    "hook": "IShowSpeed LOSES IT after ACCIDENTALLY deleting his ENTIRE GTA 6 save file 🎥 @ishowspeed #IShowSpeed #GTA6 #GTAVI #gaming #fyp",
    "clip": "IgnorantBraveBananaNononoCat-znG5sU9yfduBEaMi",
    "streamer": "IShowSpeed",
-   "views": 127,
+   "views": 132,
    "likes": 2,
    "comments": 0,
    "shares": 0,
@@ -1100,7 +1135,7 @@
    "hook": "Kai takes out his guy in GTA 6 #GTA6 #GTAVI #gaming #fyp #KaiCenat  @Kai Cenat",
    "clip": "",
    "streamer": "Kai",
-   "views": 142,
+   "views": 144,
    "likes": 1,
    "comments": 0,
    "shares": 0,
@@ -1114,7 +1149,7 @@
    "hook": "IShowSpeed is SHOCKED seeing a LEGENDARY GTA IV CHARACTER appear in GTA 6 🎥 @ishowspeed #IShowSpeed #GTA6 #GTAVI #gaming #fyp",
    "clip": "AmazonianTubularScorpionPJSugar-46tKrqhdCt4P8nMO",
    "streamer": "IShowSpeed",
-   "views": 155,
+   "views": 156,
    "likes": 5,
    "comments": 0,
    "shares": 0,
@@ -1156,7 +1191,7 @@
    "hook": "Lacy stalking in gta 6  🎥 @lacy #Lacy #GTA6 #GTAVI #gaming #fyp",
    "clip": "",
    "streamer": "lacy",
-   "views": 333,
+   "views": 337,
    "likes": 14,
    "comments": 0,
    "shares": 0,
@@ -1170,7 +1205,7 @@
    "hook": "xQc is SHOCKED after seeing a boat LAUNCH into the air in GTA 6 🎥 @xqc #xQc #GTA6 #GTAVI #gaming #fyp",
    "clip": "EncouragingFlaccidBobaWutFace-wXF5gAfA2PxaTMVU",
    "streamer": "xQc",
-   "views": 199,
+   "views": 206,
    "likes": 5,
    "comments": 0,
    "shares": 0,
@@ -1408,7 +1443,7 @@
    "hook": "Lacy found the first shoe store in GTA 6 👟😭 🎥 @lacy #Lacy #GTA6 #GTAVI #gaming #fyp",
    "clip": "",
    "streamer": "lacy",
-   "views": 1427,
+   "views": 1436,
    "likes": 19,
    "comments": 0,
    "shares": 0,
@@ -1556,6 +1591,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T01:04:05Z",
- "log": []
+ "stats_updated": "2026-11-22T01:09:35Z",
+ "log": [
+  "[01:09:36Z] posting vod2936518555_14908 (8:07 PM slot) to tiktok: Lacy DISGUSTS chat with food take",
+  "[01:09:47Z]   tiktok: uploading "
+ ]
 }

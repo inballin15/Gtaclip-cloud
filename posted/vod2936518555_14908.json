@@ -1,0 +1,35 @@
+{
+ "id": "vod2936518555_14908",
+ "hook": "Lacy DISGUSTS chat with food take",
+ "streamer": "Lacy",
+ "login": "lacy",
+ "campaign": "Lacy",
+ "tag": "#Lacy",
+ "caption": "",
+ "why": "8:07 PM slot",
+ "posted_at": "2026-11-22T01:09:35Z",
+ "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936518555_14908_final.mp4?v=fb10857b35&r=1795309390",
+ "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2936518555_14908.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "uploading",
+   "buffer_id": "6b0240d1c72676f5e9f31a98",
+   "error": ""
+  }
+ },
+ "platforms": [
+  "tiktok"
+ ],
+ "hook_kind": "ai",
+ "hook_variant": "news",
+ "style": {
+  "box": "white",
+  "cam": "medium",
+  "len": "short",
+  "hooklen": "tiny"
+ },
+ "viral": 80,
+ "seconds": 26
+}

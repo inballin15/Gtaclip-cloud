@@ -1,7 +1,7 @@
 {
  "paused": false,
  "postnow": [],
- "last_slot": "2026-11-22T00:07:00Z",
+ "last_slot": "2026-11-22T01:07:00Z",
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
   "youtube": "2026-11-19T18:10:59Z",
@@ -43,16 +43,16 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-22T01:04:05Z",
- "stats_at": "2026-11-22T00:34:26Z",
+ "stats_at": "2026-11-22T01:09:35Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-21",
-  "used": 17,
+  "used": 19,
   "cap": 30,
   "slots": 6,
-  "remain30": 782,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 582
+  "remain30": 780,
+  "reset30": "2026-12-18T22:03:25Z",
+  "remain24": 580
  }
 }
