@@ -933,7 +933,8 @@ def main() -> None:
     insights = rj(P / "insights.json", {})
     try:
         import learn
-        if not insights.get("updated") or NOW - parse(insights["updated"]) >= timedelta(hours=2):
+        if not insights.get("updated") or NOW - parse(insights["updated"]) >= timedelta(hours=2) \
+                or insights.get("v") != learn.LEARN_V:
             prev = insights
             insights = learn.learn(list(rj(CHANNEL, {}).values()), recs, NOW)
             # running feed of what changed, so the site can show the learner's progress over time

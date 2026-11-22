@@ -615,7 +615,7 @@ def render_preview(raw: Path, cid: str) -> None:
 
 
 CLIP_MAX_S = 22    # the top GTA 6 clip pages post 10-20 s videos (median 16 s); longer clips get trimmed
-CLIP_KEEP_S = 18   # length of the trimmed part
+CLIP_KEEP_S = 16   # top clip pages' median length   # length of the trimmed part
 
 
 def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:

@@ -22,7 +22,11 @@ VARIANTS = {
                 "casual and specific, 20-50 characters. Real top performers on this channel: 'Marlon can't handle a night in "
                 "GTA 6' / 'Lacy stalking in gta 6' / 'Adapt tries texting and driving in GTA 6'."),
 }
-PRIOR = {"formula": 0.25, "news": 0.1, "quote": 0.1, "question": 0.1, "lowcaps": 0.45}   # natural hooks did best on our TikTok   # start mostly on what's proven
+# Starting point = what the biggest GTA clip pages do (110 of their videos studied, 1-7M views each):
+# name + CAPS emotion + one concrete detail, 'FIRST'/news angle second. Our own views move it from here.
+PRIOR = {"formula": 0.45, "news": 0.15, "lowcaps": 0.2, "quote": 0.1, "question": 0.1}
+LEARN_V = 3      # bump when the rules change -> the poster re-learns right away
+EVIDENCE = 8     # our own videos needed before they count as much as the proven starting point   # start mostly on what's proven
 MIN_WEIGHT = 0.08          # every style keeps getting a few tries so the learner can notice when tastes change
 
 # Clip-style tests ("dynamic model"): each automatic clip gets one option per dimension; views decide the mix.
@@ -34,8 +38,8 @@ STYLE_DIMS = {
     "hooklen": {"tiny": "very short hook (max ~40 chars)", "short": "short hook (max ~60 chars)"},
     "start": {"fast": "starts ~2 s before the big moment", "setup": "starts ~4 s before it (a bit of set-up)"},
 }
-STYLE_PRIOR = {"box": {"white": 0.5, "black": 0.25, "outline": 0.25}, "cam": {"small": 0.35, "medium": 0.65},
-               "len": {"short": 0.4, "normal": 0.6}, "hooklen": {"tiny": 0.4, "short": 0.6},
+STYLE_PRIOR = {"box": {"white": 0.6, "black": 0.2, "outline": 0.2}, "cam": {"small": 0.3, "medium": 0.7},   # top pages:
+               "len": {"short": 0.35, "normal": 0.65}, "hooklen": {"tiny": 0.3, "short": 0.7},             # white box, ~16 s
                "start": {"fast": 0.7, "setup": 0.3}}
 CAM_PX = {"small": 560, "medium": 672}
 
@@ -92,7 +96,7 @@ def learn(videos: list[dict], recs: dict[str, dict], now: datetime | None = None
                      rec.get("hook_variant", ""), v.get("service", ""), rec.get("style"))
         # score: views on a log scale, compared within the same platform (YouTube and TikTok differ a lot)
         rows.append((f, math.log1p(v["views"]), v["service"], v["views"], hook))
-    out = {"updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "videos": len(rows), "findings": [], "guidance": [],
+    out = {"updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "videos": len(rows), "v": LEARN_V, "findings": [], "guidance": [],
            "weights": dict(PRIOR), "style_weights": {d: dict(p) for d, p in STYLE_PRIOR.items()}, "top": []}
     if len(rows) < 6:
         out["note"] = f"Learning starts after 6 videos are at least 18 h old (now {len(rows)})."
@@ -122,7 +126,7 @@ def learn(videos: list[dict], recs: dict[str, dict], now: datetime | None = None
     # guidance for the AI (only clear differences)
     g = []
     for r in finds:
-        if r["n"] < 3 or 0.8 < r["x"] < 1.25:
+        if r["n"] < 6 or 0.8 < r["x"] < 1.25 or r["feature"] == "CAPS words":
             continue
         better = r["x"] >= 1.25
         k, val = r["feature"], r["value"]
@@ -134,7 +138,8 @@ def learn(videos: list[dict], recs: dict[str, dict], now: datetime | None = None
     for f, d, *_ in norm:
         if f.get("hook style") in vs:
             vs[f["hook style"]].append(d)
-    raw = {k: PRIOR[k] * (math.exp(sum(v) / len(v)) if len(v) >= 2 else 1.0) for k, v in vs.items()}
+    shrink = lambda v: (sum(v) / len(v)) * len(v) / (len(v) + EVIDENCE) if v else 0.0   # few videos -> small nudge
+    raw = {k: PRIOR[k] * math.exp(shrink(v)) for k, v in vs.items()}
     tot = sum(raw.values())
     w = {k: max(MIN_WEIGHT, raw[k] / tot) for k in raw}
     tot = sum(w.values())
@@ -148,7 +153,7 @@ def learn(videos: list[dict], recs: dict[str, dict], now: datetime | None = None
             a = f.get("style:" + dim)
             if a in got:
                 got[a].append(d)
-        raw = {a: STYLE_PRIOR[dim][a] * (math.exp(sum(v) / len(v)) if len(v) >= 2 else 1.0) for a, v in got.items()}
+        raw = {a: STYLE_PRIOR[dim][a] * math.exp(shrink(v)) for a, v in got.items()}
         tot = sum(raw.values())
         w = {a: max(0.12, r / tot) for a, r in raw.items()}
         tot = sum(w.values())

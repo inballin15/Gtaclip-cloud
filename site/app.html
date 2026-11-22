@@ -614,6 +614,7 @@ function learnerCard() {
   if (!I.updated) { c.append(el('div', 'mut', 'Starts after the poster\'s next check.')); return c; }
   const nextAt = new Date(new Date(I.updated).getTime() + 2 * 3600e3);
   c.append(el('div', 'mut', `Learned from ${I.videos || 0} of your videos · updated ${ago(I.updated)} · next check ${fmtLeft(nextAt - Date.now())}`));
+  c.append(el('div', 'mut', 'Started from the proven formula of the biggest clip pages (110 of their videos studied). Your own views shift it as evidence builds up.'));
   // ---- plain-English lessons
   const PH = {
     'hook length': { 'short (<60)': 'Short hooks (under 60 letters)', 'medium (60-90)': 'Medium hooks (60–90 letters)', 'long (90+)': 'Long hooks (90+ letters)' },
