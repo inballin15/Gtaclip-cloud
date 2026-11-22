@@ -811,7 +811,7 @@ def cam_without_chat(path: Path, cam: str, chat_layout: bool = False) -> str:
                         f = max(fs, key=lambda f: f[4])
                         need = max(need, (f[1] + f[3] * 1.12) / (c.shape[0] * 2))
                 if need <= lums + 0.02:
-                    frac = max(0.5, need, lums - 0.02)
+                    frac = max(0.5, need, lums - 0.06)   # a little above the panel: its first chat line sits on the edge
                     return f"{x:.4f},{y:.4f},{w:.4f},{h * frac:.4f}"
                 return cam
         d = np.convolve(np.mean([d[:n] for d in dens], axis=0), np.ones(5) / 5, mode="same")
@@ -1458,13 +1458,13 @@ def main() -> None:
         for c in clips.values():
             if c["status"] == "new":
                 c.pop("final_hash", None); c.pop("clean_v", None)
-    if st.get("redo_kaichat_v", 0) < 2:   # one time: Kai's chat strip came back on sharp footage -> re-frame his clips
-        st["redo_kaichat_v"] = 2
+    if st.get("redo_kaichat_v", 0) < 3:   # one time: Kai's chat strip came back on sharp footage -> re-frame his clips
+        st["redo_kaichat_v"] = 3
         for c in clips.values():
             if c["status"] == "new" and CFG["streamers"].get(c.get("login", ""), {}).get("chat_on_cam") and not (c.get("user_layout") or {}).get("cam"):
                 for k in ("final_hash", "clean_v", "hd", "hd_cam"):
                     c.pop(k, None)
-                c["hd_sfx"] = "_q4"
+                c["hd_sfx"] = "_q5"
     if st.get("redo_vodhq_v", 0) < 1:   # one time: VOD clips were saved blocky -> download again at full quality
         st["redo_vodhq_v"] = 1
         n_re = 0
