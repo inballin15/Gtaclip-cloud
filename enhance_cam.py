@@ -1,4 +1,4 @@
-"""AI-upscale one webcam source (≈270 px wide) to the 1080-wide top strip with Real-ESRGAN (general-x4v3 + denoise).
+"""AI-upscale one webcam source (≈270 px wide) to the 1080-wide top strip with Real-ESRGAN (general-x4v3, light denoise + real texture).
 Runs on its own GitHub server per clip (CPU, ~1 s per frame). usage: python enhance_cam.py in.mp4 out.mp4 models_dir"""
 import subprocess
 import sys
@@ -41,8 +41,12 @@ def load(models: str, denoise: float = 0.5) -> nn.Module:
     return m.eval()
 
 
+DENOISE = 0.82   # weight of the detail-keeping model: 0.5 made faces waxy/smeared, this keeps skin and hair texture
+BLEND = 0.22     # mix a little of the plain sharp scale back in so it looks like a real camera, not a painting
+
+
 def main(src: str, dst: str, models: str) -> None:
-    model = load(models)
+    model = load(models, DENOISE)
     cap = cv2.VideoCapture(src)
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -60,8 +64,10 @@ def main(src: str, dst: str, models: str) -> None:
                          for f in batch])
         with torch.inference_mode():
             o = model(t).clamp(0, 1).mul(255).round().byte().permute(0, 2, 3, 1).numpy()
-        for f in o:
-            ff.stdin.write(cv2.cvtColor(f, cv2.COLOR_RGB2BGR).tobytes())
+        for f, src_f in zip(o, batch):
+            out = cv2.cvtColor(f, cv2.COLOR_RGB2BGR)
+            plain = cv2.resize(src_f, (out.shape[1], out.shape[0]), interpolation=cv2.INTER_LANCZOS4)
+            ff.stdin.write(cv2.addWeighted(out, 1 - BLEND, plain, BLEND, 0).tobytes())
         batch.clear()
 
     while True:

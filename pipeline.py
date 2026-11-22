@@ -1010,15 +1010,22 @@ def fetch_link_audio(url: str, section, tmp: Path) -> tuple[Path, float, str]:
     return f, float(a or 0), (info.get("title") or "Link")[:60]
 
 
-def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path) -> None:
+def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path) -> int:
     """Download only the video section of a chosen moment at full source quality.
     (Before: yt-dlp's section download re-saved the 1080p60 VOD as old low-bitrate MPEG-4, which made every
     VOD clip blocky. Now ffmpeg reads the stream itself and saves a high-quality H.264 copy.)"""
     import yt_dlp
-    with yt_dlp.YoutubeDL({"quiet": True, "noprogress": True, "noplaylist": True,
-                           "format": "best[height<=1080][vcodec!=none]/bestvideo[height<=1080]+bestaudio/best",
-                           "format_sort": ["res", "fps", "tbr"]}) as y:
-        info = y.extract_info(url, download=False)
+    info = {}
+    for attempt in range(3):     # Twitch sometimes leaves the 1080p "Source" out for a live stream: ask again
+        with yt_dlp.YoutubeDL({"quiet": True, "noprogress": True, "noplaylist": True,
+                               "format": "best[height<=1080][vcodec!=none]/bestvideo[height<=1080]+bestaudio/best",
+                               "format_sort": ["res", "fps", "tbr"]}) as y:
+            info = y.extract_info(url, download=False)
+        hh = info.get("height") or max([f.get("height") or 0 for f in info.get("requested_formats") or []] or [0])
+        if hh >= 1080 or "twitch.tv" not in url:
+            break
+        log(f"[download] only {hh}p offered this time, asking Twitch again ({attempt + 1}/3)")
+        time.sleep(6)
     fmts = info.get("requested_formats") or [info]
     args = []
     for f in fmts:
@@ -1029,6 +1036,7 @@ def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path)
        "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(raw))
     h = info.get("height") or (fmts[0].get("height") if fmts else None)
     log(f"[download] VOD section {info.get('format_id')} {info.get('width')}x{h} -> H.264 full quality")
+    return int(h or 0)
 
 
 # ---------------------------------------------------------------- your own uploads -> clips
@@ -1447,6 +1455,39 @@ def main() -> None:
 
 
     # one-time: bring back fresh clips that the old replace-every-run rule / cap threw out
+    if st.get("redo_natural_cam_v", 0) < 1:   # one time: every queued webcam re-upscaled with the natural (less waxy) setting
+        st["redo_natural_cam_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new":
+                for k in ("final_hash", "clean_v", "hd", "hd_cam"):
+                    c.pop(k, None)
+                c["hd_sfx"] = (c.get("hd_sfx") or "") + "_n"
+    n_hq = 0
+    for cid, c in clips.items():     # every run: queued VOD clips that came down below 1080p get another try
+        m = re.match(r"vod(\d+)_(\d+)$", cid)
+        if not m or c["status"] != "new" or c.get("src_h", 0) >= 1080 or c.get("hq_tries", 0) >= 3 or n_hq >= 4:
+            continue
+        rawp = RAW / f"{cid}.mp4"
+        try:
+            cap = cv2.VideoCapture(str(rawp)); hh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0); cap.release()
+        except Exception:  # noqa: BLE001
+            hh = 0
+        if hh >= 1080:
+            c["src_h"] = hh
+            continue
+        c["hq_tries"] = c.get("hq_tries", 0) + 1
+        n_hq += 1
+        try:
+            a = float(m.group(2)); dur = float(c.get("seconds") or 20) - 2
+            got = fetch_link_section(f"https://www.twitch.tv/videos/{m.group(1)}", a, a + max(8.0, dur), rawp, Path(tempfile.mkdtemp()))
+            c["src_h"] = got
+            if got >= 1080:
+                for k in ("final_hash", "clean_v", "hd", "hd_cam"):
+                    c.pop(k, None)
+                c["hd_sfx"] = (c.get("hd_sfx") or "") + "_hq"
+                log(f"{cid}: got the full 1080p source now ({hh or '?'}p before) - re-making it")
+        except Exception as e:  # noqa: BLE001
+            log(f"1080p re-download failed {cid}: {str(e)[:100]}")
     if st.get("redo_camonly_v", 0) < 1:   # one time: black-screen clips skipped earlier get the webcam-only treatment
         st["redo_camonly_v"] = 1
         for c in clips.values():
