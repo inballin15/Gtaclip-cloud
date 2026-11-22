@@ -1,7 +1,8 @@
 {
  "insights": {
-  "updated": "2026-11-22T04:36:13Z",
+  "updated": "2026-11-22T05:28:02Z",
   "videos": 19,
+  "v": 3,
   "findings": [
    {
     "feature": "has a number",
@@ -24,7 +25,7 @@
    {
     "feature": "CAPS words",
     "value": "4-6",
-    "x": 0.54,
+    "x": 0.53,
     "n": 4
    },
    {
@@ -107,45 +108,43 @@
    }
   ],
   "guidance": [
-   "DO: has a number = no (3.77x views, 3 videos)",
-   "AVOID: hook length = long (90+) (0.51x views, 4 videos)",
-   "AVOID: CAPS words = 4-6 (0.54x views, 4 videos)",
    "DO: hook length = short (<60) (1.55x views, 10 videos)",
-   "DO: CAPS words = 0-1 (1.55x views, 10 videos)",
-   "AVOID: CAPS words = 2-3 (0.69x views, 5 videos)",
-   "AVOID: hook length = medium (60-90) (0.71x views, 5 videos)",
    "AVOID: has a number = yes (0.78x views, 16 videos)"
   ],
   "weights": {
-   "formula": 0.25,
-   "news": 0.1,
+   "formula": 0.45,
+   "news": 0.15,
    "quote": 0.1,
    "question": 0.1,
-   "lowcaps": 0.45
+   "lowcaps": 0.2
   },
   "style_weights": {
    "box": {
-    "white": 0.5,
-    "black": 0.25,
-    "outline": 0.25
+    "white": 0.6,
+    "black": 0.2,
+    "outline": 0.2
    },
    "cam": {
-    "small": 0.35,
-    "medium": 0.65
+    "small": 0.3,
+    "medium": 0.7
    },
    "len": {
-    "short": 0.4,
-    "normal": 0.6
+    "short": 0.35,
+    "normal": 0.65
    },
    "hooklen": {
-    "tiny": 0.4,
-    "short": 0.6
+    "tiny": 0.3,
+    "short": 0.7
+   },
+   "start": {
+    "fast": 0.7,
+    "setup": 0.3
    }
   },
   "top": [
    {
     "hook": "Speed found him",
-    "views": 1235
+    "views": 1241
    },
    {
     "hook": "Marlon can't handle a night in GTA 6",
@@ -188,10 +187,46 @@
    "hooklen": {
     "tiny": 0,
     "short": 0
+   },
+   "start": {
+    "fast": 0,
+    "setup": 0
    }
-  }
+  },
+  "feed": [
+   {
+    "at": "2026-11-22T05:28:02Z",
+    "kind": "dropped",
+    "text": "AVOID: CAPS words = 4-6 (0.54x views, 4 videos)"
+   },
+   {
+    "at": "2026-11-22T05:28:02Z",
+    "kind": "dropped",
+    "text": "AVOID: hook length = medium (60-90) (0.71x views, 5 videos)"
+   },
+   {
+    "at": "2026-11-22T05:28:02Z",
+    "kind": "dropped",
+    "text": "AVOID: hook length = long (90+) (0.51x views, 4 videos)"
+   },
+   {
+    "at": "2026-11-22T05:28:02Z",
+    "kind": "dropped",
+    "text": "AVOID: CAPS words = 2-3 (0.69x views, 5 videos)"
+   },
+   {
+    "at": "2026-11-22T05:28:02Z",
+    "kind": "dropped",
+    "text": "DO: CAPS words = 0-1 (1.55x views, 10 videos)"
+   },
+   {
+    "at": "2026-11-22T05:28:02Z",
+    "kind": "dropped",
+    "text": "DO: has a number = no (3.77x views, 3 videos)"
+   }
+  ]
  },
- "updated": "2026-11-22T05:26:30Z",
+ "updated": "2026-11-22T05:28:02Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1730,6 +1765,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T05:26:30Z",
- "log": []
+ "stats_updated": "2026-11-22T05:28:02Z",
+ "log": [
+  "[05:28:02Z] hook learner: 19 videos, 2 lessons"
+ ]
 }
