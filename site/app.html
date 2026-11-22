@@ -879,7 +879,8 @@ function clipCard(r, st) {
   const ed = el('button', 'btn', '✎ Edit'); ed.onclick = () => openEditor(r);
   const subd = linksFor(r).some(([l]) => isSub(l));
   const gp = el('button', 'btn' + (CR[campOf(r)] && !subd ? ' paid' : ''), subd ? '✓ Submitted' : '$ Get paid'); gp.onclick = () => openGetPaid(r);
-  const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, ed, gp, mb); b.append(btns);
+  const pd = el('button', 'btn ok', 'Posted ✓'); pd.onclick = () => openPosted(r);
+  const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, pd, ed, gp, mb); b.append(btns);
   const more = el('div', 'more'); const mi = el('div'); const mbt = el('div', 'btns');
   const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
   const hk = el('button', 'btn', 'Edit hook'); hk.onclick = () => openHookEdit(r);
@@ -907,6 +908,12 @@ async function saveVideo(r, btn, which) {
     else { const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
   } catch (e) { if (e && e.name !== 'AbortError') window.open(url, '_blank'); }
   btn.disabled = false; btn.textContent = label;
+}
+function openPosted(r) {   // you posted this clip yourself: the bot won't post it there (or anywhere, with Both)
+  const mk = (label, plat) => { const b = el('button', 'big go', label); b.onclick = async () => { b.disabled = true;
+    if (await ghTap(`manual: ${r.id}${plat ? ' ' + plat : ''}`)) { toast(plat ? `Marked posted on ${PN[plat]}` : 'Marked posted — the bot won\'t post it'); closeSheet(); lastSig = ''; render(); setTimeout(() => openGetPaid(r), 350); }
+    b.disabled = false; }; return b; };
+  sheet('Where did you post it?', [el('div', 'mut', 'The bot won\'t post this clip where you already did.'), mk('Both (TikTok + YouTube)', ''), mk('TikTok only', 'tiktok'), mk('YouTube only', 'youtube')]);
 }
 function openHookEdit(r) {
   const hi = el('input'); hi.value = r.hook || ''; hi.maxLength = 120;
