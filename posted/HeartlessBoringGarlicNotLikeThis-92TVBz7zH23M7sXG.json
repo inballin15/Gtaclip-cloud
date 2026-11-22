@@ -1,0 +1,26 @@
+{
+ "id": "HeartlessBoringGarlicNotLikeThis-92TVBz7zH23M7sXG",
+ "hook": "IShowSpeed finds KSI in GTA 6",
+ "streamer": "IShowSpeed",
+ "campaign": "",
+ "why": "posted by Nicholas",
+ "manual": true,
+ "posted_at": "2026-11-22T20:49:34Z",
+ "platforms": [
+  "tiktok"
+ ],
+ "style": {
+  "box": "black",
+  "cam": "medium",
+  "len": "normal",
+  "hooklen": "short",
+  "start": "fast"
+ },
+ "hook_variant": "lowcaps",
+ "seconds": 50,
+ "tiktok": "",
+ "youtube": "",
+ "manual_on": {
+  "tiktok": "2026-11-22T20:49:34Z"
+ }
+}

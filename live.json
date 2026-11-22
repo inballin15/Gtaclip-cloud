@@ -290,12 +290,12 @@
    }
   ]
  },
- "updated": "2026-11-22T20:48:54Z",
+ "updated": "2026-11-22T20:49:34Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-22T21:07:00Z",
- "up_next": "HeartlessBoringGarlicNotLikeThis-92TVBz7zH23M7sXG",
+ "up_next": "SmoothRichNewtShazBotstix-miX2CgBm4H8BwXs8",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7711095817939143949",
@@ -796,6 +796,32 @@
   "LovelyImportantAlfalfaLitty-TvWeJzP9zG95rT47"
  ],
  "posts": {
+  "HeartlessBoringGarlicNotLikeThis-92TVBz7zH23M7sXG": {
+   "id": "HeartlessBoringGarlicNotLikeThis-92TVBz7zH23M7sXG",
+   "hook": "IShowSpeed finds KSI in GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "why": "posted by Nicholas",
+   "manual": true,
+   "posted_at": "2026-11-22T20:49:34Z",
+   "platforms": [
+    "tiktok"
+   ],
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "len": "normal",
+    "hooklen": "short",
+    "start": "fast"
+   },
+   "hook_variant": "lowcaps",
+   "seconds": 50,
+   "tiktok": "",
+   "youtube": "",
+   "manual_on": {
+    "tiktok": "2026-11-22T20:49:34Z"
+   }
+  },
   "CharmingExquisiteTardigradeTooSpicy--vJfpu3JP6OieEXA": {
    "id": "CharmingExquisiteTardigradeTooSpicy--vJfpu3JP6OieEXA",
    "hook": "IShowSpeed accidentally deletes his GTA 6 save",
@@ -2044,6 +2070,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-22T20:48:54Z",
- "log": []
+ "stats_updated": "2026-11-22T20:49:34Z",
+ "log": [
+  "[20:49:36Z] marked as posted manually: HeartlessBoringGarlicNotLikeThis-92TVBz7zH23M7sXG"
+ ]
 }
