@@ -491,6 +491,17 @@ def guess_campaign(text: str, names: dict[str, str]) -> str:
 CHANNEL = P / "channel.json"   # every video on our TikTok + YouTube with its latest numbers
 
 
+def hd_ready(r: dict) -> bool:
+    """Split clips wait for their AI-upscaled webcam (normally back within ~45 min). After 3 hours a clip may go
+    without it so a slow upscaler never blocks posting; clips with no webcam strip don't need one."""
+    if r.get("hd") or (r.get("layout_used") or "split") not in ("split", "cam") or r.get("asis"):
+        return True
+    try:
+        return NOW - parse(r.get("created") or "") > timedelta(hours=3)
+    except Exception:  # noqa: BLE001
+        return True
+
+
 def vid_key(link: str) -> str:
     """Same video, any link form (tiktok.com vs www.tiktok.com, youtu.be vs /shorts/): its id."""
     m = re.search(r"/video/(\d+)|/shorts/([\w-]{6,})|youtu\.be/([\w-]{6,})|[?&]v=([\w-]{6,})", link or "")
@@ -707,7 +718,8 @@ def main() -> None:
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now
               and not too_old(r) and not already_on_buffer(r)
-              and (r.get("pic_ok") is True or ctl.get("ai_off"))]   # only clips that passed the AI picture check
+              and (r.get("pic_ok") is True or ctl.get("ai_off"))   # only clips that passed the AI picture check
+              and hd_ready(r)]                                       # and whose sharp AI webcam is in
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
         # newest clips with a real hook first, then the AI viral score (clips rated "skip" go last)
