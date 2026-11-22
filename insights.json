@@ -1,139 +1,144 @@
 {
- "updated": "2026-11-22T13:35:42Z",
- "videos": 19,
+ "updated": "2026-11-22T15:35:58Z",
+ "videos": 21,
  "v": 3,
  "findings": [
   {
-   "feature": "has a number",
-   "value": "no",
-   "x": 3.78,
-   "n": 3
-  },
-  {
    "feature": "streamer",
    "value": "Clix",
-   "x": 0.31,
-   "n": 3
-  },
-  {
-   "feature": "hook length",
-   "value": "long (90+)",
-   "x": 0.51,
-   "n": 4
-  },
-  {
-   "feature": "CAPS words",
-   "value": "4-6",
-   "x": 0.54,
-   "n": 4
-  },
-  {
-   "feature": "posted",
-   "value": "morning (7-11)",
-   "x": 0.61,
+   "x": 0.37,
    "n": 5
+  },
+  {
+   "feature": "has a number",
+   "value": "no",
+   "x": 2.26,
+   "n": 4
   },
   {
    "feature": "streamer",
    "value": "?",
-   "x": 1.59,
+   "x": 1.76,
    "n": 8
   },
   {
+   "feature": "CAPS words",
+   "value": "4-6",
+   "x": 0.58,
+   "n": 4
+  },
+  {
    "feature": "hook length",
-   "value": "short (<60)",
-   "x": 1.55,
-   "n": 10
+   "value": "long (90+)",
+   "x": 0.59,
+   "n": 4
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 1.55,
+   "x": 1.69,
    "n": 10
   },
   {
    "feature": "posted",
    "value": "midday (11-15)",
-   "x": 1.47,
+   "x": 1.65,
    "n": 5
+  },
+  {
+   "feature": "emotion word",
+   "value": "SHOCKED",
+   "x": 0.63,
+   "n": 4
   },
   {
    "feature": "CAPS words",
    "value": "2-3",
-   "x": 0.69,
+   "x": 0.64,
+   "n": 7
+  },
+  {
+   "feature": "posted",
+   "value": "morning (7-11)",
+   "x": 0.7,
    "n": 5
   },
   {
    "feature": "hook length",
+   "value": "short (<60)",
+   "x": 1.33,
+   "n": 12
+  },
+  {
+   "feature": "hook length",
    "value": "medium (60-90)",
-   "x": 0.71,
+   "x": 0.77,
    "n": 5
   },
   {
    "feature": "has a number",
    "value": "yes",
-   "x": 0.78,
-   "n": 16
-  },
-  {
-   "feature": "posted",
-   "value": "evening (15-19)",
-   "x": 1.06,
-   "n": 8
-  },
-  {
-   "feature": "has 'FIRST'",
-   "value": "no",
-   "x": 1.03,
+   "x": 0.83,
    "n": 17
   },
   {
    "feature": "emotion word",
    "value": "none",
-   "x": 1.03,
+   "x": 1.14,
    "n": 15
   },
   {
    "feature": "hook style",
    "value": "unknown",
-   "x": 1.0,
+   "x": 1.1,
+   "n": 19
+  },
+  {
+   "feature": "posted",
+   "value": "evening (15-19)",
+   "x": 0.91,
+   "n": 10
+  },
+  {
+   "feature": "has 'FIRST'",
+   "value": "no",
+   "x": 1.01,
    "n": 19
   },
   {
    "feature": "question",
    "value": "no",
    "x": 1.0,
-   "n": 19
+   "n": 21
   }
  ],
  "guidance": [
-  "DO: hook length = short (<60) (1.55x views, 10 videos)",
-  "AVOID: has a number = yes (0.78x views, 16 videos)"
+  "DO: hook length = short (<60) (1.33x views, 12 videos)"
  ],
  "weights": {
-  "formula": 0.45,
-  "news": 0.15,
-  "quote": 0.1,
-  "question": 0.1,
-  "lowcaps": 0.2
+  "formula": 0.404,
+  "news": 0.162,
+  "quote": 0.108,
+  "question": 0.108,
+  "lowcaps": 0.217
  },
  "style_weights": {
   "box": {
-   "white": 0.6,
-   "black": 0.2,
-   "outline": 0.2
+   "white": 0.578,
+   "black": 0.203,
+   "outline": 0.219
   },
   "cam": {
-   "small": 0.3,
-   "medium": 0.7
+   "small": 0.262,
+   "medium": 0.738
   },
   "len": {
-   "short": 0.35,
-   "normal": 0.65
+   "short": 0.394,
+   "normal": 0.606
   },
   "hooklen": {
-   "tiny": 0.3,
-   "short": 0.7
+   "tiny": 0.289,
+   "short": 0.711
   },
   "start": {
    "fast": 0.7,
@@ -143,7 +148,7 @@
  "top": [
   {
    "hook": "Speed found him",
-   "views": 1250
+   "views": 1253
   },
   {
    "hook": "Marlon can't handle a night in GTA 6",
@@ -163,7 +168,7 @@
   }
  ],
  "style_counts": {
-  "formula": 0,
+  "formula": 2,
   "news": 0,
   "quote": 0,
   "question": 0,
@@ -171,21 +176,21 @@
  },
  "style_tested": {
   "box": {
-   "white": 0,
-   "black": 0,
+   "white": 1,
+   "black": 1,
    "outline": 0
   },
   "cam": {
-   "small": 0,
+   "small": 2,
    "medium": 0
   },
   "len": {
    "short": 0,
-   "normal": 0
+   "normal": 2
   },
   "hooklen": {
-   "tiny": 0,
-   "short": 0
+   "tiny": 1,
+   "short": 1
   },
   "start": {
    "fast": 0,
@@ -193,6 +198,16 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-22T15:35:58Z",
+   "kind": "data",
+   "text": "judged 21 videos (was 19)"
+  },
+  {
+   "at": "2026-11-22T15:35:58Z",
+   "kind": "dropped",
+   "text": "AVOID: has a number = yes (0.78x views, 16 videos)"
+  },
   {
    "at": "2026-11-22T05:28:02Z",
    "kind": "dropped",
