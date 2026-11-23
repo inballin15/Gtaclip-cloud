@@ -338,12 +338,12 @@
    }
   ]
  },
- "updated": "2026-11-23T05:03:32Z",
+ "updated": "2026-11-23T05:08:37Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-23T13:37:00Z",
- "up_next": "vod2937998841_6383",
+ "up_next": "PreciousStrongNarwhalWholeWheat-uJMs_rYVi9linLDX",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7711176069138730253",
@@ -908,7 +908,17 @@
  ],
  "blocked": [
   "AlertBovineToadTriHard-uYBEbVe556CjCB1k",
-  "vod2937998841_6795"
+  "IntelligentCuriousEmuGingerPower-o9MgBMgcqUpavw9d",
+  "OilyCrackyAdminDancingBaby-Lmm6bsBz9qg39rCN",
+  "ScrumptiousTallWerewolfVoteYea-ABYxWTEEFtVWsSst",
+  "vod2937998841_1330",
+  "vod2937998841_3354",
+  "vod2937998841_3630",
+  "vod2937998841_5556",
+  "vod2937998841_6383",
+  "vod2937998841_6795",
+  "vod2937998841_7381",
+  "vod2937998841_7955"
  ],
  "posts": {
   "DoubtfulScrumptiousIguanaHassaanChop-t6hcRfSI2um_GfYh": {
@@ -2446,6 +2456,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T05:03:32Z",
+ "stats_updated": "2026-11-23T05:08:37Z",
  "log": []
 }
