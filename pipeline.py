@@ -1221,7 +1221,20 @@ def process_uploads(st: dict, tmp: Path) -> None:
         offset = 0.0
         try:
             import viral
-            if link:
+            tiktok = bool(re.search(r"tiktok\.com/", link))
+            if tiktok:   # TikTok links: grab the whole (short) video once, then cut it here like an upload
+                import yt_dlp
+                with yt_dlp.YoutubeDL({"format": "bv*+ba/b", "outtmpl": str(tmp / "tiktok.%(ext)s"), "quiet": True,
+                                       "noplaylist": True, "merge_output_format": "mp4", "ffmpeg_location": FF_YTDLP}) as y:
+                    info = y.extract_info(link, download=True)
+                src = next(tmp.glob("tiktok.*"))
+                job.setdefault("name", (info.get("title") or info.get("description") or "TikTok")[:60])
+                if not job.get("name") or job["name"] == "Link":
+                    job["name"] = (info.get("title") or "TikTok")[:60]
+                link = ""   # cut from the downloaded file, not the (short-lived) TikTok stream
+                if duration_of(src) <= 75:   # already a short: use the whole thing, re-captioned in our style
+                    job["asis"] = True
+            elif link:
                 src, offset, title = fetch_link_audio(link, job.get("section"), tmp)
                 job.setdefault("name", title)
                 if not job.get("name") or job["name"] == "Link":
@@ -1243,6 +1256,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
             log(f"upload {num} failed: {e}")
             hint = ("YouTube blocked the download from GitHub's servers — save the video and use Upload instead."
                     if "youtu" in link and re.search(r"sign in|bot|confirm|403|429", str(e), re.I)
+                    else "TikTok blocked the download from GitHub's servers — save the video in TikTok and use Upload instead."
+                    if "tiktok" in (job.get("url") or "")
                     else "Try a shorter part (add a time range) or upload the file instead." if link
                     else "Try a shorter video or another format (MP4).")
             _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": f"Sorry — that video couldn't be processed ({str(e)[:150]}). {hint}"})

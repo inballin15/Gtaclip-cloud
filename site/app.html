@@ -1625,20 +1625,20 @@ function openUpload(which) {
       open, el('label', null, '2 · Upload the finished clip'), f, el('label', null, 'Hook'), hook, el('label', null, 'Whose video is it? (for the credit)'), who, other, go]);
     return;
   }
-  const link = el('input'); link.type = 'url'; link.placeholder = 'Paste a Twitch or Kick link';
+  const link = el('input'); link.type = 'url'; link.placeholder = 'Paste a Twitch, Kick or TikTok link';
   const sec = el('input'); sec.placeholder = 'Optional part, e.g. 1:20:00-2:00:00 (long videos)';
   const go = el('button', 'big go', 'Find viral moments');
   go.onclick = () => {
     if (link.value.trim()) {
       if (/youtu\.?be/i.test(link.value)) { toast('For YouTube use the YouTube (Higgsfield) tab'); return; }
-      if (!/^https?:\/\/(www\.|m\.)?(twitch\.tv|kick\.com)\//i.test(link.value.trim())) { toast('Paste a Twitch or Kick link'); return; }
+      if (!/^https?:\/\/(www\.|m\.|vm\.|vt\.)?(twitch\.tv|kick\.com|tiktok\.com)\//i.test(link.value.trim())) { toast('Paste a Twitch, Kick or TikTok link'); return; }
       closeSheet(); clipLink(link.value.trim(), sec.value.trim(), who.value, credit()); return;
     }
     const file = f.files && f.files[0]; if (!file) { toast('Pick a video or paste a link'); return; }
     if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB)'); return; }
     closeSheet(); uploadVideo(file, who.value, credit());
   };
-  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch/Kick link OR upload a long video. It finds the best moments and makes 10–25 s clips with hooks (5–20 min).'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
+  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It finds the best moments and makes clips with hooks (5–20 min).'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
 }
 function b64(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }); }
 async function uploadVideo(file, login, streamer, extra = {}) {
