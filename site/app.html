@@ -524,7 +524,6 @@ header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-
   <span class="ind" id="ind"></span>
   <button data-tab="today" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="11" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Studio<b id="pcount"></b></button>
   <button data-tab="clips" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="3"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg>Clips<b id="qcount"></b></button>
-  <button data-tab="mine" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Mine<b id="mcount"></b></button>
   <button data-tab="results" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M5 19V11M12 19V5M19 19v-6"/></svg>Results</button>
 </nav>
 <div class="sheet" id="sheet"><div class="in" id="sheetin"></div></div>
@@ -567,6 +566,7 @@ let openIssues = [];
 let pend = ls.get('gc-pending', {});
 let submitted = ls.get('gc-submitted', {});
 let uploads = ls.get('gc-uploads', []);
+let feed = ls.get('gc-feed', 'stream');   // Clips tab: 'stream' (With caption / No caption) or 'mine' (Your clips)
 let variant = ls.get('gc-variant', 'final');
 let tab = 'today';
 const TAB_ALIAS = { home: 'today', queue: 'clips', posted: 'results', stats: 'results' };
@@ -802,7 +802,6 @@ let lastSig = '';
 function render() {
   const ql = queueList();
   $('qcount').textContent = ql.filter((r) => r.final && r.source !== 'upload').length || '';
-  $('mcount').textContent = ql.filter((r) => r.final && r.source === 'upload').length || '';
   $('pcount').textContent = (toSubmit().length + yourTurn(ql).length) || '';
   const age = L ? (Date.now() - new Date(L.updated)) / 60000 : 99;
   $('dot').className = 'dot' + (!L ? ' bad' : age > 15 ? ' warn' : '');
@@ -812,7 +811,7 @@ function render() {
   if (sig === lastSig) return; lastSig = sig;
   const m = $('main'); const scroll = window.scrollY;
   const v = el('div', 'view');
-  ({ today: renderStudio, clips: renderQueue, mine: renderMine, results: renderResults })[tab](v, ql);
+  ({ today: renderStudio, clips: renderQueue, results: renderResults })[tab](v, ql);
   [...v.children].forEach((n, i) => n.style.setProperty('--i', Math.min(i, 10)));
   // keep playing videos playing
   const playing = m.querySelector('video:not([paused])');
@@ -1273,12 +1272,11 @@ function platState(p, s) {
 }
 
 // ---------------------------------------------------------------- QUEUE
-function renderQueue(v, ql) {   // stream clips only: your pasted clips live in their own tab (Mine)
+function renderQueue(v, ql) {   // Clips tab: stream clips (With caption / No caption) or Your clips — separate feeds
+  if (feed === 'mine') return renderMine(v, ql);
   v.append(topicCard());
-  const qs = ql.filter((r) => r.source !== 'upload'); const nm = ql.filter((r) => r.source === 'upload' && r.final).length;
-  if (nm) { const b = el('button', 'card'); b.style.cssText = 'width:100%;text-align:left;display:flex;align-items:center;gap:10px'; const t = el('div');
-    t.append(el('b', null, `${nm} of your clip${nm > 1 ? 's' : ''} in Mine`), el('div', 'mut', 'Clips from links you pasted — kept separate, never auto-posted')); b.append(t, el('span', 'lnk', 'Open →')); b.onclick = () => switchTab('mine'); v.append(b); }
-  v.append(variantSeg());
+  const qs = ql.filter((r) => r.source !== 'upload');
+  v.append(variantSeg(ql));
   const ready = qs.filter((r) => r.final); const prep = qs.length - ready.length;
   v.append(Object.assign(el('div', 'mut', `${ready.length} stream clips ready in posting order${prep ? ` · ${prep} being made` : ''}${variant === 'clean' ? ' · no-caption copies (auto-posts use the captioned one)' : ''}`), { style: 'margin:0 2px 10px' }));
   if (!ready.length) { v.append(el('div', 'empty', 'Queue is empty — new clips arrive with the next clip-maker run (every 10 min).')); return; }
@@ -1292,16 +1290,18 @@ function renderQueue(v, ql) {   // stream clips only: your pasted clips live in 
     const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; v.append(c);
   });
 }
-function variantSeg() { const seg = el('div', 'seg');
-  for (const [k, t] of [['final', 'With caption'], ['clean', 'No caption']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', variant === k); b.onclick = () => { variant = k; ls.set('gc-variant', k); lastSig = ''; render(); }; seg.append(b); }
+function variantSeg(ql) { const seg = el('div', 'seg'); const nm = (ql || []).filter((r) => r.source === 'upload' && r.final).length;
+  for (const [k, t] of [['final', 'With caption'], ['clean', 'No caption'], ['mine', `Your clips${nm ? ' · ' + nm : ''}`]]) {
+    const b = el('button', null, t); b.setAttribute('aria-pressed', k === 'mine' ? feed === 'mine' : feed !== 'mine' && variant === k);
+    b.onclick = () => { if (k === 'mine') feed = 'mine'; else { feed = 'stream'; variant = k; ls.set('gc-variant', k); } ls.set('gc-feed', feed); haptic(); lastSig = ''; render(); window.scrollTo(0, 0); }; seg.append(b); }
   return seg; }
 // MINE: clips from links you pasted / videos you uploaded - their own queue, never auto-posted
 function renderMine(v, ql) {
+  v.append(variantSeg(ql));
   const up = el('button', 'big alt', '＋ Make clips — paste a link or upload'); up.style.marginBottom = '10px'; up.onclick = () => openUpload(); v.append(up);
   for (const u of uploads.filter((x) => Date.now() - x.at < 2 * 86400e3).slice(0, 4)) v.append(uploadItem(u));
   const mine = ql.filter((r) => r.source === 'upload'); const ready = mine.filter((r) => r.final); const prep = mine.length - ready.length;
   v.append(Object.assign(el('div', 'mut', `${ready.length} ready${prep ? ` · ${prep} being made` : ''} · cut into 25–30 s parts in order · these never auto-post: tap Ship it now or post them yourself`), { style: 'margin:0 2px 10px' }));
-  if (ready.length) v.append(variantSeg());
   if (!ready.length) { v.append(el('div', 'empty', prep ? 'Your parts are being made — they show up here in a few minutes.' : 'Paste a link above — its parts show up here, separate from the stream clips.')); return; }
   const ord = (r) => r.found || r.created || '';
   ready.sort((a, b) => ((ord(b) > ord(a)) - (ord(b) < ord(a))) || ((a.part || 0) - (b.part || 0)));   // newest video first, its parts in order
@@ -1313,7 +1313,7 @@ function renderMine(v, ql) {
     const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; v.append(c);
   });
 }
-const vidOf = (r) => (variant === 'clean' && r.clean) ? r.clean : r.final;
+const vidOf = (r) => (variant === 'clean' && feed !== 'mine' && r.clean) ? r.clean : r.final;
 const U = (p) => /^https?:/.test(p || '') ? p : PAGES + p;   // site path or a full link
 // draw your new hook over the clean video (exactly where the clip maker puts it) - an instant preview
 function withPreview(r, vd, holder) {
@@ -2005,9 +2005,10 @@ function renderResults(v, ql) {
 // ---------------------------------------------------------------- tabs + boot
 function moveInd() { const b = document.querySelector(`nav button[data-tab="${tab}"]`); const ind = $('ind'); if (!b) return; ind.style.width = b.offsetWidth + 'px'; ind.style.transform = `translateX(${b.offsetLeft - 5}px)`; }
 function switchTab(t) {
+  if (t === 'mine' || t === 'queue') { feed = t === 'mine' ? 'mine' : 'stream'; ls.set('gc-feed', feed); t = 'clips'; lastSig = ''; if (tab === 'clips') { render(); return; } }
   t = TAB_ALIAS[t] || t;
   if (t === tab) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-  const order = ['today', 'clips', 'mine', 'results']; document.documentElement.dataset.dir = order.indexOf(t) > order.indexOf(tab) ? 'fwd' : 'back';
+  const order = ['today', 'clips', 'results']; document.documentElement.dataset.dir = order.indexOf(t) > order.indexOf(tab) ? 'fwd' : 'back';
   const go = () => { tab = t; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === t)); moveInd(); lastSig = ''; $('main').dataset.tab = ''; render(); window.scrollTo(0, 0); };
   haptic();
   if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(go); else go();
