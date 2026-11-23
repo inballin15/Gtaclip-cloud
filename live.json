@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-23T03:37:55Z",
+  "updated": "2026-11-23T05:39:06Z",
   "videos": 29,
   "v": 4,
   "findings": [
@@ -37,13 +37,13 @@
    {
     "feature": "streamer",
     "value": "Kai Cenat",
-    "x": 2.15,
+    "x": 2.16,
     "n": 4
    },
    {
     "feature": "style:box",
     "value": "white",
-    "x": 0.49,
+    "x": 0.5,
     "n": 5
    },
    {
@@ -67,32 +67,32 @@
    {
     "feature": "posted",
     "value": "night (19+)",
-    "x": 1.74,
+    "x": 1.76,
     "n": 6
-   },
-   {
-    "feature": "emotion word",
-    "value": "STUNNED",
-    "x": 0.59,
-    "n": 4
    },
    {
     "feature": "CAPS words",
     "value": "4-6",
-    "x": 0.61,
+    "x": 0.6,
     "n": 4
    },
    {
-    "feature": "style:box",
-    "value": "black",
-    "x": 0.62,
-    "n": 3
+    "feature": "emotion word",
+    "value": "STUNNED",
+    "x": 0.6,
+    "n": 4
    },
    {
     "feature": "emotion word",
     "value": "SHOCKED",
     "x": 1.6,
     "n": 6
+   },
+   {
+    "feature": "style:box",
+    "value": "black",
+    "x": 0.63,
+    "n": 3
    },
    {
     "feature": "has 'FIRST'",
@@ -103,7 +103,7 @@
    {
     "feature": "streamer",
     "value": "?",
-    "x": 1.56,
+    "x": 1.55,
     "n": 8
    },
    {
@@ -115,14 +115,8 @@
    {
     "feature": "posted",
     "value": "midday (11-15)",
-    "x": 1.37,
+    "x": 1.36,
     "n": 5
-   },
-   {
-    "feature": "hook style",
-    "value": "unknown",
-    "x": 1.27,
-    "n": 21
    },
    {
     "feature": "hook length",
@@ -131,16 +125,22 @@
     "n": 20
    },
    {
-    "feature": "CAPS words",
-    "value": "2-3",
-    "x": 0.82,
-    "n": 13
+    "feature": "hook style",
+    "value": "unknown",
+    "x": 1.26,
+    "n": 21
    },
    {
     "feature": "hook length",
     "value": "medium (60-90)",
-    "x": 0.83,
+    "x": 0.82,
     "n": 5
+   },
+   {
+    "feature": "CAPS words",
+    "value": "2-3",
+    "x": 0.83,
+    "n": 13
    },
    {
     "feature": "streamer",
@@ -154,17 +154,16 @@
    "DO: hook length = short (<60) (1.27x views, 20 videos)"
   ],
   "weights": {
-   "formula": 0.435,
+   "formula": 0.434,
    "news": 0.159,
    "quote": 0.078,
    "question": 0.103,
-   "lowcaps": 0.226
+   "lowcaps": 0.225
   },
   "style_weights": {
    "box": {
-    "white": 0.549,
-    "black": 0.211,
-    "outline": 0.24
+    "white": 0.723,
+    "black": 0.277
    },
    "cam": {
     "small": 0.312,
@@ -190,7 +189,7 @@
    },
    {
     "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
-    "views": 1239
+    "views": 1242
    },
    {
     "hook": "Marlon can't handle a night in GTA 6",
@@ -215,8 +214,7 @@
   "style_tested": {
    "box": {
     "white": 5,
-    "black": 3,
-    "outline": 0
+    "black": 3
    },
    "cam": {
     "small": 3,
@@ -338,7 +336,7 @@
    }
   ]
  },
- "updated": "2026-11-23T05:34:30Z",
+ "updated": "2026-11-23T05:39:06Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -2453,6 +2451,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T05:34:30Z",
- "log": []
+ "stats_updated": "2026-11-23T05:39:06Z",
+ "log": [
+  "[05:39:07Z] hook learner: 29 videos, 2 lessons"
+ ]
 }
