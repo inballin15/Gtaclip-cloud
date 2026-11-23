@@ -258,6 +258,9 @@ def apply_issues(st: dict) -> None:
                         keep[k] = max(lo, min(hi, float(ul[k])))
                 if ul.get("hook_style") in ("white", "black", "outline"):
                     keep["hook_style"] = ul["hook_style"]
+                for k in ("subs", "punch"):   # studio switches: word subtitles / punch-in zoom
+                    if ul.get(k) in ("on", "off"):
+                        keep[k] = ul[k]
                 tr = ul.get("trim")
                 if isinstance(tr, list) and len(tr) == 2 and all(isinstance(v, (int, float)) for v in tr) and tr[1] - tr[0] >= 3:
                     keep["trim"] = [max(0.0, float(tr[0])), float(tr[1])]
@@ -1987,7 +1990,7 @@ def main() -> None:
         if not c.get("style") and not c.get("user_layout") and not c.get("asis") and c.get("source") != "upload" \
                 and not c.get("final_hash"):
             c["style"] = learn.pick_style(LEARNED_INS, cid)   # dynamic model: test looks, keep what gets views
-        sty = c.get("style") or {}
+        sty = {**(c.get("style") or {}), **{k: v for k, v in (c.get("user_layout") or {}).items() if k in ("subs", "punch")}}
         if not c.get("asis"):
             raw = best_part(raw, cid, tmp, c)
             raw = cut_dead_air(raw, cid, tmp)
