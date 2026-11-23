@@ -748,7 +748,8 @@ const isSub = (link) => !!(submitted[link] || (L && L.submitted && L.submitted[l
 async function markSub(link, clip) {
   submitted[link] = Date.now(); ls.set('gc-submitted', submitted); lastSig = ''; render();
   if (await ghTap(`paid: ${link}${clip ? ' ' + clip : ''}`)) toast('Marked submitted'); }
-function toSubmit() { return videos().filter((v) => CR[v.campaign] && !isSub(subKey(v))); }
+// Nicholas joined every streamer's Content Rewards campaign: every video posted in the last 3 days can be submitted
+function toSubmit() { return videos().filter((v) => v.link && !isSub(subKey(v)) && (CR[v.campaign] || !v.published || Date.now() - new Date(v.published || v.first_seen || 0) < 3 * 864e5)); }
 function slotPlan() {
   const now = new Date(); const day = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const offset = now - day; const act = (L && L.budget && L.budget.active) || SLOTS; return act.map(([h, m]) => { const d = new Date(day); d.setHours(h, m, 0, 0); return new Date(+d + offset); });
@@ -1250,7 +1251,7 @@ function openGetPaid(r) {
   const camp = campOf(r); const url = CR[camp] || 'https://contentrewards.com/';
   const nodes = [el('div', 'hook', r.hook || '')];
   nodes.push(el('div', 'mut', camp && CR[camp] ? `Campaign: ${camp} — copy your video link, Content Rewards opens, paste it in, then tap ✓.`
-    : `${r.streamer || 'This streamer'} has no paid campaign saved — it opens Content Rewards so you can pick one.`));
+    : `Content Rewards opens — pick ${r.streamer || 'the streamer'}'s campaign, paste your link, then tap ✓.`));
   const goSubmit = (link) => { copy(link, 'Link'); setTimeout(() => window.open(url, '_blank', 'noopener'), 150); };
   const mark = (link) => markSub(link, r.id);
   const L2 = linksFor(r);

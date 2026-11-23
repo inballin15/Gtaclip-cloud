@@ -117,7 +117,7 @@ def live_now(h: dict) -> tuple[list[dict], dict]:
         if any(x["login"] == login for x in out):
             continue
         approved = login in CFG["streamers"]
-        big = st["viewer_count"] >= big_min and st in top[:12]
+        big = st["viewer_count"] >= big_min and st in top[:30]
         if not approved and not big:
             continue
         out.append({"login": login, "name": st["user_name"], "viewers": st["viewer_count"],
@@ -167,8 +167,44 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
             c["discovered"] = bool(s.get("discovered"))
             picks.append(c)
         log(f"{s['name']}: {len(good)} fresh {TOPIC.get('name', 'topic')} clips" + (" (live topic streamer)" if s.get("discovered") else ""))
-    # paid first, then newest-and-most-viewed; discovered streamers can't crowd out your list
-    picks.sort(key=lambda c: (c["paid"], not c["discovered"], c["view_count"]), reverse=True)
+    # ANY GTA 6 streamer (Nicholas joined every Content Rewards campaign): the most-watched fresh GTA 6 clips on
+    # all of Twitch, including streamers who aren't live right now or aren't on the list
+    if d.get("game_wide", True) and TOPIC.get("game_ids"):
+        have = {c["id"] for c in picks}
+        try:
+            gclips = helix(h, "clips", game_id=TOPIC["game_ids"][0], first=100,
+                           started_at=since.strftime("%Y-%m-%dT%H:%M:%SZ")).get("data") or []
+        except Exception as e:  # noqa: BLE001
+            gclips = []
+            log(f"game-wide clips failed: {e}")
+        n = 0
+        per: dict[str, int] = {}
+        for c in sorted(gclips, key=lambda c: c["view_count"], reverse=True):
+            login = (c.get("broadcaster_name") or "").lower().replace(" ", "")
+            if (c["id"] in seen or c["id"] in have or c.get("language", "en") not in ("en", "") or not login
+                    or c["view_count"] < d.get("game_wide_min_views", 40)
+                    or not d["min_seconds"] <= c["duration"] <= d["max_seconds"]
+                    or any(w in c["title"].lower() for w in bad) or per.get(login, 0) >= 2):
+                continue
+            s = CFG["streamers"].get(login) or {}
+            c["login"], c["name"], c["tag"] = login, s.get("name") or c.get("broadcaster_name") or login, s.get("tag") or "#" + "".join(ch for ch in (c.get("broadcaster_name") or login) if ch.isalnum())
+            c["paid"] = bool(s.get("campaign"))
+            c["discovered"] = login not in CFG["streamers"]
+            per[login] = per.get(login, 0) + 1
+            picks.append(c)
+            n += 1
+            if n >= d.get("game_wide_max", 12):
+                break
+        log(f"all of Twitch: {n} fresh {TOPIC.get('name')} clips from {len(per)} streamers")
+
+    def velocity(c: dict) -> float:   # views per hour: the moments blowing up right now (first poster wins)
+        try:
+            age = max(0.25, (datetime.now(timezone.utc) - datetime.fromisoformat(c["created_at"].replace("Z", "+00:00"))).total_seconds() / 3600)
+        except Exception:  # noqa: BLE001
+            age = 4.0
+        return c["view_count"] / age
+    # paid first, then the fastest-rising clips; discovered streamers get a fair share, not all of it
+    picks.sort(key=lambda c: (c["paid"], velocity(c) * (0.8 if c["discovered"] else 1.0)), reverse=True)
     return picks[: d["max_total"]]
 
 
