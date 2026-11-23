@@ -80,12 +80,8 @@ def transcribe(audio: np.ndarray):
         _MODEL = WhisperModel("base", device="cpu", compute_type="int8")
     # name hints (FunClip "hotword" idea): streamer, game and character names come out spelled right in the
     # transcript, so hooks get the real specifics ("Lucia", "Rakai", "Druski") instead of guesses
-    hint = NAME_HINT or None
-    try:
-        segs, _ = _MODEL.transcribe(audio, language="en", vad_filter=True, word_timestamps=True,
-                                    initial_prompt=hint, hotwords=hint)
-    except TypeError:   # older faster-whisper without hotwords
-        segs, _ = _MODEL.transcribe(audio, language="en", vad_filter=True, word_timestamps=True, initial_prompt=hint)
+    # (name hints were tried Nov 23 and removed: on quiet audio Whisper "heard" the hint names - "N3on, N3on, N3on")
+    segs, _ = _MODEL.transcribe(audio, language="en", vad_filter=True, word_timestamps=True)
     out = []
     for s in segs:
         words = [(w.start, w.end, w.word) for w in (s.words or [])]
@@ -277,14 +273,41 @@ HOOK_STYLE = (
     "ORDER: who + how they reacted, then the concrete story detail (a character, mission, place, item, number, "
     "a first). The detail makes people stop - it must come from the transcript, title or the streamer's real story "
     "(never invent fake records or crimes). Never write it like a search phrase ('GTA 6 Lacy shoe store gameplay').\n"
+    "TRUTH FIRST: the hook must describe what really happens in THIS clip. Start from the Twitch clip title (the "
+    "viewer who clipped it wrote what happened) and the transcript; every name, number and event must appear in "
+    "one of them - copy numbers exactly. If the transcript is short or unclear, stay close to the title. A boring "
+    "true hook beats an exciting false one.\n"
+    "Pick the reaction word that fits what you can hear (laughed, raged, panicked, couldn't believe, was confused, "
+    "got emotional, roasted, lost it) - 'SHOCKED' at most rarely; don't reuse one word for every clip.\n"
     "Rules: 8-15 words, 45-95 characters, reads like a friend telling you what happened; normal sentence case with "
     "EXACTLY 1-2 CAPS words on the strongest emotion or fact (e.g. 'Lacy was DEVASTATED after losing 39% of his GTA 6 "
     "progress'); all-caps hooks did worse, but zero CAPS loses punch. Use a STRONG reaction verb (lost it, freaked out, "
-    "was devastated, couldn't believe, got destroyed, raged, cried, was shocked) - never weak ones (was happy / "
+    "was devastated, couldn't believe, got destroyed, raged, cried, panicked, roasted) - never weak ones (was happy / "
     "curious / excited / confused / struggling). Keep the most striking specific from the transcript or title "
     "(a number, a name, the exact thing: 'scam call', 'dead body', '39%'); never vague words like 'in game', "
     "'during a mission', 'a mission' when the real name or thing is known; say 'in GTA 6' when it's GTA 6. "
     "No filler ('in this intense moment'); no emojis, no swearing, no quotes, no hashtags.\n")
+
+def hook_is_true(hook: str, title: str, transcript: str) -> bool:
+    """Every number in the hook must really be in the clip's title or transcript (a hook said xQc rated GTA 6 a
+    '7.8' when he said 9). Made-up numbers = a made-up hook."""
+    src = f"{title} {transcript}".lower()
+    hook = re.sub(r"(?i)\bgta\s*(6|vi|5|v)\b", "GTA", hook)   # the game's name isn't a claim
+    for n in re.findall(r"\d+(?:\.\d+)?", hook):
+        if n not in src and n.rstrip("0").rstrip(".") not in src:
+            return False
+    return True
+
+
+def title_hook(streamer: str, title: str) -> str:
+    """Fallback hook from the Twitch clip title: viewers who clipped it wrote what actually happened."""
+    t = clean_line(re.sub(r"[#@]\S+|https?://\S+", "", title or "")).strip(" -|!?.")
+    if len(t.split()) < 3 or len(t) > 95:
+        return ""
+    if streamer and streamer.split()[0].lower() not in t.lower():
+        t = f"{streamer} {t[0].lower() + t[1:]}" if not t[:2].isupper() else f"{streamer}: {t}"
+    return t if streamer and t.startswith(streamer) else t[0].upper() + t[1:]
+
 
 HOOK_MAX = 95   # automatic hooks longer than this get shortened (your own typed hooks are never touched)
 _TAIL = re.compile(r"(?:,| -| during | while | because | despite | even though | as he | as she | after spending "
@@ -450,7 +473,11 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
         if time.time() - t0 > budget_s:
             log("AI scoring: time budget used, the rest next run")
             break
-        batch = [{"id": it["id"], "streamer": it.get("streamer", ""), "twitch_title": it.get("title", "")[:120],
+        # a VOD moment's "title" is the whole stream's title, not this moment ("DEATH BATTLE DAY!!!! MORE REACTS...")
+        # - hooks built from it had nothing to do with the clip
+        batch = [{"id": it["id"], "streamer": it.get("streamer", ""),
+                  **({"stream_title_NOT_this_moment": it.get("title", "")[:80]} if str(it["id"]).startswith("vod")
+                     else {"twitch_title": it.get("title", "")[:120]}),
                   "transcript": (it.get("transcript") or "")[:600], "seconds": it.get("seconds")} for it in items[i:i + 10]]
         prompt = (
             f"You rate short {TOPIC.get('name', 'GTA 6')} livestream clips for TikTok/YouTube Shorts like OpusClip's virality score.\n"
@@ -477,12 +504,20 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
                 rows = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
                 if isinstance(rows, dict):
                     rows = next((v for v in rows.values() if isinstance(v, list)), [])
+                src = {it["id"]: it for it in items}
                 for row in rows:
                     sc = max(0, min(100, int(float(row.get("score", 0)))))
+                    it = src.get(str(row.get("id"))) or {}
+                    hk = short_hook(str(row.get("hook", "")))
+                    vod = str(it.get("id", "")).startswith("vod")
+                    if hk and not hook_is_true(hk, "" if vod else it.get("title", ""), it.get("transcript", "")):
+                        hk = "" if vod else (title_hook(it.get("streamer", ""), it.get("title", "")) or "")
+                    if vod and len((it.get("transcript") or "").split()) < 12:
+                        sc = min(sc, 40)   # barely any talking: nothing to hook on - don't post it
                     out[str(row.get("id"))] = {
                         "score": sc, "why": clean_line(str(row.get("why", "")))[:90],
                         "verdict": "post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
-                        "hook": short_hook(str(row.get("hook", ""))), "model": model}
+                        "hook": hk, "model": model}
                 done = True
                 break
             except urllib.error.HTTPError as e:
