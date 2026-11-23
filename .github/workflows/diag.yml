@@ -16,6 +16,7 @@ jobs:
           python3 - <<'PY'
           import json, pathlib, yt_dlp, cv2, numpy as np, pipeline, viral
           st = json.load(open("/tmp/state.json"))["clips"]
+          for k, v in st.items(): v["id"] = k
           ready = sorted([c for c in st.values() if c.get("status") in ("ready", "rendered", "new") and c.get("transcript")],
                          key=lambda c: c.get("found") or c.get("created") or "", reverse=True)[:10]
           items = [{"id": c["id"], "streamer": c.get("streamer", ""), "title": c.get("title", ""), "transcript": c.get("transcript", ""), "seconds": c.get("seconds")} for c in ready]
