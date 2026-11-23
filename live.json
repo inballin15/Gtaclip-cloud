@@ -323,7 +323,7 @@
    }
   ]
  },
- "updated": "2026-11-23T00:11:06Z",
+ "updated": "2026-11-23T00:16:15Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -854,42 +854,6 @@
   "LovelyImportantAlfalfaLitty-TvWeJzP9zG95rT47"
  ],
  "posts": {
-  "vod2937465519_21214": {
-   "id": "vod2937465519_21214",
-   "hook": "Lacy STUNNED watching the GTA 6 ENDING credits",
-   "streamer": "Lacy",
-   "login": "lacy",
-   "campaign": "Lacy",
-   "tag": "#Lacy",
-   "caption": "",
-   "why": "7:07 PM slot",
-   "posted_at": "2026-11-23T00:11:06Z",
-   "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937465519_21214_final.mp4?v=c551acfc03&r=1795391969",
-   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937465519_21214.jpg",
-   "tiktok": "",
-   "youtube": "",
-   "status": {
-    "tiktok": {
-     "state": "uploading",
-     "buffer_id": "6b03849dd864a01105077995",
-     "error": ""
-    }
-   },
-   "platforms": [
-    "tiktok"
-   ],
-   "hook_kind": "ai",
-   "hook_variant": "formula",
-   "style": {
-    "box": "outline",
-    "cam": "small",
-    "len": "short",
-    "hooklen": "short",
-    "start": "fast"
-   },
-   "viral": 90,
-   "seconds": 21
-  },
   "vod2937465519_19749": {
    "id": "vod2937465519_19749",
    "hook": "Lacy FURIOUS over IMPOSSIBLE low criminal profile",
@@ -925,6 +889,42 @@
    },
    "viral": 90,
    "seconds": 23
+  },
+  "vod2937465519_21214": {
+   "id": "vod2937465519_21214",
+   "hook": "Lacy STUNNED watching the GTA 6 ENDING credits",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "campaign": "Lacy",
+   "tag": "#Lacy",
+   "caption": "",
+   "why": "7:07 PM slot",
+   "posted_at": "2026-11-23T00:11:06Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937465519_21214_final.mp4?v=c551acfc03&r=1795391969",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937465519_21214.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b03849dd864a01105077995",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "formula",
+   "style": {
+    "box": "outline",
+    "cam": "small",
+    "len": "short",
+    "hooklen": "short",
+    "start": "fast"
+   },
+   "viral": 90,
+   "seconds": 21
   },
   "AdorableRealLemurMoreCowbell-nvS9I6PkK_ysHynj": {
    "id": "AdorableRealLemurMoreCowbell-nvS9I6PkK_ysHynj",
@@ -2311,11 +2311,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T00:11:06Z",
- "log": [
-  "[00:11:09Z] posting vod2937465519_21214 (7:07 PM slot) to tiktok: Lacy STUNNED watching the GTA 6 ENDING credits",
-  "[00:11:19Z]   tiktok: uploading ",
-  "[00:11:19Z] posting vod2937465519_19749 (7:07 PM slot) to youtube: Lacy FURIOUS over IMPOSSIBLE low criminal profile",
-  "[00:11:22Z]   youtube: uploading "
- ]
+ "stats_updated": "2026-11-23T00:16:15Z",
+ "log": []
 }
