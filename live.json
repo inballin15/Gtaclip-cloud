@@ -386,12 +386,12 @@
    }
   ]
  },
- "updated": "2026-11-23T18:00:33Z",
+ "updated": "2026-11-23T18:05:42Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-23T18:07:00Z",
- "up_next": "PeppySpoopyCoyoteUncleNox-bwFBqWOHypOnUTnQ",
+ "up_next": "vod2937998841_25282",
  "videos": [
   {
    "link": "https://youtube.com/shorts/HN9WnoQU5V8",
@@ -2694,6 +2694,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T18:00:33Z",
+ "stats_updated": "2026-11-23T18:05:42Z",
  "log": []
 }
