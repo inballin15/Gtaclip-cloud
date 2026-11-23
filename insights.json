@@ -1,183 +1,186 @@
 {
- "updated": "2026-11-23T17:45:49Z",
- "videos": 35,
+ "updated": "2026-11-23T19:46:30Z",
+ "videos": 37,
  "v": 4,
  "findings": [
   {
    "feature": "clip length",
    "value": "16-22 s",
-   "x": 0.11,
-   "n": 4
-  },
-  {
-   "feature": "hook style",
-   "value": "quote",
-   "x": 0.14,
-   "n": 3
+   "x": 0.1,
+   "n": 5
   },
   {
    "feature": "style:start",
    "value": "fast",
-   "x": 0.14,
-   "n": 5
+   "x": 0.13,
+   "n": 7
+  },
+  {
+   "feature": "hook style",
+   "value": "quote",
+   "x": 0.16,
+   "n": 3
   },
   {
    "feature": "hook style",
    "value": "question",
-   "x": 0.22,
+   "x": 0.25,
    "n": 3
   },
   {
    "feature": "streamer",
    "value": "Kai Cenat",
-   "x": 3.15,
+   "x": 3.6,
    "n": 4
-  },
-  {
-   "feature": "style:cam",
-   "value": "medium",
-   "x": 0.33,
-   "n": 10
   },
   {
    "feature": "streamer",
    "value": "Lacy",
-   "x": 0.35,
-   "n": 7
+   "x": 0.28,
+   "n": 9
   },
   {
    "feature": "emotion word",
    "value": "STUNNED",
-   "x": 0.36,
-   "n": 5
-  },
-  {
-   "feature": "style:box",
-   "value": "black",
-   "x": 0.37,
-   "n": 4
-  },
-  {
-   "feature": "posted",
-   "value": "night (19+)",
-   "x": 2.62,
-   "n": 6
-  },
-  {
-   "feature": "style:box",
-   "value": "white",
-   "x": 0.41,
-   "n": 9
-  },
-  {
-   "feature": "style:hooklen",
-   "value": "tiny",
-   "x": 0.43,
-   "n": 8
-  },
-  {
-   "feature": "hook length",
-   "value": "long (90+)",
-   "x": 0.46,
-   "n": 4
-  },
-  {
-   "feature": "streamer",
-   "value": "Clix",
-   "x": 0.46,
-   "n": 6
-  },
-  {
-   "feature": "streamer",
-   "value": "?",
-   "x": 2.13,
-   "n": 8
-  },
-  {
-   "feature": "has a number",
-   "value": "no",
-   "x": 0.54,
-   "n": 9
-  },
-  {
-   "feature": "CAPS words",
-   "value": "0-1",
-   "x": 1.8,
-   "n": 14
-  },
-  {
-   "feature": "hook style",
-   "value": "unknown",
-   "x": 1.72,
-   "n": 22
-  },
-  {
-   "feature": "CAPS words",
-   "value": "2-3",
-   "x": 0.63,
-   "n": 17
-  },
-  {
-   "feature": "streamer",
-   "value": "IShowSpeed",
-   "x": 0.66,
-   "n": 5
-  },
-  {
-   "feature": "clip length",
-   "value": "23 s+",
-   "x": 0.71,
-   "n": 9
-  },
-  {
-   "feature": "posted",
-   "value": "morning (7-11)",
-   "x": 0.75,
+   "x": 0.29,
    "n": 6
   },
   {
    "feature": "style:cam",
    "value": "small",
-   "x": 0.76,
-   "n": 3
+   "x": 0.34,
+   "n": 5
   },
   {
-   "feature": "posted",
-   "value": "midday (11-15)",
-   "x": 0.79,
-   "n": 7
+   "feature": "style:cam",
+   "value": "medium",
+   "x": 0.38,
+   "n": 10
+  },
+  {
+   "feature": "streamer",
+   "value": "?",
+   "x": 2.52,
+   "n": 8
+  },
+  {
+   "feature": "style:box",
+   "value": "white",
+   "x": 0.42,
+   "n": 10
+  },
+  {
+   "feature": "style:box",
+   "value": "black",
+   "x": 0.43,
+   "n": 4
+  },
+  {
+   "feature": "CAPS words",
+   "value": "0-1",
+   "x": 2.1,
+   "n": 14
+  },
+  {
+   "feature": "style:hooklen",
+   "value": "tiny",
+   "x": 0.49,
+   "n": 8
+  },
+  {
+   "feature": "hook length",
+   "value": "long (90+)",
+   "x": 0.53,
+   "n": 4
+  },
+  {
+   "feature": "streamer",
+   "value": "Clix",
+   "x": 0.53,
+   "n": 6
+  },
+  {
+   "feature": "has a number",
+   "value": "no",
+   "x": 0.55,
+   "n": 10
+  },
+  {
+   "feature": "hook style",
+   "value": "unknown",
+   "x": 1.77,
+   "n": 23
+  },
+  {
+   "feature": "CAPS words",
+   "value": "2-3",
+   "x": 0.58,
+   "n": 19
+  },
+  {
+   "feature": "hook style",
+   "value": "formula",
+   "x": 0.62,
+   "n": 6
+  },
+  {
+   "feature": "clip length",
+   "value": "23 s+",
+   "x": 0.68,
+   "n": 10
+  },
+  {
+   "feature": "emotion word",
+   "value": "none",
+   "x": 1.41,
+   "n": 18
+  },
+  {
+   "feature": "hook length",
+   "value": "medium (60-90)",
+   "x": 1.39,
+   "n": 5
+  },
+  {
+   "feature": "streamer",
+   "value": "IShowSpeed",
+   "x": 0.75,
+   "n": 5
   }
  ],
  "guidance": [
-  "AVOID: has a number = no (0.54x views, 9 videos)"
+  "AVOID: emotion word = STUNNED (0.29x views, 6 videos)",
+  "AVOID: has a number = no (0.55x views, 10 videos)",
+  "DO: emotion word = none (1.41x views, 18 videos)",
+  "DO: has a number = yes (1.25x views, 27 videos)"
  ],
  "weights": {
-  "formula": 0.502,
-  "news": 0.155,
-  "quote": 0.076,
-  "question": 0.076,
-  "lowcaps": 0.192
+  "formula": 0.463,
+  "news": 0.171,
+  "quote": 0.077,
+  "question": 0.078,
+  "lowcaps": 0.212
  },
  "style_weights": {
   "box": {
-   "white": 0.723,
-   "black": 0.277
+   "white": 0.711,
+   "black": 0.289
   },
   "cam": {
-   "small": 0.423,
-   "medium": 0.577
+   "small": 0.326,
+   "medium": 0.674
   },
   "len": {
    "s16": 0.3,
    "s22": 0.7
   },
   "hooklen": {
-   "tiny": 0.179,
-   "story": 0.821
+   "tiny": 0.189,
+   "story": 0.811
   },
   "start": {
-   "fast": 0.134,
-   "build": 0.866
+   "fast": 0.119,
+   "build": 0.881
   },
   "subs": {
    "off": 0.5,
@@ -195,7 +198,7 @@
   },
   {
    "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
-   "views": 1243
+   "views": 1241
   },
   {
    "hook": "Marlon can't handle a night in GTA 6",
@@ -211,7 +214,7 @@
   }
  ],
  "style_counts": {
-  "formula": 5,
+  "formula": 6,
   "news": 1,
   "quote": 3,
   "question": 3,
@@ -219,11 +222,11 @@
  },
  "style_tested": {
   "box": {
-   "white": 9,
+   "white": 10,
    "black": 4
   },
   "cam": {
-   "small": 3,
+   "small": 5,
    "medium": 10
   },
   "len": {
@@ -235,7 +238,7 @@
    "story": 0
   },
   "start": {
-   "fast": 5,
+   "fast": 7,
    "build": 0
   },
   "subs": {
@@ -248,6 +251,26 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-23T19:46:30Z",
+   "kind": "data",
+   "text": "judged 37 videos (was 35)"
+  },
+  {
+   "at": "2026-11-23T19:46:30Z",
+   "kind": "new",
+   "text": "DO: has a number = yes (1.25x views, 27 videos)"
+  },
+  {
+   "at": "2026-11-23T19:46:30Z",
+   "kind": "new",
+   "text": "DO: emotion word = none (1.41x views, 18 videos)"
+  },
+  {
+   "at": "2026-11-23T19:46:30Z",
+   "kind": "new",
+   "text": "AVOID: emotion word = STUNNED (0.29x views, 6 videos)"
+  },
   {
    "at": "2026-11-23T15:43:48Z",
    "kind": "data",
@@ -377,11 +400,6 @@
    "at": "2026-11-22T05:28:02Z",
    "kind": "dropped",
    "text": "DO: CAPS words = 0-1 (1.55x views, 10 videos)"
-  },
-  {
-   "at": "2026-11-22T05:28:02Z",
-   "kind": "dropped",
-   "text": "DO: has a number = no (3.77x views, 3 videos)"
   }
  ]
 }
