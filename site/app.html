@@ -336,6 +336,7 @@ nav button{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-tr
 .bin::-webkit-scrollbar{display:none}
 .binlab,.qsec{font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--pink);margin:10px 2px 6px}
 .qsec{font-size:12px;margin:16px 2px 8px}
+.hkimg{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;z-index:2;height:auto}
 .bin button{flex:none;width:86px;border:1px solid var(--line);border-radius:9px;background:#0b0912;padding:0;overflow:hidden;text-align:left}
 .bin button .th{aspect-ratio:9/16;background-size:cover;background-position:center;position:relative}
 .bin button .th em{position:absolute;left:4px;bottom:4px;font:700 8.5px var(--mono);font-style:normal;background:#000b;padding:2px 4px;border-radius:4px;text-transform:uppercase}
@@ -625,16 +626,19 @@ async function refreshEdits() {
     const key = ghKey();
     EDITS = key ? await getJSON(`https://api.github.com/repos/${REPO}/contents/edits.json?ref=edits&t=${Date.now()}`, { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github.raw+json' })
       : await getJSON(`https://raw.githubusercontent.com/${REPO}/edits/edits.json?t=${Date.now()}`);
-    for (const [id, j] of Object.entries(JOBS)) { const loc = ls.get('gc-edits', {})[id]; if (!j.done && !j.failed && loc && loc.local && !(EDITS[id] && EDITS[id].at * 1000 >= j.at - 20000)) EDITS[id] = loc; }
+    // your newest saves stay until the server has them (it makes the posting copy in about a minute)
+    for (const [id, loc] of Object.entries(ls.get('gc-edits', {}))) { if (loc && loc.local && Date.now() - (loc.sent || 0) < 30 * 60000 && !(EDITS[id] && EDITS[id].at * 1000 >= (loc.sent || 0) - 20000)) EDITS[id] = loc; }
     ls.set('gc-edits', EDITS);
   } catch (e) { /* none yet */ }
   applyEdits(Q);
 }
 function startJob(id, kind) { JOBS[id] = { kind, at: Date.now(), pct: 2, label: 'Sending your edit…' }; saveJobs(); pollJobs(); }
-async function quickText(r, t) {
-  if (!(await ghTap('text: ' + r.id, JSON.stringify(t)))) return false;
-  EDITS[r.id] = { ...(EDITS[r.id] || {}), ...t, at: Math.floor(Date.now() / 1000) + 600, local: true }; applyEdits(Q);
-  startJob(r.id, 'text'); toast('Saved — putting your text on the video'); lastSig = ''; render(); return true;
+async function quickText(r, t) {   // INSTANT: saved + shown right away; the posting copy is made in the background
+  EDITS[r.id] = { ...(EDITS[r.id] || {}), ...t, at: Math.floor(Date.now() / 1000) + 600, local: true, sent: Date.now() };
+  const loc = ls.get('gc-edits', {}); loc[r.id] = EDITS[r.id]; ls.set('gc-edits', loc);
+  applyEdits(Q); lastSig = ''; render(); toast('Saved ✓');
+  if (!(await ghTap('text: ' + r.id, JSON.stringify(t)))) { toast('Couldn\'t reach GitHub — try Save again'); return false; }
+  return true;
 }
 function jobBar(id) {
   const j = JOBS[id]; const w = el('div', 'jobbar' + (j.failed ? ' bad' : j.done ? ' ok' : ''));
@@ -828,7 +832,7 @@ const HELP = {
   bar: 'What the robot is doing right now: 01 Find moments in streams → 02 Cut them → 03 Reframe for phones → 04 Caption → 05 Ship (post).',
   program: 'The clip you picked, playing. The green box shows the phone-shaped (9:16) part that gets posted. Tap ▶ to watch.',
   bin: 'Every clip that is ready to post. Tap one to look at it. A $ means it is for a paid Content Rewards campaign.',
-  insp: 'Change the words on the video here. Type, pick a white or black box, then tap "Save text" — the new video is ready in about a minute.',
+  insp: 'Change the words on the video here. Type, pick a white or black box, then tap Save — it’s saved and shown instantly. Save to phone and Ship it now work right away too.',
   out: 'The finished video. "Ship it now" posts it right away. "Save" downloads it so you can post it yourself — then tap "Posted ✓" so the robot doesn\'t post it twice.',
   seq: 'The clip from start to end: the picture, the words, the camera moves and the sound. Tap anywhere on it to jump there.',
   kit: 'The free tools that run your page in the cloud, 24/7 — you don\'t have to touch any of them.'};
@@ -846,7 +850,7 @@ function needsCard(ql) {
 }
 const ONB = [
   ['Welcome', 'Your clip page runs itself', ['A robot in the cloud watches every GTA 6 streamer on Twitch — Kai, Lacy, Speed, Clix, YourRAGE and anyone else blowing up.', 'It finds the best moments, cuts them into phone videos, adds a hook, and posts them to TikTok and YouTube — about 6 times a day.', 'You don\'t have to do anything. This site lets you watch it work and step in when you want.']],
-  ['Studio', 'The main screen', ['<b>Media bin</b> — every clip ready to post. Tap one.', '<b>Program</b> — watch it.', '<b>Inspector</b> — change the words on the video (ready in ~1 minute).', '<b>Output</b> — Ship it now, Save it, or mark it Posted ✓.']],
+  ['Studio', 'The main screen', ['<b>Media bin</b> — every clip ready to post. Tap one.', '<b>Program</b> — watch it.', '<b>Inspector</b> — change the words on the video (instant).', '<b>Output</b> — Ship it now, Save it, or mark it Posted ✓.']],
   ['Getting paid', 'Content Rewards', ['You joined the Content Rewards campaigns, so every posted video can earn.', 'After a video posts, tap <b>$ Get paid</b>: it copies the link and opens Content Rewards. Paste it there and tap ✓.', 'The "Needs you" box at the top tells you when there\'s one to submit.']],
   ['Results', 'It learns what works', ['The <b>Results</b> tab shows views and what the AI is learning.', 'It keeps testing hooks, subtitles, zooms and timing — and uses more of whatever gets views.', 'Tap <b>?</b> on any box for help. That\'s it!']]];
 function openOnboarding() {
@@ -956,7 +960,7 @@ function inspPane(r) {
   curve(); setX(); mc.append(l, rgt); d.append(mc);
   const row = el('div', 'row2'); const sv = el('button', 'btn pink', 'Save'); const full = el('button', 'btn', 'Full editor'); const note = el('div', 'mut'); note.style.cssText = 'font-size:12px;margin-top:8px';
   function upd() { const c = changed(); sv.disabled = !c.t && !c.m; sv.textContent = c.m ? 'Save + re-make video' : 'Save (instant preview)';
-    note.textContent = c.m ? 'Crop, subtitles and punch-in change the whole video: ready in a few minutes (progress bar shows it).' : c.t ? 'Words and text box: you see it instantly, the final file is ready in ~1 min.' : 'Change anything above, then Save.'; }
+    note.textContent = c.m ? 'Crop, subtitles and punch-in change the whole video: ready in a few minutes (progress bar shows it).' : c.t ? 'Words and text box: saved and shown instantly — no waiting.' : 'Change anything above, then Save.'; }
   sv.onclick = async () => { const c = changed(); sv.disabled = true;
     if (c.m) { const out = { ...ul, hook_style: S.box, hook_scale: S.scale, pan: S.pan, subs: S.subs, punch: S.punch }; if (S.y != null) out.hook_y = S.y; if (S.hook.trim() !== cur.hook.trim()) out.hook = S.hook.trim();
       if (await ghTap('layout: ' + r.id, JSON.stringify(out))) { startJob(r.id, 'remake'); toast('Saved — re-making the video'); lastSig = ''; render(); } else sv.disabled = false; return; }
@@ -1316,15 +1320,76 @@ function renderMine(v, ql) {
 const vidOf = (r) => (variant === 'clean' && feed !== 'mine' && r.clean) ? r.clean : r.final;
 const U = (p) => /^https?:/.test(p || '') ? p : PAGES + p;   // site path or a full link
 // draw your new hook over the clean video (exactly where the clip maker puts it) - an instant preview
-function withPreview(r, vd, holder) {
+function withPreview(r, vd, holder) {   // your edit, drawn exactly like the final video (no waiting)
   const pv = r._preview; if (!pv || !r.clean) return;
   vd.src = U(r.clean);
-  const o = el('div', 'hkov ' + (pv.style === 'black' ? 'blk' : '')); o.textContent = pv.hook || '';
-  const lay = r.layout_used || 'split';
-  const top = pv.y != null ? pv.y * 100 : lay === 'full' ? 50 : lay === 'fill' ? 20 : lay.startsWith('irl') ? 60 : 35;
-  o.style.top = top + '%'; o.style.transform = `translate(-50%, ${pv.y != null || lay === 'full' || lay === 'fill' ? '-50%' : '-20%'})`;
-  const fit = () => { const w = vd.getBoundingClientRect().width || holder.getBoundingClientRect().width; o.style.fontSize = (w * 0.052 * (pv.scale || 1)) + 'px'; o.style.maxWidth = (w * 0.84) + 'px'; };
-  holder.style.position = holder.style.position || 'relative'; holder.append(o, el('div', 'pvtag', 'Preview · final video in ~1 min')); requestAnimationFrame(fit); vd.addEventListener('loadedmetadata', fit);
+  const o = el('img', 'hkimg'); holder.style.position = holder.style.position || 'relative'; holder.append(o);
+  hookCanvas(pv.hook || '', pv.style, pv.scale).then((hk) => { if (!hk) return; const y = hookTop(r, hk.height, pv.y);
+    o.src = hk.toDataURL(); o.style.width = (hk.width / 1080 * 100) + '%'; o.style.top = (y / 1920 * 100) + '%'; }).catch(() => {});
+}
+// ---- the hook box, drawn in the browser with the clip maker's own font and sizes (render_hook.py)
+let HOOKFONT = null;
+async function hookFont() {
+  if (HOOKFONT) return HOOKFONT;
+  try { const f = new FontFace('HookInter', `url(https://raw.githubusercontent.com/${REPO}/main/fonts/Inter-Bold.otf)`); await f.load(); document.fonts.add(f); HOOKFONT = 'HookInter'; }
+  catch (e) { HOOKFONT = 'Inter, Arial, sans-serif'; }
+  return HOOKFONT;
+}
+async function hookCanvas(text, style = 'white', scale = 1) {
+  text = (text || '').replace(/\p{Extended_Pictographic}|\uFE0F|\u200D/gu, '').replace(/\s+/g, ' ').trim();   // text only, like the clip maker
+  if (!text) return null;
+  const fam = await hookFont(); const SIZE = 50, MAX_W = 720, PX = 22, PY = 14, GAP = 2, RAD = 16;
+  const m = document.createElement('canvas').getContext('2d'); m.font = `700 ${SIZE}px ${fam}`;
+  const lines = []; let cur = '';
+  for (const w of text.split(' ')) { const t = (cur + ' ' + w).trim(); if (cur && m.measureText(t).width > MAX_W) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur);
+  const asc = 49, desc = 13, lh = asc + desc + GAP;   // Inter's metrics (same as PIL)
+  const widths = lines.map((l) => Math.floor(m.measureText(l).width));
+  const bw = Math.max(...widths) + PX * 2, bh = lh * lines.length - GAP + PY * 2, W = bw + 8, H = bh + 8;
+  const sc = Math.abs(scale - 1) > 0.01 ? Math.max(0.6, Math.min(1.6, scale)) : 1;
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(W * sc)); c.height = Math.max(1, Math.round(H * sc));
+  const g = c.getContext('2d'); g.scale(sc, sc);
+  if (style !== 'outline') { g.fillStyle = style === 'black' ? 'rgba(12,12,16,0.92)' : '#fff'; g.beginPath();
+    if (g.roundRect) g.roundRect(4, 4, bw, bh, RAD); else g.rect(4, 4, bw, bh); g.fill(); }
+  g.font = `700 ${SIZE}px ${fam}`; g.textBaseline = 'alphabetic';
+  lines.forEach((l, i) => { const x = (W - widths[i]) / 2, y = 4 + PY + i * lh + asc;
+    if (style === 'outline') { g.lineWidth = 10; g.strokeStyle = '#000'; g.lineJoin = 'round'; g.strokeText(l, x, y); }
+    g.fillStyle = style === 'white' ? '#000' : '#fff'; g.fillText(l, x, y); });
+  return c;
+}
+const CAM_PX = { small: 560, medium: 672 };
+function hookTop(r, h, y) {   // where the clip maker puts the box (top edge, on a 1080x1920 video)
+  const lay = r.layout_used || r.layout || 'split'; const ul = r.user_layout || {};
+  if (y != null) return 1920 * y - h / 2;
+  if (lay === 'full') return (1920 - h) / 2;
+  if (lay === 'fill') return 1920 * 0.2 - h / 2;
+  if (lay.startsWith('irl')) return 1920 * 0.6;
+  if (lay === 'cam') return 1920 * 0.12;
+  const T = +(ul.top_h || CAM_PX[(r.style || {}).cam] || 672); return T - h * 0.2;
+}
+// ---- Save to phone without waiting: your phone puts the new words on the video itself (about as long as the clip)
+async function burnVideo(r, onPct, gesture) {
+  const pv = r._preview; const hk = await hookCanvas(pv.hook || '', pv.style, pv.scale);
+  const AC = window.AudioContext || window.webkitAudioContext; const ac = gesture.ac || new AC();
+  const v = document.createElement('video'); v.crossOrigin = 'anonymous'; v.playsInline = true; v.preload = 'auto'; v.src = U(r.clean);
+  await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('video did not load')); });
+  const W = 1080, H = 1920; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  const y = hk ? hookTop(r, hk.height, pv.y) : 0;
+  const node = ac.createMediaElementSource(v); const dst = ac.createMediaStreamDestination(); node.connect(dst);
+  const stream = new MediaStream([...cv.captureStream(30).getVideoTracks(), ...dst.stream.getAudioTracks()]);
+  const mime = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1.4d002a,mp4a.40.2', 'video/mp4;codecs=avc1.42E01F,mp4a.40.2', 'video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm']
+    .find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
+  if (!mime) throw new Error('this browser can\'t record video');
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6, audioBitsPerSecond: 160e3 });
+  const chunks = []; rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise((res) => { rec.onstop = res; });
+  const paint = () => { g.drawImage(v, 0, 0, W, H); if (hk) g.drawImage(hk, (W - hk.width) / 2, y); onPct(v.currentTime / (v.duration || 1)); };
+  const loop = () => { paint(); if (!v.ended) (v.requestVideoFrameCallback ? v.requestVideoFrameCallback(loop) : requestAnimationFrame(loop)); };
+  paint(); await ac.resume(); rec.start(500);
+  try { await v.play(); } catch (e) { await gesture.again(); await v.play(); }   // phone wanted one more tap to play sound
+  loop(); await new Promise((res) => { v.onended = res; }); paint(); rec.stop(); await stopped;
+  try { ac.close(); } catch (e) { /* */ }
+  return new Blob(chunks, { type: mime.split(';')[0] });
 }
 
 // ---------------------------------------------------------------- get paid (Content Rewards) for one clip
@@ -1412,6 +1477,20 @@ function naturalCase(t) {   // "Lacy LOSES IT over EXPENSIVE furniture" -> "Lacy
 function captionFor(r) { const game = (Q.topic && Q.topic.name) || 'GTA 6'; const kw = r.streamer ? `${r.streamer} ${game} stream highlight` : `${game} highlight`; return (r.caption || `${naturalCase(r.hook)}\n\n${kw}${r.login ? ' 🎥 @' + r.login : ''}\n\n${[r.tag, (Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'].filter(Boolean).join(' ')} #fyp`).trim(); }
 async function saveVideo(r, btn, which) {
   const clean = which ? which === 'clean' && r.clean : (variant === 'clean' && r.clean);
+  if (!clean && r._preview && r.clean && r.layout_used !== 'cam') {   // your new words aren't in a file yet: make it right here
+    const label = btn.textContent; btn.disabled = true; const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const again = () => new Promise((res) => { btn.disabled = false; btn.textContent = 'Tap to make the video'; btn.onclick = null;
+      const h = () => { btn.removeEventListener('click', h, true); btn.disabled = true; res(); }; btn.addEventListener('click', h, true); });
+    try {
+      btn.textContent = 'Adding your words… 0%';
+      const blob = await burnVideo(r, (p) => { btn.textContent = `Adding your words… ${Math.min(99, Math.round(p * 100))}%`; }, { ac, again });
+      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'; const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}.${ext}`;
+      const file = new File([blob], name, { type: blob.type }); copy(captionFor(r), 'Caption');
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+      else { const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+    } catch (e) { if (!e || e.name !== 'AbortError') toast('Couldn\'t make it here (' + ((e && e.message) || 'error') + ') — the finished file is ready in about a minute'); }
+    btn.disabled = false; btn.textContent = label; lastSig = ''; render(); return;
+  }
   const url = U(clean ? r.clean : r.final); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}.mp4`;
   const label = btn.textContent; btn.disabled = true; btn.textContent = 'Getting video…';
   try {
