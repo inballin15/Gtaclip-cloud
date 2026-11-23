@@ -1310,7 +1310,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
             continue
         login = (job.get("login") or "").lower()
         s_cfg = CFG["streamers"].get(login, {})
-        name = s_cfg.get("name") or job.get("streamer") or "Nicholas"
+        name = s_cfg.get("name") or (job.get("streamer") if job.get("streamer") not in ("Nicholas", "Test") else "") or ""
+        # (no streamer picked: leave the name empty so hooks never say "Nicholas" - you're the poster, not the person on screen)
         made = []
         for i, m in enumerate(moments):
             cid = f"up{job.get('id', num)}_{i + 1}"
@@ -1333,7 +1334,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     log(f"webcam check failed {cid}: {e}")
                     cam, q, frac = None, "none", None
                 rec = {"status": "new", "source": "upload", "streamer": name, "login": login,
-                       "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name)), "campaign": s_cfg.get("campaign", ""),
+                       "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name) if name else ""), "campaign": s_cfg.get("campaign", ""),
                        "title": f"{job.get('name', 'Your video')} @ {int(m['start'] // 60)}:{int(m['start'] % 60):02d}",
                        "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
                        "seconds": round(dur), "moment": {k: m[k] for k in ("start", "end", "score", "reasons")},
@@ -1806,6 +1807,16 @@ def main() -> None:
                 c.update(status="new"); c.pop("skip_reason", None); c.pop("final_hash", None)
                 if c.get("layout") == "full":
                     c["layout"] = "fill"
+    if st.get("upload_name_v", 0) < 1:   # one time: your pasted clips were named "Nicholas" - hooks said you were on screen
+        st["upload_name_v"] = 1
+        for c in clips.values():
+            if c.get("source") == "upload" and c.get("streamer") in ("Nicholas", "Test") and not c.get("login"):
+                c["streamer"], c["tag"] = "", ""
+                if "nicholas" in (c.get("hook") or "").lower() and not c.get("hook_by_user"):
+                    c["hook"] = f"Part {c['part']}" if c.get("part") else ""
+                    c["hook_auto"] = True
+                    for k in ("viral", "pic_ok", "final_hash", "hook_kind"):
+                        c.pop(k, None)
     if st.get("redo_camonly_v", 0) < 1:   # one time: black-screen clips skipped earlier get the webcam-only treatment
         st["redo_camonly_v"] = 1
         for c in clips.values():
