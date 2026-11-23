@@ -1067,6 +1067,9 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                 "boxblur=30:2,eq=brightness=-0.12,setsar=1[bg];[b]scale=1080:-2:flags=lanczos,"
                 + ("" if cam_video else "unsharp=5:5:0.8:5:5:0.0,") +
                 "setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
+    elif layout == "fill":   # your clips with no webcam: the gameplay itself fills the 9:16 screen (slide = crop spot)
+        base = (f"[0:v]scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,"
+                f"crop=1080:1920:x='(iw-ow)/2*(1+{pan:.3f})':y='(ih-oh)/2',unsharp=3:3:0.4:3:3:0.0,setsar=1")
     elif layout == "full":
         base = ("[0:v]split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
                 "boxblur=20:2,setsar=1[bg];[b]scale=1080:-2,setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
@@ -1105,7 +1108,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"), hook_style, hook_scale)
         inputs = ["-i", str(raw), "-i", png] + extra
         oy = (f"H*{hook_y:.3f}-h/2" if hook_y is not None                              # your own spot (editor)
-              else "(H-h)/2" if layout == "full" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
+              else "(H-h)/2" if layout == "full" else "H*0.2-h/2" if layout == "fill" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
               else f"'max(150,{_cam_fg_top(raw, w, h)}-h-28)'" if layout == "cam"           # cam: just above the webcam
               else f"{T}-h*0.2")                                                   # split: on the line
     else:
@@ -1297,13 +1300,13 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     rec.update(viral=sc, viral_verdict="post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
                                viral_why=", ".join(m.get("reasons", []))[:90])
                 if job.get("asis"):
-                    rec.update(cam="0,0,1,1", cam_q="none", layout="full", asis=True, title=job.get("name") or "Your clip")
+                    rec.update(cam="0,0,1,1", cam_q="none", layout="fill", asis=True, title=job.get("name") or "Your clip")
                     if job.get("hook"):
                         rec["hook_by_user"] = True
                 elif cam and q in ("edge", "learned"):
                     rec.update(cam=cam, cam_q=q, layout="split")
-                else:
-                    rec.update(cam="0,0,1,1", cam_q="none", layout="full")
+                else:   # no webcam in your own link/upload: keep it, gameplay fills the whole screen
+                    rec.update(cam="0,0,1,1", cam_q="none", layout="fill")
                 st["clips"][cid] = rec
                 made.append(f"- {int(m['start'] // 60)}:{int(m['start'] % 60):02d}–{int(m['end'] // 60)}:{int(m['end'] % 60):02d} "
                             f"({', '.join(m['reasons']) or 'good moment'}) — {m.get('hook') or ''}")
@@ -1740,6 +1743,18 @@ def main() -> None:
                 log(f"{cid}: got the full 1080p source now ({hh or '?'}p before) - re-making it")
         except Exception as e:  # noqa: BLE001
             log(f"1080p re-download failed {cid}: {str(e)[:100]}")
+    if st.get("upload_fill_v", 0) < 1:   # one time: your no-webcam clips go full-screen; ones the robot dropped come back
+        st["upload_fill_v"] = 1
+        for c in clips.values():
+            if c.get("source") != "upload":
+                continue
+            if c["status"] == "new" and c.get("layout") == "full" and (c.get("user_layout") or {}).get("mode") != "full":
+                c["layout"] = "fill"; c.pop("final_hash", None)
+            elif c["status"] == "skip" and not re.search(r"nud|sex|gore|removed by", c.get("skip_reason", ""), re.I) \
+                    and NOW - parse(c.get("created") or iso(NOW)) < timedelta(days=2):
+                c.update(status="new"); c.pop("skip_reason", None); c.pop("final_hash", None)
+                if c.get("layout") == "full":
+                    c["layout"] = "fill"
     if st.get("redo_camonly_v", 0) < 1:   # one time: black-screen clips skipped earlier get the webcam-only treatment
         st["redo_camonly_v"] = 1
         for c in clips.values():
@@ -1888,7 +1903,7 @@ def main() -> None:
                 if not c:
                     continue
                 c.update(viral=r["score"], viral_why=r["why"], viral_verdict=r["verdict"])
-                if r["score"] <= 10 and not c.get("hook_by_user") and not c.get("post_now"):
+                if r["score"] <= 10 and not c.get("hook_by_user") and not c.get("post_now") and c.get("source") != "upload":
                     c.update(status="skip", skip_reason=f"AI: {r['why'] or 'not postable'}")
                     log(f"AI removed {cid}: {r['why']}")
                     continue
@@ -2035,7 +2050,8 @@ def main() -> None:
                     hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, need_c)
                     need_f = True
-                if ok is False and not c.get("post_now"):
+                mine_ok = c.get("source") == "upload" and not re.search(r"nud|sex|gore|blood|explicit|naked", why or "", re.I)
+                if ok is False and not c.get("post_now") and not mine_ok:   # your own clips: only nudity/gore removes them
                     c.update(status="skip", skip_reason=f"AI picture check: {why or 'nudity/sexual content'}")
                     log(f"picture check removed {cid}: {why}")
                     return job
@@ -2206,7 +2222,8 @@ def main() -> None:
                 if ok is None:
                     break                      # Google still busy: try again next run
                 c["pic_ok"] = ok
-                if ok is False and not c.get("post_now"):
+                if ok is False and not c.get("post_now") and not (c.get("source") == "upload" and not re.search(
+                        r"nud|sex|gore|blood|explicit|naked", why or "", re.I)):
                     c.update(status="skip", skip_reason=f"AI picture check: {why or 'nudity/sexual content'}")
                     log(f"picture check removed {cid}: {why}")
             except Exception as e:  # noqa: BLE001
