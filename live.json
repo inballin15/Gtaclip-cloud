@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-23T15:43:48Z",
+  "updated": "2026-11-23T17:45:49Z",
   "videos": 35,
   "v": 4,
   "findings": [
@@ -196,7 +196,7 @@
    },
    {
     "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
-    "views": 1242
+    "views": 1243
    },
    {
     "hook": "Marlon can't handle a night in GTA 6",
@@ -386,12 +386,12 @@
    }
   ]
  },
- "updated": "2026-11-23T17:40:42Z",
+ "updated": "2026-11-23T17:45:49Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-23T18:07:00Z",
- "up_next": "vod2937998841_25282",
+ "up_next": "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7711407550045998350",
@@ -2681,6 +2681,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T17:40:42Z",
- "log": []
+ "stats_updated": "2026-11-23T17:45:49Z",
+ "log": [
+  "[17:45:51Z] hook learner: 35 videos, 1 lessons"
+ ]
 }
