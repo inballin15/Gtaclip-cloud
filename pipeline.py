@@ -1205,6 +1205,21 @@ PART_MIN, PART_MAX_S = 25.0, 30.0   # your pasted links/uploads: 25-30 s parts, 
 PART_MAX = 32                        # at most 32 parts (about 15 minutes) per link
 
 
+FULL_MAX_S = 180.0   # one full video per link, up to 3 minutes (longest YouTube Short)
+
+
+def full_length(src: Path) -> float:
+    """True length, also for audio-only downloads (links), where the frame count would be wrong."""
+    try:
+        out = subprocess.run([FF, "-i", str(src)], capture_output=True, text=True).stderr
+        m = re.search(r"Duration: (\d+):(\d+):([\d.]+)", out)
+        if m:
+            return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+    except Exception:  # noqa: BLE001
+        pass
+    return duration_of(src)
+
+
 def split_parts(src: Path) -> tuple[list[tuple[float, float]], int]:
     """Cut a whole video into parts in order: each 25-30 s, ending at the quietest moment in that window (a pause,
     not mid-word). A last bit under 10 s joins the part before. Returns (spans, minutes covered if cut short)."""
@@ -1257,7 +1272,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
             _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
             continue
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Got your clip — adding it to the queue (a few minutes)." if job.get("asis")
-                                                              else "Got your video — cutting it into 25–30 second parts (usually 5–15 min)."})
+                                                              else "Got your video — making it into one full video (usually 5–15 min)."})
         src = tmp / f"upload_{job.get('id', num)}.mp4"
         link = job.get("url") or ""
         offset = 0.0
@@ -1292,13 +1307,12 @@ def process_uploads(st: dict, tmp: Path) -> None:
                             "text": transcript(src) if d0 < 180 else "", "hook": (job.get("hook") or "").strip()}]
                 if moments[0]["hook"]:
                     moments[0]["hook_ai"] = True
-            else:   # your pasted link / upload: straight parts in order until the video ends (no hunting, no chopping)
-                spans, short = split_parts(src)
-                moments = [{"start": a, "end": b, "score": 1.0, "reasons": [f"part {k + 1} of {len(spans)}"],
-                            "text": "", "hook": f"Part {k + 1}", "part": k + 1, "parts": len(spans)}
-                           for k, (a, b) in enumerate(spans)]
-                if short:
-                    job["cut_short"] = short
+            else:   # your pasted link / upload: ONE full video, start to finish (no parts - posting many back to back looks spammy)
+                d0 = full_length(src)
+                end = min(d0, FULL_MAX_S)
+                moments = [{"start": 0.0, "end": end, "score": 1.0, "reasons": ["full video"], "text": "", "full": True}]
+                if d0 > FULL_MAX_S + 1:
+                    job["cut_short"] = int(FULL_MAX_S // 60)
         except Exception as e:  # noqa: BLE001
             log(f"upload {num} failed: {e}")
             hint = ("YouTube blocked the download from GitHub's servers — save the video and use Upload instead."
@@ -1341,6 +1355,10 @@ def process_uploads(st: dict, tmp: Path) -> None:
                        "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
                        "seconds": round(dur), "moment": {k: m[k] for k in ("start", "end", "score", "reasons")},
                        "cam_v": CAM_V}
+                if m.get("full"):   # one full video: no text box from us (add your own in the Studio), no AI hook
+                    rec.update(full=True, title=job.get("name") or "Your video", hook="", no_hook=True,
+                               hook_kind="user", hook_by_user=True)
+                    m.pop("hook", None)
                 if m.get("part"):   # the hook is just "Part 1", "Part 2", ... (no AI hook - Nicholas's call)
                     rec.update(part=m["part"], parts=m["parts"], title=f"{job.get('name', 'Your video')} · Part {m['part']}",
                                hook=f"Part {m['part']}", hook_kind="user", hook_by_user=True)
@@ -1367,8 +1385,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
                             f"({', '.join(m['reasons']) or 'good moment'}) — {rec.get('hook') or ''}")
             except Exception as e:  # noqa: BLE001
                 log(f"cutting clip {cid} failed: {e}")
-        msg = (f"Made {len(made)} part{'s' if len(made) != 1 else ''} from **{job.get('name', 'your video')}** — they're in Your clips (they don't auto-post)"
-               + (f". Long video: only the first {job['cut_short']} minutes were made — paste it again with a time range for the rest" if job.get("cut_short") else "") + ":\n"
+        msg = (f"Made the full video **{job.get('name', 'your video')}** — it's in Your clips (it doesn't auto-post)"
+               + (f". Long video: it's the first {job['cut_short']} minutes — paste it again with a time range for another part" if job.get("cut_short") else "") + ":\n"
                + "\n".join(made)) if made else "Couldn't make parts from this video — try uploading the file instead."
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": msg})
         _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
@@ -2088,7 +2106,7 @@ def main() -> None:
                 and not c.get("final_hash"):
             c["style"] = learn.pick_style(LEARNED_INS, cid)   # dynamic model: test looks, keep what gets views
         sty = {**(c.get("style") or {}), **{k: v for k, v in (c.get("user_layout") or {}).items() if k in ("subs", "punch")}}
-        if not c.get("asis") and not c.get("part"):   # parts of your video stay whole, in order (no trims)
+        if not c.get("asis") and not c.get("part") and not c.get("full"):   # your full video / parts stay whole (no trims)
             raw = best_part(raw, cid, tmp, c)
             raw = cut_dead_air(raw, cid, tmp)
         if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and c.get("cam") \
