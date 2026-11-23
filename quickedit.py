@@ -154,8 +154,11 @@ def main() -> None:
         (Path("/tmp/edits") / old).unlink(missing_ok=True)
     Path("/tmp/edits/edits.json").write_text(json.dumps(edits, indent=1, ensure_ascii=False))
     Path("/tmp/qe_done").write_text(cid)
+    Path("/tmp/qe_entry.json").write_text(json.dumps({"id": cid, "rec": rec}))   # for merging if another edit saved first
     print("STEP 3/3 saving")
     if out_name:
+        import shutil
+        shutil.copy(Path("/tmp/edits") / out_name, "/tmp/qe_video.mp4")
         put_on_site(out_name, Path("/tmp/edits") / out_name)
 
 
