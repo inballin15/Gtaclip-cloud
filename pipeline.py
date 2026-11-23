@@ -63,7 +63,7 @@ NOCAM_MIN_VIEWS = 200   # no-webcam clips are only kept (full-screen gameplay) w
 KEEP_NEW_HOURS = 36      # clips stay postable for 36 h after they were clipped (Nov 23: quality over newest)
 REPLACE_QUEUE_EACH_RUN = False   # (the old all-at-once swap stays off - see REPLACE_MIN_NEW)
 REPLACE_MIN_NEW = 5   # once 5+ finished clips under REPLACE_AGE_H old are ready, older stream clips leave the queue
-REPLACE_AGE_H = 24   # (was 5 h - too short: good clips left before they could post)
+REPLACE_AGE_H = 36   # same as the keep limit: quality decides what posts, age only retires clips at 36 h
 MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
 CAMSRC = Path("_camsrc")   # webcam sources waiting for the AI upscaler (branch camsrc)
 CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
@@ -1902,8 +1902,8 @@ def main() -> None:
                     and NOW - parse(c.get("created") or c.get("found") or iso(NOW)) < timedelta(hours=34):
                 c.update(status="new", cam="0,0,1,1", cam_q="none", layout="fill", nocam=True, cam_v=CAM_V)
                 c.pop("skip_reason", None); c.pop("final_hash", None)
-    if st.get("quality_revive_v", 0) < 1:   # one time (Nov 23, quality over newest): bring back the best clips from the
-        st["quality_revive_v"] = 1         # last 36 h that were thrown out for age / space / "replaced" but never posted
+    if st.get("quality_revive_v", 0) < 2:   # one time (Nov 23, quality over newest): bring back the best clips from the
+        st["quality_revive_v"] = 2         # last 36 h that were thrown out for age / space / "replaced" but never posted
         back = sorted([(c.get("views") or 0, cid) for cid, c in clips.items()
                        if c["status"] == "expired" and c.get("source") != "upload" and (c.get("views") or 0) >= 50
                        and (c.get("skip_reason") or "") in ("", "site space (lowest rated)", "replaced by newer clips", "queue full")
