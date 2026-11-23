@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-23T01:36:39Z",
+  "updated": "2026-11-23T03:37:55Z",
   "videos": 29,
   "v": 4,
   "findings": [
@@ -338,7 +338,7 @@
    }
   ]
  },
- "updated": "2026-11-23T03:32:34Z",
+ "updated": "2026-11-23T03:37:55Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -2446,6 +2446,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T03:32:34Z",
- "log": []
+ "stats_updated": "2026-11-23T03:37:55Z",
+ "log": [
+  "[03:37:56Z] hook learner: 29 videos, 2 lessons"
+ ]
 }
