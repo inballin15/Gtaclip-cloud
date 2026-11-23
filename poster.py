@@ -366,7 +366,10 @@ def set_cooldown(ctl: dict, s: str, err: str) -> None:
             log("YouTube still capped by Buffer — dropping back to 2 posts a day")
         nxt = (NOW.astimezone(ET) + timedelta(days=1)).replace(hour=0, minute=5, second=0, microsecond=0)
         until = iso(nxt.astimezone(timezone.utc))
-    elif "daily posting limit" in err:  # Buffer's rolling 24 h limit: try again in 3 h
+    elif "daily posting limit" in err:  # YouTube's rolling 24 h upload limit: try again in 3 h
+        if s == "youtube" and ctl.get("yt_per_day", YT_TRY) > 2:
+            ctl["yt_per_day"] = 2   # the 4-a-day test hit the limit: back to 2 a day (the most YouTube allows here)
+            log("YouTube daily limit hit on the 4-a-day test — back to 2 posts a day")
         until = iso(NOW + timedelta(hours=3))
     elif "daily" in err:  # YouTube's daily limit resets at midnight Pacific
         nxt = (NOW + timedelta(hours=16)).replace(hour=8, minute=5, second=0, microsecond=0)
