@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23T21:47:36Z",
+ "updated": "2026-11-23T23:48:36Z",
  "videos": 38,
  "v": 4,
  "findings": [
@@ -24,7 +24,7 @@
   {
    "feature": "streamer",
    "value": "Kai Cenat",
-   "x": 4.09,
+   "x": 4.07,
    "n": 4
   },
   {
@@ -36,7 +36,7 @@
   {
    "feature": "streamer",
    "value": "Lacy",
-   "x": 0.33,
+   "x": 0.32,
    "n": 9
   },
   {
@@ -54,26 +54,26 @@
   {
    "feature": "streamer",
    "value": "?",
-   "x": 2.73,
+   "x": 2.7,
    "n": 8
   },
   {
    "feature": "style:cam",
    "value": "small",
-   "x": 0.37,
+   "x": 0.39,
    "n": 5
-  },
-  {
-   "feature": "hook style",
-   "value": "formula",
-   "x": 0.41,
-   "n": 7
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 2.41,
+   "x": 2.4,
    "n": 14
+  },
+  {
+   "feature": "hook style",
+   "value": "formula",
+   "x": 0.43,
+   "n": 7
   },
   {
    "feature": "CAPS words",
@@ -84,8 +84,14 @@
   {
    "feature": "style:box",
    "value": "white",
-   "x": 0.48,
+   "x": 0.49,
    "n": 10
+  },
+  {
+   "feature": "hook length",
+   "value": "long (90+)",
+   "x": 0.51,
+   "n": 4
   },
   {
    "feature": "style:box",
@@ -96,37 +102,31 @@
   {
    "feature": "hook style",
    "value": "unknown",
-   "x": 1.94,
+   "x": 1.92,
    "n": 23
-  },
-  {
-   "feature": "hook length",
-   "value": "long (90+)",
-   "x": 0.52,
-   "n": 4
   },
   {
    "feature": "clip length",
    "value": "23 s+",
-   "x": 0.54,
+   "x": 0.55,
    "n": 11
   },
   {
    "feature": "streamer",
    "value": "Clix",
-   "x": 0.55,
+   "x": 0.57,
    "n": 6
   },
   {
    "feature": "style:hooklen",
    "value": "tiny",
-   "x": 0.56,
+   "x": 0.57,
    "n": 8
   },
   {
    "feature": "has a number",
    "value": "no",
-   "x": 0.59,
+   "x": 0.6,
    "n": 10
   },
   {
@@ -144,43 +144,43 @@
   {
    "feature": "emotion word",
    "value": "none",
-   "x": 1.54,
+   "x": 1.53,
    "n": 18
   }
  ],
  "guidance": [
   "AVOID: emotion word = STUNNED (0.35x views, 6 videos)",
-  "AVOID: has a number = no (0.59x views, 10 videos)",
-  "DO: emotion word = none (1.54x views, 18 videos)",
-  "AVOID: emotion word = SHOCKED (0.69x views, 9 videos)"
+  "AVOID: has a number = no (0.6x views, 10 videos)",
+  "DO: emotion word = none (1.53x views, 18 videos)",
+  "AVOID: emotion word = SHOCKED (0.7x views, 9 videos)"
  ],
  "weights": {
-  "formula": 0.409,
-  "news": 0.19,
+  "formula": 0.413,
+  "news": 0.189,
   "quote": 0.077,
-  "question": 0.089,
-  "lowcaps": 0.235
+  "question": 0.088,
+  "lowcaps": 0.233
  },
  "style_weights": {
   "box": {
-   "white": 0.714,
-   "black": 0.286
+   "white": 0.716,
+   "black": 0.284
   },
   "cam": {
-   "small": 0.358,
-   "medium": 0.642
+   "small": 0.363,
+   "medium": 0.637
   },
   "len": {
    "s16": 0.3,
    "s22": 0.7
   },
   "hooklen": {
-   "tiny": 0.2,
-   "story": 0.8
+   "tiny": 0.202,
+   "story": 0.798
   },
   "start": {
-   "fast": 0.118,
-   "build": 0.882
+   "fast": 0.117,
+   "build": 0.883
   },
   "subs": {
    "off": 0.5,
@@ -198,7 +198,7 @@
   },
   {
    "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
-   "views": 1241
+   "views": 1242
   },
   {
    "hook": "Marlon can't handle a night in GTA 6",
