@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23T05:39:06Z",
+ "updated": "2026-11-23T07:40:20Z",
  "videos": 29,
  "v": 4,
  "findings": [
@@ -179,6 +179,14 @@
   "start": {
    "fast": 0.25,
    "build": 0.75
+  },
+  "subs": {
+   "off": 0.5,
+   "on": 0.5
+  },
+  "punch": {
+   "off": 0.5,
+   "on": 0.5
   }
  },
  "top": [
@@ -230,6 +238,14 @@
   "start": {
    "fast": 0,
    "build": 0
+  },
+  "subs": {
+   "off": 0,
+   "on": 0
+  },
+  "punch": {
+   "off": 0,
+   "on": 0
   }
  },
  "feed": [
