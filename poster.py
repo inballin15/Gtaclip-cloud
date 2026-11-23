@@ -756,7 +756,7 @@ def main() -> None:
         # otherwise the old version could go out in the next slot
         try:
             for it in issues("open", 24):
-                m = re.match(r"^(?:layout|edit|redo|text):\s*(\S+)", it["title"].strip(), re.I)
+                m = re.match(r"^(?:layout|edit|redo|text|voice):\s*(\S+)", it["title"].strip(), re.I)
                 if m:
                     blocked.add(next((k for k in by_id if k == m.group(1) or k.startswith(m.group(1))), m.group(1)))
         except Exception as e:  # noqa: BLE001

@@ -337,6 +337,7 @@ nav button{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-tr
 .binlab,.qsec{font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--pink);margin:10px 2px 6px}
 .qsec{font-size:12px;margin:16px 2px 8px}
 .hkimg{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;z-index:2;height:auto}
+.vlist{display:flex;flex-direction:column;gap:6px;margin:10px 0}.vrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.vrow.on{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink)}.vrow .btn{padding:6px 10px}
 .bin button{flex:none;width:86px;border:1px solid var(--line);border-radius:9px;background:#0b0912;padding:0;overflow:hidden;text-align:left}
 .bin button .th{aspect-ratio:9/16;background-size:cover;background-position:center;position:relative}
 .bin button .th em{position:absolute;left:4px;bottom:4px;font:700 8.5px var(--mono);font-style:normal;background:#000b;padding:2px 4px;border-radius:4px;text-transform:uppercase}
@@ -676,6 +677,18 @@ async function stepJobs() {
   for (const [id, j] of Object.entries(JOBS)) {
     if (j.done || j.failed) { if (Date.now() - (j.end || j.at) > 8000) { delete JOBS[id]; saveJobs(); lastSig = ''; render(); } continue; }
     if (Date.now() - j.at > 40 * 60000) { Object.assign(j, { failed: true, label: 'Taking too long — check back soon', end: Date.now() }); continue; }
+    if (j.kind === 'voice') {   // new-voice run: real steps from GitHub (installing the AI takes the longest)
+      const run = runs.find((r) => r.name === 'new voice' && (r.display_title || '').startsWith('voice: ' + id.slice(0, 20)) && r.conclusion !== 'skipped' && after(r, j.at));
+      if (!run) { j.pct = Math.max(j.pct, Math.min(8, 2 + (Date.now() - j.at) / 3000)); j.label = 'New voice: starting…'; continue; }
+      if (run.status === 'completed') {
+        if (run.conclusion !== 'success') { Object.assign(j, { failed: true, label: 'New voice failed — try again', end: Date.now() }); continue; }
+        await refreshEdits(); Object.assign(j, { done: true, pct: 100, label: 'Done ✓ — new voice is on', end: Date.now() }); toast('New voice done ✓'); applyEdits(Q); lastSig = ''; render(); continue; }
+      const VS = [['Getting your clip', 'Getting the clip', 8, 12, 15], ['Getting ready', 'Loading the AI voice', 12, 45, 150], ['New voice', 'Swapping the voice', 45, 92, 120], ['Saving', 'Saving', 92, 99, 20]];
+      let steps = []; try { steps = ((await getJSON(`https://api.github.com/repos/${REPO}/actions/runs/${run.id}/jobs?t=${Date.now()}`, h)).jobs || [])[0]?.steps || []; } catch (e) { /* */ }
+      const cur = steps.find((x) => x.status === 'in_progress'); const vi = Math.max(0, VS.findIndex((x) => cur && x[0] === cur.name));
+      const [, lab, a, b, secs] = VS[vi]; const since = cur && cur.started_at ? new Date(cur.started_at).getTime() : Date.now();
+      j.pct = Math.max(j.pct, a + (b - a) * Math.min(0.95, (Date.now() - since) / 1000 / secs)); j.label = 'New voice: ' + lab.toLowerCase(); continue;
+    }
     if (j.kind === 'text') {
       // match THIS edit's run by its title (skip/other taps also start 'quick edit' runs that end as 'skipped')
       const run = runs.find((r) => r.name === 'quick edit' && (r.display_title || '').startsWith('text: ' + id.slice(0, 20)) && r.conclusion !== 'skipped' && after(r, j.at));
@@ -985,7 +998,8 @@ function outPane(r, n) {
   const gp = el('button', 'btn' + (CR[campOf(r)] && !subd ? ' paid' : ''), subd ? '✓ Submitted' : '$ Get paid'); gp.onclick = () => openGetPaid(r);
   const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
   const sk = el('button', 'btn del', "Don't post"); sk.onclick = async () => { if (sk.dataset.arm) { sk.disabled = true; if (await ghTap('skip: ' + r.id)) toast('Removed from the queue'); SEL = ''; lastSig = ''; render(); } else { sk.dataset.arm = 1; sk.textContent = 'Tap again'; setTimeout(() => { delete sk.dataset.arm; sk.textContent = "Don't post"; }, 3000); } };
-  sb.append(pn, dl, pd, gp, cc, sk); d.append(sb);
+  const vo = el('button', 'btn', '🎙 Voice'); vo.onclick = () => openVoice(r);
+  sb.append(pn, dl, pd, vo, gp, cc, sk); d.append(sb);
   return d;
 }
 function seqPane(r, n) {
@@ -1459,7 +1473,8 @@ function clipCard(r, st) {
   const subd = linksFor(r).some(([l]) => isSub(l));
   const gp = el('button', 'btn' + (CR[campOf(r)] && !subd ? ' paid' : ''), subd ? '✓ Submitted' : '$ Get paid'); gp.onclick = () => openGetPaid(r);
   const pd = el('button', 'btn ok', 'Posted ✓'); pd.onclick = () => openPosted(r);
-  const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, pd, ed, gp, mb); b.append(btns);
+  const vo = el('button', 'btn', '🎙 Voice'); vo.onclick = () => openVoice(r);
+  const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, pd, ed, vo, gp, mb); b.append(btns);
   const more = el('div', 'more'); const mi = el('div'); const mbt = el('div', 'btns');
   const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
   const hk = el('button', 'btn', 'Edit hook'); hk.onclick = () => openHookEdit(r);
@@ -1501,6 +1516,27 @@ async function saveVideo(r, btn, which) {
     else { const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
   } catch (e) { if (e && e.name !== 'AbortError') window.open(url, '_blank'); }
   btn.disabled = false; btn.textContent = label;
+}
+// ---------------------------------------------------------------- new voice (AI voice you pick)
+const VOICES = [['am_michael', 'Michael', 'US male'], ['am_fenrir', 'Fenrir', 'deep US male'], ['am_puck', 'Puck', 'hype US male'], ['am_echo', 'Echo', 'calm US male'],
+  ['af_heart', 'Heart', 'US female'], ['af_bella', 'Bella', 'US female'], ['bm_george', 'George', 'British male'], ['bf_emma', 'Emma', 'British female']];
+const VOICE_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/${v}.mp3`;
+function openVoice(r) {
+  let pick = ls.get('gc-voice', 'am_michael'); const au = new Audio(); const list = el('div', 'vlist');
+  const draw = () => { list.textContent = ''; for (const [id, name, kind] of VOICES) {
+    const row = el('div', 'vrow' + (id === pick ? ' on' : '')); const pb = el('button', 'btn ghost', '▶');
+    pb.onclick = (e) => { e.stopPropagation(); au.src = VOICE_SAMPLE(id); au.play().catch(() => toast('Samples are still being made — try again in a few minutes')); };
+    const t = el('div'); t.append(el('b', null, name), el('span', 'mut', ' · ' + kind)); row.append(pb, t);
+    row.onclick = () => { pick = id; ls.set('gc-voice', id); draw(); }; list.append(row); } };
+  draw();
+  const sc = el('textarea'); sc.placeholder = 'Leave empty: the new voice says the same lines, at the same moments. Or type your own script.'; sc.maxLength = 3000;
+  const go = el('button', 'big go', 'Replace the voice');
+  go.onclick = async () => { go.disabled = true; au.pause();
+    if (await ghTap('voice: ' + r.id, JSON.stringify({ voice: pick, script: sc.value.trim() }))) {
+      toast('Swapping the voice — about 3–5 minutes'); closeSheet(); JOBS[r.id] = { kind: 'voice', at: Date.now(), pct: 2, label: 'New voice: starting…' }; saveJobs(); pollJobs(); lastSig = ''; render(); }
+    go.disabled = false; };
+  sheet('New voice', [el('div', 'mut', 'Takes out the voice talking in this clip (game sounds stay) and puts in the AI voice you pick. Tap ▶ to hear one.'), list,
+    el('label', null, 'Script (optional)'), sc, go]);
 }
 function openPosted(r) {   // you posted this clip yourself: the bot won't post it there (or anywhere, with Both)
   const mk = (label, plat) => { const b = el('button', 'big go', label); b.onclick = async () => { b.disabled = true;
