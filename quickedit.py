@@ -126,7 +126,7 @@ def main() -> None:
         png = render_hook(hook, str(WORK / "hook.png"), style, scale)
         T = int(ul.get("top_h") or CAM_PX.get(sty.get("cam", ""), TOP_H))
         oy = (f"H*{hy:.3f}-h/2" if hy is not None
-              else "(H-h)/2" if lay == "full" else "H*0.6" if lay.startswith("irl")
+              else "(H-h)/2" if lay == "full" else "H*0.2-h/2" if lay == "fill" else "H*0.6" if lay.startswith("irl")
               else f"{T}-h*0.2")
         stamp = int(time.time())
         out_name = f"v/e/{cid}_{stamp}.mp4"   # same path on the edits branch and on the site

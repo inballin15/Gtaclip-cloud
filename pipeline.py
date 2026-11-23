@@ -1199,8 +1199,38 @@ def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path)
 
 
 # ---------------------------------------------------------------- your own uploads -> clips
-PART_S = 30       # your pasted links/uploads: cut into 30-second parts in order
-PART_MAX = 30     # at most 30 parts (15 minutes) per link
+PART_MIN, PART_MAX_S = 25.0, 30.0   # your pasted links/uploads: 25-30 s parts, each ending on a pause
+PART_MAX = 32                        # at most 32 parts (about 15 minutes) per link
+
+
+def split_parts(src: Path) -> tuple[list[tuple[float, float]], int]:
+    """Cut a whole video into parts in order: each 25-30 s, ending at the quietest moment in that window (a pause,
+    not mid-word). A last bit under 10 s joins the part before. Returns (spans, minutes covered if cut short)."""
+    import numpy as np
+    d0 = duration_of(src)
+    try:
+        pcm = subprocess.run([FF, "-v", "error", "-i", str(src), "-vn", "-ac", "1", "-ar", "8000", "-f", "s16le", "-"],
+                             capture_output=True, check=True, timeout=600).stdout
+        x = np.frombuffer(pcm, np.int16).astype(np.float32)
+        win = 400   # 50 ms
+        rms = np.sqrt(np.convolve((x[: len(x) // win * win].reshape(-1, win) ** 2).mean(1), np.ones(4) / 4, "same"))
+        if len(x) > 8000:
+            d0 = len(x) / 8000.0   # true length (links download audio only; the frame count would be wrong)
+    except Exception:  # noqa: BLE001
+        rms = None
+    spans, a = [], 0.0
+    while d0 - a > 0.5 and len(spans) < PART_MAX:
+        if d0 - a - PART_MIN < 10:      # what's left can't leave a real part behind: it all goes in this one
+            spans.append((round(a, 2), round(d0, 2))); a = d0; break
+        lo, hi = a + PART_MIN, min(a + PART_MAX_S, d0 - 10)   # never leave a scrap under 10 s at the end
+        b = hi
+        if rms is not None and len(rms):
+            i0, i1 = int(lo * 20), min(len(rms), int(hi * 20) + 1)
+            if i1 > i0:
+                b = (i0 + int(np.argmin(rms[i0:i1]))) / 20.0
+        b = min(max(b, a + PART_MIN), d0)
+        spans.append((round(a, 2), round(b, 2))); a = b
+    return spans, (int(a // 60) if d0 - a > 0.5 else 0)
 
 
 def process_uploads(st: dict, tmp: Path) -> None:
@@ -1225,7 +1255,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
             _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
             continue
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Got your clip — adding it to the queue (a few minutes)." if job.get("asis")
-                                                              else "Got your video — finding the best moments now (usually 5–20 min)."})
+                                                              else "Got your video — cutting it into 25–30 second parts (usually 5–15 min)."})
         src = tmp / f"upload_{job.get('id', num)}.mp4"
         link = job.get("url") or ""
         offset = 0.0
@@ -1261,16 +1291,12 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 if moments[0]["hook"]:
                     moments[0]["hook_ai"] = True
             else:   # your pasted link / upload: straight parts in order until the video ends (no hunting, no chopping)
-                d0 = duration_of(src)
-                n = max(1, min(PART_MAX, int(d0 // PART_S) + (1 if d0 % PART_S >= 10 else 0)))
-                moments = []
-                for k in range(n):
-                    a = k * PART_S
-                    b = d0 if k == n - 1 and (PART_MAX * PART_S >= d0) else min(d0, a + PART_S)
-                    moments.append({"start": float(a), "end": float(b), "score": 1.0, "reasons": [f"part {k + 1} of {n}"],
-                                    "text": "", "hook": f"Part {k + 1}", "part": k + 1, "parts": n})
-                if d0 > PART_MAX * PART_S:
-                    job["cut_short"] = int(PART_MAX * PART_S // 60)
+                spans, short = split_parts(src)
+                moments = [{"start": a, "end": b, "score": 1.0, "reasons": [f"part {k + 1} of {len(spans)}"],
+                            "text": "", "hook": f"Part {k + 1}", "part": k + 1, "parts": len(spans)}
+                           for k, (a, b) in enumerate(spans)]
+                if short:
+                    job["cut_short"] = short
         except Exception as e:  # noqa: BLE001
             log(f"upload {num} failed: {e}")
             hint = ("YouTube blocked the download from GitHub's servers — save the video and use Upload instead."
@@ -1301,7 +1327,11 @@ def process_uploads(st: dict, tmp: Path) -> None:
                         m["text"] = transcript(raw)
                     except Exception:  # noqa: BLE001
                         m["text"] = ""
-                cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(login))
+                try:
+                    cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(login))
+                except Exception as e:  # noqa: BLE001   a webcam-check error never costs you the clip: full screen
+                    log(f"webcam check failed {cid}: {e}")
+                    cam, q, frac = None, "none", None
                 rec = {"status": "new", "source": "upload", "streamer": name, "login": login,
                        "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name)), "campaign": s_cfg.get("campaign", ""),
                        "title": f"{job.get('name', 'Your video')} @ {int(m['start'] // 60)}:{int(m['start'] % 60):02d}",
@@ -1334,7 +1364,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 log(f"cutting clip {cid} failed: {e}")
         msg = (f"Made {len(made)} part{'s' if len(made) != 1 else ''} from **{job.get('name', 'your video')}** — they're in Your clips (they don't auto-post)"
                + (f". Long video: only the first {job['cut_short']} minutes were made — paste it again with a time range for the rest" if job.get("cut_short") else "") + ":\n"
-               + "\n".join(made)) if made else "No strong moments found in this video."
+               + "\n".join(made)) if made else "Couldn't make parts from this video — try uploading the file instead."
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": msg})
         _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
         if ref:
@@ -1893,12 +1923,12 @@ def main() -> None:
 
     # 4a. keep the queue to the best QUEUE_MAX clips (about 3 days of posts) so the site stays small
     fresh = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new"]
-    keep = {r["id"] for r in mix_order(fresh)[:QUEUE_MAX]}
+    keep = {r["id"] for r in mix_order([r for r in fresh if r.get("source") != "upload"])[:QUEUE_MAX]}   # your parts don't use up stream-clip spots
     for r in fresh:
         if r["id"] not in keep and not r.get("post_now") and not r.get("hook_by_user") and r.get("source") != "upload":
             clips[r["id"]].update(status="expired", skip_reason="queue full")
-    if len(fresh) > QUEUE_MAX:
-        log(f"queue full: kept {QUEUE_MAX} of {len(fresh)} clips")
+    if len([r for r in fresh if r.get("source") != "upload"]) > QUEUE_MAX:
+        log(f"queue full: kept {QUEUE_MAX} stream clips")
 
     # 3b. viral score for every queued clip BEFORE the videos are made (45 s cap, so Gemini can't hold them up) (Gemini, like OpusClip) + a better hook; throttled to save the free quota
     ai_status = st.get("ai_status", "")
@@ -2000,7 +2030,7 @@ def main() -> None:
                 hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
                 ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + c.get("layout", "")).encode()).hexdigest()[:10]
                 need_f = c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists()
-                need_c = c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists()
+                need_c = (c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists()) and not c.get("no_clean")
                 if (CAMHD / f"{hd_key(cid, c)}.mp4").exists() and not c.get("hd"):   # AI-upscaled webcam came back: re-make
                     need_f = need_c = True
                 if need_f or need_c:
@@ -2262,6 +2292,15 @@ def main() -> None:
     def site_mb():
         return sum(f.stat().st_size for f in VID.rglob("*") if f.is_file()) / 1e6   # incl. quick-edit videos (v/e)
     mb = site_mb()
+    if mb > SITE_MAX_MB:   # first: no-caption spare copies of your oldest parts (the captioned video stays; edits still work)
+        mine = sorted([(c.get("found") or "", cid) for cid, c in clips.items() if c["status"] == "new" and c.get("source") == "upload"])
+        for _, cid in mine[:-10]:
+            if mb <= SITE_MAX_MB:
+                break
+            f = VID / f"{cid}_clean.mp4"
+            if f.exists():
+                f.unlink(); clips[cid].pop("clean_v", None); clips[cid]["no_clean"] = True
+                mb = site_mb()
     if mb > SITE_MAX_MB:
         def keep_score(c: dict) -> float:
             """Higher = keep. Unrated clips count as average (they're usually brand new, not bad), and fresh moments

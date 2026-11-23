@@ -524,6 +524,7 @@ header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-
   <span class="ind" id="ind"></span>
   <button data-tab="today" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="11" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Studio<b id="pcount"></b></button>
   <button data-tab="clips" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="3"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg>Clips<b id="qcount"></b></button>
+  <button data-tab="mine" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Mine<b id="mcount"></b></button>
   <button data-tab="results" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M5 19V11M12 19V5M19 19v-6"/></svg>Results</button>
 </nav>
 <div class="sheet" id="sheet"><div class="in" id="sheetin"></div></div>
@@ -800,7 +801,8 @@ const badge = (st) => { const b = el('span', 'status ' + st.cls); if (st.spin) b
 let lastSig = '';
 function render() {
   const ql = queueList();
-  $('qcount').textContent = ql.filter((r) => r.final).length || '';
+  $('qcount').textContent = ql.filter((r) => r.final && r.source !== 'upload').length || '';
+  $('mcount').textContent = ql.filter((r) => r.final && r.source === 'upload').length || '';
   $('pcount').textContent = (toSubmit().length + yourTurn(ql).length) || '';
   const age = L ? (Date.now() - new Date(L.updated)) / 60000 : 99;
   $('dot').className = 'dot' + (!L ? ' bad' : age > 15 ? ' warn' : '');
@@ -810,11 +812,11 @@ function render() {
   if (sig === lastSig) return; lastSig = sig;
   const m = $('main'); const scroll = window.scrollY;
   const v = el('div', 'view');
-  ({ today: renderStudio, clips: renderQueue, results: renderResults })[tab](v, ql);
+  ({ today: renderStudio, clips: renderQueue, mine: renderMine, results: renderResults })[tab](v, ql);
   [...v.children].forEach((n, i) => n.style.setProperty('--i', Math.min(i, 10)));
   // keep playing videos playing
   const playing = m.querySelector('video:not([paused])');
-  if (playing && (tab === 'clips' || tab === 'today') && !playing.paused) return;
+  if (playing && (tab === 'clips' || tab === 'mine' || tab === 'today') && !playing.paused) return;
   const same = m.dataset.tab === tab;
   m.replaceChildren(v); if (same) { v.classList.add('still'); window.scrollTo(0, scroll); } else countUp(v);
   m.dataset.tab = tab;
@@ -1271,37 +1273,45 @@ function platState(p, s) {
 }
 
 // ---------------------------------------------------------------- QUEUE
-function renderQueue(v, ql) {
+function renderQueue(v, ql) {   // stream clips only: your pasted clips live in their own tab (Mine)
   v.append(topicCard());
-  const up = el('button', 'big alt', '＋ Make clips — link, upload or YouTube'); up.style.marginBottom = '10px'; up.onclick = () => openUpload(); v.append(up);
-  for (const u of uploads.filter((x) => Date.now() - x.at < 2 * 86400e3).slice(0, 4)) v.append(uploadItem(u));
-  const seg = el('div', 'seg');
-  for (const [k, t] of [['final', 'With caption'], ['clean', 'No caption']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', variant === k); b.onclick = () => { variant = k; ls.set('gc-variant', k); lastSig = ''; render(); }; seg.append(b); }
-  v.append(seg);
-  const ready = ql.filter((r) => r.final); const prep = ql.length - ready.length;
-  v.append(Object.assign(el('div', 'mut', `${ready.length} ready in posting order${prep ? ` · ${prep} being made` : ''}${variant === 'clean' ? ' · no-caption copies (auto-posts use the captioned one)' : ''}`), { style: 'margin:0 2px 10px' }));
+  const qs = ql.filter((r) => r.source !== 'upload'); const nm = ql.filter((r) => r.source === 'upload' && r.final).length;
+  if (nm) { const b = el('button', 'card'); b.style.cssText = 'width:100%;text-align:left;display:flex;align-items:center;gap:10px'; const t = el('div');
+    t.append(el('b', null, `${nm} of your clip${nm > 1 ? 's' : ''} in Mine`), el('div', 'mut', 'Clips from links you pasted — kept separate, never auto-posted')); b.append(t, el('span', 'lnk', 'Open →')); b.onclick = () => switchTab('mine'); v.append(b); }
+  v.append(variantSeg());
+  const ready = qs.filter((r) => r.final); const prep = qs.length - ready.length;
+  v.append(Object.assign(el('div', 'mut', `${ready.length} stream clips ready in posting order${prep ? ` · ${prep} being made` : ''}${variant === 'clean' ? ' · no-caption copies (auto-posts use the captioned one)' : ''}`), { style: 'margin:0 2px 10px' }));
   if (!ready.length) { v.append(el('div', 'empty', 'Queue is empty — new clips arrive with the next clip-maker run (every 10 min).')); return; }
   const plan = slotPlan().filter((s) => +s > Date.now() - 60000); let qi = 0;
-  const cards = [];
   ready.forEach((r, i) => {
     let st;
     if (r.nowing) st = { cls: 's-busy', txt: 'Posting now', spin: true };
-    else if (r.source === 'upload') st = { cls: 's-wait', txt: 'You post this · not automatic' };
     else if (L && (L.paused || L.buffer_off)) st = { cls: 's-wait', txt: `#${qi + 1} in line · posting ${L.buffer_off ? 'paused' : 'off'}` };
     else { const s = plan[qi]; st = { cls: qi === 0 ? 's-next' : 's-wait', txt: s ? `${qi === 0 ? 'Next · ' : ''}~${tET(s)}` : `#${qi + 1} · tomorrow` }; }
-    if (!r.nowing && r.source !== 'upload') qi++;
-    const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; cards.push([r, c]);
+    if (!r.nowing) qi++;
+    const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; v.append(c);
   });
-  // your own clips (pasted links / uploads) get their own section, never mixed in with the stream clips
-  const ord = (r) => [(r.found || r.created || ''), r.part || 0]; const stream = cards.filter(([r]) => r.source !== 'upload'), mine = cards.filter(([r]) => r.source === 'upload')
-    .sort(([a], [b]) => ((ord(b)[0] > ord(a)[0]) - (ord(b)[0] < ord(a)[0])) || (ord(a)[1] - ord(b)[1]));   // newest video first, its parts in order
-  if (mine.length) v.append(el('div', 'qsec', `Stream clips · ${stream.length}`));
-  stream.forEach(([, c]) => v.append(c));
-  if (!stream.length) v.append(el('div', 'empty', 'No stream clips ready yet — the clip maker runs every 10 min.'));
-  if (mine.length) {
-    v.append(el('div', 'qsec', `Your clips · ${mine.length}`), Object.assign(el('div', 'mut', 'From links you pasted or videos you uploaded. These never auto-post: use Ship it now or post them yourself. No webcam? The gameplay fills the whole screen.'), { style: 'margin:0 2px 10px' }));
-    mine.forEach(([, c]) => v.append(c));
-  }
+}
+function variantSeg() { const seg = el('div', 'seg');
+  for (const [k, t] of [['final', 'With caption'], ['clean', 'No caption']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', variant === k); b.onclick = () => { variant = k; ls.set('gc-variant', k); lastSig = ''; render(); }; seg.append(b); }
+  return seg; }
+// MINE: clips from links you pasted / videos you uploaded - their own queue, never auto-posted
+function renderMine(v, ql) {
+  const up = el('button', 'big alt', '＋ Make clips — paste a link or upload'); up.style.marginBottom = '10px'; up.onclick = () => openUpload(); v.append(up);
+  for (const u of uploads.filter((x) => Date.now() - x.at < 2 * 86400e3).slice(0, 4)) v.append(uploadItem(u));
+  const mine = ql.filter((r) => r.source === 'upload'); const ready = mine.filter((r) => r.final); const prep = mine.length - ready.length;
+  v.append(Object.assign(el('div', 'mut', `${ready.length} ready${prep ? ` · ${prep} being made` : ''} · cut into 25–30 s parts in order · these never auto-post: tap Ship it now or post them yourself`), { style: 'margin:0 2px 10px' }));
+  if (ready.length) v.append(variantSeg());
+  if (!ready.length) { v.append(el('div', 'empty', prep ? 'Your parts are being made — they show up here in a few minutes.' : 'Paste a link above — its parts show up here, separate from the stream clips.')); return; }
+  const ord = (r) => r.found || r.created || '';
+  ready.sort((a, b) => ((ord(b) > ord(a)) - (ord(b) < ord(a))) || ((a.part || 0) - (b.part || 0)));   // newest video first, its parts in order
+  let last = '';
+  ready.forEach((r, i) => {
+    const vid = (r.title || '').replace(/ · Part \d+$/, '');
+    if (vid !== last) { v.append(el('div', 'qsec', vid || 'Your video')); last = vid; }
+    const st = r.nowing ? { cls: 's-busy', txt: 'Posting now', spin: true } : { cls: 's-wait', txt: r.part ? `Part ${r.part}${r.parts ? ' of ' + r.parts : ''} · you post` : 'You post this' };
+    const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; v.append(c);
+  });
 }
 const vidOf = (r) => (variant === 'clean' && r.clean) ? r.clean : r.final;
 const U = (p) => /^https?:/.test(p || '') ? p : PAGES + p;   // site path or a full link
@@ -1311,8 +1321,8 @@ function withPreview(r, vd, holder) {
   vd.src = U(r.clean);
   const o = el('div', 'hkov ' + (pv.style === 'black' ? 'blk' : '')); o.textContent = pv.hook || '';
   const lay = r.layout_used || 'split';
-  const top = pv.y != null ? pv.y * 100 : lay === 'full' ? 50 : lay.startsWith('irl') ? 60 : 35;
-  o.style.top = top + '%'; o.style.transform = `translate(-50%, ${pv.y != null || lay === 'full' ? '-50%' : '-20%'})`;
+  const top = pv.y != null ? pv.y * 100 : lay === 'full' ? 50 : lay === 'fill' ? 20 : lay.startsWith('irl') ? 60 : 35;
+  o.style.top = top + '%'; o.style.transform = `translate(-50%, ${pv.y != null || lay === 'full' || lay === 'fill' ? '-50%' : '-20%'})`;
   const fit = () => { const w = vd.getBoundingClientRect().width || holder.getBoundingClientRect().width; o.style.fontSize = (w * 0.052 * (pv.scale || 1)) + 'px'; o.style.maxWidth = (w * 0.84) + 'px'; };
   holder.style.position = holder.style.position || 'relative'; holder.append(o, el('div', 'pvtag', 'Preview · final video in ~1 min')); requestAnimationFrame(fit); vd.addEventListener('loadedmetadata', fit);
 }
@@ -1434,7 +1444,7 @@ function openHookEdit(r) {
 function openEditor(r) {
   if (!r.src) { sheet('Edit', [el('div', 'note warn', 'This clip was made before the editor existed. Its still frame appears after its next re-make (a few minutes) — try again soon.')]); return; }
   const ul = r.user_layout || {}; const used = r.layout_used || 'split';
-  const base = { mode: ul.mode || (used.startsWith('irl') ? 'irl' : used === 'full' ? 'full' : 'split'), zoom: ul.zoom || 1, pan: ul.pan || 0,
+  const base = { mode: ul.mode || (used.startsWith('irl') || used === 'fill' ? 'irl' : used === 'full' ? 'full' : 'split'), zoom: ul.zoom || 1, pan: ul.pan || 0,
     irl_x: ul.irl_x ?? (used.startsWith('irl') ? parseFloat(used.split(':')[1]) : 0.5), hook_y: ul.hook_y ?? null, cam: null,
     hook: r.hook || '', caption: r.caption || '', hook_style: ul.hook_style || 'white', hook_scale: ul.hook_scale || 1,
     top_h: ul.top_h || TOP, speed: ul.speed || 1, trim: ul.trim || null };
@@ -1690,7 +1700,7 @@ function b64(blob) { return new Promise((res, rej) => { const r = new FileReader
 async function uploadVideo(file, login, streamer, extra = {}) {
   const id = Date.now().toString(36);
   const u = { id, name: file.name.replace(/\.[^.]+$/, '').slice(0, 60), at: Date.now(), state: 'uploading', pct: 0 };
-  uploads.unshift(u); saveUploads(); switchTab('queue');
+  uploads.unshift(u); saveUploads(); switchTab('mine');
   const CH = 20 * 1024 * 1024; const parts = []; const tree = [];
   try {
     for (let i = 0, off = 0; off < file.size; i++, off += CH) {
@@ -1709,7 +1719,7 @@ async function uploadVideo(file, login, streamer, extra = {}) {
 }
 async function clipLink(url, section, login, streamer) {
   const id = Date.now().toString(36); const u = { id, name: url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40), at: Date.now(), state: 'processing', pct: 100 };
-  uploads.unshift(u); saveUploads(); switchTab('queue');
+  uploads.unshift(u); saveUploads(); switchTab('mine');
   try { const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, url, section, name: '', login, streamer }) }); u.issue = iss.number; toast('Got it — finding the best moments'); }
   catch (e) { u.state = 'failed'; u.msg = `Couldn't send the link (GitHub ${e.status || e.message})`; }
   saveUploads(); lastSig = ''; render();
@@ -1997,7 +2007,7 @@ function moveInd() { const b = document.querySelector(`nav button[data-tab="${ta
 function switchTab(t) {
   t = TAB_ALIAS[t] || t;
   if (t === tab) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-  const order = ['today', 'clips', 'results']; document.documentElement.dataset.dir = order.indexOf(t) > order.indexOf(tab) ? 'fwd' : 'back';
+  const order = ['today', 'clips', 'mine', 'results']; document.documentElement.dataset.dir = order.indexOf(t) > order.indexOf(tab) ? 'fwd' : 'back';
   const go = () => { tab = t; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === t)); moveInd(); lastSig = ''; $('main').dataset.tab = ''; render(); window.scrollTo(0, 0); };
   haptic();
   if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(go); else go();
