@@ -32,7 +32,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           sudo apt-get -qq install -y espeak-ng >/dev/null 2>&1 || true
-          pip install -q --disable-pip-version-check torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q --disable-pip-version-check torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
           pip install -q --disable-pip-version-check "kokoro>=0.9.4" soundfile demucs faster-whisper pillow imageio-ffmpeg numpy
           git fetch -q --depth=1 origin state:refs/remotes/origin/state
           git show origin/state:state.json > /tmp/state.json
