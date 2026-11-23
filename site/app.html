@@ -4,9 +4,11 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Clip HQ</title>
+<title>Clip Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#08080d">
+<meta name="theme-color" content="#07060c">
 <style>
 :root{--bg:#08080d;--p1:#13131c;--p2:#1b1b27;--p3:#242434;--line:#ffffff12;--fg:#f5f5fa;--mut:#9898ad;--pink:#ff3d8b;--cyan:#29e3ff;--green:#2ee59d;--amber:#f5b544;--red:#ff6b6b;
   --r:18px;--ease:cubic-bezier(.2,.8,.2,1)}
@@ -273,18 +275,242 @@ nav .ind{transition:transform .45s var(--spring),width .45s var(--spring)!import
 .dot.s0{background:#8b5cff}.dot.s1{background:#8b5cff70}.dot.s2{background:#8b5cff45}.dot.s3{background:#8b5cff30}.dot.s4{background:#8b5cff22}
 .feed{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}.feed>div{flex:1}
 .feed .fd{flex:0 0 8px;height:8px;border-radius:50%;background:var(--mut)}.feed.new .fd{background:var(--green)}.feed.dropped .fd{background:var(--red)}.feed.shift .fd{background:#8b5cff}
+
+/* ================= CLIP STUDIO skin ================= */
+:root{--bg:#07060c;--p1:#0f0d17;--p2:#151222;--p3:#1d1930;--line:#ffffff14;--fg:#f3f1fa;--mut:#8f89a8;--pink:#ff2e88;--violet:#8b5cf6;--cyan:#22d3ee;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--disp:Anton,Impact,"Arial Narrow",sans-serif}
+html,body{background:radial-gradient(1200px 600px at 80% -10%,#2a0f3a55,transparent 60%),radial-gradient(900px 500px at -10% 10%,#14093055,transparent 60%),var(--bg)}
+header{background:linear-gradient(var(--bg) 75%,#07060c00);align-items:flex-end;padding-bottom:12px}
+.logo{display:none}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+.brand .k{font:700 10px/1 var(--mono);letter-spacing:.12em;color:var(--mut);text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.brand .k:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--pink);box-shadow:0 0 10px var(--pink)}
+.brand h1{font:400 34px/0.95 var(--disp);letter-spacing:.5px;margin:2px 0 0;text-transform:uppercase;white-space:nowrap}
+.brand h1 i{font-style:normal;color:var(--pink);margin-left:10px}
+.brand .sub{font:500 10.5px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.ship{font:400 17px/0.95 var(--disp);color:var(--pink);text-align:right;text-transform:uppercase;margin-left:auto;letter-spacing:.5px;text-shadow:0 0 18px #ff2e8866}
+.icbtn{margin-left:10px}
+.icbtn button{border-radius:10px;background:var(--p1)}
+main{max-width:1180px}
+.card,.clip{background:linear-gradient(180deg,#120f1c,#0d0b15);border:1px solid var(--line);border-radius:14px}
+.card h2,.clip .hook{letter-spacing:.2px}
+h2{font-family:var(--disp);font-weight:400;text-transform:uppercase;letter-spacing:.6px}
+.btn.pink,.big.go{background:var(--pink)!important;color:#fff!important}
+nav{border-radius:16px;background:#0f0d17ee}
+nav button{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+.lbl{font:700 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut);display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:9px}
+.lbl b{color:var(--pink);font-weight:700}
+.pane{background:linear-gradient(180deg,#120f1c,#0c0a13);border:1px solid var(--line);border-radius:14px;padding:12px;position:relative;overflow:hidden}
+.pane:before{content:"";position:absolute;inset:0;border-radius:14px;pointer-events:none;box-shadow:inset 0 1px 0 #ffffff0d}
+.studio{display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:900px){.studio{grid-template-columns:1.55fr 1fr}.studio .seq,.studio .pipe,.studio .kit{grid-column:1 / -1}}
+/* pipeline strip */
+.pipe{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:10px}
+.pipe::-webkit-scrollbar{display:none}
+.st{flex:1;min-width:92px;border:1px solid var(--line);border-radius:10px;padding:8px 9px;background:#0b0912}
+.st .n{font:700 10px var(--mono);color:var(--mut);letter-spacing:.1em}
+.st .t{font:400 17px/1.1 var(--disp);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.st .s{font:500 10px/1.3 var(--mono);color:var(--mut);margin-top:4px;min-height:13px}
+.st.on{border-color:#ff2e8899;background:linear-gradient(180deg,#2a0d22,#12091a);box-shadow:0 0 0 1px #ff2e8833,0 0 24px #ff2e8822}
+.st.on .s{color:var(--pink)}.st.ok .s{color:var(--green)}
+.st.on .n:after{content:" ●";color:var(--pink);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+/* program monitor */
+.prog .mon{position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:9/16;max-height:72vh;margin:0 auto}
+@media(min-width:900px){.prog .mon{max-height:640px}}
+.prog video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.mon .ov{position:absolute;left:8px;right:8px;top:8px;display:flex;justify-content:space-between;pointer-events:none}
+.mon .ov span{font:700 9.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;background:#000a;border:1px solid #ffffff22;border-radius:6px;padding:4px 6px}
+.mon .ov .r{color:var(--pink);border-color:#ff2e8866}
+.mon .crop{position:absolute;left:12%;right:12%;top:6%;height:30%;border:1.5px solid #22d3ee;border-radius:4px;pointer-events:none;opacity:.0;transition:opacity .3s}
+.mon.showcrop .crop{opacity:.75}
+.mon .crop:after{content:"9:16 / CROP";position:absolute;top:-1px;left:50%;transform:translate(-50%,-100%);font:700 9px var(--mono);background:#22d3ee;color:#000;padding:2px 5px;border-radius:3px}
+.transport{display:flex;align-items:center;gap:10px;margin-top:10px}
+.transport button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--p2);font-size:15px}
+.tc{font:700 18px var(--mono);letter-spacing:.04em}
+.tc small{color:var(--mut);font-size:12px}
+.scrub{flex:1;height:4px;border-radius:4px;background:#ffffff1a;position:relative;overflow:hidden}
+.scrub i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--pink),var(--violet));width:0}
+/* media bin */
+.bin{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.bin::-webkit-scrollbar{display:none}
+.bin button{flex:none;width:86px;border:1px solid var(--line);border-radius:9px;background:#0b0912;padding:0;overflow:hidden;text-align:left}
+.bin button .th{aspect-ratio:9/16;background-size:cover;background-position:center;position:relative}
+.bin button .th em{position:absolute;left:4px;bottom:4px;font:700 8.5px var(--mono);font-style:normal;background:#000b;padding:2px 4px;border-radius:4px;text-transform:uppercase}
+.bin button .th u{position:absolute;right:4px;top:4px;font:700 9px var(--mono);text-decoration:none;background:var(--pink);padding:2px 4px;border-radius:4px}
+.bin button.sel{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink),0 0 18px #ff2e8844}
+/* inspector */
+.insp textarea{width:100%;min-height:74px;resize:vertical;border-radius:9px;border:1px solid #ff2e8855;background:#0a0811;color:#fff;font:400 22px/1.15 var(--disp);text-transform:uppercase;letter-spacing:.4px;padding:10px 11px;outline:none}
+.insp textarea:focus{border-color:var(--pink);box-shadow:0 0 0 3px #ff2e8822}
+.kv{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;margin-top:10px;font:600 11px var(--mono);color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.kv b{color:var(--fg);font-weight:700}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:#0b0912;border-radius:8px;padding:6px 10px;font:700 10.5px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+.seg button.on{border-color:var(--pink);color:#fff;background:#ff2e881f}
+.row2{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.row2 .btn{flex:1}
+/* output */
+.outp{display:flex;gap:12px;align-items:flex-start}
+.outp .th{width:86px;aspect-ratio:9/16;border-radius:8px;background-size:cover;background-position:center;border:1px solid var(--line);flex:none}
+.outp .meta{flex:1;min-width:0}
+.outp .nm{font:400 20px/1 var(--disp);text-transform:uppercase;letter-spacing:.5px}
+.outp .sp{font:600 10.5px/1.5 var(--mono);color:var(--mut);text-transform:uppercase;margin-top:4px}
+.eq{display:flex;gap:2px;align-items:flex-end;height:20px;margin-top:6px}
+.eq i{width:3px;background:var(--pink);border-radius:2px;animation:eq 1s ease-in-out infinite}
+@keyframes eq{0%,100%{height:20%}50%{height:100%}}
+.shipbtns{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.shipbtns .btn{width:100%}
+/* sequence */
+.seq .tracks{position:relative;display:grid;grid-template-columns:62px 1fr;gap:6px 8px;align-items:center}
+.seq .tn{font:700 9px var(--mono);letter-spacing:.1em;color:var(--mut);text-transform:uppercase}
+.seq .tl{height:30px;border-radius:6px;background:#0b0912;border:1px solid var(--line);position:relative;overflow:hidden}
+.seq .src{display:flex}
+.seq .src i{flex:1;background-size:cover;background-position:center;border-right:1px solid #0007}
+.seq .cap{display:flex;align-items:center;padding:0 3px;gap:3px}
+.seq .cap span{height:20px;border-radius:4px;background:#ff2e8833;border:1px solid #ff2e8899;font:700 9px/18px var(--mono);padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ffd1e4}
+.seq .rf svg,.seq .au canvas{position:absolute;inset:0;width:100%;height:100%}
+.seq .au{height:40px}
+.seq .ph{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--pink);box-shadow:0 0 10px var(--pink);left:70px;pointer-events:none;transition:left .1s linear}
+.seq .ph:before{content:"";position:absolute;top:-4px;left:-5px;border:6px solid transparent;border-top-color:var(--pink)}
+.seq .ruler{display:flex;justify-content:space-between;font:600 9px var(--mono);color:var(--mut);margin:0 0 6px 70px}
+.chip{position:absolute;font:700 9px var(--mono);padding:3px 6px;border-radius:5px;background:#22d3ee;color:#000;white-space:nowrap}
+/* toolkit */
+.kit .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 14px}
+@media(min-width:700px){.kit .grid{grid-template-columns:repeat(4,1fr)}}
+.kit .grid div{font:600 10.5px/1.7 var(--mono);color:#c9c3de;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kit .grid b{color:var(--pink);margin-right:7px}
+@media(max-width:600px){.ship{display:none}.brand h1{font-size:30px}.prog .mon{max-height:62vh}}
+.empty{font:600 12px var(--mono);color:var(--mut);text-align:center;padding:30px 10px;text-transform:uppercase;letter-spacing:.08em}
+
+/* ===== v2: match the reference studio exactly ===== */
+html,body{background:radial-gradient(900px 520px at 15% 18%,#3a1238aa,transparent 65%),radial-gradient(800px 600px at 95% 0%,#2b0f3aaa,transparent 60%),linear-gradient(180deg,#1a0d1e,#0d0911 45%,#0b0910)}
+.sans{font-family:Inter,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-right:4px}
+.brand .k{color:#b9b0c9}.brand .k b{margin-left:auto}
+.brand h1{font-size:46px;letter-spacing:.3px}.brand h1 i{margin-left:26px}
+.brand .sub{color:#b9b0c9;font-size:12px;letter-spacing:.12em;margin-top:4px}
+.ship{font-size:22px;line-height:1.05}
+.topr{position:absolute;right:18px;top:calc(12px + env(safe-area-inset-top));font:600 10px var(--mono);letter-spacing:.12em;color:#b9b0c9;text-transform:uppercase}
+.bar{display:flex;align-items:center;gap:18px;border:1px solid #ffffff1c;border-radius:6px;background:#140f1acc;padding:9px 14px;font:600 11px var(--mono);letter-spacing:.06em;margin-bottom:12px}
+.bar .a{color:var(--pink);text-transform:uppercase;white-space:nowrap}
+.bar .b{flex:1;color:#ddd5ea;font-family:Inter,sans-serif;font-weight:500;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .c{color:#b9b0c9;white-space:nowrap}
+.pane{background:#130e19e6;border:1px solid #ffffff1f;border-radius:10px;padding:14px}
+.ttl{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.ttl span{font:500 13.5px Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#e9e3f3}
+.ttl b{font:700 9.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#b9b0c9}.ttl b.p{color:var(--pink)}
+.studio{gap:12px}
+@media(min-width:900px){.studio{grid-template-columns:1.6fr 1fr}}
+/* program: 16:9 source monitor with a 9:16 crop box */
+.prog .src16{position:relative;border:1px solid #ffffff1a;border-radius:4px;background:#0a0710;padding:10px 10px 0}
+.prog .src16 .cap0{font:700 10px var(--mono);letter-spacing:.1em;color:#d8d0e6;text-transform:uppercase;margin-bottom:8px}
+.prog .mon{aspect-ratio:16/9;max-height:none;border-radius:2px;background:#000;overflow:hidden}
+.prog .mon .bgb{position:absolute;inset:-20px;background-size:cover;background-position:center;filter:blur(18px) brightness(.55) saturate(1.2)}
+.prog .mon video{position:absolute;left:50%;top:0;height:100%;width:auto;aspect-ratio:9/16;transform:translateX(-50%);object-fit:cover}
+.prog .mon .crop{opacity:1!important;left:auto;right:auto;top:0;bottom:0;height:auto;aspect-ratio:9/16;left:50%;transform:translateX(-50%);border:1.5px solid #7ee0d0;border-radius:0}
+.prog .mon .crop:after{content:attr(data-l);background:#7ee0d0;color:#062;left:0;transform:translateY(-100%);top:-2px;font-size:8.5px}
+.prog .mon .crop i{position:absolute;width:7px;height:7px;background:#7ee0d0;border:1px solid #0a3}
+.prog .mon .crop .x{position:absolute;bottom:10px;left:6px;font:700 8.5px var(--mono);background:#7ee0d0;color:#063;padding:2px 5px;border-radius:3px}
+.prog .mon .crop:before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid #7ee0d066}
+.prog .mon .ov{display:none}
+.hookbox{position:relative;margin:12px 6% 0;border:1.5px solid #e8b77c;padding:8px 10px;text-align:center;font:400 clamp(26px,5.5vw,46px)/1.05 var(--disp);color:var(--pink);text-transform:uppercase;letter-spacing:.3px;min-height:44px;outline:none}
+.hookbox i{position:absolute;width:7px;height:7px;background:#e8b77c}
+.prog .credit{font:700 10px var(--mono);color:var(--pink);margin:6px 6px 0}
+.call{position:absolute;font:700 9.5px var(--mono);padding:3px 7px;border-radius:3px;white-space:nowrap;z-index:3;box-shadow:0 2px 8px #0008}
+.call:before{content:"";position:absolute;left:-12px;top:-14px;width:16px;height:18px;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18'%3E%3Cpath d='M1 1l13 7-6 1.6L5.5 16z' fill='%23fff' stroke='%23000' stroke-width='1'/%3E%3C/svg%3E")}
+.c-teal{background:#7ee0d0;color:#063}.c-pink{background:#ff6fae;color:#3a0018}.c-peach{background:#f6c49a;color:#4a2300}.c-lilac{background:#b9a2ff;color:#1f0a55}.c-lime{background:#d7f08a;color:#283800}.c-mint{background:#9fe8c0;color:#073}
+.transport{justify-content:space-between;margin-top:12px;padding:0 4px}
+.transport button{width:auto;height:auto;border:0;background:none;font-size:20px;color:var(--pink);padding:0 4px}
+.tc{font:500 21px var(--mono)}
+.tc small{display:none}
+.transport .tr{font:600 10.5px var(--mono);letter-spacing:.1em;color:#b9b0c9;text-transform:uppercase}
+.scrub{margin:10px 4px 2px;height:3px;flex:none;background:#ffffff1a}
+.scrub i{background:var(--pink)}
+/* media bin: landscape thumbs */
+.bin button{width:132px;border-radius:2px;border:1px solid #ffffff22;background:none}
+.bin button .th{aspect-ratio:16/10}
+.bin button .th em,.bin button .th u{display:none}
+.bin .lab{font:600 10px var(--mono);letter-spacing:.06em;color:#b9b0c9;text-transform:uppercase;padding:5px 1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bin .lab b{color:var(--pink)}
+.bin button.sel{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink)}
+.bin .wrap{flex:none;position:relative}
+/* inspector */
+.insp textarea{border-radius:2px;border:1px solid #ffffff33;background:#0c0912;font-size:22px;min-height:64px;padding:10px 12px}
+.slid{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;font:700 10px var(--mono);letter-spacing:.1em;color:#b9b0c9;text-transform:uppercase;margin-top:12px}
+.slid input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:linear-gradient(90deg,#e8b77c var(--v,50%),#ffffff26 var(--v,50%));border-radius:3px}
+.slid input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#e8b77c;border:2px solid #2a1a0a}
+.slid .val{color:#e8b77c}
+.mc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;align-items:start}
+.mc .k{font:700 10px var(--mono);letter-spacing:.1em;color:#9fe8c0;text-transform:uppercase}
+.mc .x{font:500 18px var(--mono);color:#9fe8c0;margin-top:8px}
+.mc .sa{font:700 9.5px var(--mono);color:#b9b0c9;letter-spacing:.08em;margin-top:8px;text-transform:uppercase}
+.mc .kf{margin-top:8px;border:1px solid #9fe8c055;background:#9fe8c014;color:#9fe8c0;font:700 9px var(--mono);padding:4px 8px;display:inline-block;letter-spacing:.08em}
+.mc svg{width:100%;height:78px}
+.rgb{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;margin-top:10px;font:700 10px var(--mono);color:#e8b77c;letter-spacing:.08em}
+.rgb svg{height:18px;width:100%}
+.seg button{border-radius:3px}
+/* output */
+.outp .th{width:72px;border:1.5px solid var(--pink);border-radius:3px}
+.outp .nm{font-size:22px}
+.outp .sp{color:#b9b0c9}.outp .sp.g{color:#9fe8c0}
+.expbar{display:flex;align-items:center;gap:10px;margin-top:10px}
+.expbar .e{flex:1;border:1px solid #ffffff2a;background:#0c0912;font:700 10px var(--mono);letter-spacing:.1em;text-align:center;padding:7px;color:#e9e3f3}
+.meter{display:flex;gap:3px;align-items:flex-end;height:34px}
+.meter i{width:5px;border-radius:1px;background:linear-gradient(0deg,#9fe8c0,#d7f08a 70%,#f6c49a);animation:eq 1.1s ease-in-out infinite}
+.eq{display:none}
+/* sequence */
+.seq .tracks{grid-template-columns:64px 1fr}
+.seq .tl{border-radius:2px;background:#0c0912;border-color:#ffffff1a;height:34px}
+.seq .src i{border-right:2px solid #0c0912}
+.seq .cap span{background:#3b2342;border-color:#6d4775;color:#e6d3ee;border-radius:2px;flex:1;text-transform:uppercase}
+.seq .cap span.on{background:#f6c49a33;border-color:#f6c49a}
+.seq .ph{background:#fff;box-shadow:none;width:1.5px}
+.seq .ph:before{border-top-color:var(--pink)}
+.seq .au canvas{opacity:.95}
+.seq .ruler{font:600 10px var(--mono);color:#b9b0c9}
+/* toolkit */
+.kit .grid{grid-template-columns:1fr;gap:0 34px}
+@media(min-width:700px){.kit .grid{grid-template-columns:repeat(3,1fr)}}
+.kit .grid div{font:400 14px/1.9 Inter,sans-serif;color:#e9e3f3;border-bottom:1px solid #ffffff14;position:relative}
+.kit .grid b{font:700 10px var(--mono);color:var(--pink);display:inline-block;width:26px}
+.kit .grid div.u1:after,.kit .grid div.u2:after,.kit .grid div.u3:after,.kit .grid div.u4:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px}
+.kit .grid div.u1:after{background:#b9a2ff}.kit .grid div.u2:after{background:#d7f08a}.kit .grid div.u3:after{background:#7ee0d0}.kit .grid div.u4:after{background:#f6c49a}
+@media(max-width:600px){.brand h1{font-size:34px}.brand h1 i{margin-left:14px}.topr{display:none}.brand .sub .o{display:none}.bar .c{display:none}}
+
+/* ===== beginner help ===== */
+.ttl .q{width:18px;height:18px;border-radius:50%;border:1px solid #ffffff33;background:none;color:#b9b0c9;font:700 10px var(--mono);margin-left:8px;padding:0;vertical-align:middle}
+.needs{border:1px solid #ff2e8866;background:linear-gradient(90deg,#2a0d22,#160c1c);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.needs h3{margin:0 0 8px;font:400 20px var(--disp);text-transform:uppercase;letter-spacing:.5px}
+.needs .it{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #ffffff12;font-size:14px}
+.needs .it:first-of-type{border-top:0}
+.needs .it b{font:700 11px var(--mono);color:var(--pink);min-width:22px}
+.needs .it span{flex:1}
+.needs .it button{border:1px solid var(--pink);background:#ff2e881f;border-radius:8px;padding:6px 10px;font:700 11px var(--mono);text-transform:uppercase}
+.needs.ok{border-color:#2ee59d55;background:#0e1a15}
+.onb{position:fixed;inset:0;z-index:80;background:#05030acc;backdrop-filter:blur(8px);display:grid;place-items:center;padding:18px}
+.onb .in{max-width:460px;width:100%;background:#130e19;border:1px solid #ffffff22;border-radius:16px;padding:20px}
+.onb .kk{font:700 10px var(--mono);letter-spacing:.12em;color:var(--pink);text-transform:uppercase}
+.onb h2{font:400 34px/1 var(--disp);margin:8px 0 10px;text-transform:uppercase}
+.onb p{color:#d8d0e6;font-size:15px;line-height:1.5;margin:0 0 10px}
+.onb ul{margin:0 0 12px;padding-left:18px;color:#d8d0e6;line-height:1.6}
+.onb .dots{display:flex;gap:6px;margin:14px 0}
+.onb .dots i{width:22px;height:4px;border-radius:3px;background:#ffffff22}.onb .dots i.on{background:var(--pink)}
+.onb .nav2{display:flex;gap:8px}.onb .nav2 button{flex:1}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">GC</div>
-  <div><h1 id="ttl">Clip HQ</h1><div class="sub"><span class="dot" id="dot"></span><span id="livetxt">loading…</span></div></div>
-  <div class="icbtn"><button id="reboot" aria-label="Get newest version">↻</button><button id="gear" aria-label="Settings">⚙︎</button></div>
+  <div class="brand"><div class="k">Project / gta_vi_clips</div><h1 id="ttl">Clip Studio<i>/ VI</i></h1>
+    <div class="sub"><span class="o">Opus 5.5 &nbsp;×&nbsp; 16 tools &nbsp;·&nbsp; </span><span class="dot" id="dot"></span> <span id="livetxt">loading…</span></div></div>
+  <div class="topr">Edit preview</div>
+  <div class="ship">Clip it.<br>Ship it.</div>
+  <div class="icbtn"><button id="help" aria-label="How it works">?</button><button id="reboot" aria-label="Get newest version">↻</button><button id="gear" aria-label="Settings">⚙︎</button></div>
 </header>
 <main id="main"></main>
 <nav id="nav" role="tablist">
   <span class="ind" id="ind"></span>
-  <button data-tab="today" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/></svg>Today<b id="pcount"></b></button>
+  <button data-tab="today" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="11" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Studio<b id="pcount"></b></button>
   <button data-tab="clips" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="3"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg>Clips<b id="qcount"></b></button>
   <button data-tab="results" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><path d="M5 19V11M12 19V5M19 19v-6"/></svg>Results</button>
 </nav>
@@ -547,18 +773,212 @@ function render() {
   $('dot').className = 'dot' + (!L ? ' bad' : age > 15 ? ' warn' : '');
   $('livetxt').textContent = L ? `updated ${ago(L.updated)}` : 'connecting…';
   const sig = tab + JSON.stringify([Q.topic, (Q.trending || []).length, ql.map((r) => [r.id, r.final, r.clean, r.nowing, r.hook, r.viral]), L && [L.updated, L.paused, L.buffer_off, L.next_slot, (L.videos || []).length],
-    Object.keys(pend), openIssues, RUNS.slice(0, 6).map((r) => r.id + r.status), RUNSTEP, variant, submitted, uploads.map((u) => u.state + u.pct + (u.msg || ''))]);
+    Object.keys(pend), openIssues, SEL, Object.keys(JOBS), RUNS.slice(0, 6).map((r) => r.id + r.status), RUNSTEP, variant, submitted, uploads.map((u) => u.state + u.pct + (u.msg || ''))]);
   if (sig === lastSig) return; lastSig = sig;
   const m = $('main'); const scroll = window.scrollY;
   const v = el('div', 'view');
-  ({ today: renderToday, clips: renderQueue, results: renderResults })[tab](v, ql);
+  ({ today: renderStudio, clips: renderQueue, results: renderResults })[tab](v, ql);
   [...v.children].forEach((n, i) => n.style.setProperty('--i', Math.min(i, 10)));
   // keep playing videos playing
   const playing = m.querySelector('video:not([paused])');
-  if (playing && tab === 'clips' && !playing.paused) return;
+  if (playing && (tab === 'clips' || tab === 'today') && !playing.paused) return;
   const same = m.dataset.tab === tab;
   m.replaceChildren(v); if (same) { v.classList.add('still'); window.scrollTo(0, scroll); } else countUp(v);
   m.dataset.tab = tab;
+}
+
+
+
+// ---------------------------------------------------------------- beginner help
+const HELP = {
+  bar: 'What the robot is doing right now: 01 Find moments in streams → 02 Cut them → 03 Reframe for phones → 04 Caption → 05 Ship (post).',
+  program: 'The clip you picked, playing. The green box shows the phone-shaped (9:16) part that gets posted. Tap ▶ to watch.',
+  bin: 'Every clip that is ready to post. Tap one to look at it. A $ means it is for a paid Content Rewards campaign.',
+  insp: 'Change the words on the video here. Type, pick a white or black box, then tap "Save text" — the new video is ready in about a minute.',
+  out: 'The finished video. "Ship it now" posts it right away. "Save" downloads it so you can post it yourself — then tap "Posted ✓" so the robot doesn\'t post it twice.',
+  seq: 'The clip from start to end: the picture, the words, the camera moves and the sound. Tap anywhere on it to jump there.',
+  kit: 'The free tools that run your page in the cloud, 24/7 — you don\'t have to touch any of them.'};
+function helpBtn(key) { const b = el('button', 'q', '?'); b.onclick = (e) => { e.stopPropagation(); sheet('What is this?', [el('p', null, HELP[key])]); }; return b; }
+function needsCard(ql) {
+  const items = [];
+  const yt = yourTurn(ql); if (yt.length) items.push([yt.length, `clip${yt.length > 1 ? 's' : ''} for you to post yourself`, 'Show', () => { const n = document.querySelector('.card.turn'); if (n) n.scrollIntoView({ behavior: 'smooth' }); else switchTab('clips'); }]);
+  const ts = toSubmit(); if (ts.length) items.push([ts.length, `posted video${ts.length > 1 ? 's' : ''} to submit for pay`, 'Submit', () => { const n = document.querySelector('.sub-card'); if (n) n.scrollIntoView({ behavior: 'smooth' }); }]);
+  if (L && (L.paused || L.buffer_off)) items.push(['!', 'Auto-posting is OFF — nothing will post', 'Fix', () => { const n = document.querySelector('.hero2'); if (n) n.scrollIntoView({ behavior: 'smooth' }); }]);
+  const d = el('div', 'needs' + (items.length ? '' : ' ok'));
+  d.append(el('h3', null, items.length ? 'Needs you' : 'All good — nothing needs you'));
+  if (!items.length) d.append(el('div', 'mut', `The robot is posting on its own${L && L.next_slot ? ` · next post ${tET(L.next_slot)}` : ''}. Check back anytime.`));
+  for (const [n, t, bt, fn] of items) { const it = el('div', 'it'); const b = el('button', null, bt); b.onclick = fn; it.append(el('b', null, String(n)), el('span', null, t), b); d.append(it); }
+  return d;
+}
+const ONB = [
+  ['Welcome', 'Your clip page runs itself', ['A robot in the cloud watches Kai, Lacy, Speed, Clix, YourRAGE and more.', 'It finds the best moments, cuts them into phone videos, adds a hook, and posts them to TikTok and YouTube — about 6 times a day.', 'You don\'t have to do anything. This site lets you watch it work and step in when you want.']],
+  ['Studio', 'The main screen', ['<b>Media bin</b> — every clip ready to post. Tap one.', '<b>Program</b> — watch it.', '<b>Inspector</b> — change the words on the video (ready in ~1 minute).', '<b>Output</b> — Ship it now, Save it, or mark it Posted ✓.']],
+  ['Getting paid', 'Content Rewards', ['Clips with a <b>$</b> are for paid campaigns.', 'After a video posts, tap <b>$ Get paid</b>: it copies the link and opens Content Rewards. Paste it there and tap ✓.', 'The "Needs you" box at the top tells you when there\'s one to submit.']],
+  ['Results', 'It learns what works', ['The <b>Results</b> tab shows views and what the AI is learning.', 'It keeps testing hooks, subtitles, zooms and timing — and uses more of whatever gets views.', 'Tap <b>?</b> on any box for help. That\'s it!']]];
+function openOnboarding() {
+  let i = 0; const o = el('div', 'onb'); const inn = el('div', 'in'); o.append(inn); document.body.append(o);
+  const draw = () => { const [k, h, li] = ONB[i]; inn.innerHTML = ''; inn.append(el('div', 'kk', `${i + 1} / ${ONB.length} · ${k}`), el('h2', null, h));
+    const ul = el('ul'); li.forEach((x) => { const l = el('li'); l.innerHTML = x; ul.append(l); }); inn.append(ul);
+    const dots = el('div', 'dots'); ONB.forEach((_, j) => dots.append(el('i', j === i ? 'on' : ''))); inn.append(dots);
+    const nv = el('div', 'nav2'); const back = el('button', 'btn', i ? 'Back' : 'Skip'); const nx = el('button', 'btn pink', i < ONB.length - 1 ? 'Next' : 'Got it');
+    back.onclick = () => { if (!i) { done(); return; } i--; draw(); }; nx.onclick = () => { if (i < ONB.length - 1) { i++; draw(); } else done(); }; nv.append(back, nx); inn.append(nv); };
+  const done = () => { ls.set('gc-onb', 1); o.remove(); };
+  draw();
+}
+
+// ================================================================ CLIP STUDIO
+let SEL = ls.get('gc-sel', '');
+const WF = {};   // clip id -> audio waveform peaks
+const tcode = (t) => { t = Math.max(0, t || 0); const m = Math.floor(t / 60), x = Math.floor(t % 60), f = Math.floor((t % 1) * 30); return `${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}:${String(f).padStart(2, '0')}`; };
+const ready = (ql) => ql.filter((r) => r.final);
+function selClip(ql) { const rs = ready(ql); return rs.find((r) => r.id === SEL) || rs[0]; }
+const box = (cls, kids) => { const d = el('div', cls); kids.forEach((k) => k && d.append(k)); return d; };
+const ttl = (left, right, pink, help) => { const d = el('div', 'ttl'); const sp = el('span', null, left); if (help) sp.append(helpBtn(help)); d.append(sp, el('b', pink ? 'p' : '', right || '')); return d; };
+const call = (txt, cls, css) => { const c = el('span', 'call ' + cls, txt); Object.assign(c.style, css); return c; };
+function stageBar(r) {
+  const S = sysState(); const step = S.running ? (RUNSTEP[S.running.id] || 'starting up') : '';
+  const up = S.upscale && S.upscale.status !== 'completed';
+  let a = '05 / ship', b = L && L.next_slot && !L.paused && !L.buffer_off ? `AUTO / Next post ${tET(L.next_slot)}` : 'AUTO / Posting is off';
+  if (S.running) { a = /finding/.test(step) ? '02 / cut' : /publish/.test(step) ? '04 / caption' : '01 / find'; b = `SPLIT / ${step.charAt(0).toUpperCase() + step.slice(1)}`; }
+  else if (up) { a = '03 / reframe'; b = 'HD / Sharpening webcams'; }
+  const d = el('div', 'bar'); d.append(el('span', 'a', a), el('span', 'b', b), el('span', 'c', r ? `${(+r.seconds || 0).toFixed(2)} / 25.00` : '—'));
+  return d;
+}
+function programPane(r, n) {
+  const d = el('div', 'pane prog'); d.append(ttl('Program / source_' + String(n || 1).padStart(2, '0'), r && r.style && r.style.start === 'fast' ? 'Fast start' : 'Original speed', false, 'program'));
+  if (!r) { d.append(el('div', 'empty', 'No clips ready yet — the clip maker is working on it')); return d; }
+  const s16 = el('div', 'src16'); s16.append(el('div', 'cap0', `${r.streamer || ''} / ${r.layout_used === 'cam' ? 'reaction' : 'gameplay'}`));
+  const mon = el('div', 'mon'); mon.dataset.mon = r.id;
+  const bg = el('div', 'bgb'); bg.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
+  const vd = el('video'); vd.src = PAGES + vidOf(r); vd.poster = PAGES + (r.vposter || r.poster); vd.playsInline = true; vd.preload = 'metadata'; vd.loop = true; vd.muted = false;
+  const cr = el('div', 'crop'); cr.dataset.l = `9:16 / crop ${String(n || 1).padStart(2, '0')}`;
+  for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const h = el('i'); h.style.left = x ? 'calc(100% - 4px)' : '-4px'; h.style.top = y ? 'calc(100% - 4px)' : '-4px'; cr.append(h); }
+  const pan = ((r.user_layout || {}).pan || 0); cr.append(el('span', 'x', `X ${(50 + pan * 50).toFixed(1)}%`));
+  mon.append(bg, vd, cr, call('10 Reframe', 'c-teal', { right: '18%', top: '14%' })); s16.append(mon); d.append(s16);
+  const hb = el('div', 'hookbox'); hb.textContent = r.hook || ''; const hl = (r.hook || '').length; hb.style.fontSize = hl > 60 ? 'clamp(20px,3.6vw,30px)' : hl > 35 ? 'clamp(24px,4.4vw,38px)' : '';
+  for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const h = el('i'); h.style.left = x ? 'calc(100% - 4px)' : '-4px'; h.style.top = y ? 'calc(100% - 4px)' : '-4px'; hb.append(h); }
+  hb.append(call('15 Type', 'c-peach', { right: '-6px', bottom: '-22px' })); d.append(hb);
+  d.append(el('div', 'credit', `${r.source === 'vod' ? 'Twitch VOD' : 'Twitch clip'} + faster-whisper`));
+  const tp = el('div', 'transport'); const pb = el('button', null, '▶'); const tc = el('div', 'tc', '00:00:00');
+  const names = [...new Set(ready(queueList()).map((x) => x.streamer))]; tp.append(pb, tc, el('span', 'tr', `${ready(queueList()).length} clips + ${names.length} creators`));
+  d.append(tp); const sc = el('div', 'scrub'); const si = el('i'); sc.append(si); d.append(sc);
+  pb.onclick = () => { if (vd.paused) vd.play().catch(() => {}); else vd.pause(); };
+  vd.onplay = () => { pb.textContent = '❚❚'; }; vd.onpause = () => { pb.textContent = '▶'; }; vd.onclick = pb.onclick;
+  vd.ontimeupdate = () => { const T = vd.duration || r.seconds || 1; tc.textContent = tcode(vd.currentTime); si.style.width = (vd.currentTime / T * 100) + '%';
+    const ph = document.querySelector('.seq .ph'); if (ph) ph.style.left = `calc(72px + (100% - 72px) * ${vd.currentTime / T})`;
+    const ci = Math.floor(vd.currentTime / T * 4); document.querySelectorAll('.seq .cap span').forEach((x, i) => x.classList.toggle('on', i === ci)); };
+  sc.onclick = (e) => { const bb = sc.getBoundingClientRect(); vd.currentTime = (e.clientX - bb.left) / bb.width * (vd.duration || 0); };
+  return d;
+}
+function binPane(ql, r) {
+  const d = el('div', 'pane'); const rs = ready(ql); d.append(ttl('Media bin / source moments', `${rs.length} ready`, false, 'bin'));
+  const bin = el('div', 'bin');
+  rs.forEach((x) => { const w = el('div', 'wrap'); const b = el('button', x.id === (r && r.id) ? 'sel' : ''); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (x.vposter || x.poster)})`; b.append(th);
+    const lab = el('div', 'lab'); lab.textContent = x.streamer || ''; if (CR[x.campaign]) lab.append(el('b', null, ' $'));
+    w.append(b, lab); if (x.id === (r && r.id)) w.append(call('05 Select', 'c-pink', { left: '40%', top: '62%' }));
+    b.onclick = () => { SEL = x.id; ls.set('gc-sel', SEL); haptic(); lastSig = ''; render(); }; bin.append(w); });
+  if (!rs.length) bin.append(el('div', 'empty', 'Waiting for moments…'));
+  d.append(bin); return d;
+}
+function inspPane(r) {
+  const d = el('div', 'pane insp'); d.append(ttl('Inspector / live edit', 'Keyframes', true, 'insp'));
+  if (!r) return d;
+  if (JOBS[r.id]) d.append(jobBar(r.id));
+  const ul = r.user_layout || {}; const sty = r.style || {};
+  const ta = el('textarea'); ta.value = r.hook || ''; ta.maxLength = 140; ta.placeholder = 'CLIP THAT.'; d.append(ta);
+  ta.oninput = () => { const hb = document.querySelector('.hookbox'); if (hb && hb.firstChild) hb.firstChild.nodeValue = ta.value; };
+  let scale = +(ul.hook_scale || 1);
+  const sl = el('div', 'slid'); const rg = el('input'); rg.type = 'range'; rg.min = 0.7; rg.max = 1.4; rg.step = 0.05; rg.value = scale;
+  const val = el('span', 'val', Math.round(40 * scale) + ' PX'); const upd = () => { scale = +rg.value; val.textContent = Math.round(40 * scale) + ' PX'; rg.style.setProperty('--v', ((scale - 0.7) / 0.7 * 100) + '%'); }; rg.oninput = upd; upd();
+  sl.append(el('span', null, 'Anton'), rg, val); d.append(sl);
+  let bx = ul.hook_style || sty.box || 'white'; if (bx === 'outline') bx = 'white';
+  const seg = el('div', 'seg'); seg.style.marginTop = '12px'; for (const b of ['white', 'black']) { const x = el('button', b === bx ? 'on' : '', b + ' box'); x.onclick = () => { bx = b; seg.querySelectorAll('button').forEach((y) => y.classList.toggle('on', y === x)); }; seg.append(x); } d.append(seg);
+  const pan = (ul.pan || 0);
+  const mc = el('div', 'mc'); const l = el('div'); l.append(el('div', 'k', 'Motion crop'), el('div', 'x', `X  ${(50 + pan * 50).toFixed(1)}%`), el('div', 'sa', '9:16 / safe area'), el('div', 'kf', `+ keyframe ${String((sty.punch === 'on' ? 2 : 0) + (sty.subs === 'on' ? 2 : 0) + 0).padStart(2, '0')}`));
+  const rgt = el('div'); rgt.style.position = 'relative'; rgt.append(el('div', 'k', 'Easing / position'));
+  rgt.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 120 70"><path d="M6 64 C 30 20, 60 10, 116 8" fill="none" stroke="#b9a2ff" stroke-width="1.4"/><path d="M6 64 L 28 18" stroke="#b9a2ff88" stroke-width="1"/><circle cx="28" cy="18" r="3" fill="none" stroke="#b9a2ff"/><rect x="2" y="60" width="7" height="7" transform="rotate(45 5.5 63.5)" fill="#b9a2ff"/><circle cx="86" cy="10" r="5" fill="none" stroke="#b9a2ff"/><rect x="112" y="4" width="7" height="7" transform="rotate(45 115.5 7.5)" fill="#b9a2ff"/></svg>`);
+  rgt.append(call('02 Motion', 'c-lilac', { right: '-4px', top: '52px' })); mc.append(l, rgt); d.append(mc);
+  const rgb = el('div', 'rgb'); rgb.append(el('span', null, 'RGB    -0.0')); rgb.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 200 18"><path d="M0 14 L200 4" stroke="#e8b77c" stroke-width="1.2"/><path d="M0 15 L200 6" stroke="#b9a2ff" stroke-width="1"/><path d="M0 16 L200 8" stroke="#7ee0d0" stroke-width="1"/><circle cx="120" cy="8" r="5" fill="none" stroke="#e8b77c" stroke-width="1.5"/></svg>`); d.append(rgb);
+  const row = el('div', 'row2'); const sv = el('button', 'btn pink', 'Save text (≈1 min)'); const full = el('button', 'btn', 'Full editor');
+  sv.onclick = async () => { const t = {}; const h = ta.value.trim(); if (h && h !== (r.hook || '').trim()) t.hook = h; if (bx !== (ul.hook_style || sty.box || 'white')) t.hook_style = bx;
+    if (Math.abs(scale - (ul.hook_scale || 1)) > 0.01) t.hook_scale = scale;
+    if (!Object.keys(t).length) { toast('Nothing changed'); return; } sv.disabled = true; await quickText(r, t); sv.disabled = false; };
+  full.onclick = () => openEditor(r); row.append(sv, full); d.append(row);
+  return d;
+}
+function outPane(r, n) {
+  const d = el('div', 'pane'); d.append(ttl('9:16 / output preview', r && r.nowing ? 'Posting now' : '', true, 'out'));
+  if (!r) return d;
+  const o = el('div', 'outp'); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
+  const m = el('div', 'meta'); m.append(el('div', 'nm', 'Short_' + String(n || 1).padStart(2, '0')), el('div', 'sp', '9:16  /  H.264'), el('div', 'sp g', `Video + captions${(r.style || {}).subs === 'on' ? ' + subs' : ''}`));
+  const eb = el('div', 'expbar'); eb.append(el('div', 'e', 'Export / H.264')); const mt = el('div', 'meter'); for (let i = 0; i < 8; i++) { const b = el('i'); b.style.animationDelay = (i * 0.11) + 's'; mt.append(b); } eb.append(mt); m.append(eb);
+  o.append(th, m); d.append(o);
+  const sb = el('div', 'shipbtns');
+  const pn = el('button', 'btn pink', r.nowing ? 'Posting…' : 'Ship it now'); pn.disabled = !!r.nowing; pn.onclick = () => openPostNow(r);
+  const dl = el('button', 'btn cyan', '⬇ Save'); dl.onclick = () => saveVideo(r, dl);
+  const pd = el('button', 'btn ok', 'Posted ✓'); pd.onclick = () => openPosted(r);
+  const subd = linksFor(r).some(([l2]) => isSub(l2));
+  const gp = el('button', 'btn' + (CR[campOf(r)] && !subd ? ' paid' : ''), subd ? '✓ Submitted' : '$ Get paid'); gp.onclick = () => openGetPaid(r);
+  const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
+  const sk = el('button', 'btn del', "Don't post"); sk.onclick = async () => { if (sk.dataset.arm) { sk.disabled = true; if (await ghTap('skip: ' + r.id)) toast('Removed from the queue'); SEL = ''; lastSig = ''; render(); } else { sk.dataset.arm = 1; sk.textContent = 'Tap again'; setTimeout(() => { delete sk.dataset.arm; sk.textContent = "Don't post"; }, 3000); } };
+  sb.append(pn, dl, pd, gp, cc, sk); d.append(sb);
+  return d;
+}
+function seqPane(r, n) {
+  const T = r ? (+r.seconds || 20) : 25;
+  const d = el('div', 'pane seq'); d.append(ttl('Sequence / short_' + String(n || 1).padStart(2, '0'), `Snap  •  ${T.toFixed(2)} sec`, true, 'seq'));
+  if (!r) return d;
+  const ru = el('div', 'ruler'); ru.style.marginLeft = '72px'; for (let i = 0; i <= 5; i++) ru.append(el('span', null, String(Math.round(T * i / 5)).padStart(2, '0'))); d.append(ru);
+  const tr = el('div', 'tracks');
+  const src = el('div', 'tl src'); const pool = ready(queueList()); for (let i = 0; i < 12; i++) { const x = el('i'); const q = i % 3 === 1 && pool[i % pool.length] ? pool[i % pool.length] : r; x.style.backgroundImage = `url(${PAGES + (q.vposter || q.poster)})`; x.style.backgroundPosition = `${(i * 9) % 100}% 30%`; src.append(x); }
+  const words = (r.hook || '').split(/\s+/); const per = Math.ceil(words.length / 4);
+  const cap = el('div', 'tl cap'); for (let i = 0; i < 4; i++) cap.append(el('span', null, words.slice(i * per, i * per + per).join(' ') || '·'));
+  const rf = el('div', 'tl rf'); const pts = Array.from({ length: 11 }, (_, i) => [i * 10, 22 - Math.min(10, i * 1.6)]);
+  rf.innerHTML = `<svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="${pts.map((p) => p.join(',')).join(' ')}" fill="none" stroke="#b9a2ff" stroke-width="1.2" vector-effect="non-scaling-stroke"/>${pts.map((p) => `<rect x="${p[0] - 0.7}" y="${p[1] - 2}" width="1.4" height="4" fill="#b9a2ff"/>`).join('')}</svg>`;
+  const au = el('div', 'tl au'); const cv = el('canvas'); au.append(cv);
+  tr.append(el('div', 'tn', 'Source'), src, el('div', 'tn', 'Captions'), cap, el('div', 'tn', 'Reframe'), rf, el('div', 'tn', 'Audio'), au, el('div', 'ph'));
+  tr.append(call('14 Captions', 'c-peach', { left: '34%', top: '44px' }), call('02 Trim', 'c-pink', { right: '1%', top: '44px' }), call('18 Audio', 'c-mint', { right: '4%', bottom: '-18px' }));
+  tr.style.position = 'relative'; d.append(tr);
+  tr.onclick = (e) => { const bb = tr.getBoundingClientRect(); const x = (e.clientX - bb.left - 72) / (bb.width - 72); const vd = document.querySelector('.prog video'); if (vd && x >= 0) vd.currentTime = x * (vd.duration || T); };
+  drawWave(r, cv);
+  return d;
+}
+async function drawWave(r, cv) {
+  const paint = (pk) => { const w = cv.clientWidth || 300, h = cv.clientHeight || 34; cv.width = w * 2; cv.height = h * 2; const g = cv.getContext('2d'); g.scale(2, 2); g.fillStyle = '#9fe8c0';
+    const n = Math.floor(w / 2.5); for (let i = 0; i < n; i++) { const v = pk ? pk[Math.floor(i / n * pk.length)] : 0.3 + 0.25 * Math.abs(Math.sin(i * 1.7)); const bh = Math.max(2, v * (h - 4)); g.fillRect(i * 2.5, (h - bh) / 2, 1.4, bh); } };
+  requestAnimationFrame(() => paint(WF[r.id]));
+  if (WF[r.id]) return;
+  try {
+    const buf = await (await fetch(PAGES + vidOf(r))).arrayBuffer();
+    const ac = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 22050, 22050);
+    const au = await ac.decodeAudioData(buf); const x = au.getChannelData(0); const N = 260, win = Math.floor(x.length / N); const pk = [];
+    for (let i = 0; i < N; i++) { let m = 0; for (let j = i * win; j < (i + 1) * win; j += 8) m = Math.max(m, Math.abs(x[j])); pk.push(m); }
+    const mx = Math.max(...pk) || 1; WF[r.id] = pk.map((v) => v / mx);
+    if (cv.isConnected) paint(WF[r.id]);
+  } catch (e) { /* waveform is decoration */ }
+}
+function kitPane() {
+  const d = el('div', 'pane kit'); d.append(ttl('The clipping toolkit / 16 tools', 'Opus 5.5', true, 'kit'));
+  const T = ['yt-dlp', 'Twitch chat replay', 'faster-whisper', 'Silero VAD', 'Gemini AI picks', 'OpenCV', 'YuNet faces', 'Real-ESRGAN webcam',
+    'Auto-Editor dead air', 'Word subtitles', 'Punch-in zoom', 'ffmpeg-normalize', 'Hook writer', 'Dynamic learner', 'Buffer → TikTok', 'Buffer → Shorts'];
+  const U = { 1: 'u1', 4: 'u2', 12: 'u3', 13: 'u4' };
+  const g = el('div', 'grid'); T.forEach((t, i) => { const x = el('div', U[i] || ''); x.append(el('b', null, String(i + 1).padStart(2, '0')), document.createTextNode(t)); g.append(x); }); d.append(g);
+  return d;
+}
+function renderStudio(v, ql) {
+  const r = selClip(ql); const n = r ? ready(ql).indexOf(r) + 1 : 1;
+  v.append(needsCard(ql), stageBar(r));
+  const st = el('div', 'studio');
+  const left = el('div'); left.style.display = 'grid'; left.style.gap = '12px'; left.style.alignContent = 'start'; left.append(programPane(r, n));
+  const right = el('div'); right.style.display = 'grid'; right.style.gap = '12px'; right.style.alignContent = 'start';
+  right.append(binPane(ql, r), inspPane(r), outPane(r, n));
+  st.append(left, right, seqPane(r, n), kitPane());
+  v.append(st);
+  const yt = yourTurnCard(ql); if (yt) v.append(yt);
+  v.append(heroCard(ql));
+  const ts = toSubmit();
+  if (ts.length) { const c = el('div', 'card sub-card'); c.append(el('h2', null, `Submit for pay · ${ts.length}`)); for (const x of ts.slice(0, 3)) c.append(videoRow(x, true)); v.append(c); }
+  v.append(comingUpCard(ql), sysLine());
 }
 
 // ---------------------------------------------------------------- HOME
@@ -1509,6 +1929,8 @@ async function rebootSite() {
   location.replace(location.pathname + '?v=' + Date.now());
 }
 $('reboot').onclick = rebootSite;
+$('help').onclick = openOnboarding;
+if (!ls.get('gc-onb', 0)) setTimeout(openOnboarding, 600);
 { let h = (location.hash || '').slice(1); h = TAB_ALIAS[h] || h; if (['today', 'clips', 'results'].includes(h)) { tab = h; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-selected', x.dataset.tab === h)); } }
 moveInd(); render();                                   // instant: last visit's data
 Promise.all([refreshQueue(), refreshLive(), refreshEdits()]).then(() => { lastSig = ''; render(); pollJobs(); });
@@ -1519,7 +1941,7 @@ setInterval(checkUploads, 30000);
 setInterval(refreshQueue, 45000);
 setInterval(() => { if (Object.keys(pend).length || Date.now() % 30000 < 10000) refreshLive(); }, 10000);
 setInterval(() => { if (tab === 'today') tickToday(); }, 1000);
-setInterval(() => { if (tab === 'today') render(); }, 30000);   // "x min ago" labels
+setInterval(() => { const p = document.querySelector('.prog video'); if (tab === 'today' && (!p || p.paused)) render(); }, 30000);   // "x min ago" labels
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshQueue(); refreshLive(); } });
 </script>
 </body>
