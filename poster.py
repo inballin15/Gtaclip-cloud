@@ -730,7 +730,7 @@ def main() -> None:
         ctl = {"paused": True, "postnow": [], "last_slot": ""}
     ctl.setdefault("postnow", [])
     ctl.setdefault("last_slot", "")
-    global YT_PER_DAY, YT_PREF
+    global YT_PER_DAY, YT_PREF, NOW
     if not ctl.get("yt_verified_v"):   # channel verified + refreshed in Buffer (Nov 22): lift the old 2/day pause once
         ctl["yt_verified_v"] = 1
         ctl.pop("yt_per_day", None)
@@ -1010,6 +1010,11 @@ def main() -> None:
     if len(cd) >= 2:  # both platforms waiting
         nxt = next_slot(min(cd))
     up_next = None
+    _now = NOW
+    try:   # rank as of the next post time (a clip that's fresh now may be too old by then)
+        NOW = max(NOW, next_slot(NOW) or NOW)
+    except Exception:  # noqa: BLE001
+        pass
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now
@@ -1020,6 +1025,7 @@ def main() -> None:
                         if "tiktok" in (r.get("platforms") or ["tiktok", "youtube"])), "")
         up = (next((r for r in ok[:6] if r.get("streamer") != last_tt), None) or (ok[0] if ok else None))   # same pick rule as posting
         up_next = up["id"] if up else None
+    NOW = _now
     # 3b) engagement learner: what hook styles / spellings / lengths get views on OUR channels
     insights = rj(P / "insights.json", {})
     try:
