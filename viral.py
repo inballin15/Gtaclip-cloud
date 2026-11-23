@@ -499,6 +499,9 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                       "Also ok=false if the streamer is away: their own camera shows an empty chair / empty room while "
                       "the only person on screen is a guest in a different, smaller webcam window. (A clip of the channel "
                       "owner must show the channel owner.)\n"
+                      "Also ok=false if the main (non-webcam) part of the screen is NOT the game being played: a desktop, "
+                      "OBS / stream software, a chat window, a browser, a menu-only screen, or someone else's video / "
+                      "YouTube / TikTok being watched (react content belongs to that other creator). The game must be on screen.\n"
                       "2) Write the on-screen hook about what ACTUALLY happens in these frames and what was said. "
                       + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style(variant) +
                       "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\"}."}]

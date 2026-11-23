@@ -32,14 +32,14 @@ MIN_WEIGHT = 0.08          # every style keeps getting a few tries so the learne
 
 # Clip-style tests ("dynamic model"): each automatic clip gets one option per dimension; views decide the mix.
 STYLE_DIMS = {
-    "box": {"white": "white caption box", "black": "black caption box", "outline": "outlined text, no box"},
+    "box": {"white": "white caption box", "black": "black caption box"},   # outline-only text was hard to read on busy streams
     # webcam size: never bigger than today's (a bigger strip would stretch the webcam and cost sharpness)
     "cam": {"small": "smaller webcam (560 px)", "medium": "standard webcam (672 px)"},
     "len": {"s16": "~16 s clip", "s22": "~22 s clip"},
     "hooklen": {"tiny": "short hook (max ~60 chars)", "story": "story-sentence hook (8-15 words)"},
     "start": {"fast": "starts ~2 s before the big moment", "build": "build-up first, big moment around the middle"},
 }
-STYLE_PRIOR = {"box": {"white": 0.6, "black": 0.2, "outline": 0.2}, "cam": {"small": 0.3, "medium": 0.7},   # top pages:
+STYLE_PRIOR = {"box": {"white": 0.75, "black": 0.25}, "cam": {"small": 0.3, "medium": 0.7},   # top pages:
                "len": {"s16": 0.3, "s22": 0.7}, "hooklen": {"tiny": 0.25, "story": 0.75},
                "start": {"fast": 0.25, "build": 0.75}}   # Nov 22 study: winners peak ~middle of ~25 s clips, ~13-word hooks
 CAM_PX = {"small": 560, "medium": 672}
