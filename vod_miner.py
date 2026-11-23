@@ -42,6 +42,48 @@ def parse_dur(d: str) -> int:
     return total
 
 
+CHAT_HASH = "b70a3591ff0f4e0313d126c6a1502d79a1c02baebb288227c582044aa76adf6a"   # Twitch's chat-replay query
+CHAT_CLIENT = "kimne78kx3ncx6brgo4mv6wki5h1ko"   # Twitch's public web player id (same one TwitchDownloader/yt-dlp use)
+
+
+def chat_rate(video_id: str, start: int, end: int, step: int = 20, max_req: int = 280):
+    """Chat messages per second for start..end of a VOD (from its public chat replay), like TwitchDownloader reads it.
+    One request every `step` s: each returns the next batch of messages, and how tightly they're packed gives the
+    chat speed there. Returns a numpy array (index 0 = start) or None if chat isn't available."""
+    import numpy as np
+    import urllib.request
+    n = end - start
+    if n <= 0:
+        return None
+    rate = np.zeros(n)
+    got = 0
+    for t in range(start, end, max(step, int(n / max_req) + 1)):
+        body = json.dumps([{"operationName": "VideoCommentsByOffsetOrCursor",
+                            "variables": {"videoID": str(video_id), "contentOffsetSeconds": t},
+                            "extensions": {"persistedQuery": {"version": 1, "sha256Hash": CHAT_HASH}}}]).encode()
+        req = urllib.request.Request("https://gql.twitch.tv/gql", data=body,
+                                     headers={"Client-ID": CHAT_CLIENT, "Content-Type": "text/plain"})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as r:
+                d = json.loads(r.read())
+            edges = (((d[0].get("data") or {}).get("video") or {}).get("comments") or {}).get("edges") or []
+        except Exception as e:  # noqa: BLE001
+            if got == 0:
+                log(f"chat replay unavailable: {str(e)[:100]}")
+                return None
+            continue
+        offs = sorted(e["node"]["contentOffsetSeconds"] for e in edges if e.get("node"))
+        if not offs:
+            continue
+        got += 1
+        span = max(1.0, offs[-1] - offs[0])
+        a = int(offs[0]) - start
+        b = min(n, int(offs[-1]) - start + 1)
+        if b > a >= 0:
+            rate[a:b] = np.maximum(rate[a:b], len(offs) / span)
+    return rate if got else None
+
+
 def main() -> None:
     from fetch_clips import CFG, helix, twitch_headers
     import viral
@@ -79,7 +121,12 @@ def main() -> None:
             tmp = Path(tempfile.mkdtemp())
             try:
                 audio, _, _ = fetch_link_audio(v["url"], f"{start}-{end}", tmp)
-                moments = viral.find_moments(audio, max_clips=PER_CHUNK, log=log, streamer=s.get("name", login))
+                try:
+                    chat = chat_rate(v["id"], start, end)
+                except Exception as e:  # noqa: BLE001
+                    chat = None
+                    log(f"chat skipped: {e}")
+                moments = viral.find_moments(audio, max_clips=PER_CHUNK, log=log, streamer=s.get("name", login), chat=chat)
             except Exception as e:  # noqa: BLE001
                 log(f"{login}: VOD audio failed {str(e)[:150]}")
                 shutil.rmtree(tmp, ignore_errors=True)

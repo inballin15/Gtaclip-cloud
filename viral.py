@@ -68,12 +68,24 @@ def _smooth(x: np.ndarray, k: int = 3) -> np.ndarray:
     return np.convolve(x, np.ones(k) / k, mode="same") if len(x) >= k else x
 
 
+NAME_HINT = ("GTA 6, Vice City, Leonida, Lucia, Jason, Cal, Boobie, Dre'Quan, Real Dimez, Raul, Brian, Kai Cenat, "
+             "IShowSpeed, Lacy, Clix, YourRAGE, xQc, Ludwig, N3on, Jynxzi, Rakai, Druski, Fanum, Duke Dennis, Agent 00, "
+             "Adin Ross, HasanAbi, Caseoh, Cuffem, Stable Ronaldo, Plaqueboymax")
+
+
 def transcribe(audio: np.ndarray):
     global _MODEL
     from faster_whisper import WhisperModel
     if _MODEL is None:
         _MODEL = WhisperModel("base", device="cpu", compute_type="int8")
-    segs, _ = _MODEL.transcribe(audio, language="en", vad_filter=True, word_timestamps=True)
+    # name hints (FunClip "hotword" idea): streamer, game and character names come out spelled right in the
+    # transcript, so hooks get the real specifics ("Lucia", "Rakai", "Druski") instead of guesses
+    hint = NAME_HINT or None
+    try:
+        segs, _ = _MODEL.transcribe(audio, language="en", vad_filter=True, word_timestamps=True,
+                                    initial_prompt=hint, hotwords=hint)
+    except TypeError:   # older faster-whisper without hotwords
+        segs, _ = _MODEL.transcribe(audio, language="en", vad_filter=True, word_timestamps=True, initial_prompt=hint)
     out = []
     for s in segs:
         words = [(w.start, w.end, w.word) for w in (s.words or [])]
@@ -88,16 +100,27 @@ def clean_line(t: str) -> str:
     return t
 
 
-def find_moments(path: Path, max_clips: int | None = None, log=print, streamer: str = "") -> list[dict]:
+def find_moments(path: Path, max_clips: int | None = None, log=print, streamer: str = "",
+                 chat: np.ndarray | None = None) -> list[dict]:
+    """chat: Twitch chat messages per second for the same stretch (optional). When chat floods ("LMAO", "NO WAY"),
+    that's usually the moment people loved — the strongest single signal top clippers use."""
     audio = _audio(path)
     secs = max(1, int(len(audio) / 16000))
+    chat_z = np.zeros(secs)
+    if chat is not None and len(chat) and float(np.max(chat)) > 0:
+        c = np.zeros(secs)
+        c[:min(secs, len(chat))] = chat[:secs]
+        c = np.roll(c, -4)   # chat reacts ~4 s after the moment happens
+        c[-4:] = 0
+        chat_z = np.clip(_z(_smooth(c, 5)), 0, 4)
+        log(f"chat: {int(c.sum())} messages, busiest at {int(np.argmax(chat_z)) // 60} min {int(np.argmax(chat_z)) % 60} s")
     log(f"video is {secs // 60} min {secs % 60} s long — listening and watching for the best moments")
     # 1) loudness per second (dB)
     rms = np.array([np.sqrt(np.mean(audio[i * 16000:(i + 1) * 16000] ** 2) + 1e-9) for i in range(secs)])
     loud = _z(20 * np.log10(rms + 1e-9))
     # 2) what's said, with word times. Long videos: only transcribe the ~30 loudest stretches (fast on 6-hour VODs)
     if secs > 1200:
-        sm = _smooth(np.clip(loud, 0, None), 15)
+        sm = _smooth(np.clip(loud, 0, None) + 1.2 * chat_z, 15)
         picks, taken = [], np.zeros(secs, bool)
         for p0 in np.argsort(-sm):
             if len(picks) >= 30 or sm[p0] <= 0:
@@ -134,7 +157,7 @@ def find_moments(path: Path, max_clips: int | None = None, log=print, streamer: 
     except Exception:  # noqa: BLE001
         motion = np.zeros(secs)
     score = _smooth(1.0 * np.clip(loud, 0, None) + 0.9 * hype + 0.5 * np.clip(rate_z, 0, None)
-                    + 0.5 * np.clip(motion, 0, None), 5)
+                    + 0.5 * np.clip(motion, 0, None) + 1.2 * chat_z, 5)
 
     # 4) peaks -> clips
     want = max_clips or int(np.clip(secs / 240, 3, 12))

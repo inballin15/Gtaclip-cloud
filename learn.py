@@ -38,10 +38,13 @@ STYLE_DIMS = {
     "len": {"s16": "~16 s clip", "s22": "~22 s clip"},
     "hooklen": {"tiny": "short hook (max ~60 chars)", "story": "story-sentence hook (8-15 words)"},
     "start": {"fast": "starts ~2 s before the big moment", "build": "build-up first, big moment around the middle"},
+    "subs": {"off": "no subtitles", "on": "word-by-word subtitles"},
+    "punch": {"off": "steady webcam", "on": "webcam punches in on the big reaction"},
 }
 STYLE_PRIOR = {"box": {"white": 0.75, "black": 0.25}, "cam": {"small": 0.3, "medium": 0.7},   # top pages:
                "len": {"s16": 0.3, "s22": 0.7}, "hooklen": {"tiny": 0.25, "story": 0.75},
-               "start": {"fast": 0.25, "build": 0.75}}   # Nov 22 study: winners peak ~middle of ~25 s clips, ~13-word hooks
+               "start": {"fast": 0.25, "build": 0.75},
+               "subs": {"off": 0.5, "on": 0.5}, "punch": {"off": 0.5, "on": 0.5}}   # new tests: no data yet, 50/50   # Nov 22 study: winners peak ~middle of ~25 s clips, ~13-word hooks
 CAM_PX = {"small": 560, "medium": 672}
 
 EMOTIONS = ["LOSES IT", "SHOCKED", "DEVASTATED", "DISAPPOINTED", "FURIOUS", "CRYING", "SCARED", "CONFUSED", "SPEECHLESS",

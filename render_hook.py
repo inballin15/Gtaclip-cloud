@@ -111,3 +111,46 @@ def render(text, out_path, style="white", scale=1.0):
 
 if __name__ == "__main__":
     render(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "hook.png")
+
+
+# ---------------------------------------------------------------- word-by-word subtitles (WhisperX-style captions)
+_sub_font = None
+
+
+def render_sub(text: str, out: str, size: int = 76) -> str:
+    """One subtitle chunk (1-3 words): big white bold letters with a thick black outline, like top clip pages."""
+    global _sub_font
+    if _sub_font is None or _sub_font.size != size:
+        _sub_font = ImageFont.truetype(TEXT_FONT, size)
+    text = strip_emoji(text).strip().upper()
+    stroke = max(6, size // 9)
+    l, t, r, b = _sub_font.getbbox(text, stroke_width=stroke)
+    im = Image.new("RGBA", (r - l + 8, b - t + 8), (0, 0, 0, 0))
+    ImageDraw.Draw(im).text((4 - l, 4 - t), text, font=_sub_font, fill=(255, 255, 255, 255),
+                            stroke_width=stroke, stroke_fill=(0, 0, 0, 255))
+    im.save(out)
+    return out
+
+
+def sub_chunks(words: list, max_words: int = 3, max_chars: int = 16) -> list[tuple[float, float, str]]:
+    """Group (start, end, word) into short on-screen chunks, each shown until the next one starts."""
+    out, cur = [], []
+    for w in words:
+        word = str(w[2]).strip()
+        if not word:
+            continue
+        if cur and (len(cur) >= max_words or len(" ".join(x[2] for x in cur) + " " + word) > max_chars
+                    or w[0] - cur[-1][1] > 0.6):
+            out.append(cur)
+            cur = []
+        cur.append((float(w[0]), float(w[1]), word))
+    if cur:
+        out.append(cur)
+    res = []
+    for i, ch in enumerate(out):
+        a = ch[0][0]
+        b = ch[-1][1] + 0.25
+        if i + 1 < len(out):
+            b = min(b + 0.6, out[i + 1][0][0])
+        res.append((a, max(a + 0.25, b), " ".join(x[2] for x in ch)))
+    return res

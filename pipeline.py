@@ -621,6 +621,11 @@ def duration_of(path: Path) -> float:
     return n / fps if n else 30.0
 
 
+def has_audio(path: Path) -> bool:
+    r = subprocess.run([FF, "-hide_banner", "-i", str(path)], capture_output=True, text=True)
+    return "Audio:" in r.stderr
+
+
 # ---------------------------------------------------------------- rendering
 def ff(*args) -> None:
     subprocess.run([FF, "-y", "-loglevel", "error", *args], check=True)
@@ -633,6 +638,51 @@ def render_preview(raw: Path, cid: str) -> None:
 
 CLIP_MAX_S = 22    # the top GTA 6 clip pages post 10-20 s videos (median 16 s); longer clips get trimmed
 CLIP_KEEP_S = 16   # top clip pages' median length   # length of the trimmed part
+
+
+def cut_dead_air(src: Path, cid: str, tmp: Path, min_gap: float = 0.8) -> Path:
+    """Auto-Editor's method with its tested defaults: anything quieter than 4% of the clip's loudest sound is
+    "dead air"; gaps of at least `min_gap` s are cut, keeping 0.2 s of padding on each side so cuts don't feel
+    abrupt. Short pauses (timing, reactions) are left alone."""
+    import viral
+    try:
+        a = viral._audio(src)
+        if len(a) < 16000 * 4:
+            return src
+        win = 800   # 0.05 s
+        lv = np.array([float(np.max(np.abs(a[i:i + win]))) for i in range(0, len(a) - win, win)])
+        quiet = lv < 0.04 * (float(np.percentile(lv, 99)) or 1)
+        dur = len(lv) * 0.05
+        gaps, i = [], 0
+        while i < len(quiet):
+            if quiet[i]:
+                j = i
+                while j < len(quiet) and quiet[j]:
+                    j += 1
+                if (j - i) * 0.05 >= min_gap:
+                    gaps.append((i * 0.05 + 0.2, j * 0.05 - 0.2))
+                i = j
+            else:
+                i += 1
+        if not gaps or sum(b - a for a, b in gaps) < 0.4:
+            return src
+        keep, t = [], 0.0
+        for g0, g1 in gaps:
+            if g0 > t:
+                keep.append((t, g0))
+            t = g1
+        if t < dur:
+            keep.append((t, dur))
+        keep = [(a, b) for a, b in keep if b - a > 0.1]
+        sel = "+".join(f"between(t,{a:.2f},{b:.2f})" for a, b in keep)
+        out = tmp / f"{cid}_tight.mp4"
+        ff("-i", str(src), "-vf", f"select='{sel}',setpts=N/FRAME_RATE/TB", "-af", f"aselect='{sel}',asetpts=N/SR/TB",
+           "-c:v", "libx264", "-preset", "fast", "-crf", "13", "-c:a", "aac", "-b:a", "160k", str(out))
+        log(f"cut {sum(b - a for a, b in gaps):.1f}s of dead air from {cid} ({len(gaps)} gap(s))")
+        return out
+    except Exception as e:  # noqa: BLE001
+        log(f"dead-air trim skipped {cid}: {e}")
+        return src
 
 
 def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
@@ -997,7 +1047,8 @@ def _cam_fg_top(raw: Path, w: float, h: float) -> int:
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
                  layout: str = "split", cut: float = 0.0, cam_video: Path | None = None,
                  hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0,
-                 hook_style: str = "white", hook_scale: float = 1.0, top_h: int | None = None) -> None:
+                 hook_style: str = "white", hook_scale: float = 1.0, top_h: int | None = None,
+                 subs: list | None = None, punch_at: float | None = None) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     T = int(top_h or TOP_H)   # webcam strip height (editor can make the webcam bigger or smaller)
@@ -1020,11 +1071,16 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         # webcam: the WHOLE webcam box (nothing cropped off), only as big as its pixels allow so it stays sharp
         # (max ~3.6x with the AI-upscaled webcam, 2.8x without), centred on a blurred copy of itself
         fw, fh = _cam_fit(raw, w, h, T, 3.6 if cam_video else 2.8)
+        punch = ""
+        if punch_at is not None:   # "punch into the reaction": webcam zooms in 10% on the big moment, then back
+            a, b = punch_at - 0.15, punch_at + 2.0
+            punch = (f",fps=30,zoompan=z='1+0.10*max(0,min(1,min((it-{a:.2f})/0.2,({b:.2f}-it)/0.4)))'"
+                     f":x='iw/2-(iw/zoom/2)':y='ih/2.4-(ih/zoom/2.4)':d=1:s={fw}x{fh}:fps=30")
         base = (
             f"[0:v]split=2[a][b];"
             f"[a]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,setsar=1,split=2[ca][cb];"
             f"[ca]scale=1080:{T}:force_original_aspect_ratio=increase,crop=1080:{T},boxblur=24:2,eq=brightness=-0.14,setsar=1[cbg];"
-            f"[cb]scale={fw}:{fh}:flags=lanczos,unsharp=5:5:0.7:5:5:0.0,setsar=1[cfg];"
+            f"[cb]scale={fw}:{fh}:flags=lanczos,unsharp=5:5:0.7:5:5:0.0,setsar=1{punch}[cfg];"
             f"[cbg][cfg]overlay=(W-w)/2:(H-h)/2[top];"
             + (f"[b]split=2[b1][b2];[b2]crop=iw:ih*0.15:0:ih*{-cut},boxblur=luma_radius=40:luma_power=3:chroma_radius=18:chroma_power=3[bl];"
                f"[b1][bl]overlay=0:main_h*{-cut}[bb];" if cut < 0 else "") +
@@ -1040,7 +1096,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         a_end = base.index("[top];") + len("[top];")
         base = (f"[0:v]copy[b];[{ci}:v]setsar=1,split=2[ca][cb];"
                 f"[ca]scale=1080:{T}:force_original_aspect_ratio=increase,crop=1080:{T},boxblur=24:2,eq=brightness=-0.14,setsar=1[cbg];"
-                f"[cb]scale={fw}:{fh}:flags=lanczos,setsar=1[cfg];[cbg][cfg]overlay=(W-w)/2:(H-h)/2[top];" + base[a_end:])
+                f"[cb]scale={fw}:{fh}:flags=lanczos,setsar=1{punch}[cfg];[cbg][cfg]overlay=(W-w)/2:(H-h)/2[top];" + base[a_end:])
         extra = ["-i", str(cam_video)]
     if hook:
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"), hook_style, hook_scale)
@@ -1049,13 +1105,28 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
               else "(H-h)/2" if layout == "full" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
               else f"'max(150,{_cam_fg_top(raw, w, h)}-h-28)'" if layout == "cam"           # cam: just above the webcam
               else f"{T}-h*0.2")                                                   # split: on the line
-        flt = base + f"[st];[st][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]"
     else:
         inputs = ["-i", str(raw)] + extra
-        flt = base + ",format=yuv420p[out]"
+    flt = base + "[v0]"
+    last = "v0"
+    # word-by-word subtitles (WhisperX-style): 1-3 words at a time, big white outlined letters
+    if subs:
+        from render_hook import render_sub, sub_chunks
+        sy = (f"{T}+({1920 - T})*0.62-h/2" if layout == "split" else "H*0.74-h/2")
+        for i, (a, b, txt) in enumerate(sub_chunks(subs)[:60]):
+            k = len(inputs) // 2
+            inputs += ["-i", render_sub(txt, str(tmp / f"{cid}_sub{i}.png"))]
+            flt += f";[{last}][{k}:v]overlay=(W-w)/2:{sy}:enable='between(t,{a:.2f},{b:.2f})'[s{i}]"
+            last = f"s{i}"
+    if hook:
+        flt += f";[{last}][1:v]overlay=(W-w)/2:{oy}[vh]"
+        last = "vh"
+    flt += f";[{last}]format=yuv420p[out]"
+    # clean, even sound (FFmpeg loudnorm to TikTok/YouTube's -14 LUFS): no more too-quiet or blaring clips
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
        "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-maxrate", "12000k", "-bufsize", "24M", "-r", "30",
-       "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
+       *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000"] if has_audio(raw) else []),
+       "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
 
 
 # ---------------------------------------------------------------- links (YouTube / Twitch VOD)
@@ -1899,6 +1970,7 @@ def main() -> None:
         sty = c.get("style") or {}
         if not c.get("asis"):
             raw = best_part(raw, cid, tmp, c)
+            raw = cut_dead_air(raw, cid, tmp)
         if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and c.get("cam") \
                 and (c.get("cam_only") or gameplay_is_black(raw, c.get("cam") or "")):
             vs = c.get("viral")
@@ -2024,6 +2096,21 @@ def main() -> None:
                     pan=ul.get("pan", 0.0), hook_style=ul.get("hook_style") or sty.get("box") or "white",
                     hook_scale=ul.get("hook_scale", 1.0),
                     top_h=int(ul["top_h"]) if ul.get("top_h") else learn.CAM_PX.get(sty.get("cam", ""), None))
+        # learner tests from the Nov 23 tool review: word-by-word subtitles, punch-in zoom on the big reaction
+        try:
+            if sty.get("subs") == "on":
+                import viral
+                ws = [w for sg in viral.transcribe(viral._audio(raw)) for w in sg["words"]]
+                opts["subs"] = ws or None
+            if sty.get("punch") == "on" and lay == "split":
+                import viral
+                a = viral._audio(raw)
+                secs = len(a) // 16000
+                if secs >= 4:
+                    rms = [float(np.sqrt(np.mean(a[i * 16000:(i + 1) * 16000] ** 2))) for i in range(secs)]
+                    opts["punch_at"] = float(int(np.argmax(rms[1:-1])) + 1)
+        except Exception as e:  # noqa: BLE001
+            log(f"subtitles/punch-in skipped for {cid}: {e}")
         if need_f:
             render_final(raw, cid, cam, c["hook"], tmp, **opts)
             try:   # vertical thumbnail of the finished video for the site
