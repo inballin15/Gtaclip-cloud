@@ -1339,8 +1339,10 @@ def process_uploads(st: dict, tmp: Path) -> None:
                        "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
                        "seconds": round(dur), "moment": {k: m[k] for k in ("start", "end", "score", "reasons")},
                        "cam_v": CAM_V}
-                if m.get("part"):   # Part 1, Part 2, ... (the AI adds a story hook after "Part N:")
-                    rec.update(part=m["part"], parts=m["parts"], title=f"{job.get('name', 'Your video')} · Part {m['part']}")
+                if m.get("part"):   # the hook is just "Part 1", "Part 2", ... (no AI hook - Nicholas's call)
+                    rec.update(part=m["part"], parts=m["parts"], title=f"{job.get('name', 'Your video')} · Part {m['part']}",
+                               hook=f"Part {m['part']}", hook_kind="user", hook_by_user=True)
+                    m.pop("hook", None)
                 if m.get("hook_ai"):
                     rec.update(hook=m["hook"], hook_kind="ai")
                 elif m.get("hook"):
@@ -1360,7 +1362,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill")
                 st["clips"][cid] = rec
                 made.append(f"- {int(m['start'] // 60)}:{int(m['start'] % 60):02d}–{int(m['end'] // 60)}:{int(m['end'] % 60):02d} "
-                            f"({', '.join(m['reasons']) or 'good moment'}) — {m.get('hook') or ''}")
+                            f"({', '.join(m['reasons']) or 'good moment'}) — {rec.get('hook') or ''}")
             except Exception as e:  # noqa: BLE001
                 log(f"cutting clip {cid} failed: {e}")
         msg = (f"Made {len(made)} part{'s' if len(made) != 1 else ''} from **{job.get('name', 'your video')}** — they're in Your clips (they don't auto-post)"
@@ -1817,6 +1819,14 @@ def main() -> None:
                     c["hook_auto"] = True
                     for k in ("viral", "pic_ok", "final_hash", "hook_kind"):
                         c.pop(k, None)
+    if st.get("parts_plain_v", 0) < 1:   # one time: parts already made get plain "Part N" hooks
+        st["parts_plain_v"] = 1
+        for c in clips.values():
+            if c.get("part") and c["status"] == "new" and c.get("hook") != f"Part {c['part']}":
+                c.update(hook=f"Part {c['part']}", hook_kind="user", hook_by_user=True)
+                c.pop("hook_auto", None); c.pop("final_hash", None)
+            elif c.get("part"):
+                c.update(hook_kind="user", hook_by_user=True); c.pop("hook_auto", None)
     if st.get("redo_camonly_v", 0) < 1:   # one time: black-screen clips skipped earlier get the webcam-only treatment
         st["redo_camonly_v"] = 1
         for c in clips.values():
