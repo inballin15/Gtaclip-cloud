@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-23T07:40:20Z",
- "videos": 29,
+ "updated": "2026-11-23T09:41:02Z",
+ "videos": 30,
  "v": 4,
  "findings": [
   {
    "feature": "streamer",
    "value": "Clix",
-   "x": 0.35,
+   "x": 0.34,
    "n": 6
   },
   {
@@ -16,169 +16,169 @@
    "n": 4
   },
   {
-   "feature": "posted",
-   "value": "morning (7-11)",
-   "x": 0.45,
-   "n": 5
-  },
-  {
-   "feature": "hook style",
-   "value": "formula",
-   "x": 0.46,
-   "n": 4
-  },
-  {
-   "feature": "style:hooklen",
-   "value": "tiny",
-   "x": 0.46,
-   "n": 5
-  },
-  {
    "feature": "streamer",
    "value": "Kai Cenat",
-   "x": 2.16,
+   "x": 2.09,
    "n": 4
-  },
-  {
-   "feature": "style:box",
-   "value": "white",
-   "x": 0.5,
-   "n": 5
   },
   {
    "feature": "style:cam",
    "value": "small",
-   "x": 0.53,
+   "x": 0.51,
    "n": 3
-  },
-  {
-   "feature": "clip length",
-   "value": "23 s+",
-   "x": 0.54,
-   "n": 6
-  },
-  {
-   "feature": "style:cam",
-   "value": "medium",
-   "x": 0.55,
-   "n": 5
-  },
-  {
-   "feature": "posted",
-   "value": "night (19+)",
-   "x": 1.76,
-   "n": 6
   },
   {
    "feature": "CAPS words",
    "value": "4-6",
-   "x": 0.6,
+   "x": 0.58,
    "n": 4
   },
   {
    "feature": "emotion word",
    "value": "STUNNED",
-   "x": 0.6,
+   "x": 0.58,
    "n": 4
   },
   {
-   "feature": "emotion word",
-   "value": "SHOCKED",
-   "x": 1.6,
+   "feature": "posted",
+   "value": "morning (7-11)",
+   "x": 0.59,
+   "n": 6
+  },
+  {
+   "feature": "style:hooklen",
+   "value": "tiny",
+   "x": 0.59,
+   "n": 6
+  },
+  {
+   "feature": "posted",
+   "value": "night (19+)",
+   "x": 1.69,
    "n": 6
   },
   {
    "feature": "style:box",
    "value": "black",
-   "x": 0.63,
+   "x": 0.6,
    "n": 3
+  },
+  {
+   "feature": "hook style",
+   "value": "formula",
+   "x": 0.62,
+   "n": 5
   },
   {
    "feature": "has 'FIRST'",
    "value": "yes",
-   "x": 0.64,
+   "x": 0.63,
    "n": 3
+  },
+  {
+   "feature": "style:box",
+   "value": "white",
+   "x": 0.63,
+   "n": 6
+  },
+  {
+   "feature": "emotion word",
+   "value": "SHOCKED",
+   "x": 1.55,
+   "n": 6
+  },
+  {
+   "feature": "clip length",
+   "value": "23 s+",
+   "x": 0.65,
+   "n": 7
   },
   {
    "feature": "streamer",
    "value": "?",
-   "x": 1.55,
+   "x": 1.51,
    "n": 8
+  },
+  {
+   "feature": "style:cam",
+   "value": "medium",
+   "x": 0.68,
+   "n": 6
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 1.46,
+   "x": 1.41,
    "n": 12
   },
   {
    "feature": "posted",
    "value": "midday (11-15)",
-   "x": 1.36,
+   "x": 1.34,
    "n": 5
   },
   {
    "feature": "hook length",
    "value": "short (<60)",
    "x": 1.27,
-   "n": 20
-  },
-  {
-   "feature": "hook style",
-   "value": "unknown",
-   "x": 1.26,
    "n": 21
   },
   {
    "feature": "hook length",
    "value": "medium (60-90)",
-   "x": 0.82,
+   "x": 0.79,
    "n": 5
+  },
+  {
+   "feature": "hook style",
+   "value": "unknown",
+   "x": 1.23,
+   "n": 21
   },
   {
    "feature": "CAPS words",
    "value": "2-3",
-   "x": 0.83,
-   "n": 13
+   "x": 0.87,
+   "n": 14
   },
   {
    "feature": "streamer",
    "value": "Lacy",
-   "x": 0.89,
+   "x": 0.87,
    "n": 5
   }
  ],
  "guidance": [
-  "DO: emotion word = SHOCKED (1.6x views, 6 videos)",
-  "DO: hook length = short (<60) (1.27x views, 20 videos)"
+  "DO: emotion word = SHOCKED (1.55x views, 6 videos)",
+  "DO: hook length = short (<60) (1.27x views, 21 videos)"
  ],
  "weights": {
-  "formula": 0.434,
-  "news": 0.159,
+  "formula": 0.453,
+  "news": 0.153,
   "quote": 0.078,
-  "question": 0.103,
-  "lowcaps": 0.225
+  "question": 0.099,
+  "lowcaps": 0.218
  },
  "style_weights": {
   "box": {
-   "white": 0.723,
-   "black": 0.277
+   "white": 0.739,
+   "black": 0.261
   },
   "cam": {
-   "small": 0.312,
-   "medium": 0.688
+   "small": 0.296,
+   "medium": 0.704
   },
   "len": {
    "s16": 0.3,
    "s22": 0.7
   },
   "hooklen": {
-   "tiny": 0.198,
-   "story": 0.802
+   "tiny": 0.21,
+   "story": 0.79
   },
   "start": {
-   "fast": 0.25,
-   "build": 0.75
+   "fast": 0.268,
+   "build": 0.732
   },
   "subs": {
    "off": 0.5,
@@ -203,16 +203,16 @@
    "views": 532
   },
   {
-   "hook": "Lacy stalking in gta 6",
-   "views": 340
+   "hook": "xQc FURIOUS after GTA 6 CRASH",
+   "views": 360
   },
   {
-   "hook": "Adapt tries texting and driving in GTA 6",
-   "views": 302
+   "hook": "Lacy stalking in gta 6",
+   "views": 340
   }
  ],
  "style_counts": {
-  "formula": 4,
+  "formula": 5,
   "news": 1,
   "quote": 1,
   "question": 2,
@@ -220,23 +220,23 @@
  },
  "style_tested": {
   "box": {
-   "white": 5,
+   "white": 6,
    "black": 3
   },
   "cam": {
    "small": 3,
-   "medium": 5
+   "medium": 6
   },
   "len": {
    "s16": 0,
    "s22": 0
   },
   "hooklen": {
-   "tiny": 5,
+   "tiny": 6,
    "story": 0
   },
   "start": {
-   "fast": 0,
+   "fast": 1,
    "build": 0
   },
   "subs": {
@@ -249,6 +249,11 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-23T09:41:02Z",
+   "kind": "data",
+   "text": "judged 30 videos (was 29)"
+  },
   {
    "at": "2026-11-23T01:36:39Z",
    "kind": "shift",
