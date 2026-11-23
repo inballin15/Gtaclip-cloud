@@ -123,6 +123,9 @@ def render_sub(text: str, out: str, size: int = 76) -> str:
     if _sub_font is None or _sub_font.size != size:
         _sub_font = ImageFont.truetype(TEXT_FONT, size)
     text = strip_emoji(text).strip().upper()
+    # swear words get starred out on screen (TikTok holds back videos with on-screen profanity)
+    text = re.sub(r"\b(F+U+C+K\w*|SH+I+T+\w*|B+I+T+C+H+\w*|N+I+G+G+\w*|D+I+C+K+\w*|P+U+S+S+Y+|A+S+S+H+O+L+E+\w*|C+U+N+T+\w*)",
+                  lambda m: m.group(1)[0] + "*" * (len(m.group(1)) - 1), text)
     stroke = max(6, size // 9)
     l, t, r, b = _sub_font.getbbox(text, stroke_width=stroke)
     im = Image.new("RGBA", (r - l + 8, b - t + 8), (0, 0, 0, 0))
