@@ -356,6 +356,28 @@ YT_PER_DAY = YT_TRY
 YT_PREF = YT_PREFS[4]
 
 
+def set_cooldown(ctl: dict, s: str, err: str) -> None:
+    """A platform limit error: pause that platform until the limit resets (and drop YouTube back to 2 a day on Buffer's per-day cap)."""
+    if "24 hours" in err:
+        until = iso(NOW + timedelta(hours=24))
+    elif "maximum number of posts" in err:   # per-day cap: wait for the next day (ET)
+        if s == "youtube" and ctl.get("yt_per_day", YT_TRY) > 2:
+            ctl["yt_per_day"] = 2   # verification didn't lift Buffer's cap: back to 2 a day
+            log("YouTube still capped by Buffer — dropping back to 2 posts a day")
+        nxt = (NOW.astimezone(ET) + timedelta(days=1)).replace(hour=0, minute=5, second=0, microsecond=0)
+        until = iso(nxt.astimezone(timezone.utc))
+    elif "daily posting limit" in err:  # Buffer's rolling 24 h limit: try again in 3 h
+        until = iso(NOW + timedelta(hours=3))
+    elif "daily" in err:  # YouTube's daily limit resets at midnight Pacific
+        nxt = (NOW + timedelta(hours=16)).replace(hour=8, minute=5, second=0, microsecond=0)
+        until = iso(nxt if nxt > NOW else nxt + timedelta(days=1))
+    else:
+        until = iso(NOW + timedelta(hours=2))
+    if ctl.setdefault("cooldown", {}).get(s, "") < iso(NOW):
+        ctl["cooldown"][s] = until
+        log(f"{s} limit hit — pausing {s} uploads until {until}")
+
+
 def create(service: str, c: dict) -> dict:
     tt, yt, title = texts(c)
     if DRY_RUN:
@@ -875,6 +897,9 @@ def main() -> None:
                     ctl["last_slot"] = slot_key
             else:
                 recs.pop(cid)
+                for s_, r_ in res.items():   # rejected right away (e.g. YouTube's 2-a-day cap): still pause that platform
+                    if COOLDOWN_RE.search(r_.get("error", "")) and "skipped" not in r_.get("error", ""):
+                        set_cooldown(ctl, s_, r_["error"])
                 ctl.setdefault("errors", []).insert(0, {"at": iso(NOW), "id": cid,
                                                          "error": "; ".join(r["error"] for r in res.values())})
                 ctl["errors"] = ctl["errors"][:10]
@@ -916,24 +941,7 @@ def main() -> None:
                 if st.get("state") == "error" and COOLDOWN_RE.search(st.get("error", "")) and fresh and not st.get("cooldown_set"):
                     st["cooldown_set"] = True
                     changed = True
-                    if "24 hours" in st["error"]:
-                        until = iso(NOW + timedelta(hours=24))
-                    elif "maximum number of posts" in st["error"]:   # per-day cap: wait for the next day (ET)
-                        if s == "youtube" and ctl.get("yt_per_day", YT_TRY) > 2:
-                            ctl["yt_per_day"] = 2   # verification didn't lift Buffer's cap: back to 2 a day
-                            log("YouTube still capped by Buffer — dropping back to 2 posts a day")
-                        nxt = (NOW.astimezone(ET) + timedelta(days=1)).replace(hour=0, minute=5, second=0, microsecond=0)
-                        until = iso(nxt.astimezone(timezone.utc))
-                    elif "daily posting limit" in st["error"]:  # Buffer's rolling 24 h limit: try again in 3 h
-                        until = iso(NOW + timedelta(hours=3))
-                    elif "daily" in st["error"]:  # YouTube's daily limit resets at midnight Pacific
-                        nxt = (NOW + timedelta(hours=16)).replace(hour=8, minute=5, second=0, microsecond=0)
-                        until = iso(nxt if nxt > NOW else nxt + timedelta(days=1))
-                    else:
-                        until = iso(NOW + timedelta(hours=2))
-                    if ctl.setdefault("cooldown", {}).get(s, "") < iso(NOW):
-                        ctl["cooldown"][s] = until
-                        log(f"{s} limit hit — pausing {s} uploads until {until}")
+                    set_cooldown(ctl, s, st["error"])
             if changed:
                 wj(P / "posted" / f"{cid}.json", r)
             sts = list((r.get("status") or {}).values())
