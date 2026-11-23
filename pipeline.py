@@ -69,7 +69,7 @@ CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
 def hd_key(cid: str, c: dict) -> str:
     """File name for a clip's webcam in the upscaler branches (a new suffix = a fresh upscale from a new source)."""
     return cid + c.get("hd_sfx", "")
-SITE_MAX_MB = 900        # GitHub Pages limit is 1 GB; keep room
+SITE_MAX_MB = 850        # GitHub Pages limit is 1 GB; keep room (quick-edit videos count too)
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v3-textonly-capcut"
@@ -1632,6 +1632,11 @@ def main() -> None:
             if e and e.get("video") and e.get("at", 0) > (r.get("rendered") or 0) and (VID / "e" / Path(e["video"]).name).exists():
                 r["final"] = e["video"]
                 r["final_abs"] = f"{PAGES}/{e['video']}"
+        # quick-edit videos of clips that left the queue only take up site space
+        live_ids = {r["id"] for r in ready}
+        for f in (VID / "e").glob("*.mp4") if (VID / "e").exists() else []:
+            if f.name.rsplit("_", 1)[0] not in live_ids:
+                f.unlink(missing_ok=True)
         ready = mix_order(ready)
         for r in ready:
             r["approved"] = bool(r.get("approved"))
@@ -2199,10 +2204,20 @@ def main() -> None:
 
     # 4e. size guard: GitHub Pages sites must stay under 1 GB -> drop the lowest-rated queued clips if close
     def site_mb():
-        return sum(f.stat().st_size for f in VID.glob("*") if f.is_file()) / 1e6
+        return sum(f.stat().st_size for f in VID.rglob("*") if f.is_file()) / 1e6   # incl. quick-edit videos (v/e)
     mb = site_mb()
     if mb > SITE_MAX_MB:
-        cands = sorted([(c.get("viral") or 0, cid) for cid, c in clips.items() if c["status"] == "new"
+        def keep_score(c: dict) -> float:
+            """Higher = keep. Unrated clips count as average (they're usually brand new, not bad), and fresh moments
+            are worth more (the first poster wins - Nov 22 study), so the oldest, weakest clips go first."""
+            v = c.get("viral")
+            v = 60.0 if v is None else float(v)
+            try:
+                age = (NOW - datetime.fromisoformat((c.get("created") or c.get("found") or "").replace("Z", "+00:00"))).total_seconds() / 3600
+            except Exception:  # noqa: BLE001
+                age = 6.0
+            return v + (25 if age < 2 else 12 if age < 4 else 0) - 3 * age
+        cands = sorted([(keep_score(c), cid) for cid, c in clips.items() if c["status"] == "new"
                         and c.get("source") != "upload" and not c.get("post_now")])
         for _, cid in cands:
             if mb <= SITE_MAX_MB:

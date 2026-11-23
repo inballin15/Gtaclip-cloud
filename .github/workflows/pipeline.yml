@@ -74,7 +74,7 @@ jobs:
           python3 -c "import json,sys;p='_site/queue.json';d=json.load(open(p));d['site_build']=sys.argv[1];json.dump(d,open(p,'w'),indent=1,ensure_ascii=False)" "$b" || true
           # quick text edits finished during this run: keep their videos on the site
           rm -rf /tmp/ed && mkdir -p /tmp/ed _site/v/e
-          if git fetch -q --depth=1 origin edits:refs/remotes/origin/edits 2>/dev/null; then git archive origin/edits | tar -x -C /tmp/ed; cp -n /tmp/ed/v/e/*.mp4 _site/v/e/ 2>/dev/null || true; fi
+          if git fetch -q --depth=1 origin edits:refs/remotes/origin/edits 2>/dev/null; then git archive origin/edits | tar -x -C /tmp/ed; python3 -c "import json,shutil,pathlib; ids={r['id'] for r in json.load(open('_site/queue.json')).get('ready',[])}; [shutil.copy(f,'_site/v/e/'+f.name) for f in pathlib.Path('/tmp/ed/v/e').glob('*.mp4') if f.name.rsplit('_',1)[0] in ids and not pathlib.Path('_site/v/e/'+f.name).exists()]" || true; fi
           publish () {  # dir branch  (fresh commit; unchanged videos aren't uploaded again)
             export GIT_INDEX_FILE=/tmp/idx-$2; rm -f "$GIT_INDEX_FILE"
             git --work-tree="$1" add -A
