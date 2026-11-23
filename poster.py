@@ -339,9 +339,10 @@ def texts(c: dict) -> tuple[str, str, str]:
     game = ((c.get("topic") or {}).get("name") if isinstance(c.get("topic"), dict) else c.get("topic")) or "GTA 6"
     plain = natural(hook)
     kw = f"{streamer} {game} stream highlight" if streamer else f"{game} highlight"
-    tt = cap or f"{plain}\n\n{kw} 🎥 @{login}\n\n{tag} {tags} #fyp".strip()
-    yt = cap or f"{plain}\n\n{kw}. Credit: {streamer} (https://www.twitch.tv/{login})\n\n{tag} {tags} #Shorts".strip()
-    title = plain if game.lower().replace(" ", "") in plain.lower().replace(" ", "") else f"{plain} | {streamer} {game}".strip(" |")
+    tt = cap or f"{plain}\n\n{kw}{f' 🎥 @{login}' if login else ''}\n\n{tag} {tags} #fyp".replace("\n\n ", "\n\n").strip()
+    credit = (f" Credit: {streamer} (https://www.twitch.tv/{login})" if login else f" Credit: {streamer}" if streamer else "")
+    yt = cap or f"{plain}\n\n{kw}.{credit}\n\n{tag} {tags} #Shorts".replace("\n\n ", "\n\n").strip()
+    title = plain if game.lower().replace(" ", "") in plain.lower().replace(" ", "") else f"{plain} | {(streamer + ' ' + game).strip()}".strip(" |")
     title = (title[:88] + " #Shorts").strip()
     return tt, yt, title
 

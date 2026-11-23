@@ -1409,7 +1409,7 @@ function naturalCase(t) {   // "Lacy LOSES IT over EXPENSIVE furniture" -> "Lacy
   const keep = /^(GTA|GTAVI|NPC|NPCS|NPCs|SWAT|FBI|CEO|USA|UK|VI|IV|V|OG|POV|AI|\d+)$/;
   return String(t || '').split(' ').map((w) => (w.length > 1 && w === w.toUpperCase() && /[A-Z]/.test(w) && !keep.test(w.replace(/[^A-Za-z0-9]/g, ''))) ? w.toLowerCase() : w).join(' ').replace(/\bNPCS\b/g, 'NPCs');
 }
-function captionFor(r) { const game = (Q.topic && Q.topic.name) || 'GTA 6'; const kw = r.streamer ? `${r.streamer} ${game} stream highlight` : `${game} highlight`; return (r.caption || `${naturalCase(r.hook)}\n\n${kw}${r.login ? ' 🎥 @' + r.login : ''}\n\n${r.tag || ''} ${(Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'} #fyp`).trim(); }
+function captionFor(r) { const game = (Q.topic && Q.topic.name) || 'GTA 6'; const kw = r.streamer ? `${r.streamer} ${game} stream highlight` : `${game} highlight`; return (r.caption || `${naturalCase(r.hook)}\n\n${kw}${r.login ? ' 🎥 @' + r.login : ''}\n\n${[r.tag, (Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'].filter(Boolean).join(' ')} #fyp`).trim(); }
 async function saveVideo(r, btn, which) {
   const clean = which ? which === 'clean' && r.clean : (variant === 'clean' && r.clean);
   const url = U(clean ? r.clean : r.final); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}.mp4`;
@@ -1669,7 +1669,7 @@ function openUpload(which) {
   for (const [k, t] of [['find', 'Find viral moments'], ['yt', 'YouTube (Higgsfield)']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', mode === k); b.onclick = () => { ls.set('gc-upmode', k); openUpload(k); }; seg.append(b); }
   const who = el('select'); for (const [v, n] of STREAMERS) { const o = el('option', null, n); o.value = v; who.append(o); }
   const other = el('input'); other.placeholder = 'Name for the credit (if not on the list)';
-  const credit = () => { const n0 = STREAMERS.find((x) => x[0] === who.value); return who.value ? n0[1] : (other.value.trim() || 'Nicholas'); };
+  const credit = () => { const n0 = STREAMERS.find((x) => x[0] === who.value); return who.value ? n0[1] : (other.value.trim() || ''); };
   const f = el('input'); f.type = 'file'; f.accept = 'video/*';
   if (mode === 'yt') {
     const open = el('a', 'big go', '1 · Open Higgsfield YouTube clipper ↗'); open.href = 'https://higgsfield.ai/ai-short-video-generator'; open.target = '_blank'; open.rel = 'noopener';
