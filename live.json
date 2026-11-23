@@ -1,8 +1,8 @@
 {
  "insights": {
-  "updated": "2026-11-22T23:41:15Z",
+  "updated": "2026-11-23T01:36:39Z",
   "videos": 29,
-  "v": 3,
+  "v": 4,
   "findings": [
    {
     "feature": "streamer",
@@ -37,7 +37,7 @@
    {
     "feature": "streamer",
     "value": "Kai Cenat",
-    "x": 2.14,
+    "x": 2.15,
     "n": 4
    },
    {
@@ -45,12 +45,6 @@
     "value": "white",
     "x": 0.49,
     "n": 5
-   },
-   {
-    "feature": "style:len",
-    "value": "normal",
-    "x": 0.51,
-    "n": 6
    },
    {
     "feature": "style:cam",
@@ -119,12 +113,6 @@
     "n": 12
    },
    {
-    "feature": "style:hooklen",
-    "value": "short",
-    "x": 0.71,
-    "n": 3
-   },
-   {
     "feature": "posted",
     "value": "midday (11-15)",
     "x": 1.37,
@@ -147,6 +135,18 @@
     "value": "2-3",
     "x": 0.82,
     "n": 13
+   },
+   {
+    "feature": "hook length",
+    "value": "medium (60-90)",
+    "x": 0.83,
+    "n": 5
+   },
+   {
+    "feature": "streamer",
+    "value": "Lacy",
+    "x": 0.89,
+    "n": 5
    }
   ],
   "guidance": [
@@ -154,11 +154,11 @@
    "DO: hook length = short (<60) (1.27x views, 20 videos)"
   ],
   "weights": {
-   "formula": 0.396,
-   "news": 0.161,
-   "quote": 0.11,
-   "question": 0.104,
-   "lowcaps": 0.229
+   "formula": 0.435,
+   "news": 0.159,
+   "quote": 0.078,
+   "question": 0.103,
+   "lowcaps": 0.226
   },
   "style_weights": {
    "box": {
@@ -171,16 +171,16 @@
     "medium": 0.688
    },
    "len": {
-    "short": 0.397,
-    "normal": 0.603
+    "s16": 0.3,
+    "s22": 0.7
    },
    "hooklen": {
-    "tiny": 0.258,
-    "short": 0.742
+    "tiny": 0.198,
+    "story": 0.802
    },
    "start": {
-    "fast": 0.7,
-    "setup": 0.3
+    "fast": 0.25,
+    "build": 0.75
    }
   },
   "top": [
@@ -190,7 +190,7 @@
    },
    {
     "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
-    "views": 1236
+    "views": 1239
    },
    {
     "hook": "Marlon can't handle a night in GTA 6",
@@ -223,19 +223,34 @@
     "medium": 5
    },
    "len": {
-    "short": 2,
-    "normal": 6
+    "s16": 0,
+    "s22": 0
    },
    "hooklen": {
     "tiny": 5,
-    "short": 3
+    "story": 0
    },
    "start": {
     "fast": 0,
-    "setup": 0
+    "build": 0
    }
   },
   "feed": [
+   {
+    "at": "2026-11-23T01:36:39Z",
+    "kind": "shift",
+    "text": "start: fast -> build"
+   },
+   {
+    "at": "2026-11-23T01:36:39Z",
+    "kind": "shift",
+    "text": "hooklen: short -> story"
+   },
+   {
+    "at": "2026-11-23T01:36:39Z",
+    "kind": "shift",
+    "text": "len: normal -> s22"
+   },
    {
     "at": "2026-11-22T23:41:15Z",
     "kind": "data",
@@ -323,7 +338,7 @@
    }
   ]
  },
- "updated": "2026-11-23T01:31:45Z",
+ "updated": "2026-11-23T01:36:39Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -2364,6 +2379,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T01:31:45Z",
- "log": []
+ "stats_updated": "2026-11-23T01:36:39Z",
+ "log": [
+  "[01:36:40Z] hook learner: 29 videos, 2 lessons"
+ ]
 }
