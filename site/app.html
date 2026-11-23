@@ -338,13 +338,14 @@ nav button{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-tr
 .qsec{font-size:12px;margin:16px 2px 8px}
 .hkimg{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;z-index:2;height:auto}
 .vlist{display:flex;flex-direction:column;gap:6px;margin:10px 0}.vrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.vrow.on{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink)}.vrow .btn{padding:6px 10px}
+.btn.ready{background:var(--pink);color:#fff;border-color:var(--pink);animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.04)}}
 .bin button{flex:none;width:86px;border:1px solid var(--line);border-radius:9px;background:#0b0912;padding:0;overflow:hidden;text-align:left}
 .bin button .th{aspect-ratio:9/16;background-size:cover;background-position:center;position:relative}
 .bin button .th em{position:absolute;left:4px;bottom:4px;font:700 8.5px var(--mono);font-style:normal;background:#000b;padding:2px 4px;border-radius:4px;text-transform:uppercase}
 .bin button .th u{position:absolute;right:4px;top:4px;font:700 9px var(--mono);text-decoration:none;background:var(--pink);padding:2px 4px;border-radius:4px}
 .bin button.sel{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink),0 0 18px #ff2e8844}
 /* inspector */
-.insp textarea{width:100%;min-height:74px;resize:vertical;border-radius:9px;border:1px solid #ff2e8855;background:#0a0811;color:#fff;font:400 22px/1.15 var(--disp);text-transform:uppercase;letter-spacing:.4px;padding:10px 11px;outline:none}
+.insp textarea{width:100%;min-height:74px;resize:vertical;border-radius:9px;border:1px solid #ff2e8855;background:#0a0811;color:#fff;font:700 17px/1.3 HookInter,Inter,Arial,sans-serif;text-transform:none;letter-spacing:0;padding:10px 11px;outline:none}
 .insp textarea:focus{border-color:var(--pink);box-shadow:0 0 0 3px #ff2e8822}
 .kv{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;margin-top:10px;font:600 11px var(--mono);color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
 .kv b{color:var(--fg);font-weight:700}
@@ -417,7 +418,9 @@ header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-
 .prog .mon .crop .x{position:absolute;bottom:10px;left:6px;font:700 8.5px var(--mono);background:#7ee0d0;color:#063;padding:2px 5px;border-radius:3px}
 .prog .mon .crop:before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid #7ee0d066}
 .prog .mon .ov{display:none}
-.hookbox{position:relative;margin:12px 6% 0;border:1.5px solid #e8b77c;padding:8px 10px;text-align:center;font:400 clamp(26px,5.5vw,46px)/1.05 var(--disp);color:var(--pink);text-transform:uppercase;letter-spacing:.3px;min-height:44px;outline:none}
+@font-face{font-family:HookInter;src:url(https://raw.githubusercontent.com/inballin15/Gtaclip-cloud/main/fonts/Inter-Bold.otf) format('opentype');font-weight:700;font-display:swap}
+.hookbox{position:relative;margin:12px auto 0;max-width:78%;width:fit-content;border-radius:10px;background:#fff;color:#000;padding:8px 14px;text-align:center;font:700 clamp(17px,4.4vw,26px)/1.22 HookInter,Inter,Arial,sans-serif;text-transform:none;letter-spacing:0;min-height:40px;outline:2px dashed #e8b77c66;outline-offset:6px;transform-origin:center top}
+.hookbox.blk{background:rgba(12,12,16,.92);color:#fff}
 .hookbox i{position:absolute;width:7px;height:7px;background:#e8b77c}
 .prog .credit{font:700 10px var(--mono);color:var(--pink);margin:6px 6px 0}
 .call{position:absolute;font:700 9.5px var(--mono);padding:3px 7px;border-radius:3px;white-space:nowrap;z-index:3;box-shadow:0 2px 8px #0008}
@@ -439,7 +442,7 @@ header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-
 .bin button.sel{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink)}
 .bin .wrap{flex:none;position:relative}
 /* inspector */
-.insp textarea{border-radius:2px;border:1px solid #ffffff33;background:#0c0912;font-size:22px;min-height:64px;padding:10px 12px}
+.insp textarea{border-radius:2px;border:1px solid #ffffff33;background:#0c0912;font-size:17px;min-height:64px;padding:10px 12px}
 .slid{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;font:700 10px var(--mono);letter-spacing:.1em;color:#b9b0c9;text-transform:uppercase;margin-top:12px}
 .slid input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:linear-gradient(90deg,#e8b77c var(--v,50%),#ffffff26 var(--v,50%));border-radius:3px}
 .slid input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#e8b77c;border:2px solid #2a1a0a}
@@ -911,7 +914,9 @@ function programPane(r, n) {
   for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const h = el('i'); h.style.left = x ? 'calc(100% - 4px)' : '-4px'; h.style.top = y ? 'calc(100% - 4px)' : '-4px'; cr.append(h); }
   const pan = ((r.user_layout || {}).pan || 0); cr.append(el('span', 'x', `X ${(50 + pan * 50).toFixed(1)}%`));
   mon.append(bg, vd, cr, call('10 Reframe', 'c-teal', { right: '18%', top: '14%' })); withPreview(r, vd, mon); s16.append(mon); d.append(s16);
-  const hb = el('div', 'hookbox'); hb.textContent = r.hook || ''; const hl = (r.hook || '').length; hb.style.fontSize = hl > 60 ? 'clamp(20px,3.6vw,30px)' : hl > 35 ? 'clamp(24px,4.4vw,38px)' : '';
+  const ulb = r.user_layout || {}; const boxSt = (r._preview && r._preview.style) || ulb.hook_style || (r.style || {}).box || 'white';
+  const hb = el('div', 'hookbox' + (boxSt === 'black' ? ' blk' : '')); hb.textContent = r.hook || '';   // looks like the real box on the video
+  { const sc0 = +((r._preview && r._preview.scale) || ulb.hook_scale || 1); if (Math.abs(sc0 - 1) > 0.01) hb.style.transform = `scale(${sc0})`; }
   for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const h = el('i'); h.style.left = x ? 'calc(100% - 4px)' : '-4px'; h.style.top = y ? 'calc(100% - 4px)' : '-4px'; hb.append(h); }
   hb.append(call('15 Type', 'c-peach', { right: '-6px', bottom: '-22px' })); hb.style.cursor = 'text'; hb.onclick = () => { const t = document.querySelector('.insp textarea'); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'center' }); t.focus(); } }; d.append(hb);
   d.append(el('div', 'credit', `${r.source === 'vod' ? 'Twitch VOD' : 'Twitch clip'} + faster-whisper`));
@@ -958,10 +963,10 @@ function inspPane(r) {
   const mk = (label, min, max, step, val, fmt, on) => { const w = el('div', 'slid'); const rg = el('input'); rg.type = 'range'; rg.min = min; rg.max = max; rg.step = step; rg.value = val;
     const v = el('span', 'val', fmt(val)); const set = () => { v.textContent = fmt(+rg.value); rg.style.setProperty('--v', ((rg.value - min) / (max - min) * 100) + '%'); }; rg.oninput = () => { set(); on(+rg.value); upd(); }; set();
     w.append(el('span', null, label), rg, v); return w; };
-  d.append(mk('Text size', 0.7, 1.4, 0.05, S.scale, (x) => Math.round(40 * x) + ' PX', (x) => { S.scale = x; const hb = hbox(); if (hb) hb.style.transform = `scale(${0.85 + (x - 1) * 0.8})`; }));
+  d.append(mk('Text size', 0.7, 1.4, 0.05, S.scale, (x) => Math.round(40 * x) + ' PX', (x) => { S.scale = x; const hb = hbox(); if (hb) hb.style.transform = `scale(${x})`; }));
   d.append(mk('Text height', 0.1, 0.9, 0.01, S.y != null ? S.y : 0.35, (x) => Math.round(x * 100) + '%', (x) => { S.y = +x.toFixed(2); const o = document.querySelector('.prog .hkov'); if (o) o.style.top = (x * 100) + '%'; }));
   const seg = el('div', 'seg'); seg.style.marginTop = '12px';
-  for (const b of ['white', 'black']) { const x = el('button', b === S.box ? 'on' : '', b + ' box'); x.onclick = () => { S.box = b; seg.querySelectorAll('button').forEach((y) => y.classList.toggle('on', y === x)); upd(); }; seg.append(x); }
+  for (const b of ['white', 'black']) { const x = el('button', b === S.box ? 'on' : '', b + ' box'); x.onclick = () => { S.box = b; seg.querySelectorAll('button').forEach((y) => y.classList.toggle('on', y === x)); const hb = hbox(); if (hb) hb.classList.toggle('blk', b === 'black'); upd(); }; seg.append(x); }
   d.append(seg);
   // motion crop + switches (these re-make the whole video)
   const mc = el('div', 'mc'); const l = el('div'); const xr = el('div', 'x', ''); const setX = () => { xr.textContent = `X  ${(50 + S.pan * 50).toFixed(1)}%`; const cr = document.querySelector('.prog .mon .crop'); if (cr) { cr.style.left = `calc(50% + ${S.pan * 18}%)`; const t = cr.querySelector('.x'); if (t) t.textContent = `X ${(50 + S.pan * 50).toFixed(1)}%`; } };
@@ -994,7 +999,7 @@ function outPane(r, n) {
   o.append(th, m); d.append(o);
   const sb = el('div', 'shipbtns');
   const pn = el('button', 'btn pink', r.nowing ? 'Posting…' : 'Ship it now'); pn.disabled = !!r.nowing; pn.onclick = () => openPostNow(r);
-  const dl = el('button', 'btn cyan', '⬇ Save'); dl.onclick = () => saveVideo(r, dl);
+  const dl = saveBtn(r, 'btn cyan', '⬇ Save');
   const pd = el('button', 'btn ok', 'Posted ✓'); pd.onclick = () => openPosted(r);
   const subd = linksFor(r).some(([l2]) => isSub(l2));
   const gp = el('button', 'btn' + (CR[campOf(r)] && !subd ? ' paid' : ''), subd ? '✓ Submitted' : '$ Get paid'); gp.onclick = () => openGetPaid(r);
@@ -1471,7 +1476,7 @@ function clipCard(r, st) {
   else if (r.pic_ok == null && !(L && L.ai_off)) b.append(el('div', 'note', 'Waiting for the AI picture check — it won\'t auto-post until it passes.'));
   const btns = el('div', 'btns');
   if (!r.nowing) { const pn = el('button', 'btn pink', 'Post now'); pn.onclick = () => openPostNow(r); btns.append(pn); }
-  const dl = el('button', 'btn cyan', variant === 'clean' ? '⬇ Save (no caption)' : '⬇ Save'); dl.onclick = () => saveVideo(r, dl);
+  const dl = saveBtn(r, 'btn cyan', variant === 'clean' ? '⬇ Save (no caption)' : '⬇ Save');
   const ed = el('button', 'btn', '✎ Edit'); ed.onclick = () => openEditor(r);
   const subd = linksFor(r).some(([l]) => isSub(l));
   const gp = el('button', 'btn' + (CR[campOf(r)] && !subd ? ' paid' : ''), subd ? '✓ Submitted' : '$ Get paid'); gp.onclick = () => openGetPaid(r);
@@ -1494,31 +1499,51 @@ function naturalCase(t) {   // "Lacy LOSES IT over EXPENSIVE furniture" -> "Lacy
   return String(t || '').split(' ').map((w) => (w.length > 1 && w === w.toUpperCase() && /[A-Z]/.test(w) && !keep.test(w.replace(/[^A-Za-z0-9]/g, ''))) ? w.toLowerCase() : w).join(' ').replace(/\bNPCS\b/g, 'NPCs');
 }
 function captionFor(r) { const game = (Q.topic && Q.topic.name) || 'GTA 6'; const kw = r.streamer ? `${r.streamer} ${game} stream highlight` : `${game} highlight`; return (r.caption || `${naturalCase(r.hook)}\n\n${kw}${r.login ? ' 🎥 @' + r.login : ''}\n\n${[r.tag, (Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'].filter(Boolean).join(' ')} #fyp`).trim(); }
+const SAVE_READY = {};
+function saveBtn(r, cls, text, which) { const b = el('button', cls, text);
+  if (SAVE_READY[r.id]) { b.textContent = 'Tap to save ✓'; b.classList.add('ready'); b.onclick = async () => { const f = SAVE_READY[r.id]; delete SAVE_READY[r.id]; b.classList.remove('ready'); b.textContent = text; b.onclick = () => saveVideo(r, b, which); if (!(await f())) toast('Couldn\'t open Save — press and hold the video instead'); }; }
+  else b.onclick = () => saveVideo(r, b, which); return b; }
 async function saveVideo(r, btn, which) {
+  // 1) get the right video file   2) open Save/Share - phones only allow that right after a tap, so when getting
+  // the file took a while, the button turns into "Tap to save ✓" and your next tap opens it straight away
   const clean = which ? which === 'clean' && r.clean : (variant === 'clean' && r.clean);
-  if (!clean && r._preview && r.clean && r.layout_used !== 'cam') {   // your new words aren't in a file yet: make it right here
-    const label = btn.textContent; btn.disabled = true; const ac = new (window.AudioContext || window.webkitAudioContext)();
-    const again = () => new Promise((res) => { btn.disabled = false; btn.textContent = 'Tap to make the video'; btn.onclick = null;
-      const h = () => { btn.removeEventListener('click', h, true); btn.disabled = true; res(); }; btn.addEventListener('click', h, true); });
-    try {
-      btn.textContent = 'Adding your words… 0%';
-      const blob = await burnVideo(r, (p) => { btn.textContent = `Adding your words… ${Math.min(99, Math.round(p * 100))}%`; }, { ac, again });
-      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm'; const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}.${ext}`;
-      const file = new File([blob], name, { type: blob.type }); copy(captionFor(r), 'Caption');
-      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
-      else { const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
-    } catch (e) { if (!e || e.name !== 'AbortError') toast('Couldn\'t make it here (' + ((e && e.message) || 'error') + ') — the finished file is ready in about a minute'); }
-    btn.disabled = false; btn.textContent = label; lastSig = ''; render(); return;
-  }
-  const url = U(clean ? r.clean : r.final); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}.mp4`;
-  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Getting video…';
+  const label = btn.textContent; const handler = btn.onclick; btn.disabled = true;
+  const t0 = Date.now(); let blob = null, name = `${(r.streamer || 'clip').replace(/\W/g, '') || 'clip'}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}`;
+  const e = EDITS[r.id]; const edited = !clean && e && e.at > (r.rendered || 0);
   try {
-    const blob = await (await fetch(url)).blob(); const file = new File([blob], name, { type: 'video/mp4' });
-    copy(captionFor(r), 'Caption');
-    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
-    else { const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
-  } catch (e) { if (e && e.name !== 'AbortError') window.open(url, '_blank'); }
-  btn.disabled = false; btn.textContent = label;
+    if (edited && e.video && ghKey()) {   // your edit is already made on GitHub: download it from there right away
+      btn.textContent = 'Getting your edited video…';
+      const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${e.video}?ref=edits&t=${Date.now()}`, { headers: { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github.raw+json' } });
+      if (res.ok) blob = await res.blob();
+    }
+    if (!blob && edited && r._preview && r.clean && r.layout_used !== 'cam') {   // edit not made yet: your phone makes it
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const again = () => new Promise((res) => { btn.disabled = false; btn.textContent = 'Tap to make the video'; btn.onclick = () => { btn.disabled = true; res(); }; });
+      btn.textContent = 'Adding your words… 0%';
+      blob = await burnVideo(r, (p) => { btn.textContent = `Adding your words… ${Math.min(99, Math.round(p * 100))}%`; }, { ac, again });
+    }
+    if (!blob) { btn.textContent = 'Getting video…'; const res = await fetch(U(clean ? r.clean : r.final)); if (!res.ok) throw new Error('video not found'); blob = await res.blob(); }
+  } catch (err) {
+    toast('Couldn\'t get the video (' + ((err && err.message) || 'error') + ') — try again in a minute');
+    btn.disabled = false; btn.textContent = label; btn.onclick = handler; return;
+  }
+  const type = blob.type && blob.type.startsWith('video') ? blob.type : 'video/mp4';
+  const file = new File([blob], `${name}.${type.includes('webm') ? 'webm' : 'mp4'}`, { type });
+  copy(captionFor(r), 'Caption');
+  const out = async () => {
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+      else { const a = el('a'); a.href = URL.createObjectURL(file); a.download = file.name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+      return true;
+    } catch (err) { if (err && err.name === 'AbortError') return true; return false; }
+  };
+  const done = () => { btn.disabled = false; btn.textContent = label; btn.onclick = handler; };
+  if (Date.now() - t0 < 2500 && await out()) { done(); return; }
+  // took a while (or the phone said no): one more tap opens Save/Share (kept even if the page redraws)
+  SAVE_READY[r.id] = out; setTimeout(() => { delete SAVE_READY[r.id]; }, 120000);
+  btn.disabled = false; btn.textContent = 'Tap to save ✓'; btn.classList.add('ready');
+  btn.onclick = async () => { delete SAVE_READY[r.id]; btn.classList.remove('ready'); if (!(await out())) toast('Couldn\'t open Save — press and hold the video instead'); done(); };
+  setTimeout(() => { if (btn.textContent === 'Tap to save ✓') { btn.classList.remove('ready'); done(); } }, 120000);
 }
 // ---------------------------------------------------------------- new voice (AI voice you pick)
 const VOICES = [['am_michael', 'Michael', 'US male'], ['am_fenrir', 'Fenrir', 'deep US male'], ['am_puck', 'Puck', 'hype US male'], ['am_echo', 'Echo', 'calm US male'],
