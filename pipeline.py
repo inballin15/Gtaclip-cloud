@@ -239,6 +239,7 @@ def apply_issues(st: dict) -> None:
             cm = re.search(r"^caption:[ \t]*(.*)\Z", body, re.M | re.S)
             if hm and hm.group(1).strip():
                 c["hook"] = strip_emoji(hm.group(1))[:140]
+                c.pop("no_hook", None)
                 c["hook_by_user"] = True
             if cm:
                 c["caption"] = cm.group(1).strip()[:2000]
@@ -266,6 +267,7 @@ def apply_issues(st: dict) -> None:
                     keep["trim"] = [max(0.0, float(tr[0])), float(tr[1])]
                 if isinstance(ul.get("hook"), str) and ul["hook"].strip():
                     c["hook"] = strip_emoji(ul["hook"])[:140]
+                    c.pop("no_hook", None)
                     c["hook_by_user"] = True
                 if isinstance(ul.get("caption"), str):
                     c["caption"] = ul["caption"].strip()[:2000]
@@ -1462,6 +1464,7 @@ def apply_quick_edits(clips: dict, edits: dict) -> None:
             continue
         if e.get("hook"):
             c["hook"] = e["hook"]
+            c.pop("no_hook", None)
             c["hook_by_user"] = True
         if "caption" in e:
             c["caption"] = e["caption"]
@@ -1690,7 +1693,7 @@ def main() -> None:
             r["poster"] = f"v/{r['id']}.jpg"
             _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + LAYOUT_V + r.get("layout", "")).encode()).hexdigest()[:10]
             r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"
-                          if r.get("final_v") and r.get("hook") and r.get("final_v") == _hh
+                          if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and r.get("final_v") == _hh
                           and (VID / f"{r['id']}_final.mp4").exists() else "")
             r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
             r["clean"] = (f"v/{r['id']}_clean.mp4?v={r['clean_v']}"
@@ -1822,11 +1825,17 @@ def main() -> None:
     if st.get("parts_plain_v", 0) < 1:   # one time: parts already made get plain "Part N" hooks
         st["parts_plain_v"] = 1
         for c in clips.values():
-            if c.get("part") and c["status"] == "new" and c.get("hook") != f"Part {c['part']}":
+            if c.get("part") and c["status"] == "new" and c.get("hook") != f"Part {c['part']}" and not c.get("no_hook"):
                 c.update(hook=f"Part {c['part']}", hook_kind="user", hook_by_user=True)
                 c.pop("hook_auto", None); c.pop("final_hash", None)
             elif c.get("part"):
                 c.update(hook_kind="user", hook_by_user=True); c.pop("hook_auto", None)
+    if st.get("ufo_nohook_v", 0) < 1:   # one time: the UFO TikTok already shows "Part 1/2/3" - no box from us
+        st["ufo_nohook_v"] = 1
+        for cid, c in clips.items():
+            if cid.startswith("upmwtgx8fl2_"):
+                c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
+                c.pop("hook_auto", None); c.pop("final_hash", None)
     if st.get("redo_camonly_v", 0) < 1:   # one time: black-screen clips skipped earlier get the webcam-only treatment
         st["redo_camonly_v"] = 1
         for c in clips.values():
@@ -2042,12 +2051,13 @@ def main() -> None:
             (VID / f"{cid}.mp4").unlink(missing_ok=True)  # old preview copies
             if not (VID / f"{cid}.jpg").exists():
                 render_preview(raw, cid)
-            if not c.get("hook"):
+            if not c.get("hook") and not c.get("no_hook"):
                 c["hook"], kind = auto_hook(c)
                 c["hook_auto"] = True
                 c["hook_kind"] = kind
                 log(f"auto hook {cid}: {c['hook']}")
-            if c.get("hook"):
+            if c.get("hook") or c.get("no_hook"):   # no_hook: the video already has its own text - no box from us
+                c["hook"] = c.get("hook") or ""
                 hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
                 ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + c.get("layout", "")).encode()).hexdigest()[:10]
                 need_f = c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists()
@@ -2223,7 +2233,7 @@ def main() -> None:
         except Exception as e:  # noqa: BLE001
             log(f"subtitles/punch-in skipped for {cid}: {e}")
         if need_f:
-            render_final(raw, cid, cam, c["hook"], tmp, **opts)
+            render_final(raw, cid, cam, None if c.get("no_hook") else c["hook"], tmp, **opts)
             try:   # vertical thumbnail of the finished video for the site
                 ff("-ss", "1.2", "-i", str(VID / f"{cid}_final.mp4"), "-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "6",
                    str(VID / f"{cid}_p.jpg"))
