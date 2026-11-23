@@ -776,7 +776,8 @@ function queueList() {
     && !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
   const tier = (r) => { const fresh = Date.now() - new Date(r.created || r.found || 0) < 5 * 3600e3; return fresh ? 0 : 1; };
-  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || ((a.viral_verdict === 'skip') - (b.viral_verdict === 'skip')) || (tier(a) - tier(b)) || ((b.viral ?? 50) - (a.viral ?? 50)));
+  const nxt = L && L.up_next;   // the poster's real next pick (it never posts the same streamer twice in a row) goes first
+  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || ((b.id === nxt) - (a.id === nxt)) || ((a.viral_verdict === 'skip') - (b.viral_verdict === 'skip')) || (tier(a) - tier(b)) || ((b.viral ?? 50) - (a.viral ?? 50)));
 }
 const videos = () => (L && L.videos) || [];
 const subKey = (v) => v.link;

@@ -255,8 +255,14 @@ def gemini_models(key: str, log=print) -> list[str]:
 
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=8) as pool:   # test them all at once: ~8 s max instead of 8 s each
-        good = [g for g in pool.map(probe, names[:8]) if g]
-    _MODELS = [n for _, n in sorted(good)][:3] or ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview"]
+        good = [g for g in pool.map(probe, names[:14]) if g]
+    # each model has its own free limit: when Google is busy (503) or one model's limit is used up (429), the
+    # next one usually still answers - so keep up to 5, with older stable models as the backup
+    backup = ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite",
+              "gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.0-flash"]
+    _MODELS = [n for _, n in sorted(good)][:5]
+    _MODELS += [n for n in backup if n not in _MODELS and (not names or n in names)][:max(0, 5 - len(_MODELS))]
+    _MODELS = _MODELS or backup[:5]
     log(f"AI models answering now: {', '.join(_MODELS)}")
     return _MODELS
 

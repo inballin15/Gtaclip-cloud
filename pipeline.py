@@ -1250,6 +1250,25 @@ def split_parts(src: Path) -> tuple[list[tuple[float, float]], int]:
     return spans, (int(a // 60) if d0 - a > 0.5 else 0)
 
 
+def refetch_upload(c: dict, raw: Path, tmp: Path) -> None:
+    """Get one of your pasted clips again (to re-make it after an edit): same link, same start and end."""
+    link = c.get("src_link") or ""
+    if not link:
+        raise RuntimeError("no link saved (uploaded file)")
+    a, b = float(c["moment"]["start"]), float(c["moment"]["end"])
+    if re.search(r"tiktok\.com/", link):
+        import yt_dlp
+        d = Path(tempfile.mkdtemp(dir=tmp))
+        with yt_dlp.YoutubeDL({"format": "bv*+ba/b", "outtmpl": str(d / "tt.%(ext)s"), "quiet": True, "noplaylist": True,
+                               "merge_output_format": "mp4", "ffmpeg_location": FF_YTDLP}) as y:
+            y.extract_info(link, download=True)
+        import viral
+        viral.cut(next(d.glob("tt.*")), a, b, raw)
+    else:
+        fetch_link_section(link, a, b, raw, tmp)
+    log(f"got your clip again: {raw.stem}")
+
+
 def process_uploads(st: dict, tmp: Path) -> None:
     """Dashboard upload: the video arrives in pieces on a branch 'upload-<id>' + an issue 'upload: <id>'.
     Find the viral moments, cut them, and put them in the queue like any other clip."""
@@ -1349,7 +1368,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 except Exception as e:  # noqa: BLE001   a webcam-check error never costs you the clip: full screen
                     log(f"webcam check failed {cid}: {e}")
                     cam, q, frac = None, "none", None
-                rec = {"status": "new", "source": "upload", "streamer": name, "login": login,
+                rec = {"status": "new", "source": "upload", "streamer": name, "login": login, "src_link": job.get("url") or "",
                        "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name) if name else ""), "campaign": s_cfg.get("campaign", ""),
                        "title": f"{job.get('name', 'Your video')} @ {int(m['start'] // 60)}:{int(m['start'] % 60):02d}",
                        "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
@@ -2056,6 +2075,20 @@ def main() -> None:
             (RAW / f"{cid}.mp4").unlink(missing_ok=True)
             continue
         raw = RAW / f"{cid}.mp4"
+        if not raw.exists() and c.get("source") == "upload":
+            # your pasted / uploaded clips: the original isn't kept between runs and has no Twitch address.
+            # Finished video already on the site -> keep it as is. Needs a re-make -> fetch the link again.
+            if (VID / f"{cid}_final.mp4").exists() and c.get("final_hash"):
+                hh0 = hashlib.sha1(((c.get("hook") or "") + c.get("cam", "") + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+                if c.get("final_hash") == hh0:
+                    continue
+            try:
+                refetch_upload(c, raw, tmp)
+            except Exception as e:  # noqa: BLE001
+                log(f"couldn't get your clip {cid} again: {str(e)[:120]}")
+                if not (VID / f"{cid}_final.mp4").exists():
+                    c["status"] = "expired"
+                continue
         if not raw.exists():
             log(f"raw missing for {cid}; re-downloading")
             try:
