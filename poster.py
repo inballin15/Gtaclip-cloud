@@ -823,6 +823,7 @@ def main() -> None:
     if not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key:
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now
+              and r.get("source") != "upload"   # clips from links you pasted / uploads: never auto-posted, you post them
               and not too_old(r) and not already_on_buffer(r)
               and (r.get("pic_ok") is True or ctl.get("ai_off"))   # only clips that passed the AI picture check
               and hd_ready(r)]                                       # and whose sharp AI webcam is in
@@ -1002,7 +1003,8 @@ def main() -> None:
     up_next = None
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
-        ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now],
+        ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now
+                     and r.get("source") != "upload"],
                     key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r) + boost_pts(r))))
         up = ok[0] if ok else None
         up_next = up["id"] if up else None

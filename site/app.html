@@ -1286,9 +1286,10 @@ function renderQueue(v, ql) {
   ready.forEach((r, i) => {
     let st;
     if (r.nowing) st = { cls: 's-busy', txt: 'Posting now', spin: true };
+    else if (r.source === 'upload') st = { cls: 's-wait', txt: 'You post this · not automatic' };
     else if (L && (L.paused || L.buffer_off)) st = { cls: 's-wait', txt: `#${qi + 1} in line · posting ${L.buffer_off ? 'paused' : 'off'}` };
     else { const s = plan[qi]; st = { cls: qi === 0 ? 's-next' : 's-wait', txt: s ? `${qi === 0 ? 'Next · ' : ''}~${tET(s)}` : `#${qi + 1} · tomorrow` }; }
-    if (!r.nowing) qi++;
+    if (!r.nowing && r.source !== 'upload') qi++;
     const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; cards.push([r, c]);
   });
   // your own clips (pasted links / uploads) get their own section, never mixed in with the stream clips
@@ -1297,7 +1298,7 @@ function renderQueue(v, ql) {
   stream.forEach(([, c]) => v.append(c));
   if (!stream.length) v.append(el('div', 'empty', 'No stream clips ready yet — the clip maker runs every 10 min.'));
   if (mine.length) {
-    v.append(el('div', 'qsec', `Your clips · ${mine.length}`), Object.assign(el('div', 'mut', 'From links you pasted or videos you uploaded. No webcam? The gameplay fills the whole screen.'), { style: 'margin:0 2px 10px' }));
+    v.append(el('div', 'qsec', `Your clips · ${mine.length}`), Object.assign(el('div', 'mut', 'From links you pasted or videos you uploaded. These never auto-post: use Ship it now or post them yourself. No webcam? The gameplay fills the whole screen.'), { style: 'margin:0 2px 10px' }));
     mine.forEach(([, c]) => v.append(c));
   }
 }
@@ -1665,7 +1666,7 @@ function openUpload(which) {
     const hook = el('input'); hook.placeholder = 'Hook text (leave empty and the AI writes one)'; hook.maxLength = 140;
     const go = el('button', 'big go', '3 · Add to my queue');
     go.onclick = () => { const file = f.files && f.files[0]; if (!file) { toast('Pick the clip you saved from Higgsfield'); return; } if (file.size > 1.9e9) { toast('That video is too big'); return; } closeSheet(); uploadVideo(file, who.value, credit(), { asis: true, hook: hook.value.trim() }); };
-    sheet('Make clips', [seg, el('div', 'mut', 'Clip a YouTube video with Higgsfield, save the clip to your phone, then upload it here. It gets our hook box, goes in the queue and auto-posts like any other clip.'),
+    sheet('Make clips', [seg, el('div', 'mut', 'Clip a YouTube video with Higgsfield, save the clip to your phone, then upload it here. It gets our hook box, goes in Your clips and waits for you (no auto-post).'),
       open, el('label', null, '2 · Upload the finished clip'), f, el('label', null, 'Hook'), hook, el('label', null, 'Whose video is it? (for the credit)'), who, other, go]);
     return;
   }
