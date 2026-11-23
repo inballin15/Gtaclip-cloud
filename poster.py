@@ -444,6 +444,14 @@ def fresh_bonus(r: dict) -> int:
     return 25 if age < 2 else 12 if age < 4 else 0
 
 
+STREAMER_BOOST = {"kai cenat": 12, "kai": 12, "kaicenat": 12, "ishowspeed": 8, "lacy": 8, "xqc": 4, "clix": -6}
+
+
+def boost_pts(r: dict) -> int:
+    """Kai, Speed and Lacy pull the biggest numbers on winning pages (Nov 22 study) and on ours; Clix's GTA clips less."""
+    return STREAMER_BOOST.get((r.get("streamer") or "").lower(), 0)
+
+
 def tier(r: dict) -> int:
     """0 = new clip with a real hook, 1 = older clip with a real hook, 2 = new clip still waiting for a hook, 3 = rest."""
     found = r.get("created") or r.get("found") or ""
@@ -821,7 +829,7 @@ def main() -> None:
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
         # newest clips with a real hook first, then the AI viral score (clips rated "skip" go last)
-        ok = sorted(ok, key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r))))
+        ok = sorted(ok, key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r) + boost_pts(r))))
         why = f"{slot.astimezone(ET):%-I:%M %p} slot"
         if split:
             cool = ctl.get("cooldown", {})
@@ -995,7 +1003,7 @@ def main() -> None:
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now],
-                    key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r))))
+                    key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r) + boost_pts(r))))
         up = ok[0] if ok else None
         up_next = up["id"] if up else None
     # 3b) engagement learner: what hook styles / spellings / lengths get views on OUR channels

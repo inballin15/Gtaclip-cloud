@@ -204,7 +204,10 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
             age = 4.0
         return c["view_count"] / age
     # paid first, then the fastest-rising clips; discovered streamers get a fair share, not all of it
-    picks.sort(key=lambda c: (c["paid"], velocity(c) * (0.8 if c["discovered"] else 1.0)), reverse=True)
+    # streamer boost (Nov 23, from the study + our own views): Kai > Speed = Lacy > xQc; Clix's GTA clips lower
+    def boost(c: dict) -> float:
+        return float((CFG["streamers"].get(c.get("login", "")) or {}).get("boost", 0.8 if c["discovered"] else 1.0))
+    picks.sort(key=lambda c: (c["paid"] and boost(c) >= 1, velocity(c) * boost(c)), reverse=True)
     return picks[: d["max_total"]]
 
 
