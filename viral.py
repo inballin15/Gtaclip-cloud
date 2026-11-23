@@ -147,17 +147,18 @@ def find_moments(path: Path, max_clips: int | None = None, log=print, streamer: 
             break
         if any(c["start"] - 5 <= p <= c["end"] + 5 for c in clips):
             continue
-        # start: a sentence beginning 4-14 s before the peak (the set-up)
-        starts = [t for t in sent_starts if p - 9 <= t <= p - 2]
-        start = min(starts) if starts else max(0.0, p - 6)
+        # start: a sentence beginning ~6-14 s before the peak. Clipper study (Nov 22, 128 clips timed): in 100K+ view
+        # clips the loudest moment sits around the MIDDLE (~12 s of ~25 s); they open on talk/action, then build up.
+        starts = [t for t in sent_starts if p - 14 <= t <= p - 6]
+        start = min(starts, key=lambda t: abs(t - (p - 10))) if starts else max(0.0, p - 10)
         # end: first sentence end after the reaction calms down, 10-25 s total (top clip pages: median 16 s)
-        calm = next((t for t in range(int(p) + 3, min(secs, int(start) + 25)) if score[t] < 0.4), int(min(secs, start + 18)))
-        ends = [t for t in sent_ends if calm <= t <= start + 25]
+        calm = next((t for t in range(int(p) + 3, min(secs, int(start) + 30)) if score[t] < 0.4), int(min(secs, start + 22)))
+        ends = [t for t in sent_ends if calm <= t <= start + 30]
         end = min(ends) + 0.4 if ends else min(float(secs), max(start + 10, calm + 1.5))
         if end - start < 10:
             end = min(float(secs), start + 10)
-        if end - start > 25:
-            end = start + 25
+        if end - start > 30:
+            end = start + 30
         if any(not (end + 3 < c["start"] or start - 3 > c["end"]) for c in clips):
             continue
         a, b = int(start), int(end)
@@ -242,22 +243,22 @@ def gemini_models(key: str, log=print) -> list[str]:
 
 
 HOOK_STYLE = (
-    "The on-screen hook copies the formula of the biggest GTA 6 clip pages (1-7M views each), kept SHORT: "
-    "[streamer's well-known name] [CAPS emotion: SHOCKED / LOSES IT / FURIOUS / CRYING / STUNNED] "
-    "[over / after / seeing] [ONE specific GTA 6 detail]. Or a 'FIRST' / 'just now' news angle. "
-    "Real examples: 'Kai Cenat LOSES IT over Rakai stuck on mission 1' / 'IShowSpeed SHOCKED seeing the HULK in GTA 6' / "
-    "'Kai FURIOUS that NPCs REMEMBERED him' / 'Lacy realizes you can't steal cars anymore' / "
-    "'Clix CRYING after Jason dies'.\n"
-    "ORDER: lead with the reaction (who + emotion), then ONE concrete detail - a place, item, character, mission or "
-    "'first ...' (e.g. 'first shoe store in GTA 6'). The detail is what makes people stop AND what they search for; "
-    "never write it like a search phrase ('GTA 6 Lacy shoe store gameplay').\n"
-    "Rules: SHORT - 25-60 characters, at most 10 words, one line of thought (1-2 lines on screen); cut every word "
-    "that isn't needed (no 'during his marathon', 'in this intense moment', 'that he thought it was'); 2-4 CAPS words "
-    "on the emotion and the key fact; one specific detail (Lucia, Jason, Vice City, a number, hours played, a first); "
-    "exaggerate the reaction, but the event must come from the transcript, title or the streamer's real story "
-    "(never invent fake records or crimes); no emojis, no swearing, no quotes, no hashtags.\n")
+    "The on-screen hook copies what the biggest streamer clip pages do on their winning videos (clipper study, Nov 22: "
+    "974 videos; 100K+ view hooks average ~13 words): ONE story sentence telling what happened - "
+    "[streamer's well-known name] [emotional past-tense verb: cried / was devastated / lost it / was shocked / "
+    "FREAKED OUT / got upset] [after / finding out / when] [the specific thing that happened]. "
+    "Real winners: 'Kai Cenat devastated finding out you can't free roam after GTA 6 ends' (2.4M) / "
+    "'Speed picked up and threw a Chameleon at an NPC in GTA 6' (1.6M) / 'Kai was upset GTA 6 driving is too "
+    "difficult and says it's not fun' (1.8M) / 'IShowSpeed did NOT expect this HAPPY ENDING in GTA 6' (1.6M) / "
+    "'Kai Cenat Failing A Mission Because He Couldn't Hop On A Train' (5.7M).\n"
+    "ORDER: who + how they reacted, then the concrete story detail (a character, mission, place, item, number, "
+    "a first). The detail makes people stop - it must come from the transcript, title or the streamer's real story "
+    "(never invent fake records or crimes). Never write it like a search phrase ('GTA 6 Lacy shoe store gameplay').\n"
+    "Rules: 8-15 words, 45-95 characters, reads like a friend telling you what happened; normal sentence case with "
+    "only 1-2 CAPS words for the key emotion or fact (all-caps hooks did worse); no filler ('in this intense "
+    "moment'); no emojis, no swearing, no quotes, no hashtags.\n")
 
-HOOK_MAX = 64   # automatic hooks longer than this get shortened (your own typed hooks are never touched)
+HOOK_MAX = 95   # automatic hooks longer than this get shortened (your own typed hooks are never touched)
 _TAIL = re.compile(r"(?:,| -| during | while | because | despite | even though | as he | as she | after spending "
                    r"| after playing | immediately after | for (?:over )?\d+ hours)", re.I)
 
@@ -280,7 +281,7 @@ def ai_shorten(hooks: dict[str, str], log=print, tiny: bool = False) -> dict[str
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key or not hooks:
         return {}
-    size = "VERY SHORT: 18-40 characters, at most 6 words" if tiny else "SHORT: 25-60 characters, at most 10 words"
+    size = "SHORT: 25-60 characters, at most 10 words" if tiny else "one story sentence, 45-90 characters, 8-15 words"
     prompt = (f"Rewrite each on-screen hook for a TikTok/YouTube Shorts clip so it is {size}. "
               "Keep the streamer's name exactly, keep the key event and 2-3 CAPS words, keep the meaning; cut "
               "filler ('during his marathon', 'in this intense moment', 'that he thought'). It must still read as a "
@@ -302,7 +303,7 @@ def ai_shorten(hooks: dict[str, str], log=print, tiny: bool = False) -> dict[str
             res = {}
             for k, v in (got.items() if isinstance(got, dict) else []):
                 v = clean_line(str(v))
-                if k in hooks and 14 <= len(v) <= (48 if tiny else 72):
+                if k in hooks and 14 <= len(v) <= (68 if tiny else 100):
                     res[k] = v
             return res
         except Exception as e:  # noqa: BLE001
@@ -325,7 +326,7 @@ def hook_style(variant: str | None = None) -> str:
     tiny = v.endswith("|tiny")
     v = v.split("|")[0]
     if tiny:
-        extra += "LENGTH TEST for this clip: VERY short hook, 18-40 characters, at most 6 words (e.g. 'Kai FURIOUS at Lucia').\n"
+        extra += "LENGTH TEST for this clip: SHORT hook, 25-60 characters, at most 10 words (e.g. 'Kai Cenat LOSES IT over Rakai stuck on mission 1').\n"
     if v and v != "formula" and v in learn.VARIANTS:
         extra += ("STYLE TEST for this clip (this overrides the formula and CAPS rules above): "
                   + learn.VARIANTS[v] + "\n")

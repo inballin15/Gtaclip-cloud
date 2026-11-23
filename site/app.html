@@ -750,12 +750,12 @@ function learnerCard() {
   // ---- what it's testing + who's ahead
   c.append(el('div', 'sub', 'Testing on new clips'));
   const TESTS = [
-    ['Hook style', I.weights, I.style_counts, { lowcaps: 'Natural', formula: 'Classic CAPS', news: 'Breaking news', quote: 'Their own words', question: 'Question' }],
+    ['Hook style', I.weights, I.style_counts, { lowcaps: 'Natural', formula: 'Story sentence', news: 'Breaking news', quote: 'Their own words', question: 'Question' }],
     ['Caption box', (I.style_weights || {}).box, (I.style_tested || {}).box, { white: 'White', black: 'Black', outline: 'Outline' }],
     ['Webcam size', (I.style_weights || {}).cam, (I.style_tested || {}).cam, { medium: 'Standard', small: 'Smaller' }],
-    ['Clip length', (I.style_weights || {}).len, (I.style_tested || {}).len, { short: '~12 s', normal: '~18 s' }],
-    ['Hook length', (I.style_weights || {}).hooklen, (I.style_tested || {}).hooklen, { tiny: 'Very short', short: 'Short' }],
-    ['Clip start', (I.style_weights || {}).start, (I.style_tested || {}).start, { fast: 'Right on the moment', setup: 'Short build-up' }],
+    ['Clip length', (I.style_weights || {}).len, (I.style_tested || {}).len, { s16: '~16 s', s22: '~22 s' }],
+    ['Hook length', (I.style_weights || {}).hooklen, (I.style_tested || {}).hooklen, { tiny: 'Short', story: 'Full sentence' }],
+    ['Clip start', (I.style_weights || {}).start, (I.style_tested || {}).start, { fast: 'Right on the moment', build: 'Build-up, moment mid-clip' }],
   ];
   for (const [name, W, N, names] of TESTS) {
     if (!W) continue;

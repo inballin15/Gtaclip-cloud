@@ -636,34 +636,46 @@ CLIP_KEEP_S = 16   # top clip pages' median length   # length of the trimmed par
 
 
 def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
-    """Start every clip right at its big moment. TikTok decides in the first 1-2 seconds: our analytics showed
-    ~half the viewers swiping away while a 7-second build-up played. So the clip begins ~2 s before the loudest
-    moment (the hook on screen gives the context) and runs ~12-18 s from there."""
+    """Pick the part of the clip to keep, with the big (loudest) moment placed where top pages put it.
+    Clipper study (Nov 22, 128 clips timed by their audio): 100K+ view clips open on talk/action within the first
+    second, build up, and hit the loudest moment around the MIDDLE (median ~12 s of ~25 s) - only 15% peak in the
+    first 3 s. So by default ("build") the clip starts ~45% of its length before the moment, on someone starting to
+    talk; the learner keeps testing the old "fast" start (~2 s before) against it."""
     import viral
     try:
         a = viral._audio(raw)
         secs = len(a) // 16000
-        keep_s = 12 if (c.get("style") or {}).get("len") == "short" else CLIP_KEEP_S
+        sty = c.get("style") or {}
+        keep_s = 16 if sty.get("len") in ("s16", "short") else 22
         if secs < 6:
             return raw
         rms = np.array([np.sqrt(np.mean(a[i * 16000:(i + 1) * 16000] ** 2) + 1e-9) for i in range(secs)])
         db = 20 * np.log10(rms + 1e-9)
         sm = np.convolve(db, np.ones(3) / 3, mode="same")
         p = int(np.argmax(sm[1:-1])) + 1
-        lead = 4 if (c.get("style") or {}).get("start") == "setup" else 2    # tested by the learner
-        start = float(max(0, p - lead))
-        end = float(min(secs, start + keep_s))
+        if sty.get("start") == "fast":
+            start = float(max(0, p - 2))
+        else:
+            want = p - round(keep_s * 0.45)
+            med = float(np.median(db))
+            # start on someone talking: the second (near the target) where the sound rises, and isn't silence
+            cand = [t for t in range(max(1, want - 3), max(1, min(p - 3, want + 3) + 1)) if db[t] >= med - 3]
+            start = float(max(cand, key=lambda t: (db[t] - db[t - 1]) - 0.4 * abs(t - want)) if cand else max(0, want))
+            start = max(0.0, start)
+        end = float(min(secs, max(start + keep_s, p + 4)))
         if end - start < 8:                       # moment near the end: keep at least 8 s
             start = float(max(0, end - 8))
+        if end - start > 30:
+            end = start + 30
         if secs - end < 3:                        # don't leave a tiny leftover at the end
             end = float(secs)
-        if start < 1.5 and secs - end < 3:        # already starts on the moment and isn't too long
+        if start < 1.5 and secs - end < 3:        # the whole clip already is the right part
             return raw
         out = tmp / f"{cid}_best.mp4"
         if not out.exists():
             viral.cut(raw, start, end, out)
         c["trim"] = [start, end]
-        log(f"trimmed {cid}: {secs}s -> {start:.0f}-{end:.0f}s (starts on the moment)")
+        log(f"trimmed {cid}: {secs}s -> {start:.0f}-{end:.0f}s (moment at {p}s, {sty.get('start', 'build')} start)")
         return out
     except Exception as e:  # noqa: BLE001
         log(f"trim skipped {cid}: {e}")
@@ -1800,7 +1812,7 @@ def main() -> None:
     try:
         import viral
         def _lim(c):
-            return 42 if (c.get("style") or {}).get("hooklen") == "tiny" else viral.HOOK_MAX
+            return 64 if (c.get("style") or {}).get("hooklen") == "tiny" else viral.HOOK_MAX
         long_h = {cid: c["hook"] for cid, c in clips.items()
                   if c["status"] == "new" and c.get("hook") and not c.get("hook_by_user")
                   and len(c["hook"]) > _lim(c) and not c.get("hook_short_tried")}

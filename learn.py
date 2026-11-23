@@ -14,18 +14,19 @@ ET = ZoneInfo("America/New_York")
 
 # Hook styles being tested. The pipeline picks one per clip (weighted by how well each has done) and tells the AI.
 VARIANTS = {
-    "formula": "The proven formula: [name] [CAPS emotion] after [finding out/realizing] [specific detail].",
+    "formula": "The proven story sentence: [name] [emotional past-tense verb] [after / finding out] [specific detail], 8-15 words, 1-2 CAPS words.",
     "news": "Breaking-news angle: '[name] just BECAME the FIRST…' / '[name] is OFFICIALLY…' / 'No way [name]…'.",
     "quote": "Lead with the streamer's own most shocking words in quotes-free form, then the context: '[name] said … after …'.",
     "question": "A curiosity question the clip answers: 'Why did [name] …?' / 'How did [name] …?' Keep 2-4 CAPS words.",
     "lowcaps": ("NATURAL, like a friend telling you what happened: normal spelling, NO all-caps words (GTA is fine), "
-                "casual and specific, 20-50 characters. Real top performers on this channel: 'Marlon can't handle a night in "
+                "casual and specific, 8-15 words. Real top performers on this channel: 'Marlon can't handle a night in "
                 "GTA 6' / 'Lacy stalking in gta 6' / 'Adapt tries texting and driving in GTA 6'."),
 }
 # Starting point = what the biggest GTA clip pages do (110 of their videos studied, 1-7M views each):
 # name + CAPS emotion + one concrete detail, 'FIRST'/news angle second. Our own views move it from here.
-PRIOR = {"formula": 0.45, "news": 0.15, "lowcaps": 0.2, "quote": 0.1, "question": 0.1}
-LEARN_V = 3      # bump when the rules change -> the poster re-learns right away
+# Nov 22 clipper study (974 videos): story sentences with 1-2 CAPS words win; all-caps formulas did worse.
+PRIOR = {"formula": 0.5, "news": 0.15, "lowcaps": 0.2, "quote": 0.05, "question": 0.1}
+LEARN_V = 4      # bump when the rules change -> the poster re-learns right away
 EVIDENCE = 8     # our own videos needed before they count as much as the proven starting point   # start mostly on what's proven
 MIN_WEIGHT = 0.08          # every style keeps getting a few tries so the learner can notice when tastes change
 
@@ -34,13 +35,13 @@ STYLE_DIMS = {
     "box": {"white": "white caption box", "black": "black caption box", "outline": "outlined text, no box"},
     # webcam size: never bigger than today's (a bigger strip would stretch the webcam and cost sharpness)
     "cam": {"small": "smaller webcam (560 px)", "medium": "standard webcam (672 px)"},
-    "len": {"short": "punchy ~12 s clip", "normal": "~18 s clip"},
-    "hooklen": {"tiny": "very short hook (max ~40 chars)", "short": "short hook (max ~60 chars)"},
-    "start": {"fast": "starts ~2 s before the big moment", "setup": "starts ~4 s before it (a bit of set-up)"},
+    "len": {"s16": "~16 s clip", "s22": "~22 s clip"},
+    "hooklen": {"tiny": "short hook (max ~60 chars)", "story": "story-sentence hook (8-15 words)"},
+    "start": {"fast": "starts ~2 s before the big moment", "build": "build-up first, big moment around the middle"},
 }
 STYLE_PRIOR = {"box": {"white": 0.6, "black": 0.2, "outline": 0.2}, "cam": {"small": 0.3, "medium": 0.7},   # top pages:
-               "len": {"short": 0.35, "normal": 0.65}, "hooklen": {"tiny": 0.3, "short": 0.7},             # white box, ~16 s
-               "start": {"fast": 0.7, "setup": 0.3}}
+               "len": {"s16": 0.3, "s22": 0.7}, "hooklen": {"tiny": 0.25, "story": 0.75},
+               "start": {"fast": 0.25, "build": 0.75}}   # Nov 22 study: winners peak ~middle of ~25 s clips, ~13-word hooks
 CAM_PX = {"small": 560, "medium": 672}
 
 EMOTIONS = ["LOSES IT", "SHOCKED", "DEVASTATED", "DISAPPOINTED", "FURIOUS", "CRYING", "SCARED", "CONFUSED", "SPEECHLESS",

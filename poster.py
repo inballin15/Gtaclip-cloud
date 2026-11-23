@@ -412,6 +412,16 @@ def too_old(r: dict) -> bool:
         return False
 
 
+def fresh_bonus(r: dict) -> int:
+    """Clipper study (Nov 22): when several pages post the same moment, the FIRST post got the most views in 9 of 16
+    cases (often 10-40x); posts 15 h+ late almost never won. So the newest moments jump ahead of older ones."""
+    try:
+        age = (NOW - parse(r.get("created") or r.get("found") or "")).total_seconds() / 3600
+    except Exception:  # noqa: BLE001
+        return 0
+    return 25 if age < 2 else 12 if age < 4 else 0
+
+
 def tier(r: dict) -> int:
     """0 = new clip with a real hook, 1 = older clip with a real hook, 2 = new clip still waiting for a hook, 3 = rest."""
     found = r.get("created") or r.get("found") or ""
@@ -789,7 +799,7 @@ def main() -> None:
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
         # newest clips with a real hook first, then the AI viral score (clips rated "skip" go last)
-        ok = sorted(ok, key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -(r.get("viral") or 50)))
+        ok = sorted(ok, key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r))))
         why = f"{slot.astimezone(ET):%-I:%M %p} slot"
         if split:
             cool = ctl.get("cooldown", {})
@@ -977,7 +987,7 @@ def main() -> None:
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now],
-                    key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -(r.get("viral") or 50)))
+                    key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r))))
         up = ok[0] if ok else None
         up_next = up["id"] if up else None
     # 3b) engagement learner: what hook styles / spellings / lengths get views on OUR channels
