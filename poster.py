@@ -697,9 +697,9 @@ def main() -> None:
     for r in queue.get("ready", []):
         e = EDITS.get(r["id"])
         if e and e.get("at", 0) > (r.get("rendered") or 0):
-            if e.get("video"):
-                r["final"] = e["video"]
-                r["final_abs"] = f"https://inballin15.github.io/Gtaclip-cloud/{e['video']}"
+            if e.get("url") or e.get("video"):   # the instant link is live right away; the website copy can lag
+                r["final"] = e.get("video") or e["url"]
+                r["final_abs"] = e.get("url") or f"https://inballin15.github.io/Gtaclip-cloud/{e['video']}"
             if e.get("hook"):
                 r["hook"] = e["hook"]
             if "caption" in e:

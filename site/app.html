@@ -584,11 +584,22 @@ async function ghTap(title, body = '') {
 let EDITS = ls.get('gc-edits', {});
 let JOBS = ls.get('gc-jobs', {});   // clip id -> { kind: 'text' | 'remake', at, pct, label, done, failed }
 const saveJobs = () => ls.set('gc-jobs', JOBS);
+// an edited video only counts once the site really serves it (GitHub Pages can take a few minutes to publish);
+// until then the clip keeps playing its previous version instead of a broken video
+const LIVEV = new Set(ls.get('gc-livev', []));
+async function videoLive(path) {
+  if (LIVEV.has(path)) return true;
+  try { const r = await fetch(PAGES + path + '?probe=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+    if (r.ok) { LIVEV.add(path); ls.set('gc-livev', [...LIVEV].slice(-60)); return true; } } catch (e) { /* not yet */ }
+  return false;
+}
 function applyEdits(q) {   // newest quick text edit wins until the clip is fully re-made again
   for (const r of (q && q.ready) || []) {
     const e = EDITS[r.id]; if (!e || !(e.at > (r.rendered || 0))) continue;
     if (e.hook) r.hook = e.hook; if (e.caption != null) r.caption = e.caption;
-    if (e.video) { r.final = e.video + '?e=' + e.at; r.final_abs = PAGES + e.video; }
+    if (e.video && LIVEV.has(e.video)) { r.final = e.video + '?e=' + e.at; r.final_abs = PAGES + e.video; }
+    else if (e.url) { r.final = e.url; r.final_abs = e.url; }   // instant link while the website copy publishes
+    if (e.video && !LIVEV.has(e.video)) videoLive(e.video).then((ok) => { if (ok) { applyEdits(Q); lastSig = ''; render(); } });
   }
 }
 async function refreshEdits() {
@@ -620,7 +631,7 @@ function paintJobs() {   // update the bars in place (no full re-render every fe
 // but never past the stage's end until GitHub says that stage really finished
 const STAGES = {
   text: [['queued', 'Starting…', 0, 8, 12], ['Getting your clip', 'Getting your clip', 8, 20, 8], ['Getting ready', 'Getting ready', 20, 42, 15],
-    ['Adding your text', 'Adding your text', 42, 78, 25], ['Saving', 'Saving', 78, 88, 8], ['pages', 'Putting it on the site', 88, 99, 40]],
+    ['Adding your text', 'Adding your text', 42, 78, 25], ['Saving', 'Saving', 78, 85, 8], ['pages', 'Putting it on the site', 85, 99, 180]],
   remake: [['queued', 'Waiting for the clip maker', 0, 10, 60], ['load', 'Loading your clip', 10, 22, 40], ['pipeline', 'Re-making the video', 22, 86, 300],
     ['publish', 'Saving', 86, 93, 40], ['pages', 'Putting it on the site', 93, 99, 40]] };
 const stagePct = (kind, i, since) => { const [, , a, b, secs] = STAGES[kind][i]; return a + (b - a) * Math.min(0.95, (Date.now() - since) / 1000 / secs); };
@@ -663,9 +674,10 @@ async function stepJobs() {
         continue;
       }
       if (!e.video) { Object.assign(j, { done: true, pct: 100, label: 'Done ✓', end: Date.now() }); toast('Caption saved ✓'); continue; }
-      const pg = runs.find((r) => r.name === 'pages build and deployment' && new Date(r.created_at) >= new Date(run.updated_at) - 60000);
-      if (pg && pg.status === 'completed') { Object.assign(j, { done: true, pct: 100, label: 'Done ✓ — your new video is ready', end: Date.now() }); toast('Edit done ✓'); applyEdits(Q); lastSig = ''; render(); continue; }
-      j.pct = Math.max(j.pct, stagePct('text', 5, new Date(run.updated_at).getTime())); j.label = STAGES.text[5][1];
+      // 100% when the new video is really reachable: the instant link, or the website copy
+      if (e.url || await videoLive(e.video)) { Object.assign(j, { done: true, pct: 100, label: 'Done ✓ — your new video is ready', end: Date.now() }); toast('Edit done ✓'); applyEdits(Q); lastSig = ''; render(); continue; }
+      j.pct = Math.max(j.pct, stagePct('text', 5, new Date(run.updated_at).getTime()));
+      j.label = Date.now() - new Date(run.updated_at) > 120000 ? 'Putting it on the site (GitHub is slow right now)…' : STAGES.text[5][1];
     } else {
       await refreshQueue(); applyEdits(Q);
       const r = (Q.ready || []).find((x) => x.id === id);
@@ -852,7 +864,7 @@ function programPane(r, n) {
   const s16 = el('div', 'src16'); s16.append(el('div', 'cap0', `${r.streamer || ''} / ${r.layout_used === 'cam' ? 'reaction' : 'gameplay'}`));
   const mon = el('div', 'mon'); mon.dataset.mon = r.id;
   const bg = el('div', 'bgb'); bg.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
-  const vd = el('video'); vd.src = PAGES + vidOf(r); vd.poster = PAGES + (r.vposter || r.poster); vd.playsInline = true; vd.preload = 'metadata'; vd.loop = true; vd.muted = false;
+  const vd = el('video'); vd.src = U(vidOf(r)); vd.poster = PAGES + (r.vposter || r.poster); vd.playsInline = true; vd.preload = 'metadata'; vd.loop = true; vd.muted = false;
   const cr = el('div', 'crop'); cr.dataset.l = `9:16 / crop ${String(n || 1).padStart(2, '0')}`;
   for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const h = el('i'); h.style.left = x ? 'calc(100% - 4px)' : '-4px'; h.style.top = y ? 'calc(100% - 4px)' : '-4px'; cr.append(h); }
   const pan = ((r.user_layout || {}).pan || 0); cr.append(el('span', 'x', `X ${(50 + pan * 50).toFixed(1)}%`));
@@ -951,7 +963,7 @@ async function drawWave(r, cv) {
   requestAnimationFrame(() => paint(WF[r.id]));
   if (WF[r.id]) return;
   try {
-    const buf = await (await fetch(PAGES + vidOf(r))).arrayBuffer();
+    const buf = await (await fetch(U(vidOf(r)))).arrayBuffer();
     const ac = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 22050, 22050);
     const au = await ac.decodeAudioData(buf); const x = au.getChannelData(0); const N = 260, win = Math.floor(x.length / N); const pk = [];
     for (let i = 0; i < N; i++) { let m = 0; for (let j = i * win; j < (i + 1) * win; j += 8) m = Math.max(m, Math.abs(x[j])); pk.push(m); }
@@ -1235,6 +1247,7 @@ function renderQueue(v, ql) {
   });
 }
 const vidOf = (r) => (variant === 'clean' && r.clean) ? r.clean : r.final;
+const U = (p) => /^https?:/.test(p || '') ? p : PAGES + p;   // site path or a full link
 
 // ---------------------------------------------------------------- get paid (Content Rewards) for one clip
 const CAMP_OF = { 'Kai Cenat': 'Kai', Kai: 'Kai', Lacy: 'Lacy', Clix: 'Clix', YourRAGE: 'YourRAGE', YourRAGEGaming: 'YourRAGE' };
@@ -1286,7 +1299,7 @@ function clipCard(r, st) {
   vb.append(top);
   if (r.viral != null) { const s = el('div', 'score ' + (r.viral_verdict || '')); s.append(document.createTextNode(r.viral), el('small', null, { post: 'Post it', maybe: 'Maybe', skip: 'Skip' }[r.viral_verdict] || 'score')); vb.append(s); }
   const pl = el('button', 'play'); pl.setAttribute('aria-label', 'Play'); pl.append(el('i', null, '▶'));
-  pl.onclick = () => { const vd = el('video'); vd.src = PAGES + vidOf(r); vd.controls = true; vd.playsInline = true; vd.autoplay = true; vb.append(vd); pl.remove(); vd.play().catch(() => {}); };
+  pl.onclick = () => { const vd = el('video'); vd.src = U(vidOf(r)); vd.controls = true; vd.playsInline = true; vd.autoplay = true; vb.append(vd); pl.remove(); vd.play().catch(() => {}); };
   vb.append(pl); c.append(vb);
   const b = el('div', 'cbody');
   const meta = el('div', 'row'); meta.append(badge(st), el('span', 'mut', `${r.seconds || '?'}s · ${r.created ? ago(r.created) : ''}`)); b.append(meta);
@@ -1321,7 +1334,7 @@ function naturalCase(t) {   // "Lacy LOSES IT over EXPENSIVE furniture" -> "Lacy
 function captionFor(r) { const game = (Q.topic && Q.topic.name) || 'GTA 6'; const kw = r.streamer ? `${r.streamer} ${game} stream highlight` : `${game} highlight`; return (r.caption || `${naturalCase(r.hook)}\n\n${kw}${r.login ? ' 🎥 @' + r.login : ''}\n\n${r.tag || ''} ${(Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'} #fyp`).trim(); }
 async function saveVideo(r, btn, which) {
   const clean = which ? which === 'clean' && r.clean : (variant === 'clean' && r.clean);
-  const url = PAGES + (clean ? r.clean : r.final); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}.mp4`;
+  const url = U(clean ? r.clean : r.final); const name = `${(r.streamer || 'clip').replace(/\W/g, '')}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}.mp4`;
   const label = btn.textContent; btn.disabled = true; btn.textContent = 'Getting video…';
   try {
     const blob = await (await fetch(url)).blob(); const file = new File([blob], name, { type: 'video/mp4' });

@@ -159,7 +159,42 @@ def main() -> None:
     if out_name:
         import shutil
         shutil.copy(Path("/tmp/edits") / out_name, "/tmp/qe_video.mp4")
-        put_on_site(out_name, Path("/tmp/edits") / out_name)
+        # instant link: a release file is live the moment it's uploaded (the website itself can take minutes to
+        # republish a 1 GB site), so the site and the poster use this link right away
+        try:
+            rec["url"] = upload_asset(Path("/tmp/edits") / out_name)
+            edits[cid] = rec
+            Path("/tmp/edits/edits.json").write_text(json.dumps(edits, indent=1, ensure_ascii=False))
+            Path("/tmp/qe_entry.json").write_text(json.dumps({"id": cid, "rec": rec}))
+            print("instant link:", rec["url"])
+        except Exception as e:  # noqa: BLE001
+            print("instant link failed (the site copy still comes):", e)
+        try:
+            put_on_site(out_name, Path("/tmp/edits") / out_name)
+        except Exception as e:  # noqa: BLE001
+            print("site copy failed (instant link still works):", e)
+
+
+def upload_asset(f: Path) -> str:
+    try:
+        rel = gh("GET", "/releases/tags/quick-edits")
+    except Exception:  # noqa: BLE001
+        rel = gh("POST", "/releases", {"tag_name": "quick-edits", "name": "Quick edits (temporary videos)",
+                                       "body": "Videos from quick text edits. Old ones are removed automatically.",
+                                       "target_commitish": "main", "prerelease": True})
+    # tidy: remove edit videos older than 3 days
+    try:
+        for a in gh("GET", f"/releases/{rel['id']}/assets?per_page=100"):
+            if time.time() - time.mktime(time.strptime(a["created_at"], "%Y-%m-%dT%H:%M:%SZ")) > 3 * 86400:
+                gh("DELETE", f"/releases/assets/{a['id']}")
+    except Exception as e:  # noqa: BLE001
+        print("asset tidy skipped:", e)
+    req = urllib.request.Request(f"https://uploads.github.com/repos/{REPO}/releases/{rel['id']}/assets?name={f.name}",
+                                 data=f.read_bytes(), method="POST",
+                                 headers={"Authorization": f"Bearer {TOKEN}", "Content-Type": "video/mp4",
+                                          "Accept": "application/vnd.github+json"})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        return json.loads(r.read())["browser_download_url"]
 
 
 def put_on_site(path: str, f: Path) -> None:
