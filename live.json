@@ -323,7 +323,7 @@
    }
   ]
  },
- "updated": "2026-11-23T00:31:13Z",
+ "updated": "2026-11-23T00:36:20Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -799,12 +799,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-22",
-  "used": 18,
+  "used": 19,
   "cap": 28,
   "slots": 6,
-  "remain30": 758,
-  "reset30": "2026-12-18T22:03:17Z",
-  "remain24": 583,
+  "remain30": 757,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 582,
   "active": [
    [
     8,
@@ -892,10 +892,10 @@
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937465519_19749_final.mp4?v=b949466058&r=1795390363",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937465519_19749.jpg",
    "tiktok": "",
-   "youtube": "",
+   "youtube": "https://www.youtube.com/shorts/y-XUC6-h4fo",
    "status": {
     "youtube": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b0384a8c72676f5e96f43db",
      "error": ""
     }
@@ -927,11 +927,11 @@
    "posted_at": "2026-11-23T00:11:06Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937465519_21214_final.mp4?v=c551acfc03&r=1795391969",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937465519_21214.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711152724267535630",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b03849dd864a01105077995",
      "error": ""
     }
@@ -1621,6 +1621,34 @@
   }
  },
  "stats": [
+  {
+   "service": "youtube",
+   "link": "https://www.youtube.com/shorts/y-XUC6-h4fo",
+   "sent": "2026-11-23T00:11:21.583Z",
+   "hook": "Lacy furious over impossible low criminal profile",
+   "clip": "vod2937465519_19749",
+   "streamer": "Lacy",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7711152724267535630",
+   "sent": "2026-11-23T00:11:51.236Z",
+   "hook": "Lacy stunned watching the GTA 6 ending credits",
+   "clip": "vod2937465519_21214",
+   "streamer": "Lacy",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
   {
    "service": "youtube",
    "link": "https://www.youtube.com/shorts/EYbVR82rPhU",
@@ -2336,6 +2364,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T00:31:13Z",
+ "stats_updated": "2026-11-23T00:36:20Z",
  "log": []
 }
