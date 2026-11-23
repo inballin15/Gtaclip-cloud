@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-23T18:50:46Z",
+ "updated": "2026-11-23T18:55:51Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -2775,8 +2775,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T18:50:46Z",
- "log": [
-  "[18:50:48Z] Youtube: you post these yourself now — they wait on the site, the bot won't upload them."
- ]
+ "stats_updated": "2026-11-23T18:55:51Z",
+ "log": []
 }
