@@ -1010,7 +1010,9 @@ def main() -> None:
         ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now
                      and r.get("source") != "upload"],
                     key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r) + boost_pts(r))))
-        up = ok[0] if ok else None
+        last_tt = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)
+                        if "tiktok" in (r.get("platforms") or ["tiktok", "youtube"])), "")
+        up = (next((r for r in ok[:6] if r.get("streamer") != last_tt), None) or (ok[0] if ok else None))   # same pick rule as posting
         up_next = up["id"] if up else None
     # 3b) engagement learner: what hook styles / spellings / lengths get views on OUR channels
     insights = rj(P / "insights.json", {})
