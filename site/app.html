@@ -910,12 +910,12 @@ function binPane(ql, r) {
   const mine = (x) => x.source === 'upload';
   const group = (list, label, emptyTxt) => { if (label) d.append(el('div', 'binlab', label)); const bin = el('div', 'bin');
   list.forEach((x) => { const w = el('div', 'wrap'); const b = el('button', x.id === (r && r.id) ? 'sel' : ''); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (x.vposter || x.poster)})`; b.append(th);
-    const lab = el('div', 'lab'); lab.textContent = x.streamer || ''; if (CR[x.campaign]) lab.append(el('b', null, ' $'));
+    const lab = el('div', 'lab'); lab.textContent = (x.streamer || '') + (x.part ? ' · P' + x.part : ''); if (CR[x.campaign]) lab.append(el('b', null, ' $'));
     w.append(b, lab); if (x.id === (r && r.id)) w.append(call('05 Select', 'c-pink', { left: '40%', top: '62%' }));
     b.onclick = () => { SEL = x.id; ls.set('gc-sel', SEL); haptic(); lastSig = ''; render(); }; bin.append(w); });
   if (!list.length && emptyTxt) bin.append(el('div', 'empty', emptyTxt));
   d.append(bin); };
-  const yours = rs.filter(mine);
+  const yours = rs.filter(mine).sort((a, b) => ((b.found || '') > (a.found || '')) - ((b.found || '') < (a.found || '')) || ((a.part || 0) - (b.part || 0)));
   group(rs.filter((x) => !mine(x)), yours.length ? 'Stream clips' : '', 'Waiting for moments…');
   if (yours.length) group(yours, `Your clips · ${yours.length}`, '');
   return d;
@@ -1293,7 +1293,8 @@ function renderQueue(v, ql) {
     const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; cards.push([r, c]);
   });
   // your own clips (pasted links / uploads) get their own section, never mixed in with the stream clips
-  const stream = cards.filter(([r]) => r.source !== 'upload'), mine = cards.filter(([r]) => r.source === 'upload');
+  const ord = (r) => [(r.found || r.created || ''), r.part || 0]; const stream = cards.filter(([r]) => r.source !== 'upload'), mine = cards.filter(([r]) => r.source === 'upload')
+    .sort(([a], [b]) => ((ord(b)[0] > ord(a)[0]) - (ord(b)[0] < ord(a)[0])) || (ord(a)[1] - ord(b)[1]));   // newest video first, its parts in order
   if (mine.length) v.append(el('div', 'qsec', `Stream clips · ${stream.length}`));
   stream.forEach(([, c]) => v.append(c));
   if (!stream.length) v.append(el('div', 'empty', 'No stream clips ready yet — the clip maker runs every 10 min.'));
@@ -1683,7 +1684,7 @@ function openUpload(which) {
     if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB)'); return; }
     closeSheet(); uploadVideo(file, who.value, credit());
   };
-  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It finds the best moments and makes clips with hooks (5–20 min).'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
+  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It cuts the video into 1-minute parts in order (Part 1, Part 2…) until it ends, up to 15 minutes. Add a time range for longer videos.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
 }
 function b64(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }); }
 async function uploadVideo(file, login, streamer, extra = {}) {

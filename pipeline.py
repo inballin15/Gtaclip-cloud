@@ -1199,6 +1199,10 @@ def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path)
 
 
 # ---------------------------------------------------------------- your own uploads -> clips
+PART_S = 60       # your pasted links/uploads: cut into 1-minute parts in order
+PART_MAX = 15     # at most 15 parts (15 minutes) per link
+
+
 def process_uploads(st: dict, tmp: Path) -> None:
     """Dashboard upload: the video arrives in pieces on a branch 'upload-<id>' + an issue 'upload: <id>'.
     Find the viral moments, cut them, and put them in the queue like any other clip."""
@@ -1256,8 +1260,17 @@ def process_uploads(st: dict, tmp: Path) -> None:
                             "text": transcript(src) if d0 < 180 else "", "hook": (job.get("hook") or "").strip()}]
                 if moments[0]["hook"]:
                     moments[0]["hook_ai"] = True
-            else:
-                moments = viral.find_moments(src, log=log)
+            else:   # your pasted link / upload: straight parts in order until the video ends (no hunting, no chopping)
+                d0 = duration_of(src)
+                n = max(1, min(PART_MAX, int(d0 // PART_S) + (1 if d0 % PART_S >= 20 else 0)))
+                moments = []
+                for k in range(n):
+                    a = k * PART_S
+                    b = d0 if k == n - 1 and (PART_MAX * PART_S >= d0) else min(d0, a + PART_S)
+                    moments.append({"start": float(a), "end": float(b), "score": 1.0, "reasons": [f"part {k + 1} of {n}"],
+                                    "text": "", "hook": f"Part {k + 1}", "part": k + 1, "parts": n})
+                if d0 > PART_MAX * PART_S:
+                    job["cut_short"] = int(PART_MAX * PART_S // 60)
         except Exception as e:  # noqa: BLE001
             log(f"upload {num} failed: {e}")
             hint = ("YouTube blocked the download from GitHub's servers — save the video and use Upload instead."
@@ -1283,6 +1296,11 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 else:
                     viral.cut(src, m["start"], m["end"], raw)
                 dur = duration_of(raw)
+                if m.get("part") and not m["text"]:
+                    try:
+                        m["text"] = transcript(raw)
+                    except Exception:  # noqa: BLE001
+                        m["text"] = ""
                 cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(login))
                 rec = {"status": "new", "source": "upload", "streamer": name, "login": login,
                        "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name)), "campaign": s_cfg.get("campaign", ""),
@@ -1290,6 +1308,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
                        "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
                        "seconds": round(dur), "moment": {k: m[k] for k in ("start", "end", "score", "reasons")},
                        "cam_v": CAM_V}
+                if m.get("part"):   # Part 1, Part 2, ... (the AI adds a story hook after "Part N:")
+                    rec.update(part=m["part"], parts=m["parts"], title=f"{job.get('name', 'Your video')} · Part {m['part']}")
                 if m.get("hook_ai"):
                     rec.update(hook=m["hook"], hook_kind="ai")
                 elif m.get("hook"):
@@ -1312,7 +1332,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
                             f"({', '.join(m['reasons']) or 'good moment'}) — {m.get('hook') or ''}")
             except Exception as e:  # noqa: BLE001
                 log(f"cutting clip {cid} failed: {e}")
-        msg = (f"Made {len(made)} clip{'s' if len(made) != 1 else ''} from **{job.get('name', 'your video')}** — they're in the Queue (tagged 'Your video'):\n"
+        msg = (f"Made {len(made)} part{'s' if len(made) != 1 else ''} from **{job.get('name', 'your video')}** — they're in Your clips (they don't auto-post)"
+               + (f". Long video: only the first {job['cut_short']} minutes were made — paste it again with a time range for the rest" if job.get("cut_short") else "") + ":\n"
                + "\n".join(made)) if made else "No strong moments found in this video."
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": msg})
         _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
@@ -1908,7 +1929,7 @@ def main() -> None:
                     log(f"AI removed {cid}: {r['why']}")
                     continue
                 if r["hook"] and len(r["hook"]) >= 12 and (c.get("hook_auto") or not c.get("hook")) and not c.get("hook_by_user"):
-                    c.update(hook=r["hook"], hook_kind="ai")
+                    c.update(hook=(f"Part {c['part']}: " if c.get("part") else "") + r["hook"], hook_kind="ai")
                     c.pop("hook_auto", None)
             if not res and re.search(r"429|quota|exhaust|rate", ai_status, re.I):
                 st["ai_backoff2"] = iso(NOW + timedelta(minutes=60))   # free daily/minute limit: try again in an hour
@@ -2006,7 +2027,7 @@ def main() -> None:
                 and not c.get("final_hash"):
             c["style"] = learn.pick_style(LEARNED_INS, cid)   # dynamic model: test looks, keep what gets views
         sty = {**(c.get("style") or {}), **{k: v for k, v in (c.get("user_layout") or {}).items() if k in ("subs", "punch")}}
-        if not c.get("asis"):
+        if not c.get("asis") and not c.get("part"):   # parts of your video stay whole, in order (no trims)
             raw = best_part(raw, cid, tmp, c)
             raw = cut_dead_air(raw, cid, tmp)
         if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and c.get("cam") \
@@ -2045,7 +2066,7 @@ def main() -> None:
                 if ok is not None:
                     c["pic_ok"] = ok
                 if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower():
-                    c["hook"], c["hook_kind"], c["hook_variant"] = vhook, "ai", var   # written from what's on screen
+                    c["hook"], c["hook_kind"], c["hook_variant"] = (f"Part {c['part']}: " if c.get("part") else "") + vhook, "ai", var
                     c.pop("hook_short_tried", None)   # a fresh hook gets its own length check
                     hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, need_c)
