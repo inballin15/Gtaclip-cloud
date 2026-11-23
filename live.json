@@ -381,7 +381,7 @@
    }
   ]
  },
- "updated": "2026-11-23T13:58:59Z",
+ "updated": "2026-11-23T14:04:03Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -881,12 +881,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-23",
-  "used": 3,
+  "used": 4,
   "cap": 28,
   "slots": 6,
-  "remain30": 750,
-  "reset30": "2026-12-18T22:03:28Z",
-  "remain24": 575,
+  "remain30": 749,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 599,
   "active": [
    [
     8,
@@ -989,11 +989,11 @@
    "posted_at": "2026-11-23T13:38:46Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937998841_31510_final.mp4?v=a9e8ce7bda&r=1795438228",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2937998841_31510.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711360698101533966",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b0441ecf3aecf260a992b5a",
      "error": ""
     }
@@ -1795,6 +1795,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7711360698101533966",
+   "sent": "2026-11-23T13:39:34.578Z",
+   "hook": "YourRAGE was shocked after realizing he finally got his own car in GTA 6",
+   "clip": "vod2937998841_31510",
+   "streamer": "YourRAGE",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://www.tiktok.com/@gtaclip96/video/7711095817939143949?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
    "sent": "2026-11-22T20:30:18.000Z",
    "hook": "IShowSpeed finds an alien in GTA 6 IShowSpeed GTA 6 stream highlight @ishowspeed #IShowSpeed #GTA6 #GTAVI #gaming #fyp",
@@ -2564,6 +2578,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T13:58:59Z",
+ "stats_updated": "2026-11-23T14:04:03Z",
  "log": []
 }
