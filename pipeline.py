@@ -1199,8 +1199,8 @@ def fetch_link_section(url: str, start: float, end: float, raw: Path, tmp: Path)
 
 
 # ---------------------------------------------------------------- your own uploads -> clips
-PART_S = 60       # your pasted links/uploads: cut into 1-minute parts in order
-PART_MAX = 15     # at most 15 parts (15 minutes) per link
+PART_S = 30       # your pasted links/uploads: cut into 30-second parts in order
+PART_MAX = 30     # at most 30 parts (15 minutes) per link
 
 
 def process_uploads(st: dict, tmp: Path) -> None:
@@ -1262,7 +1262,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     moments[0]["hook_ai"] = True
             else:   # your pasted link / upload: straight parts in order until the video ends (no hunting, no chopping)
                 d0 = duration_of(src)
-                n = max(1, min(PART_MAX, int(d0 // PART_S) + (1 if d0 % PART_S >= 20 else 0)))
+                n = max(1, min(PART_MAX, int(d0 // PART_S) + (1 if d0 % PART_S >= 10 else 0)))
                 moments = []
                 for k in range(n):
                     a = k * PART_S

@@ -1684,7 +1684,7 @@ function openUpload(which) {
     if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB)'); return; }
     closeSheet(); uploadVideo(file, who.value, credit());
   };
-  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It cuts the video into 1-minute parts in order (Part 1, Part 2…) until it ends, up to 15 minutes. Add a time range for longer videos.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
+  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It cuts the video into 30-second parts in order (Part 1, Part 2…) until it ends, up to 15 minutes. Add a time range for longer videos.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
 }
 function b64(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }); }
 async function uploadVideo(file, login, streamer, extra = {}) {
