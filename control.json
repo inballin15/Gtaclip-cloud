@@ -5,9 +5,14 @@
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
   "tiktok": "2026-11-19T22:49:33Z",
-  "youtube": "2026-11-22T20:06:50Z"
+  "youtube": "2026-11-23T20:05:18Z"
  },
  "errors": [
+  {
+   "at": "2026-11-23T17:05:18Z",
+   "id": "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA",
+   "error": "The daily posting limit for this channel has been reached! Please try reducing the amount of times per day in your schedule and try again later."
+  },
   {
    "at": "2026-11-23T01:41:38Z",
    "id": "vod2937465519_19095",
@@ -45,6 +50,7 @@
   }
  ],
  "returned": [
+  "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA",
   "LittleTallHummingbirdTwitchRPG-aZDk6gYfud9r2-1M",
   "PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL",
   "SaltyHomelyDaikonPMSTwin-fLtOo1_1lICIxGde",
@@ -54,17 +60,17 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-23T16:59:47Z",
- "stats_at": "2026-11-23T16:40:07Z",
+ "stats_at": "2026-11-23T17:05:18Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-23",
-  "used": 7,
+  "used": 8,
   "cap": 28,
   "slots": 6,
-  "remain30": 746,
-  "reset30": "2026-12-18T22:03:19Z",
-  "remain24": 596
+  "remain30": 745,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 595
  },
  "yt_verified_v": 1
 }

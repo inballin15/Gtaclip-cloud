@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-23T16:59:47Z",
+ "updated": "2026-11-23T17:05:18Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -911,12 +911,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-23",
-  "used": 7,
+  "used": 8,
   "cap": 28,
   "slots": 6,
-  "remain30": 746,
-  "reset30": "2026-12-18T22:03:19Z",
-  "remain24": 596,
+  "remain30": 745,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 595,
   "active": [
    [
     8,
@@ -946,7 +946,7 @@
  },
  "cooldown": {
   "tiktok": "2026-11-19T22:49:33Z",
-  "youtube": "2026-11-22T20:06:50Z"
+  "youtube": "2026-11-23T20:05:18Z"
  },
  "ai_off": false,
  "channel_check": {
@@ -955,6 +955,11 @@
   "tiktok": "ok"
  },
  "errors": [
+  {
+   "at": "2026-11-23T17:05:18Z",
+   "id": "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA",
+   "error": "The daily posting limit for this channel has been reached! Please try reducing the amount of times per day in your schedule and try again later."
+  },
   {
    "at": "2026-11-23T01:41:38Z",
    "id": "vod2937465519_19095",
@@ -1009,44 +1014,6 @@
   "vod2937998841_7955"
  ],
  "posts": {
-  "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA": {
-   "id": "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA",
-   "hook": "caseoh_ ROASTED an NPC after hitting their scooter",
-   "streamer": "caseoh_",
-   "login": "caseoh_",
-   "campaign": "",
-   "tag": "#caseoh",
-   "caption": "",
-   "why": "11:37 AM slot",
-   "posted_at": "2026-11-23T16:40:07Z",
-   "video": "https://inballin15.github.io/Gtaclip-cloud/v/BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA_final.mp4?v=9151d899ee&r=1795447796",
-   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA.jpg",
-   "tiktok": "",
-   "youtube": "",
-   "status": {
-    "youtube": {
-     "state": "uploading",
-     "buffer_id": "6b046c79bc9cbf561d4cbd45",
-     "error": ""
-    }
-   },
-   "platforms": [
-    "youtube"
-   ],
-   "hook_kind": "ai",
-   "hook_variant": "news",
-   "style": {
-    "box": "white",
-    "cam": "small",
-    "len": "s22",
-    "hooklen": "tiny",
-    "start": "build",
-    "subs": "off",
-    "punch": "on"
-   },
-   "viral": 74,
-   "seconds": 30
-  },
   "SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q": {
    "id": "SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q",
    "hook": "CaseOh LOST it and threatened to catch a body inside GTA 6",
@@ -1059,11 +1026,11 @@
    "posted_at": "2026-11-23T16:40:07Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q_final.mp4?v=52e5e75618&r=1795448111",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q.jpg",
-   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711407550045998350",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711407550045998350",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b046c6bcbe2b99010d69a58",
      "error": ""
     }
@@ -1914,6 +1881,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7711407550045998350",
+   "sent": "2026-11-23T16:40:54.329Z",
+   "hook": "CaseOh lost it and threatened to catch a body inside GTA 6",
+   "clip": "SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q",
+   "streamer": "caseoh_",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7711360698101533966",
    "sent": "2026-11-23T13:39:34.578Z",
    "hook": "YourRAGE was shocked after realizing he finally got his own car in GTA 6",
@@ -2697,6 +2678,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T16:59:47Z",
- "log": []
+ "stats_updated": "2026-11-23T17:05:18Z",
+ "log": [
+  "[17:05:20Z] youtube limit hit — pausing youtube uploads until 2026-11-23T20:05:18Z",
+  "[17:05:20Z] BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA failed everywhere — back in the queue"
+ ]
 }
