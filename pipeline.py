@@ -59,6 +59,7 @@ VID = SITE / "v"
 RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (actions cache)
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
+NOCAM_MIN_VIEWS = 200   # no-webcam clips are only kept (full-screen gameplay) when 200+ people already watched them
 KEEP_NEW_HOURS = 36      # clips stay postable for 36 h after they were clipped (Nov 23: quality over newest)
 REPLACE_QUEUE_EACH_RUN = False   # (the old all-at-once swap stays off - see REPLACE_MIN_NEW)
 REPLACE_MIN_NEW = 5   # once 5+ finished clips under REPLACE_AGE_H old are ready, older stream clips leave the queue
@@ -1725,7 +1726,10 @@ def main() -> None:
                     usual = ",".join(str(v) for v in (s.get("facecam") or []))
                     if not cam and usual and box_has_face(raw, dur, usual):
                         cam, q = usual, "learned"
-                    if not cam:
+                    if not cam and (c.get("view_count") or 0) >= NOCAM_MIN_VIEWS:
+                        # no webcam, but already proven on Twitch (lots of views): full-screen gameplay instead of skipping
+                        rec.update(cam="0,0,1,1", cam_q="none", layout="fill", nocam=True, cam_v=CAM_V)
+                    elif not cam:
                         rec.update(status="skip", skip_reason="no webcam found")
                     else:
                         rec.update(cam=cam, cam_q=q, cam_v=CAM_V)
@@ -1890,6 +1894,14 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
+    if st.get("nocam_revive_v", 0) < 1:   # one time: proven no-webcam clips from the last 34 h -> full-screen gameplay
+        st["nocam_revive_v"] = 1
+        for c in clips.values():
+            if c.get("skip_reason") == "no webcam found" and c.get("source") != "upload" \
+                    and (c.get("views") or 0) >= NOCAM_MIN_VIEWS \
+                    and NOW - parse(c.get("created") or c.get("found") or iso(NOW)) < timedelta(hours=34):
+                c.update(status="new", cam="0,0,1,1", cam_q="none", layout="fill", nocam=True, cam_v=CAM_V)
+                c.pop("skip_reason", None); c.pop("final_hash", None)
     if st.get("quality_revive_v", 0) < 1:   # one time (Nov 23, quality over newest): bring back the best clips from the
         st["quality_revive_v"] = 1         # last 36 h that were thrown out for age / space / "replaced" but never posted
         back = sorted([(c.get("views") or 0, cid) for cid, c in clips.items()
