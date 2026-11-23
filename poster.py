@@ -1008,7 +1008,8 @@ def main() -> None:
     if not ctl.get("paused"):
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now
-                     and r.get("source") != "upload"],
+                     and r.get("source") != "upload" and not too_old(r) and not already_on_buffer(r)
+                     and (r.get("pic_ok") is True or ctl.get("ai_off")) and hd_ready(r)],   # same rules as the real pick
                     key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r) + boost_pts(r))))
         last_tt = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)
                         if "tiktok" in (r.get("platforms") or ["tiktok", "youtube"])), "")
