@@ -350,7 +350,7 @@ COOLDOWN_RE = re.compile(r"24 hours|daily video upload limit|daily posting limit
                          r"|maximum number of posts", re.I)
 # YouTube daily cap. The channel is verified (Nov 22), so try 4 a day; if Buffer still answers
 # "maximum number of posts", the poster drops back to 2 on its own (ctl["yt_per_day"]).
-YT_TRY = 4
+YT_TRY = 2   # 2 a day (YouTube limit via Buffer); Nicholas posts extras by hand. Set back to 4 to test more
 YT_PREFS = {2: {(13, 7), (19, 7)}, 4: {(11, 37), (13, 7), (16, 7), (19, 7)}}
 YT_PER_DAY = YT_TRY
 YT_PREF = YT_PREFS[4]
