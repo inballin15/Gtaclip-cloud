@@ -496,6 +496,10 @@ header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-
 .onb .dots{display:flex;gap:6px;margin:14px 0}
 .onb .dots i{width:22px;height:4px;border-radius:3px;background:#ffffff22}.onb .dots i.on{background:var(--pink)}
 .onb .nav2{display:flex;gap:8px}.onb .nav2 button{flex:1}
+.hkov{position:absolute;left:50%;z-index:2;background:#fff;color:#000;font:800 16px/1.12 Inter,-apple-system,sans-serif;text-align:center;padding:.35em .6em;border-radius:.45em;pointer-events:none;box-shadow:0 2px 10px #0006;width:max-content}
+.hkov.blk{background:#000;color:#fff}
+.pvtag{position:absolute;left:8px;bottom:8px;z-index:2;font:700 9.5px var(--mono,monospace);background:#ff2e88;color:#fff;padding:3px 6px;border-radius:4px;pointer-events:none}
+.prog .mon .hkov{left:50%}
 </style>
 </head>
 <body>
@@ -597,8 +601,13 @@ function applyEdits(q) {   // newest quick text edit wins until the clip is full
   for (const r of (q && q.ready) || []) {
     const e = EDITS[r.id]; if (!e || !(e.at > (r.rendered || 0))) continue;
     if (e.hook) r.hook = e.hook; if (e.caption != null) r.caption = e.caption;
+    r._preview = null;
     if (e.video && LIVEV.has(e.video)) { r.final = e.video + '?e=' + e.at; r.final_abs = PAGES + e.video; }
-    else if (e.url) { r.final = e.url; r.final_abs = e.url; }   // instant link while the website copy publishes
+    else if (e.hook || e.hook_style || e.hook_scale || e.hook_y) {
+      // INSTANT: until the new file is on the website, show the clean video with your new words drawn on top
+      r._preview = { hook: r.hook, style: e.hook_style || (r.user_layout || {}).hook_style || (r.style || {}).box || 'white', scale: e.hook_scale || (r.user_layout || {}).hook_scale || 1, y: e.hook_y };
+      if (e.url) r.final_abs = e.url;   // the poster/download use the finished file (live right away)
+    }
     if (e.video && !LIVEV.has(e.video)) videoLive(e.video).then((ok) => { if (ok) { applyEdits(Q); lastSig = ''; render(); } });
   }
 }
@@ -607,6 +616,7 @@ async function refreshEdits() {
     const key = ghKey();
     EDITS = key ? await getJSON(`https://api.github.com/repos/${REPO}/contents/edits.json?ref=edits&t=${Date.now()}`, { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github.raw+json' })
       : await getJSON(`https://raw.githubusercontent.com/${REPO}/edits/edits.json?t=${Date.now()}`);
+    for (const [id, j] of Object.entries(JOBS)) { const loc = ls.get('gc-edits', {})[id]; if (!j.done && !j.failed && loc && loc.local && !(EDITS[id] && EDITS[id].at * 1000 >= j.at - 20000)) EDITS[id] = loc; }
     ls.set('gc-edits', EDITS);
   } catch (e) { /* none yet */ }
   applyEdits(Q);
@@ -614,6 +624,7 @@ async function refreshEdits() {
 function startJob(id, kind) { JOBS[id] = { kind, at: Date.now(), pct: 2, label: 'Sending your edit…' }; saveJobs(); pollJobs(); }
 async function quickText(r, t) {
   if (!(await ghTap('text: ' + r.id, JSON.stringify(t)))) return false;
+  EDITS[r.id] = { ...(EDITS[r.id] || {}), ...t, at: Math.floor(Date.now() / 1000) + 600, local: true }; applyEdits(Q);
   startJob(r.id, 'text'); toast('Saved — putting your text on the video'); lastSig = ''; render(); return true;
 }
 function jobBar(id) {
@@ -762,7 +773,7 @@ async function markSub(link, clip) {
   submitted[link] = Date.now(); ls.set('gc-submitted', submitted); lastSig = ''; render();
   if (await ghTap(`paid: ${link}${clip ? ' ' + clip : ''}`)) toast('Marked submitted'); }
 // Nicholas joined every streamer's Content Rewards campaign: every video posted in the last 3 days can be submitted
-function toSubmit() { return videos().filter((v) => v.link && !isSub(subKey(v)) && (CR[v.campaign] || !v.published || Date.now() - new Date(v.published || v.first_seen || 0) < 3 * 864e5)); }
+function toSubmit() { return videos().filter((v) => v.link && !isSub(subKey(v)) && Date.now() - new Date(v.published || v.sent || v.first_seen || 0) < 3 * 864e5); }
 function slotPlan() {
   const now = new Date(); const day = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const offset = now - day; const act = (L && L.budget && L.budget.active) || SLOTS; return act.map(([h, m]) => { const d = new Date(day); d.setHours(h, m, 0, 0); return new Date(+d + offset); });
@@ -868,7 +879,7 @@ function programPane(r, n) {
   const cr = el('div', 'crop'); cr.dataset.l = `9:16 / crop ${String(n || 1).padStart(2, '0')}`;
   for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const h = el('i'); h.style.left = x ? 'calc(100% - 4px)' : '-4px'; h.style.top = y ? 'calc(100% - 4px)' : '-4px'; cr.append(h); }
   const pan = ((r.user_layout || {}).pan || 0); cr.append(el('span', 'x', `X ${(50 + pan * 50).toFixed(1)}%`));
-  mon.append(bg, vd, cr, call('10 Reframe', 'c-teal', { right: '18%', top: '14%' })); s16.append(mon); d.append(s16);
+  mon.append(bg, vd, cr, call('10 Reframe', 'c-teal', { right: '18%', top: '14%' })); withPreview(r, vd, mon); s16.append(mon); d.append(s16);
   const hb = el('div', 'hookbox'); hb.textContent = r.hook || ''; const hl = (r.hook || '').length; hb.style.fontSize = hl > 60 ? 'clamp(20px,3.6vw,30px)' : hl > 35 ? 'clamp(24px,4.4vw,38px)' : '';
   for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const h = el('i'); h.style.left = x ? 'calc(100% - 4px)' : '-4px'; h.style.top = y ? 'calc(100% - 4px)' : '-4px'; hb.append(h); }
   hb.append(call('15 Type', 'c-peach', { right: '-6px', bottom: '-22px' })); d.append(hb);
@@ -1248,6 +1259,17 @@ function renderQueue(v, ql) {
 }
 const vidOf = (r) => (variant === 'clean' && r.clean) ? r.clean : r.final;
 const U = (p) => /^https?:/.test(p || '') ? p : PAGES + p;   // site path or a full link
+// draw your new hook over the clean video (exactly where the clip maker puts it) - an instant preview
+function withPreview(r, vd, holder) {
+  const pv = r._preview; if (!pv || !r.clean) return;
+  vd.src = U(r.clean);
+  const o = el('div', 'hkov ' + (pv.style === 'black' ? 'blk' : '')); o.textContent = pv.hook || '';
+  const lay = r.layout_used || 'split';
+  const top = pv.y != null ? pv.y * 100 : lay === 'full' ? 50 : lay.startsWith('irl') ? 60 : 35;
+  o.style.top = top + '%'; o.style.transform = `translate(-50%, ${pv.y != null || lay === 'full' ? '-50%' : '-20%'})`;
+  const fit = () => { const w = vd.getBoundingClientRect().width || holder.getBoundingClientRect().width; o.style.fontSize = (w * 0.052 * (pv.scale || 1)) + 'px'; o.style.maxWidth = (w * 0.84) + 'px'; };
+  holder.style.position = holder.style.position || 'relative'; holder.append(o, el('div', 'pvtag', 'Preview · final video in ~1 min')); requestAnimationFrame(fit); vd.addEventListener('loadedmetadata', fit);
+}
 
 // ---------------------------------------------------------------- get paid (Content Rewards) for one clip
 const CAMP_OF = { 'Kai Cenat': 'Kai', Kai: 'Kai', Lacy: 'Lacy', Clix: 'Clix', YourRAGE: 'YourRAGE', YourRAGEGaming: 'YourRAGE' };
@@ -1299,7 +1321,7 @@ function clipCard(r, st) {
   vb.append(top);
   if (r.viral != null) { const s = el('div', 'score ' + (r.viral_verdict || '')); s.append(document.createTextNode(r.viral), el('small', null, { post: 'Post it', maybe: 'Maybe', skip: 'Skip' }[r.viral_verdict] || 'score')); vb.append(s); }
   const pl = el('button', 'play'); pl.setAttribute('aria-label', 'Play'); pl.append(el('i', null, '▶'));
-  pl.onclick = () => { const vd = el('video'); vd.src = U(vidOf(r)); vd.controls = true; vd.playsInline = true; vd.autoplay = true; vb.append(vd); pl.remove(); vd.play().catch(() => {}); };
+  pl.onclick = () => { const vd = el('video'); vd.src = U(vidOf(r)); vd.controls = true; vd.playsInline = true; vd.autoplay = true; vb.append(vd); withPreview(r, vd, vb); pl.remove(); vd.play().catch(() => {}); };
   vb.append(pl); c.append(vb);
   const b = el('div', 'cbody');
   const meta = el('div', 'row'); meta.append(badge(st), el('span', 'mut', `${r.seconds || '?'}s · ${r.created ? ago(r.created) : ''}`)); b.append(meta);
