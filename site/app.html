@@ -636,13 +636,14 @@ async function pollJobs() {
 async function stepJobs() {
   const h = ghKey() ? authH() : { Accept: 'application/vnd.github+json' };
   let runs = [];
-  try { runs = (await getJSON(`https://api.github.com/repos/${REPO}/actions/runs?per_page=20&t=${Date.now()}`, h)).workflow_runs || []; } catch (e) { return; }
+  try { runs = (await getJSON(`https://api.github.com/repos/${REPO}/actions/runs?per_page=40&t=${Date.now()}`, h)).workflow_runs || []; } catch (e) { return; }
   const after = (r, t) => new Date(r.created_at) >= new Date(t - 15000);
   for (const [id, j] of Object.entries(JOBS)) {
     if (j.done || j.failed) { if (Date.now() - (j.end || j.at) > 8000) { delete JOBS[id]; saveJobs(); lastSig = ''; render(); } continue; }
     if (Date.now() - j.at > 40 * 60000) { Object.assign(j, { failed: true, label: 'Taking too long — check back soon', end: Date.now() }); continue; }
     if (j.kind === 'text') {
-      const run = runs.find((r) => r.name === 'quick edit' && after(r, j.at));
+      // match THIS edit's run by its title (skip/other taps also start 'quick edit' runs that end as 'skipped')
+      const run = runs.find((r) => r.name === 'quick edit' && (r.display_title || '').startsWith('text: ' + id.slice(0, 20)) && r.conclusion !== 'skipped' && after(r, j.at));
       if (!run) { j.pct = Math.max(j.pct, stagePct('text', 0, j.at)); j.label = 'Starting…'; continue; }
       if (run.status === 'completed' && run.conclusion !== 'success') { Object.assign(j, { failed: true, label: 'The edit failed — try again', end: Date.now() }); continue; }
       if (run.status !== 'completed') {
