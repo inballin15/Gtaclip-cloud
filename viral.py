@@ -255,8 +255,13 @@ HOOK_STYLE = (
     "a first). The detail makes people stop - it must come from the transcript, title or the streamer's real story "
     "(never invent fake records or crimes). Never write it like a search phrase ('GTA 6 Lacy shoe store gameplay').\n"
     "Rules: 8-15 words, 45-95 characters, reads like a friend telling you what happened; normal sentence case with "
-    "only 1-2 CAPS words for the key emotion or fact (all-caps hooks did worse); no filler ('in this intense "
-    "moment'); no emojis, no swearing, no quotes, no hashtags.\n")
+    "EXACTLY 1-2 CAPS words on the strongest emotion or fact (e.g. 'Lacy was DEVASTATED after losing 39% of his GTA 6 "
+    "progress'); all-caps hooks did worse, but zero CAPS loses punch. Use a STRONG reaction verb (lost it, freaked out, "
+    "was devastated, couldn't believe, got destroyed, raged, cried, was shocked) - never weak ones (was happy / "
+    "curious / excited / confused / struggling). Keep the most striking specific from the transcript or title "
+    "(a number, a name, the exact thing: 'scam call', 'dead body', '39%'); never vague words like 'in game', "
+    "'during a mission', 'a mission' when the real name or thing is known; say 'in GTA 6' when it's GTA 6. "
+    "No filler ('in this intense moment'); no emojis, no swearing, no quotes, no hashtags.\n")
 
 HOOK_MAX = 95   # automatic hooks longer than this get shortened (your own typed hooks are never touched)
 _TAIL = re.compile(r"(?:,| -| during | while | because | despite | even though | as he | as she | after spending "

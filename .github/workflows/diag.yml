@@ -17,7 +17,7 @@ jobs:
           import json, pathlib, yt_dlp, cv2, numpy as np, pipeline, viral
           st = json.load(open("/tmp/state.json"))["clips"]
           for k, v in st.items(): v["id"] = k
-          ready = sorted([c for c in st.values() if c.get("status") in ("ready", "rendered", "new") and c.get("transcript")],
+          ready = sorted([c for c in st.values() if c.get("status") in ("new", "used") and c.get("transcript")],
                          key=lambda c: c.get("found") or c.get("created") or "", reverse=True)[:10]
           items = [{"id": c["id"], "streamer": c.get("streamer", ""), "title": c.get("title", ""), "transcript": c.get("transcript", ""), "seconds": c.get("seconds")} for c in ready]
           got, status = viral.ai_score_clips(items, budget_s=90)
@@ -25,7 +25,7 @@ jobs:
           for c in ready:
               print("HOOK OLD:", c.get("hook"), "\nHOOK NEW:", (got.get(c["id"]) or {}).get("hook"))
           out = pathlib.Path("/tmp/out"); n = 0
-          for c in [c for c in st.values() if c.get("twitch") and "/clip/" in c.get("twitch", "") and c.get("status") in ("ready", "rendered")][:4]:
+          for c in [c for c in st.values() if c.get("twitch") and "/clip/" in c.get("twitch", "") and c.get("status") in ("new", "used")][:4]:
               f = out / f"{c['id'][:20]}.mp4"
               try:
                   with yt_dlp.YoutubeDL({"quiet": True, "outtmpl": str(f), "format": "best"}) as y: y.download([c["twitch"]])
