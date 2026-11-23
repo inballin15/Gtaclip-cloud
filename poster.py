@@ -425,8 +425,8 @@ def metrics(node: dict) -> dict:
             "saves": int(out.get("saves", 0) or 0)}
 
 
-FRESH_HOURS = 5    # "newest" = clipped in the last 5 hours
-MAX_AGE_HOURS = 9  # never post a clip clipped more than 9 hours ago
+FRESH_HOURS = 8    # gets a small newer-is-better bonus
+MAX_AGE_HOURS = 36  # never post a clip clipped more than 36 hours ago (Nov 23: quality over newest)
 
 
 def too_old(r: dict) -> bool:
@@ -445,7 +445,7 @@ def fresh_bonus(r: dict) -> int:
         age = (NOW - parse(r.get("created") or r.get("found") or "")).total_seconds() / 3600
     except Exception:  # noqa: BLE001
         return 0
-    return 25 if age < 2 else 12 if age < 4 else 0
+    return 12 if age < 3 else 6 if age < FRESH_HOURS else 0   # a nudge, not a trump card (quality decides)
 
 
 STREAMER_BOOST = {"kai cenat": 12, "kai": 12, "kaicenat": 12, "ishowspeed": 8, "lacy": 8, "xqc": 4, "clix": -6}
@@ -456,20 +456,19 @@ def boost_pts(r: dict) -> int:
     return STREAMER_BOOST.get((r.get("streamer") or "").lower(), 0)
 
 
-NEWEST_HOURS = 2.5   # clips from the newest clip runs always go before older ones (first poster wins - Nov 22 study)
-
-
 def tier(r: dict) -> int:
-    """Newest first: 0 = clipped in the last 2.5 h, 1 = 2.5-5 h ago, 2 = older; placeholder hooks drop one step.
-    Inside a tier the AI score decides - but an older clip never jumps ahead of a newer one just for its score."""
-    found = r.get("created") or r.get("found") or ""
-    try:
-        age = (NOW - parse(found)).total_seconds() / 3600
-    except Exception:  # noqa: BLE001
-        age = 99
-    band = 0 if age < NEWEST_HOURS else 1 if age < FRESH_HOURS else 2
+    """Quality first (Nov 23): clips with a real hook go before placeholder hooks; inside that, the score decides
+    (AI score + Twitch views + streamer boost + a small newer-is-better nudge)."""
     real = not r.get("hook_auto") or r.get("hook_kind") == "title"
-    return band * 2 + (0 if real else 1)
+    return 0 if real else 1
+
+
+def views_pts(r: dict) -> float:
+    """Twitch views = how many people already found it funny. 100 views ~12 pts, 1k ~18, 10k ~24.
+    Clips we found ourselves in a stream (no Twitch views) count as average."""
+    import math
+    v = r.get("views") or 0
+    return min(26.0, 6 * math.log10(1 + v)) if v else 12.0
 
 
 # ------------------------------------------------------------------ your own uploads, spotted on the channels
@@ -839,7 +838,7 @@ def main() -> None:
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
         # newest clips with a real hook first, then the AI viral score (clips rated "skip" go last)
-        ok = sorted(ok, key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r) + boost_pts(r))))
+        ok = sorted(ok, key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + views_pts(r) + fresh_bonus(r) + boost_pts(r))))
         why = f"{slot.astimezone(ET):%-I:%M %p} slot"
         if split:
             cool = ctl.get("cooldown", {})
@@ -1020,7 +1019,7 @@ def main() -> None:
         ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now
                      and r.get("source") != "upload" and not too_old(r) and not already_on_buffer(r)
                      and (r.get("pic_ok") is True or ctl.get("ai_off")) and hd_ready(r)],   # same rules as the real pick
-                    key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + fresh_bonus(r) + boost_pts(r))))
+                    key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + views_pts(r) + fresh_bonus(r) + boost_pts(r))))
         last_tt = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)
                         if "tiktok" in (r.get("platforms") or ["tiktok", "youtube"])), "")
         up = (next((r for r in ok[:6] if r.get("streamer") != last_tt), None) or (ok[0] if ok else None))   # same pick rule as posting

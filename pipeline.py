@@ -59,9 +59,10 @@ VID = SITE / "v"
 RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (actions cache)
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
-KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
+KEEP_NEW_HOURS = 36      # clips stay postable for 36 h after they were clipped (Nov 23: quality over newest)
 REPLACE_QUEUE_EACH_RUN = False   # (the old all-at-once swap stays off - see REPLACE_MIN_NEW)
-REPLACE_MIN_NEW = 5   # once 5+ finished clips under 5 h old are ready, older stream clips leave the queue
+REPLACE_MIN_NEW = 5   # once 5+ finished clips under REPLACE_AGE_H old are ready, older stream clips leave the queue
+REPLACE_AGE_H = 24   # (was 5 h - too short: good clips left before they could post)
 MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
 CAMSRC = Path("_camsrc")   # webcam sources waiting for the AI upscaler (branch camsrc)
 CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
@@ -320,11 +321,26 @@ def auto_hook(c: dict) -> tuple[str, str]:
     return f"{name} can't believe this in {fetch_clips_mod.TOPIC.get('name') or 'GTA 6'}", "placeholder"
 
 
+def clip_quality(c: dict) -> float:
+    """Quality first (Nov 23): AI score + Twitch views (how many people already found it funny) + a small nudge for
+    newer clips. Same idea as the poster's ranking, so the queue keeps the clips that will actually be posted."""
+    import math
+    v = c.get("viral")
+    v = 55.0 if v is None else float(v)
+    views = c.get("views") or 0
+    vp = min(26.0, 6 * math.log10(1 + views)) if views else 12.0
+    try:
+        age = (NOW - datetime.fromisoformat((c.get("created") or c.get("found") or "").replace("Z", "+00:00"))).total_seconds() / 3600
+    except Exception:  # noqa: BLE001
+        age = 6.0
+    return v + vp + (12 if age < 3 else 6 if age < 8 else 0) - 0.5 * age
+
+
 def mix_order(ready: list) -> list:
     """Post-now first, then take turns: a paid clip (Clix/Lacy, rotating), then two from other streamers (rotating),
-    never the same streamer twice in a row when it can be avoided. Newest first within each streamer."""
+    never the same streamer twice in a row when it can be avoided. Best clips first within each streamer."""
     now = sorted([r for r in ready if r.get("post_now")], key=lambda r: r["post_now"])
-    rest = sorted([r for r in ready if not r.get("post_now")], key=lambda r: r.get("created") or "", reverse=True)
+    rest = sorted([r for r in ready if not r.get("post_now")], key=clip_quality, reverse=True)   # best first within each streamer
     by: dict = {}
     for r in rest:
         by.setdefault(r["streamer"], []).append(r)
@@ -1874,6 +1890,17 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
+    if st.get("quality_revive_v", 0) < 1:   # one time (Nov 23, quality over newest): bring back the best clips from the
+        st["quality_revive_v"] = 1         # last 36 h that were thrown out for age / space / "replaced" but never posted
+        back = sorted([(c.get("views") or 0, cid) for cid, c in clips.items()
+                       if c["status"] == "expired" and c.get("source") != "upload" and (c.get("views") or 0) >= 50
+                       and (c.get("skip_reason") or "") in ("", "site space (lowest rated)", "replaced by newer clips", "queue full")
+                       and NOW - parse(c.get("created") or c.get("found") or iso(NOW)) < timedelta(hours=34)], reverse=True)[:12]
+        for _, cid in back:
+            c = clips[cid]
+            c.update(status="new"); c.pop("skip_reason", None); c.pop("final_hash", None)
+        if back:
+            log(f"brought back {len(back)} high-view clips from the last 36 h")
     if st.get("redo_camonly_v", 0) < 1:   # one time: black-screen clips skipped earlier get the webcam-only treatment
         st["redo_camonly_v"] = 1
         for c in clips.values():
@@ -1997,17 +2024,17 @@ def main() -> None:
             return (NOW - parse(c.get("created") or c.get("found") or iso(NOW))).total_seconds() / 3600
         except Exception:  # noqa: BLE001
             return 0.0
-    newer_ok = [c for c in clips.values() if c["status"] == "new" and c.get("source") != "upload" and _age_h(c) < 5
+    newer_ok = [c for c in clips.values() if c["status"] == "new" and c.get("source") != "upload" and _age_h(c) < REPLACE_AGE_H
                 and c.get("final_hash") and c.get("pic_ok") is not False]
     if len(newer_ok) >= REPLACE_MIN_NEW:
         n_old = 0
         for cid, c in clips.items():
             if c["status"] == "new" and c.get("source") != "upload" and not c.get("post_now") and not c.get("hook_by_user") \
-                    and _age_h(c) >= 5:
+                    and _age_h(c) >= REPLACE_AGE_H:
                 c.update(status="expired", skip_reason="replaced by newer clips")
                 n_old += 1
         if n_old:
-            log(f"queue refreshed: {n_old} clips over 5 h old replaced by {len(newer_ok)} newer finished clips")
+            log(f"queue refreshed: {n_old} clips over {REPLACE_AGE_H} h old replaced by {len(newer_ok)} newer finished clips")
 
     # 4a. keep the queue to the best QUEUE_MAX clips (about 3 days of posts) so the site stays small
     fresh = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new"]
@@ -2414,7 +2441,7 @@ def main() -> None:
                 age = (NOW - datetime.fromisoformat((c.get("created") or c.get("found") or "").replace("Z", "+00:00"))).total_seconds() / 3600
             except Exception:  # noqa: BLE001
                 age = 6.0
-            return v + (25 if age < 2 else 12 if age < 4 else 0) - 3 * age
+            return clip_quality(c)
         cands = sorted([(keep_score(c), cid) for cid, c in clips.items() if c["status"] == "new"
                         and c.get("source") != "upload" and not c.get("post_now")])
         for _, cid in cands:

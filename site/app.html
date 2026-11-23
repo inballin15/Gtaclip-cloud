@@ -793,9 +793,10 @@ function queueList() {
   const list = (Q.ready || []).filter((r) => (r.source === 'upload' || (Date.now() - new Date(r.created || r.found || Date.now())) < 9 * 3600e3)
     && !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
-  const tier = (r) => { const h = (Date.now() - new Date(r.created || r.found || 0)) / 3600e3; return h < 2.5 ? 0 : h < 5 ? 1 : 2; };   // newest first, like the poster
+  const qscore = (r) => (r.viral ?? 50) + (r.views ? Math.min(26, 6 * Math.log10(1 + r.views)) : 12) + (((Date.now() - new Date(r.created || r.found || 0)) / 3600e3) < 3 ? 12 : ((Date.now() - new Date(r.created || r.found || 0)) / 3600e3) < 8 ? 6 : 0);
+const tier = (r) => (r.hook_auto && r.hook_kind !== 'title') ? 1 : 0;   // quality first, like the poster
   const nxt = L && L.up_next;   // the poster's real next pick (it never posts the same streamer twice in a row) goes first
-  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || ((b.id === nxt) - (a.id === nxt)) || ((a.viral_verdict === 'skip') - (b.viral_verdict === 'skip')) || (tier(a) - tier(b)) || ((b.viral ?? 50) - (a.viral ?? 50)));
+  return list.map((r) => ({ ...r, nowing: tapped(r) })).sort((a, b) => (b.nowing - a.nowing) || ((b.id === nxt) - (a.id === nxt)) || ((a.viral_verdict === 'skip') - (b.viral_verdict === 'skip')) || (tier(a) - tier(b)) || (qscore(b) - qscore(a)));
 }
 const videos = () => (L && L.videos) || [];
 const subKey = (v) => v.link;

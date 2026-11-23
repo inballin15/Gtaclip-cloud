@@ -207,7 +207,13 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
     # streamer boost (Nov 23, from the study + our own views): Kai > Speed = Lacy > xQc; Clix's GTA clips lower
     def boost(c: dict) -> float:
         return float((CFG["streamers"].get(c.get("login", "")) or {}).get("boost", 0.8 if c["discovered"] else 1.0))
-    picks.sort(key=lambda c: (c["paid"] and boost(c) >= 1, velocity(c) * boost(c)), reverse=True)
+    def quality(c: dict) -> float:   # most-watched first, a mild edge for newer (Nov 23: quality over newest)
+        try:
+            age = max(0.25, (datetime.now(timezone.utc) - datetime.fromisoformat(c["created_at"].replace("Z", "+00:00"))).total_seconds() / 3600)
+        except Exception:  # noqa: BLE001
+            age = 6.0
+        return c["view_count"] / (1 + age / 24) ** 0.5
+    picks.sort(key=lambda c: (c["paid"] and boost(c) >= 1, quality(c) * boost(c)), reverse=True)
     return picks[: d["max_total"]]
 
 
