@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-23T16:40:07Z",
+ "updated": "2026-11-23T16:45:51Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -995,44 +995,6 @@
   "vod2937998841_7955"
  ],
  "posts": {
-  "SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q": {
-   "id": "SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q",
-   "hook": "CaseOh LOST it and threatened to catch a body inside GTA 6",
-   "streamer": "caseoh_",
-   "login": "caseoh_",
-   "campaign": "",
-   "tag": "#caseoh",
-   "caption": "",
-   "why": "11:37 AM slot",
-   "posted_at": "2026-11-23T16:40:07Z",
-   "video": "https://inballin15.github.io/Gtaclip-cloud/v/SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q_final.mp4?v=52e5e75618&r=1795448111",
-   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q.jpg",
-   "tiktok": "",
-   "youtube": "",
-   "status": {
-    "tiktok": {
-     "state": "uploading",
-     "buffer_id": "6b046c6bcbe2b99010d69a58",
-     "error": ""
-    }
-   },
-   "platforms": [
-    "tiktok"
-   ],
-   "hook_kind": "ai",
-   "hook_variant": "",
-   "style": {
-    "box": "white",
-    "cam": "medium",
-    "len": "s22",
-    "hooklen": "story",
-    "start": "build",
-    "subs": "on",
-    "punch": "off"
-   },
-   "viral": 92,
-   "seconds": 60
-  },
   "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA": {
    "id": "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA",
    "hook": "caseoh_ ROASTED an NPC after hitting their scooter",
@@ -1070,6 +1032,44 @@
    },
    "viral": 74,
    "seconds": 30
+  },
+  "SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q": {
+   "id": "SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q",
+   "hook": "CaseOh LOST it and threatened to catch a body inside GTA 6",
+   "streamer": "caseoh_",
+   "login": "caseoh_",
+   "campaign": "",
+   "tag": "#caseoh",
+   "caption": "",
+   "why": "11:37 AM slot",
+   "posted_at": "2026-11-23T16:40:07Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q_final.mp4?v=52e5e75618&r=1795448111",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b046c6bcbe2b99010d69a58",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "len": "s22",
+    "hooklen": "story",
+    "start": "build",
+    "subs": "on",
+    "punch": "off"
+   },
+   "viral": 92,
+   "seconds": 60
   },
   "DullPrettyCaterpillarKappaWealth-_PBk2Ut1sJ0GUkqc": {
    "id": "DullPrettyCaterpillarKappaWealth-_PBk2Ut1sJ0GUkqc",
@@ -2683,11 +2683,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-23T16:40:07Z",
- "log": [
-  "[16:40:10Z] posting SmoggyCleverMosquitoTBTacoRight-RVBfPSPbe5p5k44q (11:37 AM slot) to tiktok: CaseOh LOST it and threatened to catch a body inside GTA 6",
-  "[16:40:22Z]   tiktok: uploading ",
-  "[16:40:22Z] posting BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA (11:37 AM slot) to youtube: caseoh_ ROASTED an NPC after hitting their scooter",
-  "[16:40:26Z]   youtube: uploading "
- ]
+ "stats_updated": "2026-11-23T16:45:51Z",
+ "log": []
 }
