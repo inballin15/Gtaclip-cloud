@@ -60,7 +60,8 @@ RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (ac
 PAGES = "https://inballin15.github.io/Gtaclip-cloud"
 KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
 KEEP_NEW_HOURS = 9       # a clip is only posted while it's fresh: under 9 hours since it was clipped on Twitch
-REPLACE_QUEUE_EACH_RUN = False   # off: clips stay until they're 9 h old (max 30 in the queue)
+REPLACE_QUEUE_EACH_RUN = False   # (the old all-at-once swap stays off - see REPLACE_MIN_NEW)
+REPLACE_MIN_NEW = 5   # once 5+ finished clips under 5 h old are ready, older stream clips leave the queue
 MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
 CAMSRC = Path("_camsrc")   # webcam sources waiting for the AI upscaler (branch camsrc)
 CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
@@ -1987,6 +1988,26 @@ def main() -> None:
                 c.update(status="expired", skip_reason="replaced by newer clips")
                 n_old += 1
             log(f"queue refreshed: {len(fresh_ids)} new clips replace {n_old} older ones")
+
+    # 3d. new clips REPLACE old ones: once the newest runs have made enough finished clips, stream clips older than
+    #     5 h leave the queue so the poster only has fresh moments to post (first poster wins - Nov 22 study).
+    #     Kept: your pasted clips, Post-now picks and clips you edited.
+    def _age_h(c):
+        try:
+            return (NOW - parse(c.get("created") or c.get("found") or iso(NOW))).total_seconds() / 3600
+        except Exception:  # noqa: BLE001
+            return 0.0
+    newer_ok = [c for c in clips.values() if c["status"] == "new" and c.get("source") != "upload" and _age_h(c) < 5
+                and c.get("final_hash") and c.get("pic_ok") is not False]
+    if len(newer_ok) >= REPLACE_MIN_NEW:
+        n_old = 0
+        for cid, c in clips.items():
+            if c["status"] == "new" and c.get("source") != "upload" and not c.get("post_now") and not c.get("hook_by_user") \
+                    and _age_h(c) >= 5:
+                c.update(status="expired", skip_reason="replaced by newer clips")
+                n_old += 1
+        if n_old:
+            log(f"queue refreshed: {n_old} clips over 5 h old replaced by {len(newer_ok)} newer finished clips")
 
     # 4a. keep the queue to the best QUEUE_MAX clips (about 3 days of posts) so the site stays small
     fresh = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new"]

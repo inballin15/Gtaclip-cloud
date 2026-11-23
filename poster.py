@@ -456,15 +456,20 @@ def boost_pts(r: dict) -> int:
     return STREAMER_BOOST.get((r.get("streamer") or "").lower(), 0)
 
 
+NEWEST_HOURS = 2.5   # clips from the newest clip runs always go before older ones (first poster wins - Nov 22 study)
+
+
 def tier(r: dict) -> int:
-    """0 = new clip with a real hook, 1 = older clip with a real hook, 2 = new clip still waiting for a hook, 3 = rest."""
+    """Newest first: 0 = clipped in the last 2.5 h, 1 = 2.5-5 h ago, 2 = older; placeholder hooks drop one step.
+    Inside a tier the AI score decides - but an older clip never jumps ahead of a newer one just for its score."""
     found = r.get("created") or r.get("found") or ""
     try:
-        fresh = (NOW - parse(found)) < timedelta(hours=FRESH_HOURS)
+        age = (NOW - parse(found)).total_seconds() / 3600
     except Exception:  # noqa: BLE001
-        fresh = False
+        age = 99
+    band = 0 if age < NEWEST_HOURS else 1 if age < FRESH_HOURS else 2
     real = not r.get("hook_auto") or r.get("hook_kind") == "title"
-    return 0 if (fresh and real) else 1 if real else 2 if fresh else 3
+    return band * 2 + (0 if real else 1)
 
 
 # ------------------------------------------------------------------ your own uploads, spotted on the channels
