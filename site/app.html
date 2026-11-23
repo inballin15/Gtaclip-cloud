@@ -619,6 +619,8 @@ function applyEdits(q) {   // newest quick text edit wins until the clip is full
       r._preview = { hook: r.hook, style: e.hook_style || (r.user_layout || {}).hook_style || (r.style || {}).box || 'white', scale: e.hook_scale || (r.user_layout || {}).hook_scale || 1, y: e.hook_y };
       if (e.url) r.final_abs = e.url;   // the poster/download use the finished file (live right away)
     }
+    if (e.url && !(e.video && LIVEV.has(e.video))) r.final_abs = e.url;   // posting / download use the finished file right away
+    r._voice = e.voice && !(e.video && LIVEV.has(e.video)) ? e.voice : '';
     if (e.video && !LIVEV.has(e.video)) videoLive(e.video).then((ok) => { if (ok) { applyEdits(Q); lastSig = ''; render(); } });
   }
 }
@@ -1465,6 +1467,7 @@ function clipCard(r, st) {
   if (r.viral_why) b.append(el('div', 'why', r.viral_why));
   if (JOBS[r.id]) b.append(jobBar(r.id));
   else if (isPending('edit: ' + r.id) || isPending('layout: ' + r.id)) b.append(el('div', 'note warn', 'Re-making this video with your changes…'));
+  else if (r._voice) b.append(el('div', 'note', 'New voice is done ✓ — posting uses it now; it plays here once the site copies it (up to ~20 min).'));
   else if (r.pic_ok == null && !(L && L.ai_off)) b.append(el('div', 'note', 'Waiting for the AI picture check — it won\'t auto-post until it passes.'));
   const btns = el('div', 'btns');
   if (!r.nowing) { const pn = el('button', 'btn pink', 'Post now'); pn.onclick = () => openPostNow(r); btns.append(pn); }

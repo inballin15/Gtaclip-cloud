@@ -172,6 +172,9 @@ def main() -> None:
     import shutil
     shutil.copy(out, "/tmp/qe_video.mp4")
     for path, f in ((out_name, out), (f"v/{cid}_clean.mp4", newclean)):   # the no-caption copy gets the new voice too
+        if f.stat().st_size > 45e6:   # too big for the quick way: the clip maker copies it onto the site on its next run
+            print("big file - the clip maker puts it on the site:", path)
+            continue
         try:
             qe.put_on_site(path, f)
         except Exception as e:  # noqa: BLE001
