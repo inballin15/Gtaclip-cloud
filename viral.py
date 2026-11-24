@@ -556,6 +556,9 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
     return out, status
 
 
+LAST_VISUAL: dict = {}   # extra answers from the last picture check: react, watching, owner_cam
+
+
 def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str = "", variant: str = "") -> tuple[bool | None, str, str]:
     """Look at a few frames of a clip (Gemini vision). False = nudity / sexual content / gore -> don't post.
     None = couldn't check (no key, quota, error)."""
@@ -564,6 +567,7 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
     import os
     import urllib.request
     key = os.environ.get("GEMINI_API_KEY", "").strip()
+    LAST_VISUAL.clear()
     if not key or not jpegs:
         return None, "no key", ""
     parts = [{"text": f"These are frames (in order) from a {TOPIC.get('name', 'GTA 6')} livestream clip of {streamer or 'a streamer'} "
@@ -574,12 +578,21 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                       "Also ok=false if the streamer is away: their own camera shows an empty chair / empty room while "
                       "the only person on screen is a guest in a different, smaller webcam window. (A clip of the channel "
                       "owner must show the channel owner.)\n"
-                      "Also ok=false if the main (non-webcam) part of the screen is NOT the game being played: a desktop, "
-                      "OBS / stream software, a chat window, a browser, a menu-only screen, or someone else's video / "
-                      "YouTube / TikTok being watched (react content belongs to that other creator). The game must be on screen.\n"
+                      "Also ok=false if the main (non-webcam) part of the screen is a desktop, OBS / stream software, a chat "
+                      "window, a browser page, or a menu-only screen.\n"
+                      "REACT: if the streamer is WATCHING someone else's stream / video / TikTok / YouTube (another "
+                      "creator's content fills the main screen - often with that creator's own webcam inside it), that is "
+                      "fine (ok=true unless the rules above are broken, also inside the watched content): set react=true, "
+                      "watching = that creator's name if it is shown or said (else \"\"), and owner_cam = the box "
+                      "[ymin, xmin, ymax, xmax] (0-1000) in the FIRST frame of the CHANNEL OWNER's own webcam - the overlay "
+                      "on top of everything, usually at an edge or corner - NOT a face that is part of the video being "
+                      "watched. Otherwise react=false, owner_cam=null.\n"
                       "2) Write the on-screen hook about what ACTUALLY happens in these frames and what was said. "
+                      "For a react: the hook is about the streamer's REACTION to what they are watching (name who they "
+                      "are watching if you know it). "
                       + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style(variant) +
-                      "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\"}."}]
+                      "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\", \"react\": true|false, "
+                      "\"watching\": \"...\", \"owner_cam\": [ymin, xmin, ymax, xmax] or null}."}]
     for j in jpegs[:4]:
         parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(j).decode()}})
     body = {"contents": [{"parts": parts}],
@@ -598,6 +611,9 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                 row = _json.loads(res["candidates"][0]["content"]["parts"][0]["text"])
                 if isinstance(row, list):
                     row = row[0] if row else {}
+                LAST_VISUAL.clear()   # react details for the caller (react layout - Nov 24)
+                LAST_VISUAL.update(react=bool(row.get("react")), watching=clean_line(str(row.get("watching") or ""))[:40],
+                                   owner_cam=row.get("owner_cam"))
                 return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
                         short_hook(str(row.get("hook", ""))))
             except Exception as e:  # noqa: BLE001

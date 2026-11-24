@@ -149,7 +149,7 @@ def main() -> None:
         hy = cur.get("hook_y", ul.get("hook_y"))
         lay = "cam" if c.get("cam_only") else (c.get("layout_used") or c.get("layout") or "split")
         T = int(ul.get("top_h") or qe.CAM_PX.get(sty.get("cam", ""), qe.TOP_H))
-        oy = (f"H*{hy:.3f}-h/2" if hy is not None else "(H-h)/2" if lay == "full" else "H*0.2-h/2" if lay == "fill"
+        oy = (f"H*{hy:.3f}-h/2" if hy is not None else "(H-h)/2" if lay == "full" else "'max(60,340-h-26)'" if lay == "react" else "H*0.2-h/2" if lay == "fill"
               else "H*0.6" if lay.startswith("irl") else "H*0.12" if lay == "cam" else f"{T}-h*0.2")
         png = render_hook(hook, str(WORK / "hook.png"), style, scale)
         subprocess.run([FF, "-y", "-loglevel", "error", "-i", str(newclean), "-i", png, "-filter_complex",

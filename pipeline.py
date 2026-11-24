@@ -1114,6 +1114,45 @@ def _cam_fg_top(raw: Path, w: float, h: float) -> int:
     return int((1920 - fg_h) / 2)
 
 
+REACT_TOP = 340   # react layout: where the watched screen starts (the hook sits above it)
+
+
+def react_cam(frame, box) -> str | None:
+    """The channel owner's webcam in a react clip, from the AI's box ([ymin, xmin, ymax, xmax], 0-1000).
+    Only used if a face really is inside it (so we never show the face from the video being watched by mistake)."""
+    try:
+        y0, x0, y1, x1 = [max(0.0, min(1000.0, float(v))) / 1000 for v in box]
+        if x1 - x0 < 0.06 or y1 - y0 < 0.06 or (x1 - x0) * (y1 - y0) > 0.45:
+            return None   # too small to be a webcam / so big it's the whole screen
+        pad = 0.01
+        x0, y0, x1, y1 = max(0, x0 - pad), max(0, y0 - pad), min(1, x1 + pad), min(1, y1 + pad)
+        if frame is not None:
+            H, W = frame.shape[:2]
+            crop = frame[int(y0 * H):int(y1 * H), int(x0 * W):int(x1 * W)]
+            if crop.size == 0 or not _yunet_faces(cv2.resize(crop, None, fx=2, fy=2), 0.6):
+                return None
+        return f"{x0:.4f},{y0:.4f},{x1 - x0:.4f},{y1 - y0:.4f}"
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def react_geometry(raw: Path, w: float, h: float) -> tuple[int, int, int, int]:
+    """React layout sizes: (top of the watched screen, top of the webcam, webcam width, webcam height).
+    The webcam is shown whole, as big as fits under the screen (max 1080 wide / ~720 tall) but at most 2.8x its
+    real pixels so the face stays sharp."""
+    cap = cv2.VideoCapture(str(raw))
+    W = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1920
+    H = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1080
+    cap.release()
+    ch = int(round(1080 * H / W / 2) * 2)            # watched screen height at full width (608 for 16:9)
+    cb = REACT_TOP + ch + 36                          # webcam starts under it
+    room = max(300, 1920 - cb - 150)                  # leave space at the bottom for subtitles
+    pw, ph = max(2.0, W * w), max(2.0, H * h)
+    sc = min(1080 / pw, min(720, room) / ph, 2.8)
+    fw, fh = int(pw * sc) // 2 * 2, int(ph * sc) // 2 * 2
+    return REACT_TOP, cb, fw, fh
+
+
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
                  layout: str = "split", cut: float = 0.0, cam_video: Path | None = None,
                  hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0,
@@ -1140,6 +1179,22 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     elif layout == "full":
         base = ("[0:v]split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
                 "boxblur=20:2,setsar=1[bg];[b]scale=1080:-2,setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
+    elif layout == "react":
+        # REACTION clips (Nov 24): the streamer watching someone else's stream / video. Nothing is cut off:
+        # the WHOLE screen (what they're watching) full-width on top, the hook above it, and the reacting
+        # streamer's own webcam - the whole box - big underneath, on a blurred background.
+        RT, cb, fw, fh = react_geometry(raw, w, h)
+        punch = ""
+        if punch_at is not None:
+            a, b = punch_at - 0.15, punch_at + 2.0
+            punch = (f",fps=30,zoompan=z='1+0.10*max(0,min(1,min((it-{a:.2f})/0.2,({b:.2f}-it)/0.4)))'"
+                     f":x='iw/2-(iw/zoom/2)':y='ih/2.4-(ih/zoom/2.4)':d=1:s={fw}x{fh}:fps=30")
+        base = ("[0:v]split=3[a][b][c];"
+                "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.2,setsar=1[bg];"
+                "[b]scale=1080:-2:flags=lanczos,setsar=1[ct];"
+                f"[c]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,scale={fw}:{fh}:flags=lanczos,"
+                f"unsharp=5:5:0.7:5:5:0.0,setsar=1{punch}[cm];"
+                f"[bg][ct]overlay=0:{RT}[t1];[t1][cm]overlay=(W-w)/2:{cb}")
     else:
         # webcam: the WHOLE webcam box (nothing cropped off), only as big as its pixels allow so it stays sharp
         # (max ~3.6x with the AI-upscaled webcam, 2.8x without), centred on a blurred copy of itself
@@ -1176,6 +1231,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         inputs = ["-i", str(raw), "-i", png] + extra
         oy = (f"H*{hook_y:.3f}-h/2" if hook_y is not None                              # your own spot (editor)
               else "(H-h)/2" if layout == "full" else "H*0.2-h/2" if layout == "fill" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
+              else f"'max(60,{REACT_TOP}-h-26)'" if layout == "react"                       # react: just above what they watch
               else f"'max(150,{_cam_fg_top(raw, w, h)}-h-28)'" if layout == "cam"           # cam: just above the webcam
               else f"{T}-h*0.2")                                                   # split: on the line
     else:
@@ -1185,7 +1241,9 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     # word-by-word subtitles (WhisperX-style): 1-3 words at a time, big white outlined letters
     if subs:
         from render_hook import render_sub, sub_chunks
-        sy = (f"{T}+({1920 - T})*0.62-h/2" if layout == "split" else "H*0.74-h/2")
+        sy = (f"{T}+({1920 - T})*0.62-h/2" if layout == "split"
+              else f"'min(H-h-70,{react_geometry(raw, w, h)[1] + react_geometry(raw, w, h)[3] + 24})'" if layout == "react"
+              else "H*0.74-h/2")
         for i, (a, b, txt) in enumerate(sub_chunks(subs)[:60]):
             k = len(inputs) // 2
             inputs += ["-i", render_sub(txt, str(tmp / f"{cid}_sub{i}.png"))]
@@ -2379,6 +2437,24 @@ def main() -> None:
                                                    variant=var_p)
                 if ok is not None:
                     c["pic_ok"] = ok
+                vis = dict(getattr(viral, "LAST_VISUAL", {}) or {})
+                if ok and vis.get("react") and not c.get("user_layout") and c.get("layout") != "react":
+                    # a REACTION clip (the streamer watching someone else's stream / video): react layout, using
+                    # the CHANNEL OWNER's own webcam (the AI points it out; we check a face is really in it)
+                    rcam = react_cam(fr[0] if fr else None, vis.get("owner_cam"))
+                    if rcam:
+                        c.update(layout="react", cam=rcam, cam_q="ai-react", react=True, watching=vis.get("watching", ""))
+                        c.pop("irl_x", None); c.pop("cam_only", None)
+                        lay = "react"
+                        hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + "react").encode()).hexdigest()[:10]
+                        ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + "react").encode()).hexdigest()[:10]
+                        job = (cid, job[1], hh, ch, True, True)
+                        need_f = need_c = True
+                        log(f"react clip {cid}: {c.get('streamer')} watching {vis.get('watching') or 'another creator'} -> react layout")
+                    elif not c.get("post_now") and c.get("source") != "upload":
+                        c.update(status="skip", skip_reason="react clip: couldn't tell which webcam is the streamer's")
+                        log(f"skipped {cid}: react clip, streamer's webcam not found")
+                        return job
                 if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower():
                     c["hook"], c["hook_kind"], c["hook_variant"] = (f"Part {c['part']}: " if c.get("part") else "") + vhook, "ai", var
                     c.pop("hook_short_tried", None)   # a fresh hook gets its own length check
@@ -2476,7 +2552,7 @@ def main() -> None:
                 import viral
                 ws = [w for sg in viral.transcribe(viral._audio(raw)) for w in sg["words"]]
                 opts["subs"] = ws or None
-            if sty.get("punch") == "on" and lay == "split":
+            if sty.get("punch") == "on" and lay in ("split", "react"):
                 import viral
                 a = viral._audio(raw)
                 secs = len(a) // 16000
@@ -2560,6 +2636,11 @@ def main() -> None:
                 ok, why, _h = viral.ai_visual_ok(jp, log, c.get("streamer", ""), c.get("title") or "")
                 if ok is None:
                     break                      # Google still busy: try again next run
+                if ok and (getattr(viral, "LAST_VISUAL", {}) or {}).get("react") and c.get("layout") != "react" \
+                        and not c.get("user_layout"):
+                    c.pop("final_hash", None)   # a react clip made in the old layout: look again at the original next run
+                    log(f"{cid} looks like a react clip: re-made in the react layout next run")
+                    continue
                 c["pic_ok"] = ok
                 if ok is False and not c.get("post_now") and not (c.get("source") == "upload" and not re.search(
                         r"nud|sex|gore|blood|explicit|naked", why or "", re.I)):
