@@ -1,6 +1,6 @@
 {
- "updated": "2026-11-24T05:51:37Z",
- "videos": 38,
+ "updated": "2026-11-24T07:52:29Z",
+ "videos": 39,
  "v": 4,
  "findings": [
   {
@@ -24,7 +24,7 @@
   {
    "feature": "streamer",
    "value": "Kai Cenat",
-   "x": 4.08,
+   "x": 4.04,
    "n": 4
   },
   {
@@ -40,21 +40,21 @@
    "n": 9
   },
   {
-   "feature": "style:cam",
-   "value": "medium",
-   "x": 0.33,
-   "n": 11
-  },
-  {
    "feature": "emotion word",
    "value": "STUNNED",
-   "x": 0.35,
+   "x": 0.34,
    "n": 6
+  },
+  {
+   "feature": "style:cam",
+   "value": "medium",
+   "x": 0.36,
+   "n": 12
   },
   {
    "feature": "streamer",
    "value": "?",
-   "x": 2.7,
+   "x": 2.68,
    "n": 8
   },
   {
@@ -64,16 +64,16 @@
    "n": 5
   },
   {
-   "feature": "CAPS words",
-   "value": "0-1",
-   "x": 2.4,
-   "n": 14
-  },
-  {
    "feature": "hook style",
    "value": "formula",
-   "x": 0.43,
+   "x": 0.42,
    "n": 7
+  },
+  {
+   "feature": "CAPS words",
+   "value": "0-1",
+   "x": 2.29,
+   "n": 15
   },
   {
    "feature": "CAPS words",
@@ -83,9 +83,9 @@
   },
   {
    "feature": "style:box",
-   "value": "white",
-   "x": 0.49,
-   "n": 10
+   "value": "black",
+   "x": 0.5,
+   "n": 4
   },
   {
    "feature": "hook length",
@@ -94,21 +94,15 @@
    "n": 4
   },
   {
-   "feature": "style:box",
-   "value": "black",
-   "x": 0.51,
-   "n": 4
-  },
-  {
    "feature": "hook style",
    "value": "unknown",
-   "x": 1.92,
+   "x": 1.91,
    "n": 23
   },
   {
-   "feature": "clip length",
-   "value": "23 s+",
-   "x": 0.55,
+   "feature": "style:box",
+   "value": "white",
+   "x": 0.53,
    "n": 11
   },
   {
@@ -124,16 +118,16 @@
    "n": 8
   },
   {
+   "feature": "clip length",
+   "value": "23 s+",
+   "x": 0.59,
+   "n": 12
+  },
+  {
    "feature": "has a number",
    "value": "no",
    "x": 0.6,
    "n": 10
-  },
-  {
-   "feature": "hook length",
-   "value": "medium (60-90)",
-   "x": 1.59,
-   "n": 5
   },
   {
    "feature": "CAPS words",
@@ -142,53 +136,60 @@
    "n": 19
   },
   {
+   "feature": "hook length",
+   "value": "medium (60-90)",
+   "x": 1.54,
+   "n": 6
+  },
+  {
    "feature": "emotion word",
    "value": "none",
-   "x": 1.53,
+   "x": 1.52,
    "n": 18
   }
  ],
  "guidance": [
-  "AVOID: emotion word = STUNNED (0.35x views, 6 videos)",
+  "AVOID: emotion word = STUNNED (0.34x views, 6 videos)",
   "AVOID: has a number = no (0.6x views, 10 videos)",
-  "DO: emotion word = none (1.53x views, 18 videos)",
-  "AVOID: emotion word = SHOCKED (0.7x views, 9 videos)"
+  "DO: hook length = medium (60-90) (1.54x views, 6 videos)",
+  "DO: emotion word = none (1.52x views, 18 videos)",
+  "AVOID: emotion word = SHOCKED (0.75x views, 10 videos)"
  ],
  "weights": {
-  "formula": 0.413,
-  "news": 0.189,
+  "formula": 0.408,
+  "news": 0.187,
   "quote": 0.077,
-  "question": 0.088,
-  "lowcaps": 0.233
+  "question": 0.087,
+  "lowcaps": 0.241
  },
  "style_weights": {
   "box": {
-   "white": 0.716,
-   "black": 0.284
+   "white": 0.724,
+   "black": 0.276
   },
   "cam": {
-   "small": 0.363,
-   "medium": 0.637
+   "small": 0.352,
+   "medium": 0.648
   },
   "len": {
-   "s16": 0.3,
-   "s22": 0.7
+   "s16": 0.292,
+   "s22": 0.708
   },
   "hooklen": {
-   "tiny": 0.202,
-   "story": 0.798
+   "tiny": 0.195,
+   "story": 0.805
   },
   "start": {
    "fast": 0.117,
    "build": 0.883
   },
   "subs": {
-   "off": 0.5,
-   "on": 0.5
+   "off": 0.51,
+   "on": 0.49
   },
   "punch": {
-   "off": 0.5,
-   "on": 0.5
+   "off": 0.49,
+   "on": 0.51
   }
  },
  "top": [
@@ -218,39 +219,54 @@
   "news": 1,
   "quote": 3,
   "question": 3,
-  "lowcaps": 1
+  "lowcaps": 2
  },
  "style_tested": {
   "box": {
-   "white": 10,
+   "white": 11,
    "black": 4
   },
   "cam": {
    "small": 5,
-   "medium": 11
+   "medium": 12
   },
   "len": {
    "s16": 0,
-   "s22": 0
+   "s22": 1
   },
   "hooklen": {
    "tiny": 8,
-   "story": 0
+   "story": 1
   },
   "start": {
    "fast": 8,
-   "build": 0
+   "build": 1
   },
   "subs": {
-   "off": 0,
+   "off": 1,
    "on": 0
   },
   "punch": {
    "off": 0,
-   "on": 0
+   "on": 1
   }
  },
  "feed": [
+  {
+   "at": "2026-11-24T07:52:29Z",
+   "kind": "data",
+   "text": "judged 39 videos (was 38)"
+  },
+  {
+   "at": "2026-11-24T07:52:29Z",
+   "kind": "shift",
+   "text": "punch: off -> on"
+  },
+  {
+   "at": "2026-11-24T07:52:29Z",
+   "kind": "new",
+   "text": "DO: hook length = medium (60-90) (1.54x views, 6 videos)"
+  },
   {
    "at": "2026-11-23T21:47:36Z",
    "kind": "data",
@@ -385,21 +401,6 @@
    "at": "2026-11-22T15:35:58Z",
    "kind": "data",
    "text": "judged 21 videos (was 19)"
-  },
-  {
-   "at": "2026-11-22T15:35:58Z",
-   "kind": "dropped",
-   "text": "AVOID: has a number = yes (0.78x views, 16 videos)"
-  },
-  {
-   "at": "2026-11-22T05:28:02Z",
-   "kind": "dropped",
-   "text": "AVOID: CAPS words = 4-6 (0.54x views, 4 videos)"
-  },
-  {
-   "at": "2026-11-22T05:28:02Z",
-   "kind": "dropped",
-   "text": "AVOID: hook length = medium (60-90) (0.71x views, 5 videos)"
   }
  ]
 }
