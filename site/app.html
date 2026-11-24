@@ -790,7 +790,7 @@ const isPending = (prefix) => Object.keys(pend).some((k) => k.startsWith(prefix)
 function queueList() {
   const P = posts(); const blocked = new Set((L && L.blocked) || []);
   const now = new Set(((L && L.postnow) || []).map((p) => p.id));
-  const list = (Q.ready || []).filter((r) => (r.source === 'upload' || (Date.now() - new Date(r.created || r.found || Date.now())) < 9 * 3600e3)
+  const list = (Q.ready || []).filter((r) => (r.source === 'upload' || (Date.now() - new Date(r.created || r.found || Date.now())) < 36 * 3600e3)   // same 36 h limit as the poster
     && !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
   const qscore = (r) => (r.viral ?? 50) + (r.views ? Math.min(26, 6 * Math.log10(1 + r.views)) : 12) + (((Date.now() - new Date(r.created || r.found || 0)) / 3600e3) < 3 ? 12 : ((Date.now() - new Date(r.created || r.found || 0)) / 3600e3) < 8 ? 6 : 0);
