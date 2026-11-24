@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       login: { description: "twitch login", default: "nickeh30" }
+permissions:
+  contents: write
 jobs:
   frames:
     runs-on: ubuntu-latest
@@ -37,5 +39,6 @@ jobs:
                   subprocess.run([ff, "-y", "-loglevel", "error", "-ss", str(t), "-i", str(f), "-frames:v", "1", "-vf", "scale=640:-1", str(out / f"c{i}_{t}.jpg")])
               f.unlink()
           PY
-      - uses: actions/upload-artifact@v4
-        with: { name: frames, path: frames, retention-days: 1 }
+      - run: |
+          cd frames && git init -q -b diag-frames && git add -A && git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm frames
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:diag-frames
