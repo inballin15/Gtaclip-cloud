@@ -63,6 +63,7 @@ NOCAM_MIN_VIEWS = 200   # no-webcam clips are only kept (full-screen gameplay) w
 KEEP_NEW_HOURS = 36      # clips stay postable for 36 h after they were clipped (Nov 23: quality over newest)
 REPLACE_QUEUE_EACH_RUN = False   # (the old all-at-once swap stays off - see REPLACE_MIN_NEW)
 REPLACE_MIN_NEW = 5   # once 5+ finished clips under REPLACE_AGE_H old are ready, older stream clips leave the queue
+PER_STREAMER_MAX = 4   # most clips one streamer can have waiting in the queue (their best ones)
 REPLACE_AGE_H = 36   # same as the keep limit: quality decides what posts, age only retires clips at 36 h
 MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
 CAMSRC = Path("_camsrc")   # webcam sources waiting for the AI upscaler (branch camsrc)
@@ -2154,7 +2155,15 @@ def main() -> None:
 
     # 4a. keep the queue to the best QUEUE_MAX clips (about 3 days of posts) so the site stays small
     fresh = [dict(id=k, **v) for k, v in clips.items() if v["status"] == "new"]
-    keep = {r["id"] for r in mix_order([r for r in fresh if r.get("source") != "upload"])[:QUEUE_MAX]}   # your parts don't use up stream-clip spots
+    # variety (Nov 24): at most PER_STREAMER_MAX clips per streamer stay in the queue (their best), so one streamer
+    # can't fill it (9 of 18 were ohnePixel). Post-now picks and clips you edited always stay.
+    per, capped = {}, []
+    for r in sorted([r for r in fresh if r.get("source") != "upload"], key=clip_quality, reverse=True):
+        k = (r.get("login") or r.get("streamer") or "").lower()
+        if r.get("post_now") or r.get("hook_by_user") or per.get(k, 0) < PER_STREAMER_MAX:
+            per[k] = per.get(k, 0) + 1
+            capped.append(r)
+    keep = {r["id"] for r in mix_order(capped)[:QUEUE_MAX]}   # your pasted clips don't use up stream-clip spots
     for r in fresh:
         if r["id"] not in keep and not r.get("post_now") and not r.get("hook_by_user") and r.get("source") != "upload":
             clips[r["id"]].update(status="expired", skip_reason="queue full")
