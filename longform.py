@@ -688,7 +688,8 @@ def make(job: dict, num: int = 0) -> dict:
         tdir = WORK / "testout"
         tdir.mkdir(exist_ok=True)
         for f in (prev, thumb, WORK / "plan.json", WORK / "scene_log.json"):
-            shutil.copy(f, tdir / f.name)
+            if f.exists():
+                shutil.copy(f, tdir / f.name)
         (tdir / "entry.json").write_text(json.dumps(entry, indent=1))
         idx = {"GIT_INDEX_FILE": "/tmp/idx-lftest"}
         Path("/tmp/idx-lftest").unlink(missing_ok=True)
