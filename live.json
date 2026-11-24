@@ -403,12 +403,12 @@
    }
   ]
  },
- "updated": "2026-11-24T13:36:02Z",
+ "updated": "2026-11-24T13:40:42Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-24T13:37:00Z",
- "up_next": "KawaiiTrustworthyDolphinTakeNRG-8LBVMoDRRcSGq3oo",
+ "next_slot": "2026-11-24T16:37:00Z",
+ "up_next": "AbstemiousBrainyLouseEleGiggle-W6F4fYlUCtyHh9b3",
  "videos": [
   {
    "link": "https://youtube.com/shorts/htssvxaDjQY",
@@ -1030,12 +1030,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-24",
-  "used": 1,
+  "used": 3,
   "cap": 28,
   "slots": 6,
-  "remain30": 732,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 582,
+  "remain30": 730,
+  "reset30": "2026-12-18T22:03:26Z",
+  "remain24": 580,
   "active": [
    [
     8,
@@ -1141,6 +1141,44 @@
   "vod2937998841_7955"
  ],
  "posts": {
+  "KawaiiTrustworthyDolphinTakeNRG-8LBVMoDRRcSGq3oo": {
+   "id": "KawaiiTrustworthyDolphinTakeNRG-8LBVMoDRRcSGq3oo",
+   "hook": "ohnePixel LOST IT when Jenna confessed to throwing up on a bride's mom",
+   "streamer": "ohnePixel",
+   "login": "ohnepixel",
+   "campaign": "",
+   "tag": "#ohnePixel",
+   "caption": "",
+   "why": "8:37 AM slot",
+   "posted_at": "2026-11-24T13:40:42Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/KawaiiTrustworthyDolphinTakeNRG-8LBVMoDRRcSGq3oo_final.mp4?v=6478ba415b&r=1795514471",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/KawaiiTrustworthyDolphinTakeNRG-8LBVMoDRRcSGq3oo.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b0593dee1395a23833e6cef",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "quote",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "len": "s16",
+    "hooklen": "story",
+    "start": "build",
+    "subs": "on",
+    "punch": "on"
+   },
+   "viral": 92,
+   "seconds": 60
+  },
   "SpookyHorribleMuleBabyRage-0yBY5UZSn_pb8r8-": {
    "id": "SpookyHorribleMuleBabyRage-0yBY5UZSn_pb8r8-",
    "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
@@ -2189,6 +2227,20 @@
  "stats": [
   {
    "service": "youtube",
+   "link": "https://www.youtube.com/shorts/L_hllhf7MN0",
+   "sent": "2026-11-24T13:31:02.000Z",
+   "hook": "",
+   "clip": "",
+   "streamer": "",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "youtube",
    "link": "https://www.youtube.com/shorts/htssvxaDjQY",
    "sent": "2026-11-24T03:49:24.000Z",
    "hook": "",
@@ -3084,6 +3136,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T13:36:02Z",
- "log": []
+ "stats_updated": "2026-11-24T13:40:42Z",
+ "log": [
+  "[13:40:44Z] posting KawaiiTrustworthyDolphinTakeNRG-8LBVMoDRRcSGq3oo (8:37 AM slot) to tiktok: ohnePixel LOST IT when Jenna confessed to throwing up on a bride's mom",
+  "[13:40:56Z]   tiktok: uploading "
+ ]
 }
