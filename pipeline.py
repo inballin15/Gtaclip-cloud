@@ -1653,7 +1653,7 @@ def sync_edit_videos() -> None:
 # maker removes the other's videos. $base = the live site version it was copied from (the push only goes through
 # if nobody changed the site since - otherwise it copies again and retries).
 KEEP_MINE_SH = r"""
-git fetch -q --depth=1 origin gh-pages:refs/remotes/origin/gh-pages || true
+git fetch -q --depth=1 origin +gh-pages:refs/remotes/origin/gh-pages || true
 base=$(git rev-parse origin/gh-pages 2>/dev/null || echo "")
 rm -rf "$SITE/v/m" "$SITE/mine.json"
 git archive origin/gh-pages v/m 2>/dev/null | tar -x -C "$SITE" || true

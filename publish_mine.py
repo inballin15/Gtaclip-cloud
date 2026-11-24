@@ -54,7 +54,7 @@ def publish() -> None:
     blob_of = {path: git("hash-object", "-w", str(f)) for path, f in want.items()}
     mj = git("hash-object", "-w", "--stdin", inp=mine_json())
     for attempt in range(8):
-        git("fetch", "-q", "--depth=1", "origin", "gh-pages:refs/remotes/origin/gh-pages")
+        git("fetch", "-q", "--depth=1", "origin", "+gh-pages:refs/remotes/origin/gh-pages")
         base = git("rev-parse", "origin/gh-pages")
         idx = {"GIT_INDEX_FILE": "/tmp/idx-mine"}
         Path("/tmp/idx-mine").unlink(missing_ok=True)

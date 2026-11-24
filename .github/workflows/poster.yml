@@ -29,7 +29,7 @@ jobs:
       - name: load the posted records and the site queue
         shell: bash
         run: |
-          git fetch -q --depth=1 origin gh-pages:refs/remotes/origin/gh-pages || true
+          git fetch -q --depth=1 origin +gh-pages:refs/remotes/origin/gh-pages || true
           git show origin/gh-pages:queue.json > /tmp/queue.json 2>/dev/null || echo '{"ready":[]}' > /tmp/queue.json
           git show origin/gh-pages:mine.json > /tmp/mine.json 2>/dev/null || echo '{"ready":[]}' > /tmp/mine.json
           curl -sf -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github.raw+json" \

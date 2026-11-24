@@ -86,7 +86,7 @@ jobs:
           }
           publish_site () {  # the site: keep YOUR clips' folder (v/m + mine.json) as it is live right now - the
             for i in 1 2 3 4 5 6; do   # your-clips maker may have just added one; only push if nobody changed the site since
-              git fetch -q --depth=1 origin gh-pages:refs/remotes/origin/gh-pages || true
+              git fetch -q --depth=1 origin +gh-pages:refs/remotes/origin/gh-pages || true
               base=$(git rev-parse origin/gh-pages 2>/dev/null || echo "")
               rm -rf _site/v/m _site/mine.json
               git archive origin/gh-pages v/m 2>/dev/null | tar -x -C _site || true
