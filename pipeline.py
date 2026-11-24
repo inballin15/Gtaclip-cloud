@@ -2626,6 +2626,11 @@ def main() -> None:
                 for k in ("final_hash", "final_v", "clean_v", "trim"):
                     c.pop(k, None)
                 log(f"{cid}: re-cutting {c['moment']['start']}-{c['moment']['end']} s (setup + payoff)")
+    if MINE and st.get("mine_hook_fix_v", 0) < 3:   # clip 4's hook left "6" alone on a third line - shorter
+        st["mine_hook_fix_v"] = 3
+        c4 = clips.get("upmwuw3jf8_4")
+        if c4 and not c4.get("user_layout"):
+            c4.update(hook="Jynxzi reacts to Nick Eh 30's family friendly GTA 6", hook_kind="user", hook_by_user=True)
     if MINE and st.get("mine_view_fix_v", 0) < 1:   # one time (Nov 24): the AI's "watched video" box cut Nick Eh 30
         st["mine_view_fix_v"] = 1                    # in half - re-check it against the picture, whole screen if wrong
         for cid, c in clips.items():
