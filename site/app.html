@@ -570,7 +570,7 @@ let L = ls.get('gc-cache-l', null);
 let openIssues = [];
 let pend = ls.get('gc-pending', {});
 let submitted = ls.get('gc-submitted', {});
-let uploads = ls.get('gc-uploads', []);
+let uploads = ls.get('gc-uploads', []).map((u) => u.state === 'uploading' ? { ...u, state: 'failed', msg: 'The upload stopped (the page was closed or the phone locked). Tap Make clips and pick the video again — keep the site open until it says Uploaded.' } : u);
 let feed = ls.get('gc-feed', 'stream');   // Clips tab: 'stream' (With caption / No caption) or 'mine' (Your clips)
 let variant = ls.get('gc-variant', 'final');
 let tab = 'today';
@@ -1801,7 +1801,7 @@ function uploadItem(u) {
   const d = el('div', 'upitem'); const top = el('div', 'row'); top.append(el('b', null, u.name));
   const lbl = { uploading: `Uploading ${u.pct}%`, processing: 'Finding the best moments…', done: 'Clips ready ✓', failed: 'Problem' }[u.state];
   top.append(badge({ cls: u.state === 'done' ? 's-live' : u.state === 'failed' ? 's-err' : 's-busy', txt: lbl, spin: u.state === 'uploading' || u.state === 'processing' })); d.append(top);
-  if (u.state === 'uploading') { const b = el('div', 'bar'); const f = el('div'); f.style.width = u.pct + '%'; b.append(f); d.append(b, el('div', 'mut', 'Keep this page open until it reaches 100%.')); }
+  if (u.state === 'uploading') { const b = el('div', 'bar'); const f = el('div'); f.style.width = u.pct + '%'; b.append(f); d.append(b, el('div', 'mut', u.msg || `Keep this page open and the phone unlocked until it reaches 100%${u.size ? ` (${Math.round(u.size / 1e6)} MB)` : ''}.`)); }
   if (u.state === 'processing') d.append(el('div', 'mut', 'Usually 5–20 minutes. Clips show up below tagged "Your video". You can close the site.'));
   if (u.msg && u.state !== 'uploading') d.append(el('div', 'mut', u.msg.split('\n')[0]));
   if (u.state === 'done' || u.state === 'failed') { const x = el('button', 'btn ghost', 'Dismiss'); x.onclick = () => { uploads = uploads.filter((y) => y !== u); saveUploads(); lastSig = ''; render(); }; d.append(x); }
@@ -1846,24 +1846,45 @@ function openUpload(which) {
   sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It finds the funniest moments (like the Twitch clips) and makes up to 4 short clips with hooks. Add a time range for long videos.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, el('label', null, 'Subtitles on the clips'), subSeg, go]);
 }
 function b64(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }); }
+// send one piece of the video to GitHub, with real progress, a time limit and the reason if it fails
+function ghBlob(data, onProg) {
+  return new Promise((res, rej) => {
+    const x = new XMLHttpRequest(); x.open('POST', `https://api.github.com/repos/${REPO}/git/blobs`);
+    const h = authH(); for (const k in h) x.setRequestHeader(k, h[k]); x.setRequestHeader('Content-Type', 'application/json');
+    x.timeout = 120000;   // a piece that hasn't finished in 2 minutes is stuck: try it again
+    x.upload.onprogress = (e) => { if (e.lengthComputable) onProg(e.loaded / e.total); };
+    x.onload = () => { if (x.status >= 200 && x.status < 300) { try { res(JSON.parse(x.responseText).sha); } catch (e) { rej(e); } }
+      else { const e = new Error(`GitHub ${x.status}`); e.status = x.status; rej(e); } };
+    x.onerror = () => rej(new Error('connection dropped')); x.ontimeout = () => rej(new Error('stalled'));
+    x.send(JSON.stringify({ content: data, encoding: 'base64' }));
+  });
+}
 async function uploadVideo(file, login, streamer, extra = {}) {
   const id = Date.now().toString(36);
-  const u = { id, name: file.name.replace(/\.[^.]+$/, '').slice(0, 60), at: Date.now(), state: 'uploading', pct: 0 };
+  const u = { id, name: file.name.replace(/\.[^.]+$/, '').slice(0, 60), at: Date.now(), state: 'uploading', pct: 0, size: file.size };
   uploads.unshift(u); saveUploads(); switchTab('mine');
-  const CH = 20 * 1024 * 1024; const parts = []; const tree = [];
-  try {
-    for (let i = 0, off = 0; off < file.size; i++, off += CH) {
-      const data = await b64(file.slice(off, off + CH)); let sha = null;
-      for (let t = 0; t < 3 && !sha; t++) { try { sha = (await gh('POST', '/git/blobs', { content: data, encoding: 'base64' })).sha; } catch (e) { if (e.status === 403 || e.status === 404) throw e; await new Promise((r) => setTimeout(r, 2000)); } }
-      if (!sha) throw new Error('upload kept failing — check your connection');
-      const path = `uploads/${id}/part${String(i).padStart(3, '0')}`; parts.push(path); tree.push({ path, mode: '100644', type: 'blob', sha });
-      u.pct = Math.min(99, Math.round(((off + CH) / file.size) * 100)); saveUploads(); lastSig = ''; render();
+  let lock = null; try { lock = await navigator.wakeLock.request('screen'); } catch (e) { /* not supported */ }   // keep the screen on
+  const CH = 8 * 1024 * 1024; const n = Math.ceil(file.size / CH); const shas = new Array(n); const prog = new Array(n).fill(0);
+  let shown = 0; const show = () => { const p = Math.min(99, Math.floor(prog.reduce((a, b) => a + b, 0) / n * 100)); if (p !== shown) { shown = p; u.pct = p; saveUploads(); lastSig = ''; render(); } };
+  const sendOne = async (i) => {
+    const data = await b64(file.slice(i * CH, (i + 1) * CH));
+    for (let t = 0; t < 5; t++) {
+      try { shas[i] = await ghBlob(data, (f) => { prog[i] = f * 0.97; show(); }); prog[i] = 1; u.msg = ''; show(); return; }
+      catch (e) { if (e.status === 401 || e.status === 403 || e.status === 404) throw e; prog[i] = 0; u.msg = `Connection hiccup — retrying (${t + 1}/5)…`; await new Promise((r) => setTimeout(r, 3000 * (t + 1))); }
     }
+    throw new Error('the connection kept dropping — try again on Wi-Fi');
+  };
+  try {
+    let next = 0; const worker = async () => { while (next < n) { const i = next++; await sendOne(i); } };
+    await Promise.all([worker(), worker()]);   // two pieces at a time
+    const parts = shas.map((_, i) => `uploads/${id}/part${String(i).padStart(3, '0')}`);
+    const tree = parts.map((path, i) => ({ path, mode: '100644', type: 'blob', sha: shas[i] }));
     const t = await gh('POST', '/git/trees', { tree }); const c = await gh('POST', '/git/commits', { message: `upload ${u.name}`, tree: t.sha, parents: [] });
     await gh('POST', '/git/refs', { ref: `refs/heads/upload-${id}`, sha: c.sha });
     const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, ref: `upload-${id}`, parts, name: u.name, login, streamer, size: file.size, ...extra }) });
-    Object.assign(u, { state: 'processing', pct: 100, issue: iss.number }); toast(extra.asis ? 'Uploaded — adding it to the queue' : 'Uploaded — finding the best moments');
-  } catch (e) { u.state = 'failed'; u.msg = (e.status === 403 || e.status === 404) ? 'Your GitHub key needs Contents → Read and write.' : `Upload failed: ${e.message}`; }
+    Object.assign(u, { state: 'processing', pct: 100, issue: iss.number, msg: '' }); toast(extra.asis ? 'Uploaded — adding it to the queue' : 'Uploaded — finding the funniest moments');
+  } catch (e) { u.state = 'failed'; u.msg = (e.status === 401 || e.status === 403 || e.status === 404) ? 'Your GitHub key needs Contents → Read and write.' : `Upload failed: ${e.message}`; }
+  try { lock && lock.release(); } catch (e) { /* */ }
   saveUploads(); lastSig = ''; render();
 }
 async function clipLink(url, section, login, streamer, subs = 'on') {
