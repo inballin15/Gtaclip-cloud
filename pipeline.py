@@ -1153,6 +1153,36 @@ def react_view(box, cam: str) -> str | None:
         return None
 
 
+def view_ok(frames, view: str, cam: str = "") -> bool:
+    """Only show just the watched part if everything left out really is empty: blurred / plain side fill around a
+    vertical TikTok. If there's real picture outside the AI's box in any frame (the watched video changed, or the
+    AI's box was simply wrong - Nov 24: Nick Eh 30 was cut in half), keep the whole screen instead."""
+    try:
+        vx, vy, vw, vh = [float(v) for v in view.split(",")]
+        cx = cy = cw = chh = -1.0
+        if cam:
+            cx, cy, cw, chh = [float(v) for v in cam.split(",")]
+        for f in frames:
+            H, W = f.shape[:2]
+            g = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            det = np.abs(cv2.Laplacian(g, cv2.CV_32F))
+            mask = np.zeros((H, W), bool)
+            if cw > 0:
+                mask[int(cy * H):int((cy + chh) * H), int(cx * W):int((cx + cw) * W)] = True   # the webcam isn't "content"
+            inside = np.zeros((H, W), bool)
+            inside[int(vy * H):int((vy + vh) * H), int(vx * W):int((vx + vw) * W)] = True
+            out = ~inside & ~mask
+            if out.sum() < 0.02 * H * W:
+                continue
+            d_in = float(det[inside & ~mask].mean()) if (inside & ~mask).any() else 0.0
+            d_out = float(det[out].mean())
+            if d_in <= 0 or d_out > 0.45 * d_in:
+                return False
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def cam_is_live(raw: Path, cam: str) -> bool:
     """A real webcam is never perfectly still (people move, cameras have noise). If the box looks the same in every
     frame, it's a picture in the stream overlay (art, a logo, a game character), not a camera."""
@@ -2596,6 +2626,17 @@ def main() -> None:
                 for k in ("final_hash", "final_v", "clean_v", "trim"):
                     c.pop(k, None)
                 log(f"{cid}: re-cutting {c['moment']['start']}-{c['moment']['end']} s (setup + payoff)")
+    if MINE and st.get("mine_view_fix_v", 0) < 1:   # one time (Nov 24): the AI's "watched video" box cut Nick Eh 30
+        st["mine_view_fix_v"] = 1                    # in half - re-check it against the picture, whole screen if wrong
+        for cid, c in clips.items():
+            raw = RAW / f"{cid}.mp4"
+            if c["status"] == "new" and c.get("react_view") and raw.exists():
+                fr = _frames(raw, [1.5, 6, 11, 16])
+                if not view_ok(fr, c["react_view"], c.get("cam", "")):
+                    c["react_view"] = ""
+                    for k in ("final_hash", "final_v", "clean_v"):
+                        c.pop(k, None)
+                    log(f"{cid}: showing the whole screen on top (the 'watched video' box would cut picture off)")
     if st.get("cutout_redo_v", 0) < 1:   # one time: clips made full-screen because a cut-out webcam was missed
         st["cutout_redo_v"] = 1
         for cid, c in clips.items():
@@ -3027,9 +3068,12 @@ def main() -> None:
                         rcam = widen_cam(fr, rcam)
                     if rcam:
                         c.pop("react_by", None)
+                        rv = react_view(vis.get("watched_box"), rcam) or ""
+                        if rv and not view_ok(fr, rv, rcam):
+                            log(f"react clip {cid}: the AI's 'watched video' box would cut off picture - showing the whole screen")
+                            rv = ""
                         c.update(layout="react", cam=rcam, cam_q=c.get("cam_q") if rcam == known else "ai-react",
-                                 react=True, watching=vis.get("watching", ""),
-                                 react_view=react_view(vis.get("watched_box"), rcam) or "")
+                                 react=True, watching=vis.get("watching", ""), react_view=rv)
                         c.pop("irl_x", None); c.pop("cam_only", None)
                         lay = "react"
                         hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + "react").encode()).hexdigest()[:10]
