@@ -1219,6 +1219,13 @@ def shrink_site_videos(st: dict) -> None:
             log(f"shrink skipped {f.name}: {e}")
     st["shrink_v"] = 1
     log(f"re-saved {done} site videos smaller: {saved:.0f} MB freed")
+    for cid, c in st.get("clips", {}).items():   # real length of clips made before final_s existed
+        f = VID / f"{cid}_final.mp4"
+        if c.get("status") == "new" and not c.get("final_s") and f.exists():
+            try:
+                c["final_s"] = round(duration_of(f))
+            except Exception:  # noqa: BLE001
+                pass
 
 
 # ---------------------------------------------------------------- links (YouTube / Twitch VOD)
