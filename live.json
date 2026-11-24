@@ -403,7 +403,7 @@
    }
   ]
  },
- "updated": "2026-11-24T18:33:48Z",
+ "updated": "2026-11-24T18:40:06Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1103,12 +1103,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-24",
-  "used": 9,
+  "used": 10,
   "cap": 28,
   "slots": 6,
-  "remain30": 724,
-  "reset30": "2026-12-18T22:03:26Z",
-  "remain24": 594,
+  "remain30": 723,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 593,
   "active": [
    [
     8,
@@ -1227,11 +1227,11 @@
    "posted_at": "2026-11-24T18:08:49Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj_final.mp4?v=8ecde2feb9&r=1795508333",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj.jpg",
-   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711801683826855182",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711801683826855182",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b05d2b4bd6e90a328201177",
      "error": ""
     }
@@ -2427,6 +2427,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7711801683826855182",
+   "sent": "2026-11-24T18:10:31.885Z",
+   "hook": "Lacy panicked after choosing to take the deal in GTA 6",
+   "clip": "SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj",
+   "streamer": "Lacy",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7711778357830094093",
    "sent": "2026-11-24T16:39:53.651Z",
    "hook": "Kai Cenat lost it watching Lucia beat up an NPC in GTA 6",
@@ -3364,6 +3378,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T18:33:48Z",
+ "stats_updated": "2026-11-24T18:40:06Z",
  "log": []
 }
