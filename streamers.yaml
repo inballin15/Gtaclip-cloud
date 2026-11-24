@@ -29,7 +29,7 @@ streamers:
   kaicenat:    {name: "Kai Cenat",     tag: "#KaiCenat", campaign: "Kai", facecam: null, chat_on_cam: true, boost: 2.0,
                chat_cut: {box: "0.0023,0.3361,0.2141,0.3383", at: 0.59}}   # where chat starts in his usual webcam box
   yourragegaming: {name: "YourRAGE",   tag: "#YourRAGE", campaign: "YourRAGE", facecam: [0.7375, 0.5852, 0.2625, 0.4148]}   # borderless cut-out webcam, bottom right
-  jynxzi:      {name: "Jynxzi",        tag: "#Jynxzi",   facecam: null}
+  jynxzi:      {name: "Jynxzi",        tag: "#Jynxzi",   facecam: [0, 0.53, 0.30, 0.47]}   # cut-out cam, bottom left (Nov 24)
   xqc:         {name: "xQc",           tag: "#xQc",      facecam: null, boost: 1.3}
   vanossgaming: {name: "Vanoss",       tag: "#Vanoss",   facecam: null}
   h2odelirious: {name: "H2O Delirious", tag: "#Vanoss",  facecam: null}

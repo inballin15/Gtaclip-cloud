@@ -586,13 +586,20 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                       "watching = that creator's name if it is shown or said (else \"\"), and owner_cam = the box "
                       "[ymin, xmin, ymax, xmax] (0-1000) in the FIRST frame of the CHANNEL OWNER's own webcam - the overlay "
                       "on top of everything, usually at an edge or corner - NOT a face that is part of the video being "
-                      "watched. Otherwise react=false, owner_cam=null.\n"
+                      "watched. With TWO webcams on screen (e.g. one streamer reacting to another streamer's video that has "
+                      "its own facecam), the owner's webcam is the one sitting in the SAME spot in every frame, drawn on top "
+                      "of the watched video; the other face moves / changes size with the video. The whole webcam, head and "
+                      "shoulders, not just the face. Also watched_box = the box [ymin, xmin, ymax, xmax] (0-1000) in the FIRST frame of just the "
+                      "content being watched (the video / stream / TikTok itself - not the owner's webcam, chat or the "
+                      "stream's side decorations; for a vertical TikTok in the middle, just that tall area). "
+                      "Otherwise react=false, owner_cam=null, watched_box=null.\n"
                       "2) Write the on-screen hook about what ACTUALLY happens in these frames and what was said. "
                       "For a react: the hook is about the streamer's REACTION to what they are watching (name who they "
                       "are watching if you know it). "
                       + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style(variant) +
                       "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\", \"react\": true|false, "
-                      "\"watching\": \"...\", \"owner_cam\": [ymin, xmin, ymax, xmax] or null}."}]
+                      "\"watching\": \"...\", \"owner_cam\": [ymin, xmin, ymax, xmax] or null, "
+                      "\"watched_box\": [ymin, xmin, ymax, xmax] or null}."}]
     for j in jpegs[:4]:
         parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(j).decode()}})
     body = {"contents": [{"parts": parts}],
@@ -613,7 +620,7 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                     row = row[0] if row else {}
                 LAST_VISUAL.clear()   # react details for the caller (react layout - Nov 24)
                 LAST_VISUAL.update(react=bool(row.get("react")), watching=clean_line(str(row.get("watching") or ""))[:40],
-                                   owner_cam=row.get("owner_cam"))
+                                   owner_cam=row.get("owner_cam"), watched_box=row.get("watched_box"))
                 return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
                         short_hook(str(row.get("hook", ""))))
             except Exception as e:  # noqa: BLE001

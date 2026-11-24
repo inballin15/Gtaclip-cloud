@@ -84,6 +84,7 @@ jobs:
         run: |
           git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
           python3 publish_mine.py
+          tail -n 600 /tmp/mine.log > _mine/run.log 2>/dev/null || true   # last run's log, for checking
           export GIT_INDEX_FILE=/tmp/idx-minestate; rm -f "$GIT_INDEX_FILE"
           git --work-tree=_mine add -A
           tree=$(git write-tree); unset GIT_INDEX_FILE

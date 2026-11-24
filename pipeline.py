@@ -513,10 +513,10 @@ def _fit(rect, face, W, H):
     return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
 
 
-def _guess_box(face, W, H):
+def _guess_box(face, W, H, widen: float = 2.8):
     x, y, w, h = face
     aspect = 1080 / 960
-    bw = min(W, max(w * 2.8, 0.135 * W))   # cut-out webcams (no border): head and shoulders, less game
+    bw = min(W, max(w * widen, 0.135 * W))   # cut-out webcams (no border): head and shoulders, less game
     bh = bw / aspect
     if bh > H:
         bh, bw = float(H), H * aspect
@@ -1126,6 +1126,22 @@ def _cam_fg_top(raw: Path, w: float, h: float) -> int:
 REACT_TOP = 340   # react layout: where the watched screen starts (the hook sits above it)
 
 
+def react_view(box, cam: str) -> str | None:
+    """The part of the screen showing what the streamer is watching (AI box, 0-1000) - only if it's a sensible,
+    big area that isn't just the streamer's own webcam."""
+    try:
+        y0, x0, y1, x1 = [max(0.0, min(1000.0, float(v))) / 1000 for v in box]
+        if (x1 - x0) * (y1 - y0) < 0.12 or x1 - x0 < 0.2 or y1 - y0 < 0.3:
+            return None
+        cx, cy, cw, chh = [float(v) for v in cam.split(",")]
+        ix = max(0.0, min(x1, cx + cw) - max(x0, cx)) * max(0.0, min(y1, cy + chh) - max(y0, cy))
+        if ix > 0.6 * cw * chh and (x1 - x0) * (y1 - y0) < 2.5 * cw * chh:
+            return None   # that's mostly the webcam itself
+        return f"{x0:.4f},{y0:.4f},{x1 - x0:.4f},{y1 - y0:.4f}"
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def cam_is_live(raw: Path, cam: str) -> bool:
     """A real webcam is never perfectly still (people move, cameras have noise). If the box looks the same in every
     frame, it's a picture in the stream overlay (art, a logo, a game character), not a camera."""
@@ -1147,47 +1163,272 @@ def cam_is_live(raw: Path, cam: str) -> bool:
         return True   # can't tell: don't throw the clip away
 
 
-def react_cam(frame, box) -> str | None:
+def find_bars(path: Path, secs=None) -> tuple[int, int, int, int] | None:
+    """Phone screen recordings / re-uploads: flat bars (black OR dark-gray / blurred fill) around the real picture.
+    A bar = edge columns/rows that are one flat colour and never change from frame to frame, while the picture
+    inside moves. Returns the picture's (x, y, w, h) in the file's real pixels, or None if there are no bars."""
+    cap = cv2.VideoCapture(str(path))
+    W, H = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    n, fps = cap.get(cv2.CAP_PROP_FRAME_COUNT), cap.get(cv2.CAP_PROP_FPS) or 30
+    cap.release()
+    if not W or not H:
+        return None
+    dur = n / fps if n else 30.0
+    secs = secs or [max(0.3, dur * p) for p in (0.04, 0.16, 0.28, 0.4, 0.52, 0.64, 0.76, 0.88, 0.97)]
+    cap = cv2.VideoCapture(str(path))
+    gs = []
+    for t in secs:
+        cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
+        ok, fr = cap.read()
+        if ok:
+            gs.append(cv2.cvtColor(fr, cv2.COLOR_BGR2GRAY).astype(np.float32))
+    cap.release()
+    if len(gs) < 3:
+        return None
+    g = np.stack(gs)                                  # frames x H x W
+    # a bar line is one flat, darkish colour from end to end in EVERY sampled frame (its shade may drift with
+    # the picture - iPhone recordings tint the bars - but it never has any detail in it)
+    col_ok = (g.std(axis=1).max(axis=0) < 7) & (g.max(axis=1).max(axis=0) < 120)
+    row_ok = (g.std(axis=2).max(axis=0) < 7) & (g.max(axis=2).max(axis=0) < 120)
+
+    def run(ok):
+        k = 0
+        while k < len(ok) and ok[k]:
+            k += 1
+        return k
+    x0, x1 = run(col_ok), W - run(col_ok[::-1])
+    y0, y1 = run(row_ok), H - run(row_ok[::-1])
+    if x1 - x0 < 0.4 * W or y1 - y0 < 0.4 * H:
+        return None                                    # a dark/still scene, not bars
+    if x0 + (W - x1) < 0.03 * W and y0 + (H - y1) < 0.03 * H:
+        return None                                    # no real bars
+    pad = 2                                            # don't keep a soft edge of the bar
+    x0, x1 = (x0 + pad if x0 else 0), (x1 - pad if x1 < W else W)
+    y0, y1 = (y0 + pad if y0 else 0), (y1 - pad if y1 < H else H)
+    w, h = (x1 - x0) // 2 * 2, (y1 - y0) // 2 * 2
+    return x0, y0, w, h
+
+
+def crop_bars(raw: Path, tmp: Path, crop: tuple | None = None) -> bool:
+    """Cut the bars off (crop from find_bars, worked out once for a whole upload; or found on this clip).
+    Replaces the file; True if it cropped."""
+    try:
+        crop = crop or find_bars(raw)
+        if not crop:
+            return False
+        x, y, w, h = crop
+        tmp_out = tmp / f"{raw.stem}_nobars.mp4"
+        ff("-i", str(raw), "-vf", f"crop={w}:{h}:{x}:{y}", "-c:v", "libx264", "-preset", "fast", "-crf", "14",
+           "-c:a", "copy", "-movflags", "+faststart", str(tmp_out))
+        shutil.move(str(tmp_out), raw)
+        log(f"{raw.stem}: cut off the bars around the stream -> {w}x{h}")
+        return True
+    except Exception as e:  # noqa: BLE001
+        log(f"bar check skipped {raw.stem}: {e}")
+        return False
+
+
+def _pool_frames(paths, n: int = 24, crop: tuple | None = None):
+    """Frames spread across one or more videos (a whole upload / all clips from it), optionally cropped."""
+    paths = [p for p in paths if p and Path(p).exists()]
+    if not paths:
+        return []
+    per = max(3, -(-n // len(paths)))
+    out = []
+    for p in paths:
+        d = duration_of(Path(p))
+        secs = [max(0.4, d * (k + 0.5) / per) for k in range(per)]
+        cap = cv2.VideoCapture(str(p))
+        for t in secs:
+            cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
+            ok, fr = cap.read()
+            if not ok:
+                continue
+            if crop:
+                x, y, w, h = crop
+                fr = fr[y:y + h, x:x + w]
+            if fr.shape[1] > 1280:
+                fr = cv2.resize(fr, (1280, int(fr.shape[0] * 1280 / fr.shape[1])), interpolation=cv2.INTER_AREA)
+            out.append(fr)
+        cap.release()
+    return out
+
+
+def owner_cam(frames) -> tuple[str, str] | tuple[None, None]:
+    """The person whose stream it is: in a reaction stream there are TWO+ faces (the streamer's webcam and the
+    creator in the video they're watching). The streamer's own webcam is part of their stream overlay, so their
+    face sits in the SAME spot in nearly every frame of the whole video; faces in the watched videos change
+    size and place from video to video. Works for webcams with no border (cut-outs) too.
+    Returns (cam box, 'owner'/'owner-edge') or (None, None)."""
+    if len(frames) < 6:
+        return None, None
+    H, W = frames[0].shape[:2]
+    per = []
+    for f in frames:
+        try:
+            per.append([(x, y, w, h) for (x, y, w, h, sc) in _yunet_faces(f, 0.7) if h >= 0.05 * H])
+        except Exception:  # noqa: BLE001
+            per.append([])
+    best, best_hits, best_edge = None, 0, 0.0
+    for i, faces in enumerate(per):
+        for (x, y, w, h) in faces:
+            cx, cy = x + w / 2, y + h / 2
+            hits = 1 + sum(1 for j, o in enumerate(per) if j != i and any(
+                abs(ox + ow / 2 - cx) < 0.6 * w and abs(oy + oh / 2 - cy) < 0.6 * h and 0.65 < ow / w < 1.5
+                for (ox, oy, ow, oh) in o))
+            edge = max(abs(cx / W - 0.5), abs(cy / H - 0.5))   # 0 = dead centre, 0.5 = at an edge
+            if hits > best_hits + 1 or (hits >= best_hits - 1 and best and edge > best_edge + 0.08):
+                best, best_hits, best_edge = (x, y, w, h), hits, edge
+    if not best or best_hits < max(4, int(0.5 * len(frames))):
+        return None, None    # no face that's always in the same place
+    # median spot of that face across the frames (steadier than one detection)
+    cx0, cy0 = best[0] + best[2] / 2, best[1] + best[3] / 2
+    same = [f for faces in per for f in faces
+            if abs(f[0] + f[2] / 2 - cx0) < 0.6 * best[2] and abs(f[1] + f[3] / 2 - cy0) < 0.6 * best[3]]
+    face = tuple(float(np.median([f[k] for f in same])) for k in range(4))
+    if not 0.06 <= face[3] / H <= 0.45:
+        return None, None
+    iface = tuple(int(v) for v in face)
+    try:
+        rect = _overlay_rect(frames, iface)    # a real webcam border around it -> use exactly that box
+        if rect:
+            return _fit(rect, iface, W, H), "owner-edge"
+    except Exception:  # noqa: BLE001
+        pass
+    return _guess_box(face, W, H, 3.1), "owner"
+
+
+def face_in_box(frames, cam: str) -> int:
+    """How many frames have a face inside this box."""
+    x, y, w, h = [float(v) for v in cam.split(",")]
+    n = 0
+    for f in frames:
+        H, W = f.shape[:2]
+        crop = f[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+        if crop.size and _yunet_faces(cv2.resize(crop, None, fx=1.5, fy=1.5), 0.6):
+            n += 1
+    return n
+
+
+def upload_cams(raws: list, log_name: str = "") -> str | None:
+    """Your upload: the streamer's own webcam, found across ALL the clips cut from it (more frames = the face
+    that never moves stands out from the faces in the videos they're watching)."""
+    try:
+        cam, q = owner_cam(_pool_frames(raws, 30))
+        if cam:
+            log(f"{log_name}: the streamer's own webcam is at {cam} ({q})")
+        return cam
+    except Exception as e:  # noqa: BLE001
+        log(f"{log_name}: webcam search failed: {e}")
+        return None
+
+
+def other_faces(frames, cam: str) -> int:
+    """How many frames show a clear face OUTSIDE the streamer's webcam box (someone in the video they watch)."""
+    try:
+        x, y, w, h = [float(v) for v in cam.split(",")]
+    except Exception:  # noqa: BLE001
+        return 0
+    n = 0
+    for f in frames:
+        H, W = f.shape[:2]
+        for (fx, fy, fw, fh, sc) in _yunet_faces(f, 0.75):
+            cx, cy = (fx + fw / 2) / W, (fy + fh / 2) / H
+            if fh >= 0.06 * H and not (x <= cx <= x + w and y <= cy <= y + h):
+                n += 1
+                break
+    return n
+
+
+def widen_cam(frames, box: str) -> str:
+    """The AI's webcam box is often just the face: grow it to head-and-shoulders (the whole webcam), so it isn't a
+    blurry zoom on a nose."""
+    try:
+        x, y, w, h = [float(v) for v in box.split(",")]
+        if w >= 0.2 and h >= 0.25:
+            return box
+        f = frames[0]
+        H, W = f.shape[:2]
+        faces = [(fx, fy, fw, fh) for (fx, fy, fw, fh, sc) in _yunet_faces(f, 0.6)
+                 if x * W <= fx + fw / 2 <= (x + w) * W and y * H <= fy + fh / 2 <= (y + h) * H]
+        if not faces:
+            return box
+        face = max(faces, key=lambda r: r[2] * r[3])
+        return _guess_box(face, W, H, 3.1)
+    except Exception:  # noqa: BLE001
+        return box
+
+
+def same_spot(a: str, b: str) -> bool:
+    """Two webcam boxes point at the same webcam (each one's centre is inside the other)."""
+    try:
+        ax, ay, aw, ah = [float(v) for v in a.split(",")]
+        bx, by, bw, bh = [float(v) for v in b.split(",")]
+    except Exception:  # noqa: BLE001
+        return False
+    acx, acy, bcx, bcy = ax + aw / 2, ay + ah / 2, bx + bw / 2, by + bh / 2
+    return (bx <= acx <= bx + bw and by <= acy <= by + bh) or (ax <= bcx <= ax + aw and ay <= bcy <= ay + ah)
+
+
+def react_cam(frames, box) -> str | None:
     """The channel owner's webcam in a react clip, from the AI's box ([ymin, xmin, ymax, xmax], 0-1000).
-    Only used if a face really is inside it (so we never show the face from the video being watched by mistake)."""
+    Telling the two webcams apart: the streamer's own webcam is part of their stream overlay, so there's a face in
+    that SAME spot in most of the clip; a face inside the watched video (another creator's webcam / TikTok) moves
+    around or comes and goes. So it's only used if a face is inside it in at least 3 of 4 frames."""
     try:
         y0, x0, y1, x1 = [max(0.0, min(1000.0, float(v))) / 1000 for v in box]
         if x1 - x0 < 0.06 or y1 - y0 < 0.06 or (x1 - x0) * (y1 - y0) > 0.45:
             return None   # too small to be a webcam / so big it's the whole screen
         pad = 0.01
         x0, y0, x1, y1 = max(0, x0 - pad), max(0, y0 - pad), min(1, x1 + pad), min(1, y1 + pad)
-        if frame is not None:
-            H, W = frame.shape[:2]
-            crop = frame[int(y0 * H):int(y1 * H), int(x0 * W):int(x1 * W)]
-            if crop.size == 0 or not _yunet_faces(cv2.resize(crop, None, fx=2, fy=2), 0.6):
+        frames = [f for f in (frames if isinstance(frames, list) else [frames]) if f is not None]
+        if frames:
+            hits = 0
+            for fr in frames:
+                H, W = fr.shape[:2]
+                crop = fr[int(y0 * H):int(y1 * H), int(x0 * W):int(x1 * W)]
+                if crop.size and _yunet_faces(cv2.resize(crop, None, fx=2, fy=2), 0.6):
+                    hits += 1
+            if hits < max(1, -(-3 * len(frames) // 4)):   # face there in at least 3 of every 4 frames
                 return None
         return f"{x0:.4f},{y0:.4f},{x1 - x0:.4f},{y1 - y0:.4f}"
     except Exception:  # noqa: BLE001
         return None
 
 
-def react_geometry(raw: Path, w: float, h: float) -> tuple[int, int, int, int]:
-    """React layout sizes: (top of the watched screen, top of the webcam, webcam width, webcam height).
-    The webcam is shown whole, as big as fits under the screen (max 1080 wide / ~720 tall) but at most 2.8x its
-    real pixels so the face stays sharp."""
+def react_geometry(raw: Path, w: float, h: float, view: str | None = None) -> dict:
+    """React layout sizes (1080x1920), like the big react pages: the hook, then what the streamer is watching
+    (only that part of the screen when we know it, in its own shape - a vertical TikTok shows tall, a stream
+    shows wide), then the streamer's own webcam, big - the reaction is the point - but never past 2.4x its
+    real pixels so the face stays sharp. Content and webcam share the height so neither ends up tiny."""
     cap = cv2.VideoCapture(str(raw))
     W = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1920
     H = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1080
     cap.release()
-    ch = int(round(1080 * H / W / 2) * 2)            # watched screen height at full width (608 for 16:9)
-    cb = REACT_TOP + ch + 36                          # webcam starts under it
-    room = max(300, 1920 - cb - 150)                  # leave space at the bottom for subtitles
-    pw, ph = max(2.0, W * w), max(2.0, H * h)
-    sc = min(1080 / pw, min(720, room) / ph, 2.8)
-    fw, fh = int(pw * sc) // 2 * 2, int(ph * sc) // 2 * 2
-    return REACT_TOP, cb, fw, fh
+    vx, vy, vw, vh = [float(v) for v in view.split(",")] if view else (0.0, 0.0, 1.0, 1.0)
+    pw, ph = max(2.0, W * w), max(2.0, H * h)                 # webcam pixels
+    gap, bottom = 30, 110                                     # space between them / under (subtitles sit on it)
+    avail = 1920 - REACT_TOP - gap - bottom
+    ch_full = 1080 * (H * vh) / (W * vw)                      # content at full width
+    fh_cap = min(1080 * ph / pw, ph * 2.4)                    # webcam at full width, but sharp
+    if ch_full + fh_cap <= avail:
+        ch, fh = ch_full, fh_cap
+    else:
+        ch = min(ch_full, max(avail - fh_cap, 0.55 * avail))
+        fh = min(fh_cap, avail - ch)
+    cw = min(1080.0, ch * (W * vw) / (H * vh))
+    fw = min(1080.0, fh * pw / ph)
+    cw, ch, fw, fh = [int(v) // 2 * 2 for v in (cw, ch, fw, fh)]
+    ct = REACT_TOP                                            # fixed: the site's editor puts the hook right above it
+    cb = ct + ch + gap
+    return {"vx": vx, "vy": vy, "vw": vw, "vh": vh, "cw": cw, "ch": ch, "ct": ct, "cb": cb, "fw": fw, "fh": fh}
 
 
 def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out: str = "_final",
                  layout: str = "split", cut: float = 0.0, cam_video: Path | None = None,
                  hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0,
                  hook_style: str = "white", hook_scale: float = 1.0, top_h: int | None = None,
-                 subs: list | None = None, punch_at: float | None = None) -> None:
+                 subs: list | None = None, punch_at: float | None = None, view: str | None = None) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     T = int(top_h or TOP_H)   # webcam strip height (editor can make the webcam bigger or smaller)
@@ -1213,18 +1454,20 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         # REACTION clips (Nov 24): the streamer watching someone else's stream / video. Nothing is cut off:
         # the WHOLE screen (what they're watching) full-width on top, the hook above it, and the reacting
         # streamer's own webcam - the whole box - big underneath, on a blurred background.
-        RT, cb, fw, fh = react_geometry(raw, w, h)
+        g = react_geometry(raw, w, h, view)
+        cb, fw, fh = g["cb"], g["fw"], g["fh"]
         punch = ""
         if punch_at is not None:
             a, b = punch_at - 0.15, punch_at + 2.0
             punch = (f",fps=30,zoompan=z='1+0.10*max(0,min(1,min((it-{a:.2f})/0.2,({b:.2f}-it)/0.4)))'"
                      f":x='iw/2-(iw/zoom/2)':y='ih/2.4-(ih/zoom/2.4)':d=1:s={fw}x{fh}:fps=30")
         base = ("[0:v]split=3[a][b][c];"
-                "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.2,setsar=1[bg];"
-                "[b]scale=1080:-2:flags=lanczos,setsar=1[ct];"
-                f"[c]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,scale={fw}:{fh}:flags=lanczos,"
-                f"unsharp=5:5:0.7:5:5:0.0,setsar=1{punch}[cm];"
-                f"[bg][ct]overlay=0:{RT}[t1];[t1][cm]overlay=(W-w)/2:{cb}")
+                "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.22,setsar=1[bg];"
+                f"[b]crop=w=iw*{g['vw']}:h=ih*{g['vh']}:x=iw*{g['vx']}:y=ih*{g['vy']},scale={g['cw']}:{g['ch']}:flags=lanczos,setsar=1[ct];"
+                f"[c]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,setsar=1,split=2[c1][c2];"
+                f"[c1]scale=1080:{fh + 40}:force_original_aspect_ratio=increase,crop=1080:{fh + 40},boxblur=24:2,eq=brightness=-0.16,setsar=1[cband];"
+                f"[c2]scale={fw}:{fh}:flags=lanczos,unsharp=5:5:0.7:5:5:0.0,setsar=1{punch}[cm];"
+                f"[bg][ct]overlay=(W-w)/2:{g['ct']}[t1];[t1][cband]overlay=0:{cb - 20}[t2];[t2][cm]overlay=(W-w)/2:{cb}")
     else:
         # webcam: the WHOLE webcam box (nothing cropped off), only as big as its pixels allow so it stays sharp
         # (max ~3.6x with the AI-upscaled webcam, 2.8x without), centred on a blurred copy of itself
@@ -1271,8 +1514,9 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     # word-by-word subtitles (WhisperX-style): 1-3 words at a time, big white outlined letters
     if subs:
         from render_hook import render_sub, sub_chunks
+        _rg = react_geometry(raw, w, h, view) if layout == "react" else {}
         sy = (f"{T}+({1920 - T})*0.62-h/2" if layout == "split"
-              else f"'min(H-h-70,{react_geometry(raw, w, h)[1] + react_geometry(raw, w, h)[3] + 24})'" if layout == "react"
+              else f"'min(H-h-50,{_rg['cb'] + int(_rg['fh'] * 0.80)}-h/2)'" if layout == "react"
               else "H*0.74-h/2")
         for i, (a, b, txt) in enumerate(sub_chunks(subs)[:60]):
             k = len(inputs) // 2
@@ -1545,6 +1789,14 @@ def process_uploads(st: dict, tmp: Path) -> None:
         name = s_cfg.get("name") or (job.get("streamer") if job.get("streamer") not in ("Nicholas", "Test") else "") or ""
         # (no streamer picked: leave the name empty so hooks never say "Nicholas" - you're the poster, not the person on screen)
         made = []
+        # 1) cut every moment; bars around the stream (phone screen recordings) come off first
+        bars = None
+        if not link and not job.get("asis"):
+            try:
+                bars = find_bars(src)
+            except Exception as e:  # noqa: BLE001
+                log(f"bar check failed: {e}")
+        cut_ok = {}
         for i, m in enumerate(moments):
             cid = f"up{job.get('id', num)}_{i + 1}"
             raw = RAW / f"{cid}.mp4"
@@ -1554,14 +1806,33 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     fetch_link_section(link, offset + m["start"], offset + m["end"], raw, tmp)
                 else:
                     viral.cut(src, m["start"], m["end"], raw)
+                if not job.get("asis"):
+                    crop_bars(raw, tmp, bars)
+                cut_ok[i] = raw
+            except Exception as e:  # noqa: BLE001
+                log(f"cutting clip {cid} failed: {e}")
+        # 2) the streamer's own webcam: the face that stays in one spot across every clip from this video
+        own = upload_cams(list(cut_ok.values()), f"upload {num}") if not job.get("asis") and cut_ok else None
+        for i, m in enumerate(moments):
+            cid = f"up{job.get('id', num)}_{i + 1}"
+            raw = RAW / f"{cid}.mp4"
+            if i not in cut_ok:
+                continue
+            try:
+                import viral
                 dur = duration_of(raw)
                 if m.get("part") and not m["text"]:
                     try:
                         m["text"] = transcript(raw)
                     except Exception:  # noqa: BLE001
                         m["text"] = ""
+                cam, q, frac = None, "none", None
                 try:
-                    cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(login))
+                    cfr = _pool_frames([raw], 6)
+                    if own and face_in_box(cfr, own) >= max(2, len(cfr) // 2):
+                        cam, q = own, "owner"      # the streamer's own webcam (works for cut-outs with no border)
+                    else:
+                        cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(login))
                 except Exception as e:  # noqa: BLE001   a webcam-check error never costs you the clip: full screen
                     log(f"webcam check failed {cid}: {e}")
                     cam, q, frac = None, "none", None
@@ -1594,8 +1865,13 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill", asis=True, title=job.get("name") or "Your clip")
                     if job.get("hook"):
                         rec["hook_by_user"] = True
-                elif cam and q in ("edge", "learned", "cutout"):
+                elif cam and q in ("edge", "learned", "cutout", "owner"):
                     rec.update(cam=cam, cam_q=q, layout="split")
+                    try:   # someone else's face on screen too (the video they're reacting to) -> reaction layout;
+                        if other_faces(_pool_frames([raw], 4), cam) >= 2:   # the AI picture check refines it later
+                            rec.update(layout="react", react=True, react_by="faces")
+                    except Exception:  # noqa: BLE001
+                        pass
                 else:   # no webcam in your own link/upload: keep it, gameplay fills the whole screen
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill")
                 st["clips"][cid] = rec
@@ -2094,6 +2370,38 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
+    if MINE and st.get("mine_cam_redo_v", 0) < 1:   # one time (Nov 24): your clips that went full-screen or got a
+        st["mine_cam_redo_v"] = 1                    # blurry face crop - bars off, find the streamer's own webcam
+        tmp0 = Path(tempfile.mkdtemp())              # across all clips of that upload, re-make them
+        groups = {}
+        for cid, c in clips.items():
+            if c.get("source") == "upload" and c["status"] == "new" and not c.get("asis") and not c.get("user_layout") \
+                    and (RAW / f"{cid}.mp4").exists() and cid.startswith("up"):
+                groups.setdefault(cid.rsplit("_", 1)[0], []).append(cid)
+        for gid, cids in groups.items():
+            try:
+                for cid in cids:
+                    crop_bars(RAW / f"{cid}.mp4", tmp0)
+                own = upload_cams([RAW / f"{cid}.mp4" for cid in cids], gid)
+                for cid in cids:
+                    c, raw = clips[cid], RAW / f"{cid}.mp4"
+                    for k in ("final_hash", "final_v", "clean_v", "pic_ok", "irl_x", "react", "react_view", "react_by",
+                              "watching", "cam_only", "hd"):
+                        c.pop(k, None)   # re-make, and the AI picture check looks again (reaction? whose webcam?)
+                    cfr = _pool_frames([raw], 6)
+                    cam, q = (own, "owner") if own and face_in_box(cfr, own) >= max(2, len(cfr) // 2) else (None, None)
+                    if not cam:
+                        cam, q, _f = find_cam_info(raw, duration_of(raw), st.get("learned_cams", {}).get(c.get("login", "")))
+                    if cam:
+                        c.update(cam=cam, cam_q=q, layout="split", cam_v=CAM_V)
+                        if other_faces(_pool_frames([raw], 4), cam) >= 2:
+                            c.update(layout="react", react=True, react_by="faces")
+                        log(f"{cid}: streamer's webcam {cam} ({q}) -> re-making as {c['layout']}")
+                    else:
+                        c.update(cam="0,0,1,1", cam_q="none", layout="fill")
+                        log(f"{cid}: still no webcam -> re-making full screen")
+            except Exception as e:  # noqa: BLE001
+                log(f"webcam re-check failed {gid}: {e}")
     if st.get("cutout_redo_v", 0) < 1:   # one time: clips made full-screen because a cut-out webcam was missed
         st["cutout_redo_v"] = 1
         for cid, c in clips.items():
@@ -2493,12 +2801,31 @@ def main() -> None:
                 if ok is not None:
                     c["pic_ok"] = ok
                 vis = dict(getattr(viral, "LAST_VISUAL", {}) or {})
-                if ok and vis.get("react") and not c.get("user_layout") and c.get("layout") != "react":
+                if ok is not None and not vis.get("react") and c.get("react_by") == "faces" and not c.get("user_layout"):
+                    # we guessed "reaction" from a second face; the AI looked and says it isn't -> normal layout
+                    c.update(layout="split", react=False)
+                    c.pop("react_by", None); c.pop("react_view", None)
+                    lay = "split"
+                    hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + "split").encode()).hexdigest()[:10]
+                    ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + "split").encode()).hexdigest()[:10]
+                    job = (cid, job[1], hh, ch, True, True)
+                    need_f = need_c = True
+                if ok and vis.get("react") and not c.get("user_layout") and (c.get("layout") != "react" or c.get("react_by") == "faces"):
                     # a REACTION clip (the streamer watching someone else's stream / video): react layout, using
-                    # the CHANNEL OWNER's own webcam (the AI points it out; we check a face is really in it)
-                    rcam = react_cam(fr[0] if fr else None, vis.get("owner_cam"))
+                    # the CHANNEL OWNER's own webcam. Two faces on screen: the AI points out which webcam is the
+                    # streamer's; a webcam we already traced / found staying put across the video wins when it's
+                    # the same one (its box is the whole webcam, the AI's is often just the face).
+                    rcam = react_cam(fr, vis.get("owner_cam"))
+                    known = c.get("cam") if c.get("cam_q") in ("owner", "owner-edge", "learned", "edge", "cutout", "ai-react") else None
+                    if known and (same_spot(known, rcam) if rcam else c.get("cam_q") in ("owner", "owner-edge", "learned")):
+                        rcam = known
+                    elif rcam:
+                        rcam = widen_cam(fr, rcam)
                     if rcam:
-                        c.update(layout="react", cam=rcam, cam_q="ai-react", react=True, watching=vis.get("watching", ""))
+                        c.pop("react_by", None)
+                        c.update(layout="react", cam=rcam, cam_q=c.get("cam_q") if rcam == known else "ai-react",
+                                 react=True, watching=vis.get("watching", ""),
+                                 react_view=react_view(vis.get("watched_box"), rcam) or "")
                         c.pop("irl_x", None); c.pop("cam_only", None)
                         lay = "react"
                         hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + "react").encode()).hexdigest()[:10]
@@ -2612,7 +2939,8 @@ def main() -> None:
         opts = dict(layout=lay, cut=cut, cam_video=cam_video, hook_y=ul.get("hook_y"), zoom=ul.get("zoom", 1.0),
                     pan=ul.get("pan", 0.0), hook_style=ul.get("hook_style") or sty.get("box") or "white",
                     hook_scale=ul.get("hook_scale", 1.0),
-                    top_h=int(ul["top_h"]) if ul.get("top_h") else learn.CAM_PX.get(sty.get("cam", ""), None))
+                    top_h=int(ul["top_h"]) if ul.get("top_h") else learn.CAM_PX.get(sty.get("cam", ""), None),
+                    view=(c.get("react_view") or None) if lay == "react" else None)
         # learner tests from the Nov 23 tool review: word-by-word subtitles, punch-in zoom on the big reaction
         try:
             if sty.get("subs") == "on":
