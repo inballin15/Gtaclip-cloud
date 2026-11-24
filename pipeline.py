@@ -2567,6 +2567,12 @@ def main() -> None:
                         log(f"{cid}: still no webcam -> re-making full screen")
             except Exception as e:  # noqa: BLE001
                 log(f"webcam re-check failed {gid}: {e}")
+    if MINE and st.get("mine_hook_fix_v", 0) < 1:   # one time (Nov 24): Jynxzi is the one reacting - the hooks are
+        st["mine_hook_fix_v"] = 1                    # about HIS reaction, not about Nick Eh 30
+        for cid, hk in {"upmwuw3jf8_3": "Jynxzi LOSES IT at Nick Eh 30's family friendly meltdown",
+                        "upmwuw3jf8_4": "Jynxzi reacts to Nick Eh 30 wanting a family friendly GTA 6"}.items():
+            if cid in clips:
+                clips[cid].update(hook=hk, hook_kind="user", hook_by_user=True)
     if st.get("cutout_redo_v", 0) < 1:   # one time: clips made full-screen because a cut-out webcam was missed
         st["cutout_redo_v"] = 1
         for cid, c in clips.items():
