@@ -920,7 +920,9 @@ def cam_without_chat_known(path: Path, cam: str, chat_layout: bool = False, know
     try:
         kb = [float(v) for v in str(known["box"]).split(",")]
         x, y, w, h = [float(v) for v in cam.split(",")]
-        if max(abs(a - b) for a, b in zip(kb, (x, y, w, h))) > 0.01:
+        # same kind of box (webcam + chat panel under it) - his layout moves around a little, so match the SIZE,
+        # not the exact spot (Nov 24: a 0.198 x 0.314 box at y 0.42 kept his chat in the crop)
+        if abs(w - kb[2]) > 0.03 or abs(h - kb[3]) > 0.045:
             return cam
         cap = cv2.VideoCapture(str(path))
         dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
@@ -1180,9 +1182,43 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     flt += f";[{last}]format=yuv420p[out]"
     # clean, even sound (FFmpeg loudnorm to TikTok/YouTube's -14 LUFS): no more too-quiet or blaring clips
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
-       "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-maxrate", "12000k", "-bufsize", "24M", "-r", "30",
+       "-c:v", "libx264", "-preset", "medium", *enc_args(out), "-r", "30",
        *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000"] if has_audio(raw) else []),
        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
+
+
+def enc_args(out: str) -> list:
+    """Video quality for saved clips. Posted copy: CRF 20, max 6 Mbps - TikTok re-compresses every upload to ~2-3 Mbps,
+    so this looks the same on a phone (the old CRF 17 / 12 Mbps made ~27 MB files and the site only fit ~10 clips).
+    The no-caption copy is only a working copy for edits / saving without the hook: a bit lighter."""
+    if out == "_clean":
+        return ["-crf", "22", "-maxrate", "4500k", "-bufsize", "9M"]
+    return ["-crf", "20", "-maxrate", "6000k", "-bufsize", "12M"]   # tested Nov 24 on a Kai clip: 26 -> 17 MB, looks identical
+
+
+def shrink_site_videos(st: dict) -> None:
+    """One time (Nov 24): re-save the videos already on the site at the new sizes - same look, about half the space."""
+    if st.get("shrink_v", 0) >= 1:
+        return
+    done, saved = 0, 0.0
+    for f in sorted(VID.rglob("*.mp4")):
+        try:
+            mb = f.stat().st_size / 1e6
+            secs = max(1.0, duration_of(f))
+            if mb / secs < 0.8:   # already light (about 6 Mbps or less)
+                continue
+            out = f.with_suffix(".shrink.mp4")
+            ff("-i", str(f), "-map", "0:v", "-map", "0:a?", "-c:v", "libx264", "-preset", "medium",
+               *enc_args("_clean" if f.stem.endswith("_clean") else "_final"), "-c:a", "copy", "-movflags", "+faststart", str(out))
+            if out.exists() and out.stat().st_size < f.stat().st_size:
+                saved += mb - out.stat().st_size / 1e6
+                out.replace(f); done += 1
+            else:
+                out.unlink(missing_ok=True)
+        except Exception as e:  # noqa: BLE001
+            log(f"shrink skipped {f.name}: {e}")
+    st["shrink_v"] = 1
+    log(f"re-saved {done} site videos smaller: {saved:.0f} MB freed")
 
 
 # ---------------------------------------------------------------- links (YouTube / Twitch VOD)
@@ -1924,6 +1960,11 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
+    if st.get("kai_chat_v", 0) < 1:   # one time: re-make queued Kai clips whose webcam crop still showed his chat
+        st["kai_chat_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new" and c.get("login") == "kaicenat" and not (c.get("user_layout") or {}).get("cam"):
+                c.pop("final_hash", None)
     if st.get("nick_cam_v", 0) < 1:   # one time: Nick Eh 30's clips were skipped - his cut-out cam has no border
         st["nick_cam_v"] = 1
         box = ",".join(str(v) for v in (CFG["streamers"].get("nickeh30", {}).get("facecam") or []))
@@ -2402,6 +2443,10 @@ def main() -> None:
                 c = clips[cid]
                 if need_f:
                     c["final_hash"] = c["final_v"] = hh
+                    try:   # real length of OUR video (c["seconds"] is the original Twitch clip's length)
+                        c["final_s"] = round(duration_of(VID / f"{cid}_final.mp4"))
+                    except Exception:  # noqa: BLE001
+                        pass
                 if need_c:
                     c["clean_v"] = ch
                 if need_f or need_c:
@@ -2442,8 +2487,8 @@ def main() -> None:
     # 4c2. clips that missed the picture check (Google busy) get checked now; until then the poster won't post them
     if not control.get("ai_off"):
         import viral
-        todo = [cid for cid, c in clips.items() if c["status"] == "new" and c.get("pic_ok") is None
-                and (VID / f"{cid}_final.mp4").exists()][:6]
+        todo = [cid for _, cid in sorted(((clip_quality(c), cid) for cid, c in clips.items() if c["status"] == "new"
+                and c.get("pic_ok") is None and (VID / f"{cid}_final.mp4").exists()), reverse=True)][:6]   # best clips first
         for cid in todo:
             c = clips[cid]
             try:
@@ -2471,8 +2516,19 @@ def main() -> None:
     # 4e. size guard: GitHub Pages sites must stay under 1 GB -> drop the lowest-rated queued clips if close
     def site_mb():
         return sum(f.stat().st_size for f in VID.rglob("*") if f.is_file()) / 1e6   # incl. quick-edit videos (v/e)
+    shrink_site_videos(st)
     mb = site_mb()
-    if mb > SITE_MAX_MB:   # first: no-caption spare copies of your oldest parts (the captioned video stays; edits still work)
+    if mb > SITE_MAX_MB:   # first: no-caption spare copies of the weaker half of the queue (the posted copy stays;
+        ranked = sorted([(clip_quality(c), cid) for cid, c in clips.items()   # edits still work - they just take a remake)
+                         if c["status"] == "new" and c.get("source") != "upload" and not c.get("hook_by_user")])
+        for _, cid in ranked[: len(ranked) // 2]:
+            if mb <= SITE_MAX_MB:
+                break
+            f = VID / f"{cid}_clean.mp4"
+            if f.exists():
+                f.unlink(); clips[cid].pop("clean_v", None); clips[cid]["no_clean"] = True
+                mb = site_mb()
+    if mb > SITE_MAX_MB:   # then: no-caption spare copies of your oldest parts
         mine = sorted([(c.get("found") or "", cid) for cid, c in clips.items() if c["status"] == "new" and c.get("source") == "upload"])
         for _, cid in mine[:-10]:
             if mb <= SITE_MAX_MB:

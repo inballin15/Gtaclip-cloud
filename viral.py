@@ -221,7 +221,7 @@ def gemini_models(key: str, log=print) -> list[str]:
     that answer."""
     global _MODELS
     if _MODELS is not None:
-        return _MODELS
+        return [m for m in _MODELS if m not in _TIRED]
     import json as _json
     import time
     import urllib.request
@@ -260,11 +260,19 @@ def gemini_models(key: str, log=print) -> list[str]:
     # next one usually still answers - so keep up to 5, with older stable models as the backup
     backup = ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview", "gemini-2.5-flash", "gemini-2.5-flash-lite",
               "gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.0-flash"]
-    _MODELS = [n for _, n in sorted(good)][:5]
-    _MODELS += [n for n in backup if n not in _MODELS and (not names or n in names)][:max(0, 5 - len(_MODELS))]
-    _MODELS = _MODELS or backup[:5]
-    log(f"AI models answering now: {', '.join(_MODELS)}")
-    return _MODELS
+    _MODELS = [n for _, n in sorted(good)][:6] or backup[:4]   # only models that answered the test (Nov 24: an
+    log(f"AI models answering now: {', '.join(_MODELS)}")      # untested backup answered "not found" all day)
+    return [m for m in _MODELS if m not in _TIRED]
+
+
+_TIRED: dict = {}   # models that said "too many requests" / "not found" this run - don't ask them again (saves the
+                    # free daily allowance for the models that still have some left)
+
+
+def _tired(model: str, err) -> None:
+    t = str(err)
+    if "429" in t or "404" in t:
+        _TIRED[model] = t[:40]
 
 
 HOOK_STYLE = (
@@ -364,6 +372,7 @@ def ai_shorten(hooks: dict[str, str], log=print, tiny: bool = False) -> dict[str
                     res[k] = v
             return res
         except Exception as e:  # noqa: BLE001
+            _tired(model, e)
             log(f"hook shortening ({model}): {str(e)[:120]}")
     return {}
 
@@ -451,6 +460,7 @@ def ai_rank(clips: list[dict], log=print, streamer: str = "") -> list[dict]:
             log(f"AI picked the best moments ({model})")
             return clips
         except Exception as e:  # noqa: BLE001
+            _tired(model, e)
             log(f"AI ranking skipped ({model}): {str(e)[:120]}")
     return clips
 
@@ -535,6 +545,7 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
                 if e.code in (401, 403):
                     return out, status    # bad key: no point trying again
             except Exception as e:  # noqa: BLE001
+                _tired(model, e)
                 status = f"{model}: {str(e)[:120]}"
                 log(f"AI scoring: {status}")
         if not done:
@@ -590,6 +601,7 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                 return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
                         short_hook(str(row.get("hook", ""))))
             except Exception as e:  # noqa: BLE001
+                _tired(model, e)
                 busy = busy or "429" in str(e) or "503" in str(e)
                 log(f"picture check ({model}): {str(e)[:80]}")
         if not busy:

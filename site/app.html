@@ -1468,7 +1468,7 @@ function clipCard(r, st) {
   pl.onclick = () => { const vd = el('video'); vd.src = U(vidOf(r)); vd.controls = true; vd.playsInline = true; vd.autoplay = true; vb.append(vd); withPreview(r, vd, vb); pl.remove(); vd.play().catch(() => {}); };
   vb.append(pl); c.append(vb);
   const b = el('div', 'cbody');
-  const meta = el('div', 'row'); meta.append(badge(st), el('span', 'mut', `${r.seconds || '?'}s · ${r.created ? ago(r.created) : ''}`)); b.append(meta);
+  const meta = el('div', 'row'); meta.append(badge(st), el('span', 'mut', `${r.final_s || r.seconds || '?'}s · ${r.created ? ago(r.created) : ''}`)); b.append(meta);
   b.append(el('div', 'hook', r.hook || ''));
   if (r.viral_why) b.append(el('div', 'why', r.viral_why));
   if (JOBS[r.id]) b.append(jobBar(r.id));
