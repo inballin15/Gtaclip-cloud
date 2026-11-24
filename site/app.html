@@ -193,6 +193,8 @@ nav button b:empty{display:none}
 .edx-tools{display:flex;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:#0d0d14}
 .edx-tool{border:0;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:12px}
 .edx-tool .i{font-size:20px;line-height:1.1;color:#fff}.edx-tool.on{color:#fff;background:#ffffff14}
+.trim-row{display:flex;align-items:center;gap:6px;margin:6px 10px}.trim-row b{width:44px;font-size:13px}.trim-row .btn{flex:1;padding:10px 0;font-size:15px}
+.trim-lbl{margin:8px 10px 2px;font-weight:700;font-size:14px}
 .edx-trim{position:relative;height:44px;border-radius:10px;background:var(--p2);margin:4px 10px}
 .edx-trim .sel{position:absolute;top:0;bottom:0;background:#29e3ff33;border-top:3px solid var(--cyan);border-bottom:3px solid var(--cyan)}
 .edx-trim .h{position:absolute;top:-4px;bottom:-4px;width:22px;margin-left:-11px;border-radius:7px;background:var(--cyan);touch-action:none}
@@ -958,7 +960,7 @@ function inspPane(r) {
   if (JOBS[r.id]) d.append(jobBar(r.id));
   const ul = r.user_layout || {}; const sty = r.style || {};
   const cur = { hook: r.hook || '', box: (ul.hook_style || sty.box || 'white') === 'black' ? 'black' : 'white', scale: +(ul.hook_scale || 1),
-    y: ul.hook_y != null ? +ul.hook_y : null, pan: +(ul.pan || 0), subs: ul.subs || sty.subs || 'off', punch: ul.punch || sty.punch || 'off' };
+    y: ul.hook_y != null ? +ul.hook_y : null, pan: +(ul.pan || 0), subs: ul.subs || r.subs_pick || 'off', punch: ul.punch || sty.punch || 'off' };
   const S = { ...cur };
   const changed = () => { const t = S.hook.trim() !== cur.hook.trim() || S.box !== cur.box || Math.abs(S.scale - cur.scale) > 0.01 || S.y !== cur.y;
     const m = Math.abs(S.pan - cur.pan) > 0.01 || S.subs !== cur.subs || S.punch !== cur.punch; return { t, m }; };
@@ -1001,7 +1003,7 @@ function outPane(r, n) {
   const d = el('div', 'pane'); d.append(ttl('9:16 / output preview', r && r.nowing ? 'Posting now' : '', true, 'out'));
   if (!r) return d;
   const o = el('div', 'outp'); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
-  const m = el('div', 'meta'); m.append(el('div', 'nm', 'Short_' + String(n || 1).padStart(2, '0')), el('div', 'sp', '9:16  /  H.264'), el('div', 'sp g', `Video + captions${(r.style || {}).subs === 'on' ? ' + subs' : ''}`));
+  const m = el('div', 'meta'); m.append(el('div', 'nm', 'Short_' + String(n || 1).padStart(2, '0')), el('div', 'sp', '9:16  /  H.264'), el('div', 'sp g', `Video + captions${((r.user_layout || {}).subs || r.subs_pick) === 'on' ? ' + subs' : ''}`));
   const eb = el('div', 'expbar'); eb.append(el('div', 'e', 'Export / H.264')); const mt = el('div', 'meter'); for (let i = 0; i < 8; i++) { const b = el('i'); b.style.animationDelay = (i * 0.11) + 's'; mt.append(b); } eb.append(mt); m.append(eb);
   o.append(th, m); d.append(o);
   const sb = el('div', 'shipbtns');
@@ -1596,10 +1598,10 @@ function openHookEdit(r) {
 function openEditor(r) {
   if (!r.src) { sheet('Edit', [el('div', 'note warn', 'This clip was made before the editor existed. Its still frame appears after its next re-make (a few minutes) — try again soon.')]); return; }
   const ul = r.user_layout || {}; const used = r.layout_used || 'split';
-  const base = { mode: ul.mode || (used.startsWith('irl') || used === 'fill' ? 'irl' : used === 'full' ? 'full' : 'split'), zoom: ul.zoom || 1, pan: ul.pan || 0,
+  const base = { mode: (ul.mode === 'split' && !ul.v && used === 'react') ? 'react' : ul.mode || (used === 'react' ? 'react' : used.startsWith('irl') || used === 'fill' ? 'irl' : used === 'full' ? 'full' : 'split'), zoom: ul.zoom || 1, pan: ul.pan || 0,
     irl_x: ul.irl_x ?? (used.startsWith('irl') ? parseFloat(used.split(':')[1]) : 0.5), hook_y: ul.hook_y ?? null, cam: null,
     hook: r.hook || '', caption: r.caption || '', hook_style: ul.hook_style || 'white', hook_scale: ul.hook_scale || 1,
-    top_h: ul.top_h || TOP, speed: ul.speed || 1, trim: ul.trim || null };
+    top_h: ul.top_h || TOP, speed: ul.speed || 1, trim: ul.trim || null, span: ul.span || null };
   const draftKey = 'gc-draft-' + r.id; const draft = ls.get(draftKey, null);
   let S = draft && draft.S ? { ...base, ...draft.S } : { ...base };
   const hist = [JSON.stringify(S)]; let hi = 0;
@@ -1635,7 +1637,8 @@ function openEditor(r) {
     if (S.cam) return;
     const W = img.naturalWidth || 960, H = img.naturalHeight || 540;
     let [x, y, w, h] = (ul.cam || r.cam_used || r.cam || '0,0,0.25,0.25').split(',').map(Number);
-    const ch = Math.min(h, w * W / H / A()); y = y + (h - ch) * 0.1; S.cam = [x, y, w, w * W / H / A()];
+    if (S.mode === 'react') S.cam = [x, y, w, h];   // reaction layout shows the whole webcam box as it is
+    else { const ch = Math.min(h, w * W / H / A()); y = y + (h - ch) * 0.1; S.cam = [x, y, w, w * W / H / A()]; }
     hist[0] = JSON.stringify(S); if (hi === 0) hist[hi] = hist[0];
   }
   const drawBox = () => { if (!S.cam) return; const [x, y, w, h] = S.cam; Object.assign(box.style, { left: x * 100 + '%', top: y * 100 + '%', width: w * 100 + '%', height: h * 100 + '%' }); };
@@ -1645,6 +1648,7 @@ function openEditor(r) {
     if (!bdrag) return; const W = img.naturalWidth || 960, H = img.naturalHeight || 540;
     const dx = (e.clientX - bdrag.x0) / bdrag.rw, dy = (e.clientY - bdrag.y0) / bdrag.rh; let [x, y, w, h] = bdrag.c0;
     if (bdrag.mode === 'move') { x = Math.min(Math.max(0, x + dx), 1 - w); y = Math.min(Math.max(0, y + dy), 1 - h); }
+    else if (S.mode === 'react') { w = Math.min(Math.max(0.06, w + dx), 1 - x); h = Math.min(Math.max(0.06, h + dy), 1 - y); }
     else { w = Math.min(Math.max(0.06, w + dx), 1 - x); h = w * W / H / A(); if (y + h > 1) { h = 1 - y; w = h * A() * H / W; } }
     S.cam = [x, y, w, h]; drawBox(); draw();
   });
@@ -1653,7 +1657,17 @@ function openEditor(r) {
   function hookLines(fs) { ctx.font = `800 ${fs}px -apple-system,BlinkMacSystemFont,sans-serif`; const maxw = CW * dpr * 720 / 1080; const words = (S.hook || '').split(/\s+/).filter(Boolean); const out = []; let cur = '';
     for (const w of words) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxw && cur) { out.push(cur); cur = w; } else cur = t; } if (cur) out.push(cur); return out; }
   const topFrac = () => S.top_h / 1920;
-  function defHookY(bhFrac) { return S.mode === 'split' ? topFrac() + 0.3 * bhFrac : S.mode === 'irl' ? 0.6 + bhFrac / 2 : 0.5; }
+  function defHookY(bhFrac) { return S.mode === 'split' ? topFrac() + 0.3 * bhFrac : S.mode === 'irl' ? 0.6 + bhFrac / 2
+    : S.mode === 'react' ? Math.max(60 / 1920 + bhFrac / 2, (340 - 26) / 1920 - bhFrac / 2) : 0.5; }
+  // reaction layout, same sizes as the clip maker: what they watch on top (whole screen, or just the watched video),
+  // the streamer's whole webcam big underneath
+  function reactGeo(W, H) {
+    const [vx, vy, vw, vh] = (r.react_view && used === 'react' ? r.react_view : '0,0,1,1').split(',').map(Number);
+    const [, , w, h] = S.cam || [0, 0, 0.3, 0.3]; const pw = Math.max(2, W * w), ph = Math.max(2, H * h);
+    const avail = 1920 - 340 - 30 - 110; const chFull = 1080 * (H * vh) / (W * vw); const fhCap = 1080 * ph / pw;
+    let c_h, f_h; if (chFull + fhCap <= avail) { c_h = chFull; f_h = fhCap; } else { c_h = Math.min(chFull, Math.max(avail - fhCap, 0.55 * avail)); f_h = Math.min(fhCap, avail - c_h); }
+    const c_w = Math.min(1080, c_h * (W * vw) / (H * vh)), f_w = Math.min(1080, f_h * pw / ph);
+    return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 340 + c_h + 30, fw: f_w, fh: f_h }; }
   let capBox = null;
   function draw() {
     if (!img.complete || !img.naturalWidth || !CW) return;
@@ -1664,6 +1678,11 @@ function openEditor(r) {
       const sw = W / S.zoom, sh = H / S.zoom, sx = (W - sw) / 2 * (1 + S.pan), sy = (H - sh) / 2;
       const scale = (ch - tp) / sh; const vis = Math.min(sw, cw / scale); const vx = sx + (sw - vis) / 2 * (1 + S.pan);
       ctx.drawImage(img, Math.max(0, vx), sy, vis, sh, 0, tp, cw, ch - tp);
+    } else if (S.mode === 'react') {
+      const k = cw / 1080; const gg = reactGeo(W, H);
+      ctx.filter = `blur(${12 * dpr}px) brightness(0.78)`; const s0 = ch / H; ctx.drawImage(img, (cw - W * s0) / 2, 0, W * s0, ch); ctx.filter = 'none';
+      ctx.drawImage(img, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, (cw - gg.cw * k) / 2, 340 * k, gg.cw * k, gg.ch * k);
+      if (S.cam) { const [x, y, w, h] = S.cam; ctx.drawImage(img, x * W, y * H, w * W, h * H, (cw - gg.fw * k) / 2, gg.cb * k, gg.fw * k, gg.fh * k); }
     } else if (S.mode === 'irl') {
       const h = H / S.zoom, w = h * 9 / 16; const x = Math.min(Math.max(W * S.irl_x - w / 2, 0), W - w);
       ctx.drawImage(img, x, (H - h) / 2, w, h, 0, 0, cw, ch);
@@ -1734,30 +1753,45 @@ function openEditor(r) {
       const d = el('details'); const sm = el('summary', null, 'Post description'); const ta = el('textarea'); ta.rows = 3; ta.value = S.caption; ta.placeholder = 'Leave empty for the automatic description';
       ta.oninput = () => { S.caption = ta.value; }; ta.onchange = commit; d.append(sm, ta); panel.append(d);
     } else if (tool === 'layout') {
-      panel.append(chips([['split', 'Webcam + game'], ['irl', 'Full screen'], ['full', 'Whole frame']], S.mode, (v) => { S.mode = v; }));
+      panel.append(chips([['split', 'Webcam + game'], ['react', 'Reaction'], ['irl', 'Full screen'], ['full', 'Whole frame']], S.mode, (v) => {
+        if (v === 'react' && S.mode === 'split' && S.cam) { const c0 = (r.cam_used || r.cam || '').split(',').map(Number); if (c0.length === 4) S.cam = c0; }
+        S.mode = v; }));
       if (S.mode === 'split') panel.append(chips([[540, 'Small cam'], [672, 'Medium'], [860, 'Large cam']], [540, 672, 860].includes(S.top_h) ? S.top_h : 0, (v) => { S.top_h = v; }),
         el('div', 'mut', 'Or drag the blue line on the video · drag the game to reframe · pinch to zoom'));
-      else panel.append(el('div', 'mut', S.mode === 'irl' ? 'Drag the picture left/right · pinch to zoom' : 'The whole stream frame on a blurred background'));
+      else panel.append(el('div', 'mut', S.mode === 'irl' ? 'Drag the picture left/right · pinch to zoom' : S.mode === 'react'
+        ? 'What they\u2019re watching on top, their webcam big underneath \u00b7 move the webcam box with the Webcam tool' : 'The whole stream frame on a blurred background'));
     } else if (tool === 'cam') {
-      if (S.mode !== 'split') { panel.append(el('div', 'mut', 'Switch Layout to "Webcam + game" to place the webcam.')); return; }
+      if (S.mode !== 'split' && S.mode !== 'react') { panel.append(el('div', 'mut', 'Switch Layout to "Webcam + game" or "Reaction" to place the webcam.')); return; }
       panel.append(srcBox, el('div', 'mut', 'Drag the blue box onto the face · drag the round handle to resize')); requestAnimationFrame(drawBox);
     } else if (tool === 'trim') {
+      // Move the start / end earlier or later - past the edges of the clip too (the whole Twitch clip / your whole
+      // video is kept). Times are on the whole footage; the clip is re-cut to exactly what you pick.
       cv.hidden = true; vid = el('video'); vid.src = PAGES + (r.clean || r.final); vid.playsInline = true; vid.muted = false; vid.className = 'edx-vid'; stage.append(vid);
-      const old = (r.user_layout || {}).trim; const off = old ? old[0] : 0;
-      const bar = el('div', 'edx-trim'); const sel = el('div', 'sel'); const h1 = el('div', 'h'), h2 = el('div', 'h'); bar.append(sel, h1, h2);
-      const lbl = el('div', 'mut'); const play = el('button', 'btn', '▶ Play selection');
-      let D = (r.seconds || 18) + off;
-      const set = () => { const [a, b] = S.trim || [0, D]; sel.style.left = (a / D * 100) + '%'; sel.style.width = ((b - a) / D * 100) + '%'; h1.style.left = (a / D * 100) + '%'; h2.style.left = (b / D * 100) + '%'; lbl.textContent = `${a.toFixed(1)}s → ${b.toFixed(1)}s · ${(b - a).toFixed(1)}s long${(b - a) > 25 ? ' (shorter clips do better)' : ''}`; };
-      vid.onloadedmetadata = () => { if (!old) D = vid.duration || D; set(); };
-      let hd = null;
-      for (const [h, i] of [[h1, 0], [h2, 1]]) {
-        h.addEventListener('pointerdown', (e) => { e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (x) { /* */ } hd = i; });
-        h.addEventListener('pointermove', (e) => { if (hd !== i) return; const rc = bar.getBoundingClientRect(); const t = Math.min(D, Math.max(0, (e.clientX - rc.left) / rc.width * D)); const tr = (S.trim || [0, D]).slice();
-          if (i === 0) tr[0] = Math.min(t, tr[1] - 3); else tr[1] = Math.max(t, tr[0] + 3); S.trim = tr.map((v) => Math.round(v * 10) / 10); set(); try { vid.currentTime = Math.max(0, S.trim[i] - off); } catch (x) { /* */ } });
-        const up = () => { if (hd === i) { hd = null; commit(); } }; h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
-      }
-      play.onclick = () => { const [a, b] = S.trim || [0, D]; vid.currentTime = Math.max(0, a - off); vid.play(); const stop = () => { if (vid && vid.currentTime >= b - off) { vid.pause(); vid.removeEventListener('timeupdate', stop); } }; vid.addEventListener('timeupdate', stop); };
-      panel.append(bar, lbl, play); set();
+      const up = r.source === 'upload'; const mom = r.moment || {};
+      const base = (r.span || (up && mom.end != null ? [mom.start, mom.end] : (r.trim || [0, r.seconds || 20]))).map(Number);
+      const avail = (r.avail || [0, up ? base[1] + 60 : Math.max(base[1], r.seconds || base[1])]).map(Number);
+      const cur = () => (S.span || base).slice();
+      const fmt = (d) => Math.abs(d) < 0.05 ? 'as made' : (d < 0 ? `${(-d).toFixed(1)}s earlier` : `${d.toFixed(1)}s later`);
+      const lbl = el('div', 'trim-lbl'); const note = el('div', 'mut');
+      const set = () => { const [a, b] = cur();
+        lbl.textContent = `Start ${fmt(a - base[0])} · End ${fmt(b - base[1])} · ${(b - a).toFixed(1)}s long`;
+        note.textContent = (a < base[0] - 0.05 || b > base[1] + 0.05) ? 'The new part isn\u2019t in this preview yet \u2014 Save and it\u2019s cut in (a few minutes).'
+          : (b - a > 35 ? 'Long clip \u2014 15\u201330 s usually does best.' : 'Tap Play to check the new start.'); };
+      const playFrom = (t0, t1) => { if (!vid) return; const st = Math.max(0, t0); try { vid.currentTime = st; } catch (x) { /* */ } vid.play().catch(() => {});
+        const stop = () => { if (vid && t1 != null && vid.currentTime >= t1) { vid.pause(); vid.removeEventListener('timeupdate', stop); } }; vid.addEventListener('timeupdate', stop); };
+      const nudge = (i, d) => { const was = cur(); const sp = was.slice(); sp[i] = Math.round((sp[i] + d) * 10) / 10;
+        sp[0] = Math.max(avail[0], Math.min(sp[0], sp[1] - 5)); sp[1] = Math.min(avail[1], Math.max(sp[1], sp[0] + 5));
+        if (sp[1] - sp[0] > 90) { if (i === 0) sp[1] = sp[0] + 90; else sp[0] = sp[1] - 90; }
+        if (sp[0] === was[0] && sp[1] === was[1]) { toast(i === 0 ? 'That\u2019s as early as the footage goes' : 'That\u2019s as late as the footage goes'); return; }
+        S.span = sp; set(); commit();
+        if (i === 0) playFrom(sp[0] - base[0], sp[0] - base[0] + 4); else playFrom(sp[1] - base[0] - 4, sp[1] - base[0]); };
+      const row = (name, i) => { const d = el('div', 'trim-row'); d.append(el('b', null, name));
+        for (const [txt, v] of [['\u22125s', -5], ['\u22121s', -1], ['+1s', 1], ['+5s', 5]]) { const b = el('button', 'btn', txt); b.onclick = () => nudge(i, v); d.append(b); }
+        return d; };
+      const play = el('button', 'btn cyan', '\u25b6 Play the new cut'); play.onclick = () => { const c0 = cur(); playFrom(c0[0] - base[0], c0[1] - base[0]); };
+      const back = el('button', 'btn', 'Back to how it was made'); back.onclick = () => { S.span = (r.user_layout || {}).span ? base.slice() : null; set(); commit(); };
+      panel.append(el('div', 'mut', '\u2212 = earlier, + = later. You can go past the start / end of the clip to catch the moment.'),
+        row('Start', 0), row('End', 1), lbl, note, play, back); set();
     } else if (tool === 'speed') {
       panel.append(chips([[1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']], S.speed, (v) => { S.speed = v; }), el('div', 'mut', 'Speeds up the video and the voice together. 1.25× keeps viewers watching without sounding off.'));
     } else if (tool === 'reset') {
@@ -1769,19 +1803,23 @@ function openEditor(r) {
   sv.onclick = async () => {
     sv.disabled = true; sv.textContent = 'Saving…';
     const out = { mode: S.mode, hook_style: S.hook_style };
+    out.v = 2;   // knows the Reaction layout (older saves said "split" for reaction clips)
     if (S.mode === 'split') { out.cam = S.cam.map((n) => (+n).toFixed(4)).join(','); out.pan = +S.pan.toFixed(3); if (S.top_h !== TOP) out.top_h = S.top_h; }
+    if (S.mode === 'react' && S.cam) out.cam = S.cam.map((n) => (+n).toFixed(4)).join(',');
     if (S.mode === 'irl') out.irl_x = +S.irl_x.toFixed(3);
     if (S.mode !== 'full' && S.zoom > 1.001) out.zoom = +S.zoom.toFixed(3);
     if (S.hook_y != null) out.hook_y = +S.hook_y.toFixed(3);
     if (Math.abs(S.hook_scale - 1) > 0.01) out.hook_scale = +S.hook_scale.toFixed(2);
     if (S.speed > 1.01) out.speed = S.speed;
-    if (S.trim) out.trim = S.trim;
+    if (S.span) out.span = S.span.map((v) => +(+v).toFixed(2));
+    else if (S.trim) out.trim = S.trim;
     if (S.hook.trim() && S.hook.trim() !== (r.hook || '').trim()) out.hook = S.hook.trim();
     if (S.caption.trim() !== (r.caption || '').trim()) out.caption = S.caption.trim();
     // only words / text box changed? → quick edit (about a minute) instead of a full re-make
     const b0 = JSON.parse(hist[0]); const near = (a, b) => JSON.stringify(a) === JSON.stringify(b) ||
       (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) < 0.002));
-    const textOnly = ['mode', 'cam', 'pan', 'zoom', 'irl_x', 'top_h', 'speed', 'trim'].every((k) => near(S[k], b0[k]));
+    const textOnly = ['mode', 'cam', 'pan', 'zoom', 'irl_x', 'top_h', 'speed', 'trim'].every((k) => near(S[k], b0[k]))
+      && (!S.span || near(S.span, b0.span));
     if (textOnly) {
       const t = {};
       if (S.hook.trim() && S.hook.trim() !== (r.hook || '').trim()) t.hook = S.hook.trim();
@@ -1837,9 +1875,9 @@ function openUpload(which) {
   const link = el('input'); link.type = 'url'; link.placeholder = 'Paste a Twitch, Kick or TikTok link';
   const sec = el('input'); sec.placeholder = 'Optional part, e.g. 1:20:00-2:00:00 (long videos)';
   // subtitles on the clips it makes (word-by-word captions) - picked before it makes them
-  let subs = ls.get('gc-upsubs', 'on'); const subSeg = el('div', 'seg');
-  for (const [k, t] of [['on', 'Subtitles ON'], ['off', 'No subtitles']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', subs === k);
-    b.onclick = () => { subs = k; ls.set('gc-upsubs', k); subSeg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b)); haptic(); }; subSeg.append(b); }
+  let subs = ls.get('gc-upsubs2', 'off'); const subSeg = el('div', 'seg');
+  for (const [k, t] of [['off', 'No subtitles'], ['on', 'Subtitles ON']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', subs === k);
+    b.onclick = () => { subs = k; ls.set('gc-upsubs2', k); subSeg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b)); haptic(); }; subSeg.append(b); }
   const go = el('button', 'big go', 'Find viral moments');
   go.onclick = () => {
     if (link.value.trim()) {
@@ -1910,7 +1948,7 @@ async function uploadVideo(file, login, streamer, extra = {}) {
   try { lock && lock.release(); } catch (e) { /* */ }
   saveUploads(); lastSig = ''; render();
 }
-async function clipLink(url, section, login, streamer, subs = 'on') {
+async function clipLink(url, section, login, streamer, subs = 'off') {
   const id = Date.now().toString(36); const u = { id, name: url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40), at: Date.now(), state: 'processing', pct: 100 };
   uploads.unshift(u); saveUploads(); switchTab('mine');
   try { const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, url, section, name: '', login, streamer, subs }) }); u.issue = iss.number; toast('Got it — finding the best moments'); }

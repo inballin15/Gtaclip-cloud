@@ -258,8 +258,10 @@ def apply_issues(st: dict) -> None:
             try:
                 ul = json.loads(body[body.index("{"):body.rindex("}") + 1])
                 keep = {}
-                if ul.get("mode") in ("split", "full", "irl"):
+                if ul.get("mode") in ("split", "full", "irl", "react"):
                     keep["mode"] = ul["mode"]
+                if isinstance(ul.get("v"), int):
+                    keep["v"] = ul["v"]   # v2+: the Studio knows the Reaction layout, so "split" really means split
                 if isinstance(ul.get("cam"), str) and re.match(r"^[\d.]+,[\d.]+,[\d.]+,[\d.]+$", ul["cam"]):
                     keep["cam"] = ul["cam"]
                 for k, lo, hi in (("hook_y", 0.05, 0.95), ("zoom", 1.0, 2.5), ("pan", -1.0, 1.0), ("irl_x", 0.0, 1.0),
@@ -274,6 +276,10 @@ def apply_issues(st: dict) -> None:
                 tr = ul.get("trim")
                 if isinstance(tr, list) and len(tr) == 2 and all(isinstance(v, (int, float)) for v in tr) and tr[1] - tr[0] >= 3:
                     keep["trim"] = [max(0.0, float(tr[0])), float(tr[1])]
+                sp = ul.get("span")   # new start / end on the whole footage (can go earlier / later than the clip)
+                if isinstance(sp, list) and len(sp) == 2 and all(isinstance(v, (int, float)) for v in sp) and 3 <= sp[1] - sp[0] <= 120:
+                    keep["span"] = [round(max(0.0, float(sp[0])), 2), round(float(sp[1]), 2)]
+                    keep.pop("trim", None)
                 if isinstance(ul.get("hook"), str) and ul["hook"].strip():
                     c["hook"] = fix_names(strip_emoji(ul["hook"]))[:140]
                     c.pop("no_hook", None)
@@ -1908,6 +1914,8 @@ def refetch_upload(c: dict, raw: Path, tmp: Path, cid: str = "") -> None:
     if not link:
         import viral
         src = upload_source(c, cid or raw.stem, tmp)
+        c["src_s"] = round(duration_of(src), 1)
+        a, b = max(0.0, a), min(c["src_s"], b)
         viral.cut(src, a, b, raw, vf=bars_vf(src, c.get("bars")))   # same bars off as when it was made
         log(f"got your clip again: {raw.stem}")
         return
@@ -2015,6 +2023,12 @@ def process_uploads(st: dict, tmp: Path) -> None:
             except Exception as e:  # noqa: BLE001
                 log(f"bar check failed: {e}")
         cut_ok, crops = {}, {}
+        src_dur = 0.0
+        if not link:
+            try:
+                src_dur = duration_of(src)
+            except Exception:  # noqa: BLE001
+                pass
         for i, m in enumerate(moments):
             cid = f"up{job.get('id', num)}_{i + 1}"
             raw = RAW / f"{cid}.mp4"
@@ -2057,6 +2071,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     cam, q, frac = None, "none", None
                 rec = {"status": "new", "source": "upload", "streamer": name, "login": login, "src_link": job.get("url") or "",
                        "src_commit": job.get("src_commit") or "", "bars": crops.get(i),
+                       "src_s": round(src_dur, 1) if src_dur else 0,
                        "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name) if name else ""), "campaign": s_cfg.get("campaign", ""),
                        "title": f"{job.get('name', 'Your video')} @ {int(m['start'] // 60)}:{int(m['start'] % 60):02d}",
                        "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
@@ -2083,7 +2098,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     rec.update(viral=sc, viral_verdict="post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
                                viral_why=", ".join(m.get("reasons", []))[:90])
                 if job.get("subs") in ("on", "off"):   # you picked subtitles on / off when you made it
-                    rec["style"] = {**(rec.get("style") or {}), "subs": job["subs"]}
+                    rec["subs_pick"] = job["subs"]
                 if job.get("asis"):
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill", asis=True, title=job.get("name") or "Your clip")
                     if job.get("hook"):
@@ -2678,6 +2693,20 @@ def main() -> None:
                 for k in ("final_hash", "final_v", "clean_v", "trim"):
                     c.pop(k, None)
                 log(f"{cid}: re-cutting {c['moment']['start']}-{c['moment']['end']} s (setup + payoff)")
+    if st.get("subs_off_v", 0) < 1:   # one time (Nov 24): subtitles off - re-make the clips that have them burned in
+        st["subs_off_v"] = 1
+        n = 0
+        for cid, c in clips.items():
+            sty0 = c.get("style") or {}
+            if c["status"] == "new" and sty0.get("subs") == "on" and (c.get("user_layout") or {}).get("subs") != "on":
+                sty0.pop("subs", None)
+                for k in ("final_hash", "final_v", "clean_v"):
+                    c.pop(k, None)
+                n += 1
+            elif "subs" in sty0:
+                sty0.pop("subs", None)
+        if n:
+            log(f"subtitles off: re-making {n} clips without them")
     if MINE and st.get("mine_hook_fix_v", 0) < 3:   # clip 4's hook left "6" alone on a third line - shorter
         st["mine_hook_fix_v"] = 3
         c4 = clips.get("upmwuw3jf8_4")
@@ -2976,6 +3005,19 @@ def main() -> None:
     except Exception as e:  # noqa: BLE001
         log(f"hook shortening skipped: {e}")
 
+    # your clip's new start / end goes past what was cut from your video: cut it again from the video, wider
+    for cid, c in clips.items():
+        sp = (c.get("user_layout") or {}).get("span")
+        if c.get("source") == "upload" and c["status"] == "new" and sp and c.get("moment") \
+                and (sp[0] < float(c["moment"]["start"]) - 0.05 or sp[1] > float(c["moment"]["end"]) + 0.05):
+            if c.get("src_s"):
+                sp = [max(0.0, sp[0]), min(float(c["src_s"]), sp[1])]
+            c["moment"]["start"], c["moment"]["end"] = round(float(sp[0]), 2), round(float(sp[1]), 2)
+            (RAW / f"{cid}.mp4").unlink(missing_ok=True)
+            for k in ("final_hash", "final_v", "clean_v"):
+                c.pop(k, None)
+            log(f"{cid}: cutting {sp[0]:.1f}-{sp[1]:.1f}s from your video (your new start / end)")
+
     # 4. drop old stuff, get queued clips ready (thumbnail, hook); videos are made in 4b
     jobs = []
     for cid, c in list(clips.items()):
@@ -3060,12 +3102,31 @@ def main() -> None:
             # but the subtitles on/off you picked when making them always wins.
             c["style"] = {**learn.pick_style(LEARNED_INS, cid), **(c.get("style") or {})}
         sty = {**(c.get("style") or {}), **{k: v for k, v in (c.get("user_layout") or {}).items() if k in ("subs", "punch")}}
-        if not c.get("asis") and not c.get("part") and not c.get("full") and c.get("source") != "upload":
-            # your clips were already cut around the moment on whole sentences (setup -> payoff): no second trim,
-            # it was cutting off the setup / the payoff. Stream clips get trimmed to the best part.
-            raw = best_part(raw, cid, tmp, c)
-        if not c.get("asis") and not c.get("part") and not c.get("full"):   # your full video / parts stay whole
-            raw = cut_dead_air(raw, cid, tmp)
+        span_u = (c.get("user_layout") or {}).get("span")   # your own start / end from the Studio's Trim
+        raw_s = duration_of(raw)
+        win0 = float(c["moment"]["start"]) if c.get("source") == "upload" and c.get("moment") else 0.0
+        if span_u:
+            # exactly the start and end you picked (times on the whole footage: the Twitch clip / your video)
+            a0, b0 = max(0.0, float(span_u[0]) - win0), min(raw_s, float(span_u[1]) - win0)
+            if b0 - a0 >= 3 and (a0 > 0.05 or b0 < raw_s - 0.05):
+                out_s = tmp / f"{cid}_span.mp4"
+                import viral
+                viral.cut(raw, a0, b0, out_s)
+                raw = out_s
+            c["span"] = [round(win0 + a0, 2), round(win0 + b0, 2)]
+            log(f"{cid}: your start / end {c['span'][0]:.1f}-{c['span'][1]:.1f}s")
+        else:
+            if not c.get("asis") and not c.get("part") and not c.get("full") and c.get("source") != "upload":
+                # your clips were already cut around the moment on whole sentences (setup -> payoff): no second trim,
+                # it was cutting off the setup / the payoff. Stream clips get trimmed to the best part.
+                raw = best_part(raw, cid, tmp, c)
+            if not c.get("asis") and not c.get("part") and not c.get("full"):   # your full video / parts stay whole
+                raw = cut_dead_air(raw, cid, tmp)
+            tr = c.get("trim") if c.get("source") != "upload" else None
+            c["span"] = [round(win0 + float(tr[0]), 2), round(win0 + float(tr[1]), 2)] if tr else [round(win0, 2), round(win0 + raw_s, 2)]
+        # how far the Trim tool can go: the whole Twitch clip / your whole video
+        c["avail"] = [0.0, round(float(c.get("src_s") or 0) or (win0 + raw_s if c.get("source") == "upload" and not c.get("src_commit")
+                                                                  and not c.get("src_link") else (win0 + raw_s + 60 if c.get("source") == "upload" else raw_s)), 2)]
         if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and c.get("cam") \
                 and (c.get("cam_only") or gameplay_is_black(raw, c.get("cam") or "")):
             vs = c.get("viral")
@@ -3076,9 +3137,9 @@ def main() -> None:
                 log(f"skipped {cid}: the stream showed a black screen, no gameplay")
                 return job
         _ul = c.get("user_layout") or {}
-        if _ul.get("trim") or (_ul.get("speed") or 1) > 1.01:   # your trim / speed from the editor
+        if (_ul.get("trim") and not _ul.get("span")) or (_ul.get("speed") or 1) > 1.01:   # your trim / speed from the editor
             try:
-                a0, b0 = (_ul.get("trim") or [0, 9999])
+                a0, b0 = ((_ul.get("trim") if not _ul.get("span") else None) or [0, 9999])
                 sp = float(_ul.get("speed") or 1)
                 out_t = tmp / f"{cid}_edit.mp4"
                 vf = f"trim=start={a0}:end={b0},setpts=(PTS-STARTPTS)/{sp:.3f}"
@@ -3167,6 +3228,10 @@ def main() -> None:
                             [cv2.IMWRITE_JPEG_QUALITY, 72])
         except Exception:  # noqa: BLE001
             pass
+        if ul.get("mode") == "react":
+            lay = "react"
+        elif ul.get("mode") == "split" and ul.get("v", 0) >= 2 and lay == "react":
+            lay = "split"                        # you switched a reaction clip to webcam + game
         if ul.get("mode") == "full":
             lay = "full"
         elif ul.get("mode") == "irl":
@@ -3249,7 +3314,8 @@ def main() -> None:
                     view=(c.get("react_view") or None) if lay == "react" else None)
         # learner tests from the Nov 23 tool review: word-by-word subtitles, punch-in zoom on the big reaction
         try:
-            if sty.get("subs") == "on":
+            if (c.get("user_layout") or {}).get("subs") == "on" or c.get("subs_pick") == "on":
+                # subtitles only when YOU switch them on (Studio / Make clips) - off by default (Nov 24: inaccurate)
                 import viral
                 ws = [w for sg in viral.transcribe(viral._audio(raw)) for w in sg["words"]]
                 opts["subs"] = ws or None
