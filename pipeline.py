@@ -513,7 +513,7 @@ def _fit(rect, face, W, H):
     return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
 
 
-def _guess_box(face, W, H, widen: float = 2.8):
+def _guess_box(face, W, H, widen: float = 2.8, headroom: float = 0.0):
     x, y, w, h = face
     aspect = 1080 / 960
     bw = min(W, max(w * widen, 0.135 * W))   # cut-out webcams (no border): head and shoulders, less game
@@ -523,6 +523,9 @@ def _guess_box(face, W, H, widen: float = 2.8):
     cx, cy = x + w / 2, y + h * 0.85
     bx = min(max(0.0, cx - bw / 2), W - bw)
     by = min(max(0.0, cy - bh / 2), H - bh)
+    if headroom and by > y - headroom * h:   # room above the head (hair, headphones, cat ears) - grow the box up
+        top = max(0.0, y - headroom * h)
+        bh, by = by + bh - top, top
     return f"{bx / W:.4f},{by / H:.4f},{bw / W:.4f},{bh / H:.4f}"
 
 
@@ -1186,10 +1189,11 @@ def find_bars(path: Path, secs=None) -> tuple[int, int, int, int] | None:
     if len(gs) < 3:
         return None
     g = np.stack(gs)                                  # frames x H x W
-    # a bar line is one flat, darkish colour from end to end in EVERY sampled frame (its shade may drift with
-    # the picture - iPhone recordings tint the bars - but it never has any detail in it)
-    col_ok = (g.std(axis=1).max(axis=0) < 7) & (g.max(axis=1).max(axis=0) < 120)
-    row_ok = (g.std(axis=2).max(axis=0) < 7) & (g.max(axis=2).max(axis=0) < 120)
+    # a bar line is darkish and has NO detail from end to end in every sampled frame. It may be a smooth gradient
+    # and its shade may drift with the picture (iPhone recordings tint the bars) - so measure detail (how much
+    # neighbouring pixels differ), not flatness. Real picture: >= 0.25; bars: ~0.03.
+    col_ok = (np.abs(np.diff(g, axis=1)).mean(axis=1).max(axis=0) < 0.15) & (g.max(axis=1).max(axis=0) < 120)
+    row_ok = (np.abs(np.diff(g, axis=2)).mean(axis=2).max(axis=0) < 0.15) & (g.max(axis=2).max(axis=0) < 120)
 
     def run(ok):
         k = 0
@@ -1209,23 +1213,38 @@ def find_bars(path: Path, secs=None) -> tuple[int, int, int, int] | None:
     return x0, y0, w, h
 
 
-def crop_bars(raw: Path, tmp: Path, crop: tuple | None = None) -> bool:
+def bars_vf(src: Path, crop) -> str | None:
+    """ffmpeg filter for cutting clips from an upload: bars off + 120 fps phone video down to 60, in the same pass."""
+    cap = cv2.VideoCapture(str(src))
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30
+    cap.release()
+    f = [f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}"] if crop else []
+    if fps > 61:
+        f.append("fps=60")
+    return ",".join(f) or None
+
+
+def crop_bars(raw: Path, tmp: Path, crop: tuple | None = None) -> list | None:
     """Cut the bars off (crop from find_bars, worked out once for a whole upload; or found on this clip).
-    Replaces the file; True if it cropped."""
+    Replaces the file; returns the crop [x, y, w, h] it used (saved with the clip, so a re-fetch matches)."""
     try:
         crop = crop or find_bars(raw)
         if not crop:
-            return False
+            return None
         x, y, w, h = crop
         tmp_out = tmp / f"{raw.stem}_nobars.mp4"
-        ff("-i", str(raw), "-vf", f"crop={w}:{h}:{x}:{y}", "-c:v", "libx264", "-preset", "fast", "-crf", "14",
+        cap = cv2.VideoCapture(str(raw))
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30
+        cap.release()
+        ff("-i", str(raw), "-vf", f"crop={w}:{h}:{x}:{y}" + (",fps=60" if fps > 61 else ""),   # 120 fps phone video -> 60
+           "-c:v", "libx264", "-preset", "fast", "-crf", "14",
            "-c:a", "copy", "-movflags", "+faststart", str(tmp_out))
         shutil.move(str(tmp_out), raw)
         log(f"{raw.stem}: cut off the bars around the stream -> {w}x{h}")
-        return True
+        return [int(x), int(y), int(w), int(h)]
     except Exception as e:  # noqa: BLE001
         log(f"bar check skipped {raw.stem}: {e}")
-        return False
+        return None
 
 
 def _pool_frames(paths, n: int = 24, crop: tuple | None = None):
@@ -1295,7 +1314,7 @@ def owner_cam(frames) -> tuple[str, str] | tuple[None, None]:
             return _fit(rect, iface, W, H), "owner-edge"
     except Exception:  # noqa: BLE001
         pass
-    return _guess_box(face, W, H, 3.1), "owner"
+    return _guess_box(face, W, H, 3.1, 0.35), "owner"
 
 
 def face_in_box(frames, cam: str) -> int:
@@ -1310,17 +1329,19 @@ def face_in_box(frames, cam: str) -> int:
     return n
 
 
-def upload_cams(raws: list, log_name: str = "") -> str | None:
+def upload_cams(raws: list, log_name: str = "") -> tuple[str | None, str]:
     """Your upload: the streamer's own webcam, found across ALL the clips cut from it (more frames = the face
-    that never moves stands out from the faces in the videos they're watching)."""
+    that never moves stands out from the faces in the videos they're watching). Returns (box, quality):
+    'owner' = seen in the same spot across several clips (trusted over the AI's pick), 'owner1' = one clip only."""
     try:
         cam, q = owner_cam(_pool_frames(raws, 30))
         if cam:
+            q = "owner" if len(raws) >= 2 else "owner1"
             log(f"{log_name}: the streamer's own webcam is at {cam} ({q})")
-        return cam
+        return cam, q or ""
     except Exception as e:  # noqa: BLE001
         log(f"{log_name}: webcam search failed: {e}")
-        return None
+        return None, ""
 
 
 def other_faces(frames, cam: str) -> int:
@@ -1354,7 +1375,7 @@ def widen_cam(frames, box: str) -> str:
         if not faces:
             return box
         face = max(faces, key=lambda r: r[2] * r[3])
-        return _guess_box(face, W, H, 3.1)
+        return _guess_box(face, W, H, 3.1, 0.35)
     except Exception:  # noqa: BLE001
         return box
 
@@ -1691,12 +1712,49 @@ def split_parts(src: Path) -> tuple[list[tuple[float, float]], int]:
     return spans, (int(a // 60) if d0 - a > 0.5 else 0)
 
 
-def refetch_upload(c: dict, raw: Path, tmp: Path) -> None:
-    """Get one of your pasted clips again (to re-make it after an edit): same link, same start and end."""
+_UPLOAD_SRC = {}   # upload commit -> the whole video, put back together (once per run)
+
+
+def upload_source(c: dict, cid: str, tmp: Path) -> Path:
+    """An uploaded FILE again, from the commit its pieces were uploaded in. The upload branch is deleted after the
+    clips are made, but GitHub keeps the commit - we find it from the branch's history if it wasn't saved."""
+    jid = re.sub(r"^up|_\d+$", "", cid)
+    sha = c.get("src_commit") or ""
+    if not sha:
+        code, acts = _gh("GET", f"/repos/{REPO}/activity?ref=refs/heads/upload-{jid}&per_page=20")
+        for a in (acts if isinstance(acts, list) else []):
+            if a.get("activity_type") in ("branch_creation", "push") and a.get("after", "0" * 40) != "0" * 40:
+                sha = a["after"]
+                break
+    if not sha:
+        raise RuntimeError("no link saved (uploaded file) and the upload's commit is gone")
+    c["src_commit"] = sha
+    if sha in _UPLOAD_SRC and _UPLOAD_SRC[sha].exists():
+        return _UPLOAD_SRC[sha]
+    subprocess.run(["git", "fetch", "-q", "--depth=1", "origin", sha], check=True, timeout=1800)   # by commit id
+    blobs = subprocess.run(["git", "ls-tree", "-r", "--name-only", sha], capture_output=True, text=True,
+                           check=True).stdout.split()
+    parts = sorted(p for p in blobs if p.startswith(f"uploads/{jid}/")) or sorted(blobs)
+    src = tmp / f"upload_{jid}_again.mp4"
+    with open(src, "wb") as fh:
+        for part in parts:
+            fh.write(subprocess.run(["git", "show", f"{sha}:{part}"], capture_output=True, check=True).stdout)
+    log(f"got your uploaded video {jid} back ({src.stat().st_size // 1_000_000} MB)")
+    _UPLOAD_SRC[sha] = src
+    return src
+
+
+def refetch_upload(c: dict, raw: Path, tmp: Path, cid: str = "") -> None:
+    """Get one of your clips again (to re-make it after an edit): same link / uploaded file, same start and end,
+    same bars cut off (so the webcam box still fits)."""
     link = c.get("src_link") or ""
-    if not link:
-        raise RuntimeError("no link saved (uploaded file)")
     a, b = float(c["moment"]["start"]), float(c["moment"]["end"])
+    if not link:
+        import viral
+        src = upload_source(c, cid or raw.stem, tmp)
+        viral.cut(src, a, b, raw, vf=bars_vf(src, c.get("bars")))   # same bars off as when it was made
+        log(f"got your clip again: {raw.stem}")
+        return
     if re.search(r"tiktok\.com/", link):
         import yt_dlp
         d = Path(tempfile.mkdtemp(dir=tmp))
@@ -1707,6 +1765,8 @@ def refetch_upload(c: dict, raw: Path, tmp: Path) -> None:
         viral.cut(next(d.glob("tt.*")), a, b, raw)
     else:
         fetch_link_section(link, a, b, raw, tmp)
+    if c.get("bars"):
+        crop_bars(raw, tmp, tuple(c["bars"]))
     log(f"got your clip again: {raw.stem}")
 
 
@@ -1758,6 +1818,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     job["name"] = title
             else:
                 subprocess.run(["git", "fetch", "-q", "--depth=1", "origin", f"{ref}:refs/remotes/origin/{ref}"], check=True)
+                job["src_commit"] = subprocess.run(["git", "rev-parse", f"origin/{ref}"], capture_output=True, text=True,
+                                                   check=True).stdout.strip()
                 with open(src, "wb") as fh:
                     for part in parts:
                         fh.write(subprocess.run(["git", "show", f"origin/{ref}:{part}"], capture_output=True, check=True).stdout)
@@ -1796,7 +1858,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 bars = find_bars(src)
             except Exception as e:  # noqa: BLE001
                 log(f"bar check failed: {e}")
-        cut_ok = {}
+        cut_ok, crops = {}, {}
         for i, m in enumerate(moments):
             cid = f"up{job.get('id', num)}_{i + 1}"
             raw = RAW / f"{cid}.mp4"
@@ -1804,15 +1866,16 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 import viral
                 if link:
                     fetch_link_section(link, offset + m["start"], offset + m["end"], raw, tmp)
-                else:
-                    viral.cut(src, m["start"], m["end"], raw)
-                if not job.get("asis"):
-                    crop_bars(raw, tmp, bars)
+                    if not job.get("asis"):
+                        crops[i] = crop_bars(raw, tmp)
+                else:   # uploaded file: bars (found once on the whole video) come off while cutting - one encode
+                    viral.cut(src, m["start"], m["end"], raw, vf=bars_vf(src, None if job.get("asis") else bars))
+                    crops[i] = None if job.get("asis") or not bars else [int(v) for v in bars]
                 cut_ok[i] = raw
             except Exception as e:  # noqa: BLE001
                 log(f"cutting clip {cid} failed: {e}")
         # 2) the streamer's own webcam: the face that stays in one spot across every clip from this video
-        own = upload_cams(list(cut_ok.values()), f"upload {num}") if not job.get("asis") and cut_ok else None
+        own, own_q = upload_cams(list(cut_ok.values()), f"upload {num}") if not job.get("asis") and cut_ok else (None, "")
         for i, m in enumerate(moments):
             cid = f"up{job.get('id', num)}_{i + 1}"
             raw = RAW / f"{cid}.mp4"
@@ -1830,13 +1893,14 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 try:
                     cfr = _pool_frames([raw], 6)
                     if own and face_in_box(cfr, own) >= max(2, len(cfr) // 2):
-                        cam, q = own, "owner"      # the streamer's own webcam (works for cut-outs with no border)
+                        cam, q = own, own_q        # the streamer's own webcam (works for cut-outs with no border)
                     else:
                         cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(login))
                 except Exception as e:  # noqa: BLE001   a webcam-check error never costs you the clip: full screen
                     log(f"webcam check failed {cid}: {e}")
                     cam, q, frac = None, "none", None
                 rec = {"status": "new", "source": "upload", "streamer": name, "login": login, "src_link": job.get("url") or "",
+                       "src_commit": job.get("src_commit") or "", "bars": crops.get(i),
                        "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name) if name else ""), "campaign": s_cfg.get("campaign", ""),
                        "title": f"{job.get('name', 'Your video')} @ {int(m['start'] // 60)}:{int(m['start'] % 60):02d}",
                        "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
@@ -1865,7 +1929,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill", asis=True, title=job.get("name") or "Your clip")
                     if job.get("hook"):
                         rec["hook_by_user"] = True
-                elif cam and q in ("edge", "learned", "cutout", "owner"):
+                elif cam and q in ("edge", "learned", "cutout", "owner", "owner1"):
                     rec.update(cam=cam, cam_q=q, layout="split")
                     try:   # someone else's face on screen too (the video they're reacting to) -> reaction layout;
                         if other_faces(_pool_frames([raw], 4), cam) >= 2:   # the AI picture check refines it later
@@ -2370,26 +2434,45 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
-    if MINE and st.get("mine_cam_redo_v", 0) < 1:   # one time (Nov 24): your clips that went full-screen or got a
-        st["mine_cam_redo_v"] = 1                    # blurry face crop - bars off, find the streamer's own webcam
+    if MINE and st.get("mine_cam_redo_v", 0) < 2:   # one time (Nov 24): your clips that went full-screen or got a
+        st["mine_cam_redo_v"] = 2                    # blurry face crop - bars off, find the streamer's own webcam
         tmp0 = Path(tempfile.mkdtemp())              # across all clips of that upload, re-make them
-        groups = {}
+        groups, src_bars = {}, {}
         for cid, c in clips.items():
             if c.get("source") == "upload" and c["status"] == "new" and not c.get("asis") and not c.get("user_layout") \
-                    and (RAW / f"{cid}.mp4").exists() and cid.startswith("up"):
+                    and not c.get("full") and not c.get("part") and cid.startswith("up"):
                 groups.setdefault(cid.rsplit("_", 1)[0], []).append(cid)
         for gid, cids in groups.items():
             try:
-                for cid in cids:
-                    crop_bars(RAW / f"{cid}.mp4", tmp0)
-                own = upload_cams([RAW / f"{cid}.mp4" for cid in cids], gid)
+                for cid in list(cids):
+                    raw = RAW / f"{cid}.mp4"
+                    if not raw.exists():
+                        try:
+                            if not clips[cid].get("src_link") and not clips[cid].get("bars"):
+                                usrc = upload_source(clips[cid], cid, tmp0)
+                                if str(usrc) not in src_bars:
+                                    fb = find_bars(usrc)
+                                    src_bars[str(usrc)] = [int(v) for v in fb] if fb else None
+                                clips[cid]["bars"] = src_bars[str(usrc)]   # bars come off while re-cutting
+                            refetch_upload(clips[cid], raw, tmp0, cid)   # the saved copy was lost: get it back
+                        except Exception as e:  # noqa: BLE001
+                            log(f"{cid}: couldn't get the video again ({str(e)[:100]}) - left as it is")
+                            cids.remove(cid)
+                            continue
+                    elif not clips[cid].get("bars"):
+                        got = crop_bars(raw, tmp0)   # the saved copy still has its bars: cut them off
+                        if got and not clips[cid].get("src_link"):
+                            clips[cid]["bars"] = None   # (relative to the clip, not the upload: don't reuse)
+                if not cids:
+                    continue
+                own, own_q = upload_cams([RAW / f"{cid}.mp4" for cid in cids], gid)
                 for cid in cids:
                     c, raw = clips[cid], RAW / f"{cid}.mp4"
                     for k in ("final_hash", "final_v", "clean_v", "pic_ok", "irl_x", "react", "react_view", "react_by",
                               "watching", "cam_only", "hd"):
                         c.pop(k, None)   # re-make, and the AI picture check looks again (reaction? whose webcam?)
                     cfr = _pool_frames([raw], 6)
-                    cam, q = (own, "owner") if own and face_in_box(cfr, own) >= max(2, len(cfr) // 2) else (None, None)
+                    cam, q = (own, own_q) if own and face_in_box(cfr, own) >= max(2, len(cfr) // 2) else (None, None)
                     if not cam:
                         cam, q, _f = find_cam_info(raw, duration_of(raw), st.get("learned_cams", {}).get(c.get("login", "")))
                     if cam:
@@ -2816,9 +2899,10 @@ def main() -> None:
                     # streamer's; a webcam we already traced / found staying put across the video wins when it's
                     # the same one (its box is the whole webcam, the AI's is often just the face).
                     rcam = react_cam(fr, vis.get("owner_cam"))
-                    known = c.get("cam") if c.get("cam_q") in ("owner", "owner-edge", "learned", "edge", "cutout", "ai-react") else None
-                    if known and (same_spot(known, rcam) if rcam else c.get("cam_q") in ("owner", "owner-edge", "learned")):
-                        rcam = known
+                    known = c.get("cam") if c.get("cam_q") in ("owner", "owner1", "owner-edge", "learned", "edge", "cutout",
+                                                               "ai-react") else None
+                    if known and (c.get("cam_q") in ("owner", "learned") or (rcam and same_spot(known, rcam))):
+                        rcam = known   # seen in the same spot across your whole video / this streamer's known spot
                     elif rcam:
                         rcam = widen_cam(fr, rcam)
                     if rcam:
