@@ -405,7 +405,7 @@
    }
   ]
  },
- "updated": "2026-11-24T08:02:38Z",
+ "updated": "2026-11-24T08:07:40Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1032,12 +1032,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-24",
-  "used": 0,
+  "used": 1,
   "cap": 28,
   "slots": 6,
-  "remain30": 733,
+  "remain30": 732,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 583,
+  "remain24": 582,
   "active": [
    [
     8,
@@ -2162,6 +2162,20 @@
  },
  "stats": [
   {
+   "service": "youtube",
+   "link": "https://www.youtube.com/shorts/htssvxaDjQY",
+   "sent": "2026-11-24T03:49:24.000Z",
+   "hook": "",
+   "clip": "",
+   "streamer": "",
+   "views": 1,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
    "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7711546592687377695",
    "sent": "2026-11-24T01:41:12.885Z",
@@ -2407,7 +2421,7 @@
    "clip": "",
    "streamer": "",
    "views": 1242,
-   "likes": 18,
+   "likes": 19,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -2476,8 +2490,8 @@
    "hook": "Lacy STUNNED by 90 HOUR restart",
    "clip": "PlayfulTriumphantWalletTinyFace-22B9lCIYz9kQ9j5O",
    "streamer": "Lacy",
-   "views": 2,
-   "likes": 0,
+   "views": 3,
+   "likes": 1,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -2504,8 +2518,8 @@
    "hook": "Clix SHOCKED he TRICKED police with empty boat",
    "clip": "vod2934996320_93392",
    "streamer": "Clix",
-   "views": 2,
-   "likes": 0,
+   "views": 3,
+   "likes": 1,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -2672,8 +2686,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1251,
-   "likes": 22,
+   "views": 1253,
+   "likes": 23,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -2686,7 +2700,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 2,
+   "views": 3,
    "likes": 0,
    "comments": 0,
    "shares": 0,
@@ -2952,7 +2966,7 @@
    "hook": "Clix refuses to dive in GTA 6 waters",
    "clip": "",
    "streamer": "Clix",
-   "views": 5,
+   "views": 6,
    "likes": 0,
    "comments": 0,
    "shares": 0,
@@ -3044,6 +3058,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T08:02:38Z",
+ "stats_updated": "2026-11-24T08:07:40Z",
  "log": []
 }
