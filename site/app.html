@@ -1860,7 +1860,9 @@ function ghBlob(data, onProg) {
     x.timeout = 120000;   // a piece that hasn't finished in 2 minutes is stuck: try it again
     x.upload.onprogress = (e) => { if (e.lengthComputable) onProg(e.loaded / e.total); };
     x.onload = () => { if (x.status >= 200 && x.status < 300) { try { res(JSON.parse(x.responseText).sha); } catch (e) { rej(e); } }
-      else { const e = new Error(`GitHub ${x.status}`); e.status = x.status; rej(e); } };
+      else { let m = ''; try { m = JSON.parse(x.responseText).message || ''; } catch (e) { /* */ }
+        const e = new Error(`GitHub ${x.status}${m ? ': ' + m : ''}`); e.status = x.status; e.ghmsg = m;
+        e.wait = +(x.getResponseHeader('retry-after') || 0); rej(e); } };
     x.onerror = () => rej(new Error('connection dropped')); x.ontimeout = () => rej(new Error('stalled'));
     x.send(JSON.stringify({ content: data, encoding: 'base64' }));
   });
@@ -1874,22 +1876,35 @@ async function uploadVideo(file, login, streamer, extra = {}) {
   let shown = 0; const show = () => { const p = Math.min(99, Math.floor(prog.reduce((a, b) => a + b, 0) / n * 100)); if (p !== shown) { shown = p; u.pct = p; saveUploads(); lastSig = ''; render(); } };
   const sendOne = async (i) => {
     const data = await b64(file.slice(i * CH, (i + 1) * CH));
-    for (let t = 0; t < 5; t++) {
+    for (let t = 0; t < 8; t++) {
       try { shas[i] = await ghBlob(data, (f) => { prog[i] = f * 0.97; show(); }); prog[i] = 1; u.msg = ''; show(); return; }
-      catch (e) { if (e.status === 401 || e.status === 403 || e.status === 404) throw e; prog[i] = 0; u.msg = `Connection hiccup — retrying (${t + 1}/5)…`; await new Promise((r) => setTimeout(r, 3000 * (t + 1))); }
+      catch (e) {
+        prog[i] = 0;
+        const slow = e.status === 429 || (e.status === 403 && /rate limit|abuse|secondary|too many/i.test(e.ghmsg || ''));
+        if (!slow && (e.status === 401 || e.status === 403 || e.status === 404)) throw e;   // a real key problem
+        const secs = slow ? Math.max(e.wait || 0, 60) : 3 * (t + 1);   // GitHub said "slow down": wait, then go on
+        u.msg = slow ? `GitHub asked to slow down — continuing in ${secs}s…` : `Connection hiccup — retrying (${t + 1}/8)…`;
+        show(); lastSig = ''; render(); await new Promise((r) => setTimeout(r, secs * 1000));
+      }
     }
     throw new Error('the connection kept dropping — try again on Wi-Fi');
   };
   try {
     let next = 0; const worker = async () => { while (next < n) { const i = next++; await sendOne(i); } };
-    await Promise.all([worker(), worker()]);   // two pieces at a time
+    await worker();   // one piece at a time (GitHub blocks big uploads sent side by side)
     const parts = shas.map((_, i) => `uploads/${id}/part${String(i).padStart(3, '0')}`);
     const tree = parts.map((path, i) => ({ path, mode: '100644', type: 'blob', sha: shas[i] }));
     const t = await gh('POST', '/git/trees', { tree }); const c = await gh('POST', '/git/commits', { message: `upload ${u.name}`, tree: t.sha, parents: [] });
     await gh('POST', '/git/refs', { ref: `refs/heads/upload-${id}`, sha: c.sha });
     const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, ref: `upload-${id}`, parts, name: u.name, login, streamer, size: file.size, ...extra }) });
     Object.assign(u, { state: 'processing', pct: 100, issue: iss.number, msg: '' }); toast(extra.asis ? 'Uploaded — adding it to the queue' : 'Uploaded — finding the funniest moments');
-  } catch (e) { u.state = 'failed'; u.msg = (e.status === 401 || e.status === 403 || e.status === 404) ? 'Your GitHub key needs Contents → Read and write.' : `Upload failed: ${e.message}`; }
+  } catch (e) {
+    u.state = 'failed';
+    u.msg = e.status === 401 ? 'Your GitHub key expired or is wrong — make a new one in Settings, then upload again.'
+      : (e.status === 403 || e.status === 404) && /not accessible|permission|Not Found/i.test(e.ghmsg || e.message)
+        ? `Your GitHub key needs Contents → Read and write (GitHub said: ${e.ghmsg || e.status}).`
+        : `Upload failed: ${e.message}. Try again — on Wi-Fi if you can.`;
+  }
   try { lock && lock.release(); } catch (e) { /* */ }
   saveUploads(); lastSig = ''; render();
 }
