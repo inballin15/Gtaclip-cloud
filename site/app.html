@@ -728,8 +728,9 @@ async function stepJobs() {
         if (!pg || pg.status === 'completed') { Object.assign(j, { done: true, pct: 100, label: 'Done ✓ — your new video is ready', end: Date.now() }); toast('Re-make done ✓'); lastSig = ''; render(); continue; }
         j.pct = Math.max(j.pct, stagePct('remake', 4, new Date(pg.created_at).getTime())); j.label = STAGES.remake[4][1]; continue;
       }
-      const run = runs.find((x) => x.name.startsWith('gtaclip pipeline') && x.status !== 'completed' && after(x, j.at))
-        || runs.find((x) => x.name.startsWith('gtaclip pipeline') && x.status === 'in_progress');
+      const wf = id.startsWith('up') ? 'gtaclip your clips' : 'gtaclip pipeline';   // your clips have their own maker
+      const run = runs.find((x) => x.name.startsWith(wf) && x.status !== 'completed' && after(x, j.at))
+        || runs.find((x) => x.name.startsWith(wf) && x.status === 'in_progress');
       if (!run || run.status === 'queued' || !after(run, j.at)) { j.pct = Math.max(j.pct, stagePct('remake', 0, j.at)); j.label = run && run.status === 'in_progress' ? 'Waiting for the clip maker to finish its current run' : STAGES.remake[0][1]; continue; }
       let steps = []; try { steps = ((await getJSON(`https://api.github.com/repos/${REPO}/actions/runs/${run.id}/jobs?t=${Date.now()}`, h)).jobs || [])[0]?.steps || []; } catch (e) { /* */ }
       const cur = steps.find((x) => x.status === 'in_progress');
@@ -745,6 +746,10 @@ async function refreshQueue() {
     if (q.site_build && !DEV && q.site_build !== BUILD && !sessionStorage.getItem('rl-' + q.site_build) && location.pathname.endsWith('/')) {
       sessionStorage.setItem('rl-' + q.site_build, '1'); location.reload(); return;
     }
+    // your clips come from their own maker (mine.json); stream clips from queue.json - shown together
+    let mine = []; try { mine = ((await getJSON(PAGES + 'mine.json?t=' + Date.now())).ready || []).map((r) => ({ ...r, source: 'upload' })); } catch (e) { /* none yet */ }
+    const ids = new Set(mine.map((r) => r.id));
+    q.ready = [...(q.ready || []).filter((r) => !ids.has(r.id)), ...mine];
     Q = q; applyEdits(Q); ls.set('gc-cache-q', { ...q, ready: (q.ready || []).slice(0, 40) });
   } catch (e) { /* keep last */ }
 }

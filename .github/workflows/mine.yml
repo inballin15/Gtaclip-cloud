@@ -1,0 +1,91 @@
+name: gtaclip your clips (pasted links / uploads)
+# Your own clips are made here, on their own - they never wait for (or get mixed up with) the auto clip finder.
+# Starts the moment you paste a link / upload a video (or edit / remove one of your clips) on the site.
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch: {}
+
+concurrency:
+  group: mine
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  run:
+    if: >-
+      github.event_name == 'workflow_dispatch' || (github.event.issue.user.login == github.repository_owner &&
+      (startsWith(github.event.issue.title, 'upload:') || ((startsWith(github.event.issue.title, 'skip:') ||
+      startsWith(github.event.issue.title, 'edit:') || startsWith(github.event.issue.title, 'layout:')) &&
+      contains(github.event.issue.title, ': up'))))
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: cache your clips' downloads + speech model
+        uses: actions/cache@v4
+        with:
+          path: |
+            _raw
+            ~/.cache/huggingface
+          key: mine-${{ github.run_id }}
+          restore-keys: mine-
+      - name: load your clips, posted reports and your site folder
+        shell: bash
+        run: |
+          mkdir -p _mine _posted _minesite/v
+          for b in mine state posted gh-pages; do git fetch -q --depth=1 origin "$b:refs/remotes/origin/$b" || true; done
+          git archive origin/posted 2>/dev/null | tar -x -C _posted || true
+          rm -rf /tmp/gp && mkdir -p /tmp/gp
+          if git show origin/mine:state.json > _mine/state.json 2>/dev/null; then
+            git archive origin/gh-pages v/m 2>/dev/null | tar -x -C /tmp/gp || true
+            [ -d /tmp/gp/v/m ] && cp -r /tmp/gp/v/m/. _minesite/v/ || true
+          else
+            # first run: take over your clips from the auto finder's saved data (+ their videos)
+            git show origin/state:state.json > /tmp/state.json 2>/dev/null || echo '{"clips":{}}' > /tmp/state.json
+            git archive origin/gh-pages v 2>/dev/null | tar -x -C /tmp/gp || true
+            python3 - <<'PY'
+          import json, pathlib, shutil
+          st = json.load(open("/tmp/state.json"))
+          mine = {k: v for k, v in st.get("clips", {}).items() if v.get("source") == "upload"}
+          json.dump({"clips": mine}, open("_mine/state.json", "w"), indent=1, ensure_ascii=False)
+          n = 0
+          for f in pathlib.Path("/tmp/gp/v").glob("up*"):
+              if f.is_file() and any(f.name.startswith(k + "_") or f.name.startswith(k + ".") for k in mine):
+                  shutil.copy(f, "_minesite/v/" + f.name); n += 1
+          print(f"took over {len(mine)} of your clips, {n} files")
+          PY
+          fi
+      - name: pipeline
+        shell: bash
+        run: python pipeline.py 2>&1 | tee /tmp/mine.log; exit ${PIPESTATUS[0]}
+        env:
+          MINE_MODE: "1"
+          FETCH: "0"
+          STATE_DIR: _mine
+          SITE_OUT: _minesite
+          SITE_MAX_MB: "300"
+          GH_TOKEN: ${{ github.token }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+      - name: publish your clips + save
+        shell: bash
+        run: |
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          python3 publish_mine.py
+          export GIT_INDEX_FILE=/tmp/idx-minestate; rm -f "$GIT_INDEX_FILE"
+          git --work-tree=_mine add -A
+          tree=$(git write-tree); unset GIT_INDEX_FILE
+          c=$(git commit-tree "$tree" -m "your clips $(date -u +%FT%TZ)")
+          for i in 1 2 3 4; do git push -qf origin "$c:refs/heads/mine" && break; [ $i = 4 ] && exit 1; sleep $((i*5)); done

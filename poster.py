@@ -709,6 +709,10 @@ def next_slot(after: datetime | None = None) -> datetime | None:
 # ------------------------------------------------------------------ main
 def main() -> None:
     queue = rj(QUEUE, {"ready": []})
+    # your clips come from the separate your-clips maker (mine.json): only posted when you tap Ship it now
+    _mine = rj(Path(os.environ.get("MINE_JSON", "/tmp/mine.json")), {"ready": []}).get("ready", [])
+    _ids = {r["id"] for r in _mine}
+    queue["ready"] = [r for r in queue.get("ready", []) if r["id"] not in _ids] + [{**r, "source": "upload"} for r in _mine]
     # quick text edits (quickedit.py): post the edited video with your words, not the older version
     for r in queue.get("ready", []):
         e = EDITS.get(r["id"])

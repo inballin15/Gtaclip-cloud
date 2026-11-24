@@ -52,6 +52,9 @@ try:
     os.environ["PATH"] = f"{FF_DIR}{os.pathsep}{os.environ.get('PATH', '')}"   # yt-dlp's section check looks on PATH
 except Exception:  # noqa: BLE001
     FF_YTDLP = FF
+# MINE_MODE=1: the separate "your clips" maker (Nov 24) - pasted links / uploads only, its own saved data
+# (branch "mine") and its own site folder (v/m + mine.json), so it never waits for / clashes with the auto clip finder.
+MINE = os.environ.get("MINE_MODE") == "1"
 STATE_DIR = Path(os.environ.get("STATE_DIR", ROOT / "_state"))
 POSTED_DIR = Path(os.environ.get("POSTED_DIR", ROOT / "_posted"))
 SITE = Path(os.environ.get("SITE_OUT", ROOT / "_site"))
@@ -73,7 +76,7 @@ CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
 def hd_key(cid: str, c: dict) -> str:
     """File name for a clip's webcam in the upscaler branches (a new suffix = a fresh upscale from a new source)."""
     return cid + c.get("hd_sfx", "")
-SITE_MAX_MB = 650        # smaller site = GitHub Pages publishes faster (edits show up sooner); 1 GB is the hard limit
+SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "650"))        # smaller site = GitHub Pages publishes faster (edits show up sooner); 1 GB is the hard limit
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v3-textonly-capcut"
@@ -216,7 +219,7 @@ def apply_issues(st: dict) -> None:
     for it in sorted(items, key=lambda i: i["created_at"]):
         title = it["title"].strip()
         body = (it.get("body") or "").replace("\r\n", "\n")
-        tm = re.match(r"^\s*topic:\s*(.*)$", title, re.I)
+        tm = None if MINE else re.match(r"^\s*topic:\s*(.*)$", title, re.I)   # the topic belongs to the auto finder
         if tm:
             try:
                 req = json.loads(body[body.index("{"):body.rindex("}") + 1]) if "{" in body else {"query": tm.group(1)}
@@ -231,6 +234,8 @@ def apply_issues(st: dict) -> None:
         if not m:
             continue
         action, key = m.group(1).lower(), m.group(2)
+        if MINE != key.startswith("up"):   # your clips (ids start with "up") belong to the your-clips maker
+            continue
         cid = next((k for k in st["clips"] if k == key or k.startswith(key) or key.startswith(k)), None)
         if not cid:
             msg = "Couldn't find that clip (it may have expired)."
@@ -1212,6 +1217,8 @@ def shrink_site_videos(st: dict) -> None:
         return
     done, saved = 0, 0.0
     for f in sorted(VID.rglob("*.mp4")):
+        if not MINE and "m" in f.relative_to(VID).parts[:-1]:
+            continue   # your clips' folder belongs to the your-clips maker
         try:
             mb = f.stat().st_size / 1e6
             secs = max(1.0, duration_of(f))
@@ -1642,9 +1649,21 @@ def sync_edit_videos() -> None:
         log(f"edit videos sync skipped: {e}")
 
 
+# keep the your-clips maker's folder (v/m + mine.json) from the LIVE site when the auto finder publishes, so neither
+# maker removes the other's videos. $base = the live site version it was copied from (the push only goes through
+# if nobody changed the site since - otherwise it copies again and retries).
+KEEP_MINE_SH = r"""
+git fetch -q --depth=1 origin gh-pages:refs/remotes/origin/gh-pages || true
+base=$(git rev-parse origin/gh-pages 2>/dev/null || echo "")
+rm -rf "$SITE/v/m" "$SITE/mine.json"
+git archive origin/gh-pages v/m 2>/dev/null | tar -x -C "$SITE" || true
+git show origin/gh-pages:mine.json > "$SITE/mine.json" 2>/dev/null || rm -f "$SITE/mine.json"
+"""
+
+
 def publish_site() -> None:
     """Put the current site folder live now (mid-run), same way the workflow does at the end."""
-    if not os.environ.get("GITHUB_ACTIONS"):
+    if not os.environ.get("GITHUB_ACTIONS") or MINE:
         return
     sh = r"""
 set -e
@@ -1660,6 +1679,8 @@ tree=$(git write-tree); unset GIT_INDEX_FILE
 c=$(git -c user.name=gtaclip-bot -c user.email=gtaclip-bot@users.noreply.github.com commit-tree "$tree" -m "gh-pages (mid-run)")
 git push -qf origin "$c:refs/heads/gh-pages"
 """
+    sh = sh.replace('touch "$SITE/.nojekyll"', KEEP_MINE_SH + '\ntouch "$SITE/.nojekyll"').replace(
+        'git push -qf origin "$c:refs/heads/gh-pages"', 'git push -q --force-with-lease=gh-pages:"$base" origin "$c:refs/heads/gh-pages"')
     try:
         subprocess.run(["bash", "-c", sh], check=True, cwd=str(ROOT), env={**os.environ, "SITE": str(SITE)}, timeout=240)
         log("site updated (mid-run)")
@@ -1670,6 +1691,9 @@ git push -qf origin "$c:refs/heads/gh-pages"
 # ---------------------------------------------------------------- main
 def main() -> None:
     st = load_state()
+    held = {}
+    if not MINE:   # your pasted / uploaded clips are made by the separate your-clips maker now: leave them alone
+        held = {k: st["clips"].pop(k) for k in list(st.get("clips", {})) if st["clips"][k].get("source") == "upload"}
     try:
         sync_edit_videos()
         apply_quick_edits(st.get("clips", {}), load_edits())
@@ -1738,8 +1762,10 @@ def main() -> None:
                 c.pop("skip_reason", None)
                 log(f"webcam found on retry: {c['streamer']} '{c['title']}' {cam}")
 
-    process_uploads(st, tmp)
-    import_vod_clips(st)
+    if MINE:
+        process_uploads(st, tmp)
+    else:
+        import_vod_clips(st)
 
     # re-check every queued clip's webcam box with the current detector (edge-traced boxes)
     for cid, c in clips.items():
@@ -1857,7 +1883,7 @@ def main() -> None:
         # quick-edit videos of clips that left the queue only take up site space
         live_ids = {r["id"] for r in ready}
         for f in (VID / "e").glob("*.mp4") if (VID / "e").exists() else []:
-            if f.name.rsplit("_", 1)[0] not in live_ids:
+            if f.name.rsplit("_", 1)[0] not in live_ids and (MINE or not f.name.startswith("up")):
                 f.unlink(missing_ok=True)
         ready = mix_order(ready)
         for r in ready:
@@ -2552,7 +2578,12 @@ def main() -> None:
 
     # 4e. size guard: GitHub Pages sites must stay under 1 GB -> drop the lowest-rated queued clips if close
     def site_mb():
-        return sum(f.stat().st_size for f in VID.rglob("*") if f.is_file()) / 1e6   # incl. quick-edit videos (v/e)
+        return sum(f.stat().st_size for f in VID.rglob("*") if f.is_file()
+                   and (MINE or "m" not in f.relative_to(VID).parts[:-1])) / 1e6   # incl. quick-edit videos (v/e), not v/m
+    if not MINE and (SITE / "mine.json").exists():   # your clips moved to their own folder (v/m): old copies go
+        for f in VID.glob("up*"):
+            if f.is_file():
+                f.unlink(missing_ok=True)
     shrink_site_videos(st)
     mb = site_mb()
     if mb > SITE_MAX_MB:   # first: no-caption spare copies of the weaker half of the queue (the posted copy stays;
@@ -2598,6 +2629,7 @@ def main() -> None:
 
     # 5. queue.json
     write_queue()
+    st["clips"].update(held)   # (set-aside clips go back into the saved state unchanged)
     save_state(st)
     _q = json.loads((SITE / "queue.json").read_text())
     log(f"queue: {len(_q['ready'])} ready ({sum(1 for r in _q['ready'] if r['final'])} with final video)")

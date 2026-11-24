@@ -24,6 +24,8 @@ jobs:
           pip install -q --disable-pip-version-check pillow imageio-ffmpeg &
           git fetch -q --depth=1 origin state:refs/remotes/origin/state
           git show origin/state:state.json > /tmp/state.json
+          git fetch -q --depth=1 origin mine:refs/remotes/origin/mine 2>/dev/null && git show origin/mine:state.json > /tmp/mine_state.json 2>/dev/null || echo '{"clips":{}}' > /tmp/mine_state.json
+          python3 -c "import json;a=json.load(open('/tmp/state.json'));b=json.load(open('/tmp/mine_state.json'));a.setdefault('clips',{}).update(b.get('clips',{}));json.dump(a,open('/tmp/state.json','w'))"   # + your clips (own maker)
           U="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git clone -q --depth 1 --branch edits "$U" /tmp/edits 2>/dev/null || { mkdir -p /tmp/edits && cd /tmp/edits && git init -q -b edits && git remote add origin "$U"; }
           wait

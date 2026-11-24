@@ -89,7 +89,7 @@ def main() -> None:
     c = clips[cid]
     print("STEP 1/5 getting the clip", cid, voice)
     clean = WORK / "clean.mp4"
-    urllib.request.urlretrieve(qe.PAGES + f"v/{cid}_clean.mp4?t={int(time.time())}", clean)
+    urllib.request.urlretrieve(qe.PAGES + f"{qe.clip_dir(cid)}{cid}_clean.mp4?t={int(time.time())}", clean)
     FF = qe.FF
     mm = re.search(r"Duration: (\d+):(\d+):([\d.]+)", subprocess.run([FF, "-i", str(clean)], capture_output=True, text=True).stderr)
     dur = int(mm.group(1)) * 3600 + int(mm.group(2)) * 60 + float(mm.group(3))
@@ -171,7 +171,7 @@ def main() -> None:
     Path("/tmp/qe_entry.json").write_text(json.dumps({"id": cid, "rec": rec}))
     import shutil
     shutil.copy(out, "/tmp/qe_video.mp4")
-    for path, f in ((out_name, out), (f"v/{cid}_clean.mp4", newclean)):   # the no-caption copy gets the new voice too
+    for path, f in ((out_name, out), (f"{qe.clip_dir(cid)}{cid}_clean.mp4", newclean)):   # the no-caption copy gets the new voice too
         if f.stat().st_size > 45e6:   # too big for the quick way: the clip maker copies it onto the site on its next run
             print("big file - the clip maker puts it on the site:", path)
             continue

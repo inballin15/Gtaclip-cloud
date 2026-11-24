@@ -52,6 +52,11 @@ def say(msg: str, close: bool = True) -> None:
         gh("PATCH", f"/issues/{ISSUE['number']}", {"state": "closed"})
 
 
+def clip_dir(cid: str) -> str:
+    """Where a clip's videos are on the site: your clips (ids "up...") have their own folder."""
+    return "v/m/" if cid.startswith("up") else "v/"
+
+
 def fallback(cid: str, edit: dict, why: str, ul: dict | None = None) -> None:
     """Can't do it the quick way: hand it to the clip maker as a normal edit (it re-makes the whole video)."""
     print("fallback:", why)
@@ -60,7 +65,7 @@ def fallback(cid: str, edit: dict, why: str, ul: dict | None = None) -> None:
     title = f"edit: {cid}" if "hook_style" not in edit and "hook_y" not in edit and "hook_scale" not in edit else f"layout: {cid}"
     # turn this same tap into a normal edit (it stays yours, so the clip maker accepts it) and start the clip maker
     gh("PATCH", f"/issues/{ISSUE['number']}", {"title": title, "body": body})
-    gh("POST", "/actions/workflows/pipeline.yml/dispatches", {"ref": "main"})
+    gh("POST", f"/actions/workflows/{'mine' if cid.startswith('up') else 'pipeline'}.yml/dispatches", {"ref": "main"})   # your clips: own maker
     say(f"This one needs a full re-make ({why}) — the clip maker is on it now.", close=False)
 
 
@@ -116,7 +121,7 @@ def main() -> None:
 
     clean = WORK / "clean.mp4"
     try:
-        urllib.request.urlretrieve(PAGES + f"v/{cid}_clean.mp4?t={int(time.time())}", clean)
+        urllib.request.urlretrieve(PAGES + f"{clip_dir(cid)}{cid}_clean.mp4?t={int(time.time())}", clean)
     except Exception as e:  # noqa: BLE001
         fallback(cid, edit, f"no clean copy: {e}", ul)
         return

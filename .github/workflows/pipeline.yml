@@ -21,7 +21,9 @@ permissions:
 jobs:
   run:
     # issues: only the repo owner's "skip:" / "edit:" requests
-    if: github.event_name != 'issues' || ((startsWith(github.event.issue.title, 'skip:') || startsWith(github.event.issue.title, 'edit:') || startsWith(github.event.issue.title, 'layout:') || startsWith(github.event.issue.title, 'upload:')) && github.event.issue.user.login == github.repository_owner)
+    # (pasted links / uploads and edits of YOUR clips ("... up...") are made by the separate your-clips maker: mine.yml)
+    if: >-
+      github.event_name != 'issues' || ((startsWith(github.event.issue.title, 'skip:') || startsWith(github.event.issue.title, 'edit:') || startsWith(github.event.issue.title, 'layout:')) && !contains(github.event.issue.title, ': up') && github.event.issue.user.login == github.repository_owner)
     runs-on: ubuntu-latest
     timeout-minutes: 150
     steps:
@@ -82,7 +84,23 @@ jobs:
             c=$(git commit-tree "$tree" -m "$2 $(date -u +%FT%TZ)")
             for i in 1 2 3 4; do git push -qf origin "$c:refs/heads/$2" && break; [ $i = 4 ] && exit 1; sleep $((i*5)); done   # GitHub sometimes rejects a push for a moment
           }
-          publish _site gh-pages
+          publish_site () {  # the site: keep YOUR clips' folder (v/m + mine.json) as it is live right now - the
+            for i in 1 2 3 4 5 6; do   # your-clips maker may have just added one; only push if nobody changed the site since
+              git fetch -q --depth=1 origin gh-pages:refs/remotes/origin/gh-pages || true
+              base=$(git rev-parse origin/gh-pages 2>/dev/null || echo "")
+              rm -rf _site/v/m _site/mine.json
+              git archive origin/gh-pages v/m 2>/dev/null | tar -x -C _site || true
+              git show origin/gh-pages:mine.json > _site/mine.json 2>/dev/null || rm -f _site/mine.json
+              export GIT_INDEX_FILE=/tmp/idx-gh-pages; rm -f "$GIT_INDEX_FILE"
+              git --work-tree=_site add -A
+              tree=$(git write-tree); unset GIT_INDEX_FILE
+              c=$(git commit-tree "$tree" -m "gh-pages $(date -u +%FT%TZ)")
+              git push -q --force-with-lease=gh-pages:"$base" origin "$c:refs/heads/gh-pages" && return 0
+              sleep $((i*4))
+            done
+            return 1
+          }
+          publish_site
           publish _state state
           if ls _camsrc/*.mp4 >/dev/null 2>&1; then   # webcams waiting for the AI upscaler -> start it
             publish _camsrc camsrc
