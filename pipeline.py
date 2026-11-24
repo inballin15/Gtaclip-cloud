@@ -76,7 +76,7 @@ CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
 def hd_key(cid: str, c: dict) -> str:
     """File name for a clip's webcam in the upscaler branches (a new suffix = a fresh upscale from a new source)."""
     return cid + c.get("hd_sfx", "")
-SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "650"))        # smaller site = GitHub Pages publishes faster (edits show up sooner); 1 GB is the hard limit
+SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "600"))        # smaller site = GitHub Pages publishes faster (edits show up sooner); 1 GB is the hard limit
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v3-textonly-capcut"
@@ -2312,9 +2312,11 @@ def sync_edit_videos() -> None:
 KEEP_MINE_SH = r"""
 git fetch -q --depth=1 origin +gh-pages:refs/remotes/origin/gh-pages || true
 base=$(git rev-parse origin/gh-pages 2>/dev/null || echo "")
-rm -rf "$SITE/v/m" "$SITE/mine.json"
+rm -rf "$SITE/v/m" "$SITE/mine.json" "$SITE/v/l" "$SITE/longs.json"
 git archive origin/gh-pages v/m 2>/dev/null | tar -x -C "$SITE" || true
 git show origin/gh-pages:mine.json > "$SITE/mine.json" 2>/dev/null || rm -f "$SITE/mine.json"
+git archive origin/gh-pages v/l 2>/dev/null | tar -x -C "$SITE" || true      # long videos (their own maker)
+git show origin/gh-pages:longs.json > "$SITE/longs.json" 2>/dev/null || rm -f "$SITE/longs.json"
 """
 
 

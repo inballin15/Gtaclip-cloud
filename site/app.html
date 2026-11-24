@@ -193,6 +193,8 @@ nav button b:empty{display:none}
 .edx-tools{display:flex;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:#0d0d14}
 .edx-tool{border:0;background:none;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:12px}
 .edx-tool .i{font-size:20px;line-height:1.1;color:#fff}.edx-tool.on{color:#fff;background:#ffffff14}
+.vbox.wide{aspect-ratio:16/9}
+.clip.long .row.wrap{flex-wrap:wrap;gap:6px;margin-top:8px}.clip.long details{margin-top:8px}.clip.long details .mut{font-size:13px;margin:4px 0}
 .trim-row{display:flex;align-items:center;gap:6px;margin:6px 10px}.trim-row b{width:44px;font-size:13px}.trim-row .btn{flex:1;padding:10px 0;font-size:15px}
 .trim-lbl{margin:8px 10px 2px;font-weight:700;font-size:14px}
 .edx-trim{position:relative;height:44px;border-radius:10px;background:var(--p2);margin:4px 10px}
@@ -1309,6 +1311,7 @@ function platState(p, s) {
 // ---------------------------------------------------------------- QUEUE
 function renderQueue(v, ql) {   // Clips tab: stream clips (With caption / No caption) or Your clips — separate feeds
   if (feed === 'mine') return renderMine(v, ql);
+  if (feed === 'long') return renderLong(v, ql);
   v.append(topicCard());
   const qs = ql.filter((r) => r.source !== 'upload');
   v.append(variantSeg(ql));
@@ -1326,10 +1329,66 @@ function renderQueue(v, ql) {   // Clips tab: stream clips (With caption / No ca
   });
 }
 function variantSeg(ql) { const seg = el('div', 'seg'); const nm = (ql || []).filter((r) => r.source === 'upload' && r.final).length;
-  for (const [k, t] of [['final', 'With caption'], ['clean', 'No caption'], ['mine', `Your clips${nm ? ' · ' + nm : ''}`]]) {
-    const b = el('button', null, t); b.setAttribute('aria-pressed', k === 'mine' ? feed === 'mine' : feed !== 'mine' && variant === k);
-    b.onclick = () => { if (k === 'mine') feed = 'mine'; else { feed = 'stream'; variant = k; ls.set('gc-variant', k); } ls.set('gc-feed', feed); haptic(); lastSig = ''; render(); window.scrollTo(0, 0); }; seg.append(b); }
+  for (const [k, t] of [['final', 'With caption'], ['clean', 'No caption'], ['mine', `Your clips${nm ? ' · ' + nm : ''}`], ['long', 'Long videos']]) {
+    const b = el('button', null, t); b.setAttribute('aria-pressed', (k === 'mine' || k === 'long') ? feed === k : feed === 'stream' && variant === k);
+    b.onclick = () => { if (k === 'mine' || k === 'long') feed = k; else { feed = 'stream'; variant = k; ls.set('gc-variant', k); } ls.set('gc-feed', feed); haptic(); lastSig = ''; render(); window.scrollTo(0, 0); }; seg.append(b); }
   return seg; }
+// LONG: tips videos made from your gameplay (AI watches it, writes + narrates the script, edits it) - you post them
+let LONGS = null; let longsAt = 0;
+async function loadLongs() { if (Date.now() - longsAt < 60e3 && LONGS) return LONGS;
+  try { LONGS = await getJSON(PAGES + 'longs.json?t=' + Date.now()); longsAt = Date.now(); } catch (e) { LONGS = LONGS || { videos: [] }; } return LONGS; }
+function renderLong(v, ql) {
+  v.append(variantSeg(ql));
+  const up = el('button', 'big alt', '\uff0b Make a long video \u2014 upload gameplay'); up.style.marginBottom = '10px'; up.onclick = () => openUpload('long'); v.append(up);
+  for (const u of uploads.filter((x) => x.kind === 'long' && Date.now() - x.at < 2 * 86400e3).slice(0, 4)) v.append(uploadItem(u));
+  const box = el('div'); v.append(box);
+  box.append(el('div', 'mut', 'Loading your long videos\u2026'));
+  loadLongs().then((d) => {
+    box.textContent = '';
+    const vids = (d && d.videos) || [];
+    box.append(Object.assign(el('div', 'mut', `${vids.filter((x) => x.status === 'done').length} ready \u00b7 the AI watches your gameplay, writes the tips script, narrates and edits it \u00b7 nothing posts by itself`), { style: 'margin:0 2px 10px' }));
+    if (!vids.length) { box.append(el('div', 'empty', 'Upload your gameplay above \u2014 the finished tips video shows up here.')); return; }
+    for (const x of vids) box.append(longCard(x));
+  });
+}
+function longCard(x) {
+  const c = el('div', 'clip long');
+  const vb = el('div', 'vbox wide');
+  if (x.thumb) vb.style.backgroundImage = `url(${PAGES + x.thumb})`;
+  if (x.status === 'done' && (x.preview || x.full)) {
+    const pl = el('button', 'play'); pl.append(el('i', null, '\u25b6'));
+    pl.onclick = () => { const vd = el('video'); vd.src = x.preview ? PAGES + x.preview : x.full; vd.controls = true; vd.playsInline = true; vd.autoplay = true; vb.append(vd); pl.remove(); vd.play().catch(() => {}); };
+    vb.append(pl);
+  }
+  c.append(vb);
+  const b = el('div', 'cbody');
+  const st = x.status === 'done' ? { cls: 's-next', txt: `Ready \u00b7 ${Math.floor((x.seconds || 0) / 60)}:${String((x.seconds || 0) % 60).padStart(2, '0')}` }
+    : x.status === 'failed' ? { cls: 's-wait', txt: 'Didn\u2019t work' } : { cls: 's-busy', txt: x.msg || 'Being made', spin: true };
+  const meta = el('div', 'row'); meta.append(badge(st), el('span', 'mut', x.created ? ago(x.created) : '')); b.append(meta);
+  b.append(el('div', 'hook', x.title || 'Long video'));
+  if (x.status === 'failed') {
+    b.append(el('div', 'note warn', x.msg || 'Something went wrong.'));
+    const again = el('button', 'btn', 'Try again');
+    again.onclick = async () => { if (await ghTap('longform: ' + x.id, JSON.stringify({ id: x.id, ref: 'upload-' + x.id, voice: x.voice || ls.get('gc-voice', 'am_michael') }))) toast('Trying again \u2014 it shows up here when it\u2019s done'); };
+    b.append(again);
+  }
+  if (x.status === 'done') {
+    const row = el('div', 'row wrap');
+    if (x.full) { const a = el('a', 'btn pink', '\u2b07 Full quality (for YouTube)'); a.href = x.full; a.target = '_blank'; a.rel = 'noopener'; row.append(a); }
+    const ct = el('button', 'btn', 'Copy title'); ct.onclick = () => { navigator.clipboard.writeText(x.title || '').then(() => toast('Title copied')); };
+    const cd = el('button', 'btn', 'Copy description'); cd.onclick = () => { navigator.clipboard.writeText(x.description || '').then(() => toast('Description + chapters copied')); };
+    row.append(ct, cd);
+    if (x.thumb_full || x.thumb) { const th = el('a', 'btn', 'Thumbnail'); th.href = x.thumb_full || (PAGES + x.thumb); th.target = '_blank'; th.rel = 'noopener'; row.append(th); }
+    b.append(row);
+    if ((x.script || []).length) {
+      const det = el('details'); det.append(el('summary', null, 'Script'));
+      for (const ln of x.script) { const d = el('div', 'mut'); d.textContent = `${Math.floor(ln.t / 60)}:${String(Math.floor(ln.t % 60)).padStart(2, '0')}  ${ln.text}`; det.append(d); }
+      b.append(det);
+    }
+  }
+  c.append(b);
+  return c;
+}
 // MINE: clips from links you pasted / videos you uploaded - their own queue, never auto-posted
 function renderMine(v, ql) {
   v.append(variantSeg(ql));
@@ -1858,11 +1917,23 @@ function openUpload(which) {
   if (!ghKey()) { openSettings('Connect GitHub first — uploads go to your GitHub.'); return; }
   const mode = which || ls.get('gc-upmode', 'find');
   const seg = el('div', 'seg');
-  for (const [k, t] of [['find', 'Find viral moments'], ['yt', 'YouTube (Higgsfield)']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', mode === k); b.onclick = () => { ls.set('gc-upmode', k); openUpload(k); }; seg.append(b); }
+  for (const [k, t] of [['find', 'Find viral moments'], ['yt', 'YouTube (Higgsfield)'], ['long', 'Long video']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', mode === k); b.onclick = () => { ls.set('gc-upmode', k); openUpload(k); }; seg.append(b); }
   const who = el('select'); for (const [v, n] of STREAMERS) { const o = el('option', null, n); o.value = v; who.append(o); }
   const other = el('input'); other.placeholder = 'Name for the credit (if not on the list)';
   const credit = () => { const n0 = STREAMERS.find((x) => x[0] === who.value); return who.value ? n0[1] : (other.value.trim() || ''); };
   const f = el('input'); f.type = 'file'; f.accept = 'video/*';
+  if (mode === 'long') {   // a long tips video from your own gameplay: just the footage (+ which AI voice)
+    const vsel = el('select'); for (const [id, name, kind] of VOICES) { const o = el('option', null, `${name} \u00b7 ${kind}`); o.value = id; vsel.append(o); }
+    vsel.value = ls.get('gc-voice', 'am_michael');
+    const topic = el('input'); topic.placeholder = 'Optional: what it\u2019s about (leave empty and the AI picks)';
+    const go = el('button', 'big go', 'Make the long video');
+    go.onclick = () => { const file = f.files && f.files[0]; if (!file) { toast('Pick your gameplay video first'); return; } if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB) \u2014 split it'); return; }
+      ls.set('gc-voice', vsel.value); closeSheet(); feed = 'long'; ls.set('gc-feed', 'long');
+      uploadVideo(file, '', '', { kind: 'long', voice: vsel.value, topic: topic.value.trim(), game: 'GTA 6' }); };
+    sheet('Make clips', [seg, el('div', 'mut', 'Upload your own gameplay (any length). The AI watches it, picks the tips worth showing, writes the script so every line matches what\u2019s on screen, reads it in the voice you pick, and edits it into a 3\u201312 min tips video with a thumbnail, title and chapters. It shows up in Long videos \u2014 nothing posts by itself.'),
+      el('label', null, 'Your gameplay'), f, el('label', null, 'Voice'), vsel, el('label', null, 'Topic'), topic, go]);
+    return;
+  }
   if (mode === 'yt') {
     const open = el('a', 'big go', '1 · Open Higgsfield YouTube clipper ↗'); open.href = 'https://higgsfield.ai/ai-short-video-generator'; open.target = '_blank'; open.rel = 'noopener';
     open.style.cssText = 'text-align:center;text-decoration:none;display:block';
@@ -1907,7 +1978,7 @@ function ghBlob(data, onProg) {
 }
 async function uploadVideo(file, login, streamer, extra = {}) {
   const id = Date.now().toString(36);
-  const u = { id, name: file.name.replace(/\.[^.]+$/, '').slice(0, 60), at: Date.now(), state: 'uploading', pct: 0, size: file.size };
+  const u = { id, name: file.name.replace(/\.[^.]+$/, '').slice(0, 60), at: Date.now(), state: 'uploading', pct: 0, size: file.size, kind: extra.kind || '' };
   uploads.unshift(u); saveUploads(); switchTab('mine');
   let lock = null; try { lock = await navigator.wakeLock.request('screen'); } catch (e) { /* not supported */ }   // keep the screen on
   const CH = 8 * 1024 * 1024; const n = Math.ceil(file.size / CH); const shas = new Array(n); const prog = new Array(n).fill(0);
@@ -1934,8 +2005,9 @@ async function uploadVideo(file, login, streamer, extra = {}) {
     const tree = parts.map((path, i) => ({ path, mode: '100644', type: 'blob', sha: shas[i] }));
     const t = await gh('POST', '/git/trees', { tree }); const c = await gh('POST', '/git/commits', { message: `upload ${u.name}`, tree: t.sha, parents: [] });
     await gh('POST', '/git/refs', { ref: `refs/heads/upload-${id}`, sha: c.sha });
-    const iss = await gh('POST', '/issues', { title: `upload: ${id}`, body: JSON.stringify({ id, ref: `upload-${id}`, parts, name: u.name, login, streamer, size: file.size, ...extra }) });
-    Object.assign(u, { state: 'processing', pct: 100, issue: iss.number, msg: '' }); toast(extra.asis ? 'Uploaded — adding it to the queue' : 'Uploaded — finding the funniest moments');
+    const iss = await gh('POST', '/issues', { title: `${extra.kind === 'long' ? 'longform' : 'upload'}: ${id}`, body: JSON.stringify({ id, ref: `upload-${id}`, parts, name: u.name, login, streamer, size: file.size, ...extra }) });
+    Object.assign(u, { state: 'processing', pct: 100, issue: iss.number, msg: '' });
+    toast(extra.kind === 'long' ? 'Uploaded \u2014 the AI is watching it (long videos take a while)' : extra.asis ? 'Uploaded — adding it to the queue' : 'Uploaded — finding the funniest moments');
   } catch (e) {
     u.state = 'failed';
     u.msg = e.status === 401 ? 'Your GitHub key expired or is wrong — make a new one in Settings, then upload again.'
@@ -1959,7 +2031,7 @@ async function checkUploads() {
     try {
       const iss = await gh('GET', `/issues/${u.issue}`); const cm = await gh('GET', `/issues/${u.issue}/comments?per_page=10`);
       const last = cm.length ? cm[cm.length - 1].body : '';
-      if (iss.state === 'closed') { u.state = /^Made \d+ clips?/.test(last) ? 'making' : 'failed'; u.msg = last; changed = true; }
+      if (iss.state === 'closed') { u.state = u.kind === 'long' ? (/^Your long video is ready/.test(last) ? 'done' : 'failed') : /^Made \d+ clips?/.test(last) ? 'making' : 'failed'; u.msg = last; changed = true; if (u.kind === 'long') longsAt = 0; }
       else if (last && last !== u.msg) { u.msg = last; changed = true; }
     } catch (e) { /* later */ }
   }

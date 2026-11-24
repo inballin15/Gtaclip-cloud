@@ -1,0 +1,72 @@
+name: long video (tips from your gameplay)
+# You upload gameplay on the site (Make clips -> Long video): the AI watches it, writes a tips script that matches
+# what's on screen, narrates it (Kokoro AI voice), edits it, and puts it in the site's "Long videos". Nothing posts.
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'JSON like {"id": "...", "ref": "upload-...", "voice": "am_michael"}'
+        required: true
+
+concurrency:
+  group: longform
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  make:
+    if: >-
+      github.event_name == 'workflow_dispatch' || (startsWith(github.event.issue.title, 'longform:') &&
+      github.event.issue.user.login == github.repository_owner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Getting ready (AI voice, video tools)
+        shell: bash
+        run: |
+          sudo apt-get -qq install -y espeak-ng >/dev/null 2>&1 || true
+          pip install -q --disable-pip-version-check -r requirements.txt
+          pip install -q --disable-pip-version-check torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q --disable-pip-version-check "kokoro>=0.9.4" soundfile
+          ff=$(python -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())")
+          if ! "$ff" -hide_banner -filters 2>/dev/null | grep -qw zscale; then
+            echo "bundled ffmpeg has no zscale - using Ubuntu's ffmpeg (HDR phone video)"
+            sudo apt-get install -y -qq ffmpeg >/dev/null
+            echo "IMAGEIO_FFMPEG_EXE=$(command -v ffmpeg)" >> "$GITHUB_ENV"
+          fi
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+      - name: cache the AI voice model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: longform-hf-${{ github.run_id }}
+          restore-keys: longform-hf-
+      - name: Making your long video
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ISSUE_JSON: ${{ github.event_name == 'issues' && toJSON(github.event.issue) || '' }}
+          LF_JOB: ${{ github.event.inputs.job }}
+        run: python longform.py 2>&1 | tee /tmp/longform.log; exit ${PIPESTATUS[0]}
+      - name: Saving the log
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p /tmp/lglog && tail -n 400 /tmp/longform.log > /tmp/lglog/longform.log 2>/dev/null || true
+          export GIT_INDEX_FILE=/tmp/idx-lglog; rm -f "$GIT_INDEX_FILE"
+          git --work-tree=/tmp/lglog add -A
+          tree=$(git write-tree); unset GIT_INDEX_FILE
+          c=$(git commit-tree "$tree" -m "long video log $(date -u +%FT%TZ)")
+          git push -qf origin "$c:refs/heads/longlog" || true

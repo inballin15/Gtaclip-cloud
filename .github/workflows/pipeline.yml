@@ -88,9 +88,11 @@ jobs:
             for i in 1 2 3 4 5 6; do   # your-clips maker may have just added one; only push if nobody changed the site since
               git fetch -q --depth=1 origin +gh-pages:refs/remotes/origin/gh-pages || true
               base=$(git rev-parse origin/gh-pages 2>/dev/null || echo "")
-              rm -rf _site/v/m _site/mine.json
+              rm -rf _site/v/m _site/mine.json _site/v/l _site/longs.json
               git archive origin/gh-pages v/m 2>/dev/null | tar -x -C _site || true
               git show origin/gh-pages:mine.json > _site/mine.json 2>/dev/null || rm -f _site/mine.json
+              git archive origin/gh-pages v/l 2>/dev/null | tar -x -C _site || true   # long videos (their own maker)
+              git show origin/gh-pages:longs.json > _site/longs.json 2>/dev/null || rm -f _site/longs.json
               export GIT_INDEX_FILE=/tmp/idx-gh-pages; rm -f "$GIT_INDEX_FILE"
               git --work-tree=_site add -A
               tree=$(git write-tree); unset GIT_INDEX_FILE
