@@ -2571,8 +2571,13 @@ def main() -> None:
         st["mine_hook_fix_v"] = 1                    # about HIS reaction, not about Nick Eh 30
         for cid, hk in {"upmwuw3jf8_3": "Jynxzi LOSES IT at Nick Eh 30's family friendly meltdown",
                         "upmwuw3jf8_4": "Jynxzi reacts to Nick Eh 30 wanting a family friendly GTA 6"}.items():
-            if cid in clips:
+            if cid in clips and not clips[cid].get("user_layout"):   # never over your own Studio edit
                 clips[cid].update(hook=hk, hook_kind="user", hook_by_user=True)
+    if MINE and st.get("mine_hook_fix_v", 0) < 2:   # your own Studio edit of clip 3 (layout + hook) stays yours
+        st["mine_hook_fix_v"] = 2
+        c3 = clips.get("upmwuw3jf8_3")
+        if c3 and c3.get("user_layout"):
+            c3.update(hook="Jynxzi FREAKED OUT over SCARRING audio", hook_kind="user", hook_by_user=True)
     if st.get("cutout_redo_v", 0) < 1:   # one time: clips made full-screen because a cut-out webcam was missed
         st["cutout_redo_v"] = 1
         for cid, c in clips.items():
