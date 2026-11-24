@@ -66,17 +66,17 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-24T02:00:01Z",
- "stats_at": "2026-11-24T01:39:27Z",
+ "stats_at": "2026-11-24T02:04:58Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-23",
-  "used": 19,
+  "used": 20,
   "cap": 28,
   "slots": 6,
-  "remain30": 734,
-  "reset30": "2026-12-18T22:03:25Z",
-  "remain24": 584
+  "remain30": 733,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 583
  },
  "yt_verified_v": 1,
  "you_post": [
