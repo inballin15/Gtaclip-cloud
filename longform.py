@@ -150,8 +150,13 @@ def make_master(src: Path) -> Path:
 
 
 # ------------------------------------------------------------------ 2. watch it (AI)
-def ai(parts: list, log_name: str, tries: int = 6, temperature: float = 0.4) -> dict | list | None:
-    """One Gemini request -> parsed JSON. Waits and retries when Google's free tier is busy (429 / 503)."""
+DAILY = {"hit": False}
+
+
+def ai(parts: list, log_name: str, tries: int = 10, temperature: float = 0.4) -> dict | list | None:
+    """One Gemini request -> parsed JSON. Google's free tier limits requests per minute: on "too many requests" it
+    waits (as long as Google says) and tries again - it doesn't give up on a model for a busy minute."""
+    import urllib.error
     import urllib.request
     sys.path.insert(0, str(ROOT))
     import viral
@@ -161,9 +166,10 @@ def ai(parts: list, log_name: str, tries: int = 6, temperature: float = 0.4) -> 
         return None
     body = {"contents": [{"parts": parts}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": temperature}}
+    models = [m for m in viral.gemini_models(key, log)] or ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview"]
     for attempt in range(tries):
-        busy = False
-        for model in viral.gemini_models(key, log):
+        wait, daily = 0, 0
+        for model in models:
             try:
                 req = urllib.request.Request(
                     f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
@@ -172,14 +178,32 @@ def ai(parts: list, log_name: str, tries: int = 6, temperature: float = 0.4) -> 
                     res = json.loads(r.read())
                 txt = res["candidates"][0]["content"]["parts"][0]["text"]
                 return json.loads(txt)
+            except urllib.error.HTTPError as e:
+                detail = ""
+                try:
+                    detail = e.read().decode()[:2000]
+                except Exception:  # noqa: BLE001
+                    pass
+                m = re.search(r'"retryDelay":\s*"(\d+)', detail)
+                per_day = "PerDay" in detail or "per day" in detail.lower()
+                if e.code == 404:
+                    models = [x for x in models if x != model]
+                if e.code in (429, 503):
+                    wait = max(wait, int(m.group(1)) + 2 if m else 30 * (attempt + 1))
+                    daily += int(per_day)
+                log(f"{log_name} ({model}): HTTP {e.code}{' daily limit' if per_day else ''}"
+                    f"{' - Google says wait ' + m.group(1) + 's' if m else ''}")
             except Exception as e:  # noqa: BLE001
-                viral._tired(model, e)
-                busy = busy or bool(re.search(r"429|503|timed out|overloaded", str(e)))
+                wait = max(wait, 20)
                 log(f"{log_name} ({model}): {str(e)[:90]}")
-        if not busy:
+        if not models or not wait:
             break
-        wait = min(150, 30 * (attempt + 1))
-        log(f"{log_name}: Google is busy - waiting {wait}s")
+        if models and daily >= len(models):
+            DAILY["hit"] = True
+            log(f"{log_name}: Google's free daily AI limit is used up for today")
+            return None
+        wait = min(wait, 180)
+        log(f"{log_name}: Google's free AI is busy - waiting {wait}s (try {attempt + 1}/{tries})")
         time.sleep(wait)
     return None
 
@@ -217,6 +241,8 @@ def watch(master: Path, game: str) -> list[dict]:
             parts.append({"text": f"time {t}s ({mmss(t)})"})
             parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(f.read_bytes()).decode()}})
         res = ai(parts, f"watching {mmss(ts[0])}-{mmss(ts[-1])}")
+        if res is None and DAILY["hit"]:
+            break
         rows = res if isinstance(res, list) else (res or {}).get("frames", []) if isinstance(res, dict) else []
         for i, r in enumerate(rows):
             if not isinstance(r, dict):
@@ -601,7 +627,8 @@ def make(job: dict, num: int = 0) -> dict:
     status(job, "making", "Watching your footage")
     scenes = watch(master, game)
     if len(scenes) < 5:
-        raise RuntimeError("the AI couldn't watch the footage (Google's free AI is busy) - it'll try again on the next tap")
+        raise RuntimeError("Google's free AI daily limit is used up for today - tap Try again tomorrow" if DAILY["hit"]
+                           else "the AI couldn't watch the footage (Google's free AI is busy) - tap Try again in a bit")
     status(job, "making", "Writing the script")
     plan = None
     for _ in range(3):
