@@ -1894,6 +1894,14 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
+    if st.get("nick_cam_v", 0) < 1:   # one time: Nick Eh 30's clips were skipped - his cut-out cam has no border
+        st["nick_cam_v"] = 1
+        box = ",".join(str(v) for v in (CFG["streamers"].get("nickeh30", {}).get("facecam") or []))
+        for c in clips.values():
+            if c.get("login") == "nickeh30" and c.get("skip_reason") == "no webcam found" and box \
+                    and NOW - parse(c.get("created") or c.get("found") or iso(NOW)) < timedelta(hours=34):
+                c.update(status="new", cam=box, cam_q="learned", cam_v=CAM_V, layout="split")
+                c.pop("skip_reason", None); c.pop("final_hash", None); c.pop("nocam", None)
     if st.get("nocam_revive_v", 0) < 1:   # one time: proven no-webcam clips from the last 34 h -> full-screen gameplay
         st["nocam_revive_v"] = 1
         for c in clips.values():
