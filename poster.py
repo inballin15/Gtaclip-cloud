@@ -838,6 +838,7 @@ def main() -> None:
               and r.get("source") != "upload"   # clips from links you pasted / uploads: never auto-posted, you post them
               and not too_old(r) and not already_on_buffer(r)
               and (r.get("pic_ok") is True or ctl.get("ai_off"))   # only clips that passed the AI picture check
+              and r.get("view_ok") is not False                       # and the view check (fits TikTok's screen)
               and hd_ready(r)]                                       # and whose sharp AI webcam is in
         # clips with a proper hook first; automatic placeholder hooks only if nothing else is left
         last_streamer = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)), "")
@@ -1022,7 +1023,8 @@ def main() -> None:
         pending_now = {p["id"] for p in ctl["postnow"]}
         ok = sorted([r for r in ready if r["id"] not in recs and r["id"] not in blocked and r["id"] not in pending_now
                      and r.get("source") != "upload" and not too_old(r) and not already_on_buffer(r)
-                     and (r.get("pic_ok") is True or ctl.get("ai_off")) and hd_ready(r)],   # same rules as the real pick
+                     and (r.get("pic_ok") is True or ctl.get("ai_off")) and r.get("view_ok") is not False
+                     and hd_ready(r)],   # same rules as the real pick
                     key=lambda r: (r.get("viral_verdict") == "skip", tier(r), -((r.get("viral") or 50) + views_pts(r) + fresh_bonus(r) + boost_pts(r))))
         last_tt = next((r.get("streamer") for r in sorted(recs.values(), key=lambda r: r.get("posted_at", ""), reverse=True)
                         if "tiktok" in (r.get("platforms") or ["tiktok", "youtube"])), "")

@@ -1393,7 +1393,7 @@ function hookTop(r, h, y) {   // where the clip maker puts the box (top edge, on
   const lay = r.layout_used || r.layout || 'split'; const ul = r.user_layout || {};
   if (y != null) return 1920 * y - h / 2;
   if (lay === 'full') return (1920 - h) / 2;
-  if (lay === 'react') return Math.max(60, 340 - h - 26);   // react: just above the watched screen
+  if (lay === 'react') return Math.max(150, 400 - h - 26);   // react: just above the watched screen, below TikTok's top bar
   if (lay === 'fill') return 1920 * 0.2 - h / 2;
   if (lay.startsWith('irl')) return 1920 * 0.6;
   if (lay === 'cam') return 1920 * 0.12;
@@ -1478,6 +1478,7 @@ function clipCard(r, st) {
   vb.append(pl); c.append(vb);
   const b = el('div', 'cbody');
   const meta = el('div', 'row'); meta.append(badge(st), el('span', 'mut', `${r.final_s || r.seconds || '?'}s · ${r.created ? ago(r.created) : ''}`)); b.append(meta);
+  if (r.view_ok === false) b.append(el('div', 'note warn', `Held back — needs a look: ${r.view_why || 'doesn\u2019t fit the TikTok screen'}. Fix it in Edit (it re-checks).`));
   b.append(el('div', 'hook', r.hook || ''));
   if (r.viral_why) b.append(el('div', 'why', r.viral_why));
   if (JOBS[r.id]) b.append(jobBar(r.id));
@@ -1658,16 +1659,16 @@ function openEditor(r) {
     for (const w of words) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > maxw && cur) { out.push(cur); cur = w; } else cur = t; } if (cur) out.push(cur); return out; }
   const topFrac = () => S.top_h / 1920;
   function defHookY(bhFrac) { return S.mode === 'split' ? topFrac() + 0.3 * bhFrac : S.mode === 'irl' ? 0.6 + bhFrac / 2
-    : S.mode === 'react' ? Math.max(60 / 1920 + bhFrac / 2, (340 - 26) / 1920 - bhFrac / 2) : 0.5; }
+    : S.mode === 'react' ? Math.max(150 / 1920 + bhFrac / 2, (400 - 26) / 1920 - bhFrac / 2) : 0.5; }
   // reaction layout, same sizes as the clip maker: what they watch on top (whole screen, or just the watched video),
   // the streamer's whole webcam big underneath
   function reactGeo(W, H) {
     const [vx, vy, vw, vh] = (r.react_view && used === 'react' ? r.react_view : '0,0,1,1').split(',').map(Number);
     const [, , w, h] = S.cam || [0, 0, 0.3, 0.3]; const pw = Math.max(2, W * w), ph = Math.max(2, H * h);
-    const avail = 1920 - 340 - 30 - 110; const chFull = 1080 * (H * vh) / (W * vw); const fhCap = 1080 * ph / pw;
+    const avail = 1920 - 400 - 30 - 300; const chFull = 1080 * (H * vh) / (W * vw); const fhCap = 1080 * ph / pw;
     let c_h, f_h; if (chFull + fhCap <= avail) { c_h = chFull; f_h = fhCap; } else { c_h = Math.min(chFull, Math.max(avail - fhCap, 0.55 * avail)); f_h = Math.min(fhCap, avail - c_h); }
     const c_w = Math.min(1080, c_h * (W * vw) / (H * vh)), f_w = Math.min(1080, f_h * pw / ph);
-    return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 340 + c_h + 30, fw: f_w, fh: f_h }; }
+    return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 400 + c_h + 30, fw: f_w, fh: f_h }; }
   let capBox = null;
   function draw() {
     if (!img.complete || !img.naturalWidth || !CW) return;
@@ -1681,7 +1682,7 @@ function openEditor(r) {
     } else if (S.mode === 'react') {
       const k = cw / 1080; const gg = reactGeo(W, H);
       ctx.filter = `blur(${12 * dpr}px) brightness(0.78)`; const s0 = ch / H; ctx.drawImage(img, (cw - W * s0) / 2, 0, W * s0, ch); ctx.filter = 'none';
-      ctx.drawImage(img, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, (cw - gg.cw * k) / 2, 340 * k, gg.cw * k, gg.ch * k);
+      ctx.drawImage(img, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, (cw - gg.cw * k) / 2, 400 * k, gg.cw * k, gg.ch * k);
       if (S.cam) { const [x, y, w, h] = S.cam; ctx.drawImage(img, x * W, y * H, w * W, h * H, (cw - gg.fw * k) / 2, gg.cb * k, gg.fw * k, gg.fh * k); }
     } else if (S.mode === 'irl') {
       const h = H / S.zoom, w = h * 9 / 16; const x = Math.min(Math.max(W * S.irl_x - w / 2, 0), W - w);

@@ -1195,7 +1195,9 @@ def _cam_fg_top(raw: Path, w: float, h: float) -> int:
     return int((1920 - fg_h) / 2)
 
 
-REACT_TOP = 340   # react layout: where the watched screen starts (the hook sits above it)
+REACT_TOP = 400   # react layout: where the watched screen starts (the hook sits above it, below TikTok's top bar)
+SAFE_TOP = 150    # TikTok / Shorts put their top bar (Following | For You, search) over the top ~150 px of 1920
+SAFE_BOTTOM = 300 # ...and the caption / username / music over the bottom ~300 px: keep faces and text out of both
 
 
 def react_view(box, cam: str) -> str | None:
@@ -1565,7 +1567,7 @@ def react_geometry(raw: Path, w: float, h: float, view: str | None = None) -> di
     cap.release()
     vx, vy, vw, vh = [float(v) for v in view.split(",")] if view else (0.0, 0.0, 1.0, 1.0)
     pw, ph = max(2.0, W * w), max(2.0, H * h)                 # webcam pixels
-    gap, bottom = 30, 110                                     # space between them / under (subtitles sit on it)
+    gap, bottom = 30, SAFE_BOTTOM                             # space between them / TikTok's caption area under
     avail = 1920 - REACT_TOP - gap - bottom
     ch_full = 1080 * (H * vh) / (W * vw)                      # content at full width
     fh_cap = min(1080 * ph / pw, ph * 2.4)                    # webcam at full width, but sharp
@@ -1592,6 +1594,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     subs = None               # NO subtitles, ever
     T = int(top_h or TOP_H)   # webcam strip height (editor can make the webcam bigger or smaller)
+    info: dict = {"layout": layout}
     x, y, w, h = [float(v) for v in cam.split(",")]
     if layout.startswith("irl"):
         fx = float(layout.split(":")[1]) if ":" in layout else 0.5
@@ -1662,11 +1665,17 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     if hook:
         png = render_hook(hook, str(tmp / f"{cid}_hook.png"), hook_style, hook_scale)
         inputs = ["-i", str(raw), "-i", png] + extra
-        oy = (f"H*{hook_y:.3f}-h/2" if hook_y is not None                              # your own spot (editor)
-              else "(H-h)/2" if layout == "full" else "H*0.2-h/2" if layout == "fill" else "H*0.6" if layout.startswith("irl")   # irl: under the faces
-              else f"'max(60,{REACT_TOP}-h-26)'" if layout == "react"                       # react: just above what they watch
-              else f"'max(150,{_cam_fg_top(raw, w, h)}-h-28)'" if layout == "cam"           # cam: just above the webcam
-              else f"{T}-h*0.2")                                                   # split: on the line
+        from PIL import Image as _Im
+        hw, hh = _Im.open(png).size
+        yy = (1920 * hook_y - hh / 2 if hook_y is not None                       # your own spot (editor)
+              else (1920 - hh) / 2 if layout == "full" else 1920 * 0.2 - hh / 2 if layout == "fill"
+              else 1920 * 0.6 if layout.startswith("irl")                         # irl: under the faces
+              else max(SAFE_TOP, REACT_TOP - hh - 26) if layout == "react"        # react: just above what they watch
+              else max(150, _cam_fg_top(raw, w, h) - hh - 28) if layout == "cam"  # cam: just above the webcam
+              else T - hh * 0.2)                                                  # split: on the line
+        yy = max(SAFE_TOP, min(1920 - hh - SAFE_BOTTOM, yy))   # never under TikTok / Shorts' own top bar or caption
+        oy = str(int(yy))
+        info["hook_box"] = [int((1080 - hw) / 2), int(yy), int(hw), int(hh)]
     else:
         inputs = ["-i", str(raw)] + extra
     flt = base + "[v0]"
@@ -1692,6 +1701,49 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
        "-c:v", "libx264", "-preset", "medium", *enc_args(out), "-r", "30",
        *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000"] if has_audio(raw) else []),
        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
+    return info
+
+
+def view_check(video: Path, lay: str, info: dict | None) -> tuple[bool, str]:
+    """Would this look right to someone scrolling TikTok / Shorts? Checked on the finished video before it can go out:
+    - the hook is fully visible (not under the app's top bar / caption, not a wall of text)
+    - the streamer's face is clearly in view (not cut off, covered or tiny) when the layout shows a webcam
+    - the picture isn't black / far too dark
+    Returns (ok, what's wrong)."""
+    probs = []
+    hb = (info or {}).get("hook_box")
+    if hb:
+        if hb[1] < SAFE_TOP - 1 or hb[1] + hb[3] > 1920 - SAFE_BOTTOM + 1:
+            probs.append("the hook is under TikTok's buttons")
+        if hb[3] > 340:
+            probs.append("the hook is too long (4+ lines)")
+    cap = cv2.VideoCapture(str(video))
+    n = cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30
+    frames = []
+    for p in (0.15, 0.35, 0.55, 0.75, 0.9):
+        cap.set(cv2.CAP_PROP_POS_FRAMES, int(n * p))
+        ok, fr = cap.read()
+        if ok:
+            frames.append(fr)
+    cap.release()
+    if not frames:
+        return False, "the video won't open"
+    if max(float(cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).mean()) for f in frames) < 22:
+        probs.append("the picture is black / too dark")
+    if lay in ("split", "react", "cam") or lay.startswith("irl"):
+        good = 0
+        for f in frames:
+            Hh, Ww = f.shape[:2]
+            sc = 1920 / Hh
+            for (x, y, w, h, scr) in _yunet_faces(f, 0.6):
+                cx, cy, fh = (x + w / 2) * sc, (y + h / 2) * sc, h * sc
+                if fh >= 60 and SAFE_TOP - 40 <= cy <= 1920 - SAFE_BOTTOM + 120 and 40 <= cx <= 1040:
+                    good += 1
+                    break
+        if good < 2:
+            probs.append("the streamer's face isn't clearly in view")
+    return (not probs), "; ".join(probs)
 
 
 def enc_args(out: str) -> list:
@@ -2709,6 +2761,24 @@ def main() -> None:
                 n += 1
         if n:
             log(f"shorter clips: re-making {n} queued clips at ~14 s")
+    if st.get("safe_view_v", 0) < 1:   # one time (Nov 24): reaction clips re-made inside TikTok's safe area (the hook
+        st["safe_view_v"] = 1           # sat under TikTok's search bar), and every finished clip gets the view check
+        n = 0
+        for cid, c in clips.items():
+            if c["status"] != "new":
+                continue
+            if (c.get("layout_used") or c.get("layout")) == "react" or (c.get("user_layout") or {}).get("hook_y") is not None:
+                for k in ("final_hash", "final_v", "clean_v"):
+                    c.pop(k, None)
+                n += 1
+            elif (VID / f"{cid}_final.mp4").exists() and "view_ok" not in c:
+                try:
+                    vok, vwhy = view_check(VID / f"{cid}_final.mp4", c.get("layout_used") or c.get("layout") or "split", None)
+                    c["view_ok"], c["view_why"] = vok, vwhy
+                except Exception as e:  # noqa: BLE001
+                    log(f"view check skipped {cid}: {e}")
+        if n:
+            log(f"safe area: re-making {n} reaction clips with the hook below TikTok's top bar")
     if st.get("caps_v", 0) < 1:   # one time (Nov 24): at most one CAPS word in our own hooks (yours stay as you wrote)
         st["caps_v"] = 1
         import viral
@@ -3366,7 +3436,14 @@ def main() -> None:
         except Exception as e:  # noqa: BLE001
             log(f"subtitles/punch-in skipped for {cid}: {e}")
         if need_f:
-            render_final(raw, cid, cam, None if c.get("no_hook") else c["hook"], tmp, **opts)
+            rinfo = render_final(raw, cid, cam, None if c.get("no_hook") else c["hook"], tmp, **opts)
+            try:   # would it look right on TikTok / Shorts? (checked before it can be posted)
+                vok, vwhy = view_check(VID / f"{cid}_final.mp4", lay, rinfo)
+                c["view_ok"], c["view_why"] = vok, vwhy
+                if not vok:
+                    log(f"view check {cid}: {vwhy} - held back from posting")
+            except Exception as e:  # noqa: BLE001
+                log(f"view check skipped {cid}: {e}")
             try:   # vertical thumbnail of the finished video for the site
                 ff("-ss", "1.2", "-i", str(VID / f"{cid}_final.mp4"), "-frames:v", "1", "-vf", "scale=360:-2", "-q:v", "6",
                    str(VID / f"{cid}_p.jpg"))
