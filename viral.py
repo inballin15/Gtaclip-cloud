@@ -296,13 +296,39 @@ HOOK_STYLE = (
     "Pick the reaction word that fits what you can hear (laughed, raged, panicked, couldn't believe, was confused, "
     "got emotional, roasted, lost it) - 'SHOCKED' at most rarely; don't reuse one word for every clip.\n"
     "Rules: 8-15 words, 45-95 characters, reads like a friend telling you what happened; normal sentence case with "
-    "EXACTLY 1-2 CAPS words on the strongest emotion or fact (e.g. 'Lacy was DEVASTATED after losing 39% of his GTA 6 "
-    "progress'); all-caps hooks did worse, but zero CAPS loses punch. Use a STRONG reaction verb (lost it, freaked out, "
+    "AT MOST ONE CAPS word (or one short CAPS phrase like 'LOST IT') on the strongest emotion, or none at all (e.g. "
+    "'Lacy was DEVASTATED after losing 39% of his GTA 6 progress'); on our own channel hooks with 0-1 CAPS words got "
+    "~1.8x the views of hooks with more. Use a STRONG reaction verb (lost it, freaked out, "
     "was devastated, couldn't believe, got destroyed, raged, cried, panicked, roasted) - never weak ones (was happy / "
     "curious / excited / confused / struggling). Keep the most striking specific from the transcript or title "
     "(a number, a name, the exact thing: 'scam call', 'dead body', '39%'); never vague words like 'in game', "
     "'during a mission', 'a mission' when the real name or thing is known; say 'in GTA 6' when it's GTA 6. "
     "No filler ('in this intense moment'); no emojis, no swearing, no quotes, no hashtags.\n")
+
+_ACRONYMS = {"GTA", "NPC", "NPCS", "FBI", "CEO", "USA", "PC", "PS5", "PS4", "AI", "IV", "VI", "V", "FPS", "RP", "NBA",
+             "NFL", "UFO", "LOL", "OMG", "WTF", "TV", "DJ", "OG", "MVP", "XP", "HP", "IRL", "VR", "RNG", "ID", "UK", "LA",
+             "NYC", "KO", "TTS", "NICKMERCS", "CASEOH", "XQC"}
+
+
+def limit_caps(hook: str, keep: int = 1) -> str:
+    """At most one CAPS word / short CAPS phrase ('LOST IT') per hook - our channel's data (Nov 24): hooks with 0-1
+    CAPS words got ~1.8x the views. Extra shouted words go back to normal case; acronyms (GTA, NPC) stay."""
+    words = (hook or "").split(" ")
+    out, runs, prev_caps = [], 0, False
+    for w in words:
+        core = re.sub(r"[^A-Za-z]", "", w)
+        is_caps = len(core) >= 2 and core.isupper() and core not in _ACRONYMS
+        if is_caps:
+            if not prev_caps:
+                runs += 1
+            if runs > keep:
+                w = w.lower()
+        prev_caps = is_caps
+        out.append(w)
+    if out and words and out[0] != words[0]:   # only re-capitalise a first word we changed
+        out[0] = out[0][:1].upper() + out[0][1:]
+    return " ".join(out)
+
 
 def hook_is_true(hook: str, title: str, transcript: str) -> bool:
     """Every number in the hook must really be in the clip's title or transcript (a hook said xQc rated GTA 6 a
@@ -350,7 +376,7 @@ def ai_shorten(hooks: dict[str, str], log=print, tiny: bool = False) -> dict[str
         return {}
     size = "SHORT: 25-60 characters, at most 10 words" if tiny else "one story sentence, 45-90 characters, 8-15 words"
     prompt = (f"Rewrite each on-screen hook for a TikTok/YouTube Shorts clip so it is {size}. "
-              "Keep the streamer's name exactly, keep the key event and 2-3 CAPS words, keep the meaning; cut "
+              "Keep the streamer's name exactly, keep the key event and at most ONE CAPS word, keep the meaning; cut "
               "filler ('during his marathon', 'in this intense moment', 'that he thought'). It must still read as a "
               "complete thought. Examples: 'Kai Cenat LOSES IT after finding out Rakai is STILL stuck on the FIRST "
               "mission in GTA 6 after 5 HOURS' -> 'Kai Cenat LOSES IT over Rakai stuck on mission 1'; 'Kai Cenat was "

@@ -981,7 +981,7 @@ function inspPane(r) {
   const mc = el('div', 'mc'); const l = el('div'); const xr = el('div', 'x', ''); const setX = () => { xr.textContent = `X  ${(50 + S.pan * 50).toFixed(1)}%`; const cr = document.querySelector('.prog .mon .crop'); if (cr) { cr.style.left = `calc(50% + ${S.pan * 18}%)`; const t = cr.querySelector('.x'); if (t) t.textContent = `X ${(50 + S.pan * 50).toFixed(1)}%`; } };
   const pr = el('input'); pr.type = 'range'; pr.min = -1; pr.max = 1; pr.step = 0.02; pr.value = S.pan; pr.className = 'panr'; pr.oninput = () => { S.pan = +pr.value; setX(); upd(); };
   const tog = (label, key) => { const b = el('button', 'kf' + (S[key] === 'on' ? ' on' : '')); const draw = () => { b.textContent = `${label}: ${S[key] === 'on' ? 'ON' : 'OFF'}`; b.classList.toggle('on', S[key] === 'on'); }; b.onclick = () => { S[key] = S[key] === 'on' ? 'off' : 'on'; draw(); curve(); upd(); }; draw(); return b; };
-  l.append(el('div', 'k', 'Motion crop'), xr, pr, el('div', 'sa', '9:16 / safe area · slide to move the gameplay'), tog('+ Subtitles', 'subs'));
+  l.append(el('div', 'k', 'Motion crop'), xr, pr, el('div', 'sa', '9:16 / safe area · slide to move the gameplay'));
   const rgt = el('div'); rgt.style.position = 'relative'; rgt.append(el('div', 'k', 'Easing / punch-in'));
   const cv = el('div'); rgt.append(cv, tog('Punch-in zoom', 'punch'));
   const curve = () => { cv.innerHTML = S.punch === 'on'
@@ -992,7 +992,7 @@ function inspPane(r) {
   function upd() { const c = changed(); sv.disabled = !c.t && !c.m; sv.textContent = c.m ? 'Save + re-make video' : 'Save';
     note.textContent = c.m ? 'Crop, subtitles and punch-in change the whole video: ready in a few minutes (progress bar shows it).' : c.t ? 'Words and text box: saved and shown instantly — no waiting.' : 'Change anything above, then Save.'; }
   sv.onclick = async () => { const c = changed(); sv.disabled = true;
-    if (c.m) { const out = { ...ul, hook_style: S.box, hook_scale: S.scale, pan: S.pan, subs: S.subs, punch: S.punch }; if (S.y != null) out.hook_y = S.y; if (S.hook.trim() !== cur.hook.trim()) out.hook = S.hook.trim();
+    if (c.m) { const out = { ...ul, hook_style: S.box, hook_scale: S.scale, pan: S.pan, punch: S.punch }; if (S.y != null) out.hook_y = S.y; if (S.hook.trim() !== cur.hook.trim()) out.hook = S.hook.trim();
       if (await ghTap('layout: ' + r.id, JSON.stringify(out))) { startJob(r.id, 'remake'); toast('Saved — re-making the video'); lastSig = ''; render(); } else sv.disabled = false; return; }
     const t = {}; if (S.hook.trim() !== cur.hook.trim() && S.hook.trim()) t.hook = S.hook.trim(); if (S.box !== cur.box) t.hook_style = S.box; if (Math.abs(S.scale - cur.scale) > 0.01) t.hook_scale = S.scale; if (S.y !== cur.y && S.y != null) t.hook_y = S.y;
     await quickText(r, t); sv.disabled = false; };
@@ -1003,7 +1003,7 @@ function outPane(r, n) {
   const d = el('div', 'pane'); d.append(ttl('9:16 / output preview', r && r.nowing ? 'Posting now' : '', true, 'out'));
   if (!r) return d;
   const o = el('div', 'outp'); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
-  const m = el('div', 'meta'); m.append(el('div', 'nm', 'Short_' + String(n || 1).padStart(2, '0')), el('div', 'sp', '9:16  /  H.264'), el('div', 'sp g', `Video + captions${((r.user_layout || {}).subs || r.subs_pick) === 'on' ? ' + subs' : ''}`));
+  const m = el('div', 'meta'); m.append(el('div', 'nm', 'Short_' + String(n || 1).padStart(2, '0')), el('div', 'sp', '9:16  /  H.264'), el('div', 'sp g', `Video + captions`));
   const eb = el('div', 'expbar'); eb.append(el('div', 'e', 'Export / H.264')); const mt = el('div', 'meter'); for (let i = 0; i < 8; i++) { const b = el('i'); b.style.animationDelay = (i * 0.11) + 's'; mt.append(b); } eb.append(mt); m.append(eb);
   o.append(th, m); d.append(o);
   const sb = el('div', 'shipbtns');
@@ -1874,10 +1874,7 @@ function openUpload(which) {
   }
   const link = el('input'); link.type = 'url'; link.placeholder = 'Paste a Twitch, Kick or TikTok link';
   const sec = el('input'); sec.placeholder = 'Optional part, e.g. 1:20:00-2:00:00 (long videos)';
-  // subtitles on the clips it makes (word-by-word captions) - picked before it makes them
-  let subs = ls.get('gc-upsubs2', 'off'); const subSeg = el('div', 'seg');
-  for (const [k, t] of [['off', 'No subtitles'], ['on', 'Subtitles ON']]) { const b = el('button', null, t); b.setAttribute('aria-pressed', subs === k);
-    b.onclick = () => { subs = k; ls.set('gc-upsubs2', k); subSeg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b)); haptic(); }; subSeg.append(b); }
+  const subs = 'off';   // no subtitles on any video
   const go = el('button', 'big go', 'Find viral moments');
   go.onclick = () => {
     if (link.value.trim()) {
@@ -1889,7 +1886,7 @@ function openUpload(which) {
     if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB)'); return; }
     closeSheet(); uploadVideo(file, who.value, credit(), { subs });
   };
-  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It finds the funniest moments (like the Twitch clips) and makes up to 4 short clips with hooks. Add a time range for long videos.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, el('label', null, 'Subtitles on the clips'), subSeg, go]);
+  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It finds the funniest moments (like the Twitch clips) and makes up to 4 short clips with hooks. Add a time range for long videos.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
 }
 function b64(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }); }
 // send one piece of the video to GitHub, with real progress, a time limit and the reason if it fails

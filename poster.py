@@ -448,7 +448,7 @@ def fresh_bonus(r: dict) -> int:
     return 12 if age < 3 else 6 if age < FRESH_HOURS else 0   # a nudge, not a trump card (quality decides)
 
 
-STREAMER_BOOST = {"kai cenat": 12, "kai": 12, "kaicenat": 12, "ishowspeed": 8, "lacy": 8, "xqc": 4, "clix": -6}
+STREAMER_BOOST = {"kai cenat": 12, "kai": 12, "kaicenat": 12, "ishowspeed": 10, "lacy": 4, "xqc": 12, "clix": -6}   # Nov 24: our own views
 
 
 def boost_pts(r: dict) -> int:

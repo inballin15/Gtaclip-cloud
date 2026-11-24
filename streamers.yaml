@@ -25,15 +25,15 @@ vod_streamers: [clix, lacy, kaicenat, yourragegaming]
 
 streamers:
   clix:        {name: "Clix",          tag: "#Clix",     campaign: "Clix", facecam: [0, 0, 0.248, 0.248], boost: 0.6}
-  lacy:        {name: "Lacy",          tag: "#Lacy",     campaign: "Lacy", facecam: [0, 0, 0.256, 0.255], boost: 1.8}
-  kaicenat:    {name: "Kai Cenat",     tag: "#KaiCenat", campaign: "Kai", facecam: null, chat_on_cam: true, boost: 2.0,
+  lacy:        {name: "Lacy",          tag: "#Lacy",     campaign: "Lacy", facecam: [0, 0, 0.256, 0.255], boost: 1.2}   # Nov 24: ~0.3x views on our channel; stays >= 1 so campaign clips still come first
+  kaicenat:    {name: "Kai Cenat",     tag: "#KaiCenat", campaign: "Kai", facecam: null, chat_on_cam: true, boost: 2.2,
                chat_cut: {box: "0.0023,0.3361,0.2141,0.3383", at: 0.59}}   # where chat starts in his usual webcam box
   yourragegaming: {name: "YourRAGE",   tag: "#YourRAGE", campaign: "YourRAGE", facecam: [0.7375, 0.5852, 0.2625, 0.4148]}   # borderless cut-out webcam, bottom right
   jynxzi:      {name: "Jynxzi",        tag: "#Jynxzi",   facecam: [0, 0.53, 0.30, 0.47]}   # cut-out cam, bottom left (Nov 24)
-  xqc:         {name: "xQc",           tag: "#xQc",      facecam: null, boost: 1.3}
+  xqc:         {name: "xQc",           tag: "#xQc",      facecam: null, boost: 2.2}   # Nov 24: our best TikTok/YouTube numbers
   vanossgaming: {name: "Vanoss",       tag: "#Vanoss",   facecam: null}
   h2odelirious: {name: "H2O Delirious", tag: "#Vanoss",  facecam: null}
-  ishowspeed:  {name: "IShowSpeed",    tag: "#IShowSpeed", facecam: null, boost: 1.8}
+  ishowspeed:  {name: "IShowSpeed",    tag: "#IShowSpeed", facecam: null, boost: 2.0}
   stableronaldo: {name: "Stable Ronaldo", tag: "#StableRonaldo", facecam: null}
   jasontheween: {name: "JasonTheWeen", tag: "#JasonTheWeen", facecam: null}
   nickmercs:   {name: "NICKMERCS",     tag: "#Nickmercs", facecam: null}

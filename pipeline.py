@@ -270,7 +270,7 @@ def apply_issues(st: dict) -> None:
                         keep[k] = max(lo, min(hi, float(ul[k])))
                 if ul.get("hook_style") in ("white", "black", "outline"):
                     keep["hook_style"] = ul["hook_style"]
-                for k in ("subs", "punch"):   # studio switches: word subtitles / punch-in zoom
+                for k in ("punch",):   # studio switch: punch-in zoom (subtitles are gone for good)
                     if ul.get(k) in ("on", "off"):
                         keep[k] = ul[k]
                 tr = ul.get("trim")
@@ -738,8 +738,8 @@ def render_preview(raw: Path, cid: str) -> None:
     ff("-ss", "2", "-i", str(raw), "-frames:v", "1", "-vf", "scale=640:-2", "-q:v", "4", str(VID / f"{cid}.jpg"))
 
 
-CLIP_MAX_S = 22    # the top GTA 6 clip pages post 10-20 s videos (median 16 s); longer clips get trimmed
-CLIP_KEEP_S = 16   # top clip pages' median length   # length of the trimmed part
+CLIP_MAX_S = 18    # auto clips never longer than this (Nov 24: our TikToks - avg watch 5-12 s, ~13% finish; the
+CLIP_KEEP_S = 14   # short 10-15 s ones with the moment early finished 34-49%) - your own clips aren't trimmed
 
 
 def cut_dead_air(src: Path, cid: str, tmp: Path, min_gap: float = 0.8) -> Path:
@@ -807,17 +807,17 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
         a = viral._audio(raw)
         secs = len(a) // 16000
         sty = c.get("style") or {}
-        keep_s = 16 if sty.get("len") in ("s16", "short") else 22
+        keep_s = CLIP_KEEP_S   # ~14 s (Nov 24 TikTok data: short clips with the moment early hold viewers best)
         if secs < 6:
             return raw
         rms = np.array([np.sqrt(np.mean(a[i * 16000:(i + 1) * 16000] ** 2) + 1e-9) for i in range(secs)])
         db = 20 * np.log10(rms + 1e-9)
         sm = np.convolve(db, np.ones(3) / 3, mode="same")
         p = int(np.argmax(sm[1:-1])) + 1
-        if sty.get("start") == "fast":
-            start = float(max(0, p - 2))
+        if False:
+            pass
         else:
-            want = p - round(keep_s * 0.45)
+            want = p - round(keep_s * 0.28)        # the big moment ~4 s in: a beat of setup, then the payoff
             med = float(np.median(db))
             # start on someone talking: the second (near the target) where the sound rises, and isn't silence
             cand = [t for t in range(max(1, want - 3), max(1, min(p - 3, want + 3) + 1)) if db[t] >= med - 3]
@@ -829,22 +829,22 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
         # never cut mid-sentence / mid-laugh (Nov 24: clips started too late or stopped right before the payoff):
         # the start moves back to the pause before the first line, the end runs on to the next pause (the reaction lands)
         quiet = float(np.median(db)) - 6
-        back = [t for t in range(int(start), max(-1, int(start) - 4), -1) if t < secs and db[t] < quiet]
+        back = [t for t in range(int(start), max(-1, int(start) - 2), -1) if t < secs and db[t] < quiet]
         if back:
             start = float(back[0])
         fwd = [t for t in range(int(end), min(secs, int(end) + 6)) if db[t] < quiet]
         end = float(min(secs, fwd[0] + 0.5)) if fwd else float(min(secs, end + 2))
-        if end - start > 32:
-            end = start + 32
-        if secs - end < 3:                        # don't leave a tiny leftover at the end
+        if secs - end < 3 and secs - start <= CLIP_MAX_S:   # don't leave a tiny leftover at the end
             end = float(secs)
+        if end - start > CLIP_MAX_S:
+            end = start + CLIP_MAX_S
         if start < 1.5 and secs - end < 3:        # the whole clip already is the right part
             return raw
         out = tmp / f"{cid}_best.mp4"
         if not out.exists():
             viral.cut(raw, start, end, out)
         c["trim"] = [start, end]
-        log(f"trimmed {cid}: {secs}s -> {start:.0f}-{end:.0f}s (moment at {p}s, {sty.get('start', 'build')} start)")
+        log(f"trimmed {cid}: {secs}s -> {start:.0f}-{end:.0f}s (moment at {p}s, {p - start:.0f}s in)")
         return out
     except Exception as e:  # noqa: BLE001
         log(f"trim skipped {cid}: {e}")
@@ -1588,7 +1588,9 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                  hook_style: str = "white", hook_scale: float = 1.0, top_h: int | None = None,
                  subs: list | None = None, punch_at: float | None = None, view: str | None = None) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
+    No subtitles on any video (Nov 24): whatever is passed in, none are drawn.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
+    subs = None               # NO subtitles, ever
     T = int(top_h or TOP_H)   # webcam strip height (editor can make the webcam bigger or smaller)
     x, y, w, h = [float(v) for v in cam.split(",")]
     if layout.startswith("irl"):
@@ -2092,7 +2094,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     log(f"AI hook for {cid} named someone who isn't in the clip - not used: {m['hook']}")
                     m["hook_ai"], m["hook"] = False, ""
                 if m.get("hook_ai"):
-                    rec.update(hook=m["hook"], hook_kind="ai")
+                    rec.update(hook=viral.limit_caps(m["hook"]), hook_kind="ai")
                 elif m.get("hook"):
                     rec.update(hook=m["hook"], hook_auto=True, hook_kind="transcript")
                 if m.get("ai_score") is not None:
@@ -2100,8 +2102,6 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     sc = int(m["ai_score"] * 10)
                     rec.update(viral=sc, viral_verdict="post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
                                viral_why=", ".join(m.get("reasons", []))[:90])
-                if job.get("subs") in ("on", "off"):   # you picked subtitles on / off when you made it
-                    rec["subs_pick"] = job["subs"]
                 if job.get("asis"):
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill", asis=True, title=job.get("name") or "Your clip")
                     if job.get("hook"):
@@ -2696,6 +2696,33 @@ def main() -> None:
                 for k in ("final_hash", "final_v", "clean_v", "trim"):
                     c.pop(k, None)
                 log(f"{cid}: re-cutting {c['moment']['start']}-{c['moment']['end']} s (setup + payoff)")
+    if not MINE and st.get("short_v", 0) < 1:   # one time (Nov 24): queued auto clips re-cut to ~14 s, moment early
+        st["short_v"] = 1
+        n = 0
+        for cid, c in clips.items():
+            tr = c.get("trim")
+            ulx = c.get("user_layout") or {}
+            if c["status"] == "new" and c.get("source") != "upload" and not ulx.get("span") and not ulx.get("trim") \
+                    and (not tr or tr[1] - tr[0] > CLIP_MAX_S + 0.5 or (c.get("seconds") or 0) > CLIP_MAX_S + 3):
+                for k in ("final_hash", "final_v", "clean_v"):
+                    c.pop(k, None)
+                n += 1
+        if n:
+            log(f"shorter clips: re-making {n} queued clips at ~14 s")
+    if st.get("caps_v", 0) < 1:   # one time (Nov 24): at most one CAPS word in our own hooks (yours stay as you wrote)
+        st["caps_v"] = 1
+        import viral
+        n = 0
+        for cid, c in clips.items():
+            if c["status"] == "new" and c.get("hook") and not c.get("hook_by_user"):
+                h2 = viral.limit_caps(c["hook"])
+                if h2 != c["hook"]:
+                    c["hook"] = h2
+                    for k in ("final_hash", "final_v"):
+                        c.pop(k, None)
+                    n += 1
+        if n:
+            log(f"hooks: toned down CAPS in {n} hooks (re-making them)")
     if MINE and st.get("mine_hook_fix_v", 0) < 4:   # clip 3: "Nickeh 30" -> "Nick Eh 30"
         st["mine_hook_fix_v"] = 4
         c3 = clips.get("upmwuw3jf8_3")
@@ -2703,12 +2730,16 @@ def main() -> None:
             c3["hook"] = fix_names(c3["hook"])
             for k in ("final_hash", "final_v", "clean_v"):
                 c3.pop(k, None)
-    if st.get("subs_off_v", 0) < 1:   # one time (Nov 24): subtitles off - re-make the clips that have them burned in
-        st["subs_off_v"] = 1
+    if st.get("subs_off_v", 0) < 2:   # one time (Nov 24): NO subtitles - re-make every clip that has them burned in
+        st["subs_off_v"] = 2
         n = 0
         for cid, c in clips.items():
             sty0 = c.get("style") or {}
-            if c["status"] == "new" and sty0.get("subs") == "on" and (c.get("user_layout") or {}).get("subs") != "on":
+            ulx = c.get("user_layout") or {}
+            had = sty0.get("subs") == "on" or ulx.get("subs") == "on" or c.get("subs_pick") == "on" or c.get("subs_made")
+            ulx.pop("subs", None)
+            c.pop("subs_pick", None)
+            if c["status"] == "new" and had:
                 sty0.pop("subs", None)
                 for k in ("final_hash", "final_v", "clean_v"):
                     c.pop(k, None)
@@ -2980,7 +3011,7 @@ def main() -> None:
                     if not names_ok(r["hook"], hook_context({**c, "hook": ""})):
                         log(f"AI hook for {cid} named someone who isn't in the clip - kept the old one: {r['hook']}")
                         continue
-                    c.update(hook=(f"Part {c['part']}: " if c.get("part") else "") + r["hook"], hook_kind="ai")
+                    c.update(hook=(f"Part {c['part']}: " if c.get("part") else "") + viral.limit_caps(r["hook"]), hook_kind="ai")
                     c.pop("hook_auto", None)
             if not res and re.search(r"429|quota|exhaust|rate", ai_status, re.I):
                 st["ai_backoff2"] = iso(NOW + timedelta(minutes=60))   # free daily/minute limit: try again in an hour
@@ -3008,6 +3039,7 @@ def main() -> None:
                 if not names_ok(h, clips[cid].get("hook", "")):   # a shorter hook can't bring in a new name
                     log(f"shorter hook for {cid} changed who it's about - kept the old one: {h}")
                     continue
+                h = viral.limit_caps(h)
                 log(f"shorter hook {cid}: {h}")
                 clips[cid]["hook"] = h
             if got:
@@ -3215,7 +3247,7 @@ def main() -> None:
                         return job
                 if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower() \
                         and names_ok(vhook, hook_context(c) + " " + (vis.get("watching") or "")):
-                    c["hook"], c["hook_kind"], c["hook_variant"] = (f"Part {c['part']}: " if c.get("part") else "") + vhook, "ai", var
+                    c["hook"], c["hook_kind"], c["hook_variant"] = (f"Part {c['part']}: " if c.get("part") else "") + viral.limit_caps(vhook), "ai", var
                     c.pop("hook_short_tried", None)   # a fresh hook gets its own length check
                     hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, need_c)
@@ -3324,11 +3356,6 @@ def main() -> None:
                     view=(c.get("react_view") or None) if lay == "react" else None)
         # learner tests from the Nov 23 tool review: word-by-word subtitles, punch-in zoom on the big reaction
         try:
-            if (c.get("user_layout") or {}).get("subs") == "on" or c.get("subs_pick") == "on":
-                # subtitles only when YOU switch them on (Studio / Make clips) - off by default (Nov 24: inaccurate)
-                import viral
-                ws = [w for sg in viral.transcribe(viral._audio(raw)) for w in sg["words"]]
-                opts["subs"] = ws or None
             if sty.get("punch") == "on" and lay in ("split", "react"):
                 import viral
                 a = viral._audio(raw)
