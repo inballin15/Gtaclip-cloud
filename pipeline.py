@@ -573,8 +573,15 @@ def _face_in_box(frames, box: str, need: int = 3) -> bool:
 
 def find_cam_info(path: Path, duration: float, learned: list | None = None) -> tuple[str, str, list | None]:
     cam, q, frac = _find_cam_info(path, duration, learned)
-    if not cam or q == "guess":
-        return "", "", None   # no traced border and no known spot -> skip the clip rather than risk a wrong face
+    if cam and q == "guess":
+        # CUT-OUT webcam (no border - Nick Eh 30, ohnePixel, YourRAGE): a steady face at the edge of the screen, of
+        # webcam size, that moves like a live camera (not a picture / game character) -> use the box around it
+        if cam_is_live(path, cam):
+            q = "cutout"
+        else:
+            return "", "", None
+    if not cam:
+        return "", "", None   # no face that stays put -> skip the clip rather than risk a wrong face
     frames = _frames(path, [max(0.5, duration * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)])
     if frames:
         cam = _trim_black(frames, cam)
@@ -601,6 +608,8 @@ def _find_cam_info(path: Path, duration: float, learned: list | None = None) -> 
         if lr[0] < fx < lr[0] + lr[2] and lr[1] < fy < lr[1] + lr[3]:
             px = (lr[0] * W, lr[1] * H, lr[2] * W, lr[3] * H)
             return _fit(px, face, W, H), "learned", lr
+    if not 0.06 <= face[3] / H <= 0.35:   # a cut-out webcam's face is webcam-sized: not a tiny NPC, not the whole screen
+        return "", "", None
     return _guess_box(face, W, H), "guess", None
 
 
@@ -1585,7 +1594,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill", asis=True, title=job.get("name") or "Your clip")
                     if job.get("hook"):
                         rec["hook_by_user"] = True
-                elif cam and q in ("edge", "learned"):
+                elif cam and q in ("edge", "learned", "cutout"):
                     rec.update(cam=cam, cam_q=q, layout="split")
                 else:   # no webcam in your own link/upload: keep it, gameplay fills the whole screen
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill")
@@ -2085,6 +2094,25 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
+    if st.get("cutout_redo_v", 0) < 1:   # one time: clips made full-screen because a cut-out webcam was missed
+        st["cutout_redo_v"] = 1
+        for cid, c in clips.items():
+            raw = RAW / f"{cid}.mp4"
+            if c["status"] != "new" or not c.get("nocam") or c.get("source") == "upload" or not raw.exists():
+                continue
+            try:
+                d0 = duration_of(raw)
+                cam, q, _f = find_cam_info(raw, d0, st.get("learned_cams", {}).get(c.get("login", "")))
+                usual = ",".join(str(v) for v in (CFG["streamers"].get(c.get("login", ""), {}).get("facecam") or []))
+                if not cam and usual and box_has_face(raw, d0, usual):
+                    cam, q = usual, "learned"
+                if cam:
+                    c.update(cam=cam, cam_q=q, layout="split", cam_v=CAM_V)
+                    for k in ("nocam", "final_hash", "clean_v", "irl_x"):
+                        c.pop(k, None)
+                    log(f"{cid}: found the cut-out webcam ({q}) - re-made with the webcam on top")
+            except Exception as e:  # noqa: BLE001
+                log(f"cut-out webcam check failed {cid}: {e}")
     if st.get("big_only_v", 0) < 1:   # one time (Nov 24, big streamers only): small streamers' clips leave the queue
         st["big_only_v"] = 1
         for c in clips.values():

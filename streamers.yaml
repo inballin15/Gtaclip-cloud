@@ -38,6 +38,7 @@ streamers:
   jasontheween: {name: "JasonTheWeen", tag: "#JasonTheWeen", facecam: null}
   nickmercs:   {name: "NICKMERCS",     tag: "#Nickmercs", facecam: null}
   nickeh30:    {name: "Nick Eh 30",    tag: "#NickEh30",  facecam: [0, 0.15, 0.23, 0.46], boost: 1.5}   # cut-out cam, left side (no border - detector missed it)   # added Nov 23: popping off in GTA 6
+  ohnepixel:   {name: "ohnePixel",     tag: "#ohnePixel", facecam: [0.05, 0.64, 0.24, 0.36]}   # cut-out cam, bottom left (no border - detector missed it)
   marlon:      {name: "Marlon",        tag: "#Marlon",   facecam: null}
   adapt:       {name: "Adapt",         tag: "#Adapt",    facecam: null}
   silky:       {name: "Silky",         tag: "#Silky",    facecam: null}
