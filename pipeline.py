@@ -247,7 +247,7 @@ def apply_issues(st: dict) -> None:
             hm = re.search(r"^hook:[ \t]*(.*)$", body, re.M)
             cm = re.search(r"^caption:[ \t]*(.*)\Z", body, re.M | re.S)
             if hm and hm.group(1).strip():
-                c["hook"] = strip_emoji(hm.group(1))[:140]
+                c["hook"] = fix_names(strip_emoji(hm.group(1)))[:140]   # streamer names spelled right
                 c.pop("no_hook", None)
                 c["hook_by_user"] = True
             if cm:
@@ -275,7 +275,7 @@ def apply_issues(st: dict) -> None:
                 if isinstance(tr, list) and len(tr) == 2 and all(isinstance(v, (int, float)) for v in tr) and tr[1] - tr[0] >= 3:
                     keep["trim"] = [max(0.0, float(tr[0])), float(tr[1])]
                 if isinstance(ul.get("hook"), str) and ul["hook"].strip():
-                    c["hook"] = strip_emoji(ul["hook"])[:140]
+                    c["hook"] = fix_names(strip_emoji(ul["hook"]))[:140]
                     c.pop("no_hook", None)
                     c["hook_by_user"] = True
                 if isinstance(ul.get("caption"), str):
@@ -293,6 +293,58 @@ def apply_issues(st: dict) -> None:
 
 
 SWEARS = re.compile(r"\b(f+u+c*k+\w*|sh+i+t+\w*|bitch\w*|ass(hole)?|damn|dick|hell|wtf|stfu|crap|bastard|motherf\w*)\b", re.I)
+
+
+_EXTRA_NAMES = ["Jynxzi", "ohnePixel", "NICKMERCS", "IShowSpeed", "YourRAGE", "JasonTheWeen", "Vanoss", "Marlon",
+                "Ronaldo", "Bartolozzi"]
+
+
+from collections import Counter
+
+
+def _osa(a: str, b: str) -> int:
+    """Edit distance where swapping two neighbouring letters counts as one typo."""
+    d = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
+    for i in range(len(a) + 1):
+        d[i][0] = i
+    for j in range(len(b) + 1):
+        d[0][j] = j
+    for i in range(1, len(a) + 1):
+        for j in range(1, len(b) + 1):
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]:
+                d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+    return d[-1][-1]
+
+
+def fix_names(text: str) -> str:
+    """Streamer names spelled right in YOUR hooks: 'Jynzxi' / 'jyxniz' / 'Jyzxi' -> 'Jynxzi'. Only a word that is
+    clearly a mistyped streamer name (same first letter, nearly the same letters) - normal words are left alone."""
+    names = set(_EXTRA_NAMES)
+    for login, s_ in (CFG.get("streamers") or {}).items():
+        for t in re.findall(r"[A-Za-z0-9]+", (s_ or {}).get("name") or ""):
+            if len(t) >= 6 and t.lower() not in ("delirious", "stable", "gaming"):   # real words stay words
+                names.add(t)
+
+    def one(m):
+        w = m.group(0)
+        lw = w.lower()
+        if len(lw) < 5:
+            return w
+        for nm in names:
+            ln = nm.lower()
+            if lw == ln:
+                return nm if w.lower() == w or w.istitle() else w   # right spelling: just the right capitals
+            if lw[0] != ln[0] or abs(len(lw) - len(ln)) > 1:
+                continue
+            close = _osa(lw, ln) <= (1 if len(ln) < 8 else 2)
+            jumbled = len(lw) >= 5 and sum((Counter(ln) - Counter(lw)).values()) \
+                + sum((Counter(lw) - Counter(ln)).values()) <= 1
+            if close or jumbled:
+                return nm
+        return w
+    return re.sub(r"[A-Za-z0-9]+", one, text or "")
 
 
 def clean_hook(t: str) -> str:
