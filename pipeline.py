@@ -880,6 +880,36 @@ def cam_has_face(path: Path, cam: str) -> bool:
 
 
 def cam_without_chat(path: Path, cam: str, chat_layout: bool = False, known: dict | None = None) -> str:
+    """cam_without_chat_known + a last check for chat_on_cam streamers: chat over a bright game shows no dark panel
+    and no known box matches, but a webcam is 16:9 (box height == width on a 16:9 stream). A box clearly taller
+    than that is webcam + chat strip -> end it at the webcam's 16:9 bottom, never through the face."""
+    out = cam_without_chat_known(path, cam, chat_layout, known)
+    if out != cam or not chat_layout:
+        return out
+    try:
+        x, y, w, h = [float(v) for v in cam.split(",")]
+        if h <= w * 1.15:
+            return cam
+        frac = (w / h) * 0.98
+        cap = cv2.VideoCapture(str(path))
+        dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+        cap.release()
+        need = 0.0
+        for fr in _frames(path, [max(0.5, dur * p) for p in (0.15, 0.3, 0.45, 0.6, 0.75, 0.9)]):
+            H, W = fr.shape[:2]
+            c = fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)]
+            fs = _yunet_faces(cv2.resize(c, None, fx=2, fy=2), 0.6)
+            if fs:
+                f = max(fs, key=lambda f: f[4])
+                need = max(need, (f[1] + f[3] * 1.12) / (c.shape[0] * 2))
+        if need > frac + 0.02:
+            return cam
+        return f"{x:.4f},{y:.4f},{w:.4f},{h * max(0.5, frac, need):.4f}"
+    except Exception:  # noqa: BLE001
+        return cam
+
+
+def cam_without_chat_known(path: Path, cam: str, chat_layout: bool = False, known: dict | None = None) -> str:
     """Some streamers (Kai) have chat scrolling over the bottom of their webcam. Find where that text band starts
     and end the webcam box above it, so no chat shows between the face and the gameplay.
     known = {box: "x,y,w,h", at: 0.59}: where the chat panel starts in that streamer's usual webcam box; used when
@@ -1932,8 +1962,8 @@ def main() -> None:
         for c in clips.values():
             if c["status"] == "new":
                 c.pop("final_hash", None); c.pop("clean_v", None)
-    if st.get("redo_kaichat_v", 0) < 5:   # one time: Kai's chat strip came back (dark shirt / bright menu behind chat) -> re-frame
-        st["redo_kaichat_v"] = 5
+    if st.get("redo_kaichat_v", 0) < 6:   # one time: Kai's chat strip came back (v6: see-through chat over bright game) -> re-frame
+        st["redo_kaichat_v"] = 6
         for c in clips.values():
             if c["status"] == "new" and CFG["streamers"].get(c.get("login", ""), {}).get("chat_on_cam") and not (c.get("user_layout") or {}).get("cam"):
                 for k in ("final_hash", "clean_v", "hd", "hd_cam"):

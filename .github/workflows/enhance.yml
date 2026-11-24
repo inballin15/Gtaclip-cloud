@@ -58,6 +58,9 @@ jobs:
         shell: bash
         run: |
           git fetch -q --depth=1 origin camsrc
+          if ! git cat-file -e "FETCH_HEAD:${{ matrix.cid }}.mp4" 2>/dev/null; then
+            echo "source left camsrc since planning (clip posted/dropped) - nothing to do"; exit 0
+          fi
           git show "FETCH_HEAD:${{ matrix.cid }}.mp4" > src.mp4
           mkdir -p out && python enhance_cam.py src.mp4 "out/${{ matrix.cid }}.mp4" models_sr
       - uses: actions/upload-artifact@v4
