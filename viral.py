@@ -170,10 +170,12 @@ def find_moments(path: Path, max_clips: int | None = None, log=print, streamer: 
         # clips the loudest moment sits around the MIDDLE (~12 s of ~25 s); they open on talk/action, then build up.
         starts = [t for t in sent_starts if p - 14 <= t <= p - 6]
         start = min(starts, key=lambda t: abs(t - (p - 10))) if starts else max(0.0, p - 10)
+        start = max(0.0, start - 0.6)   # a breath before the first word (never clip the start of the setup line)
         # end: first sentence end after the reaction calms down, 10-25 s total (top clip pages: median 16 s)
         calm = next((t for t in range(int(p) + 3, min(secs, int(start) + 30)) if score[t] < 0.4), int(min(secs, start + 22)))
         ends = [t for t in sent_ends if calm <= t <= start + 30]
-        end = min(ends) + 0.4 if ends else min(float(secs), max(start + 10, calm + 1.5))
+        end = min(float(secs), min(ends) + 1.5) if ends else min(float(secs), max(start + 10, calm + 2.0))
+        end = max(end, min(float(secs), p + 5.0))   # the reaction after the big moment always lands
         if end - start < 10:
             end = min(float(secs), start + 10)
         if end - start > 30:

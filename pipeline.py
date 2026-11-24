@@ -762,11 +762,19 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
             cand = [t for t in range(max(1, want - 3), max(1, min(p - 3, want + 3) + 1)) if db[t] >= med - 3]
             start = float(max(cand, key=lambda t: (db[t] - db[t - 1]) - 0.4 * abs(t - want)) if cand else max(0, want))
             start = max(0.0, start)
-        end = float(min(secs, max(start + keep_s, p + 4)))
+        end = float(min(secs, max(start + keep_s, p + 5)))
         if end - start < keep_s:                  # moment near the end of the Twitch clip: start earlier instead of
             start = float(max(0, end - keep_s))   # making a short clip (a 60 s clip was coming out 11 s - Nov 24)
-        if end - start > 30:
-            end = start + 30
+        # never cut mid-sentence / mid-laugh (Nov 24: clips started too late or stopped right before the payoff):
+        # the start moves back to the pause before the first line, the end runs on to the next pause (the reaction lands)
+        quiet = float(np.median(db)) - 6
+        back = [t for t in range(int(start), max(-1, int(start) - 4), -1) if t < secs and db[t] < quiet]
+        if back:
+            start = float(back[0])
+        fwd = [t for t in range(int(end), min(secs, int(end) + 6)) if db[t] < quiet]
+        end = float(min(secs, fwd[0] + 0.5)) if fwd else float(min(secs, end + 2))
+        if end - start > 32:
+            end = start + 32
         if secs - end < 3:                        # don't leave a tiny leftover at the end
             end = float(secs)
         if start < 1.5 and secs - end < 3:        # the whole clip already is the right part
@@ -2578,6 +2586,16 @@ def main() -> None:
         c3 = clips.get("upmwuw3jf8_3")
         if c3 and c3.get("user_layout"):
             c3.update(hook="Jynxzi FREAKED OUT over SCARRING audio", hook_kind="user", hook_by_user=True)
+    if MINE and st.get("mine_timing_v", 0) < 1:   # one time (Nov 24): Jynxzi clips started late / stopped before the
+        st["mine_timing_v"] = 1                    # payoff - a little more before, more after, and no second trim
+        for cid, c in clips.items():
+            if cid.startswith("upmwuw3jf8_") and c["status"] == "new" and c.get("moment"):
+                c["moment"]["start"] = round(max(0.0, float(c["moment"]["start"]) - 1.0), 2)
+                c["moment"]["end"] = round(float(c["moment"]["end"]) + 3.0, 2)
+                (RAW / f"{cid}.mp4").unlink(missing_ok=True)   # cut again from your upload with the new start / end
+                for k in ("final_hash", "final_v", "clean_v", "trim"):
+                    c.pop(k, None)
+                log(f"{cid}: re-cutting {c['moment']['start']}-{c['moment']['end']} s (setup + payoff)")
     if st.get("cutout_redo_v", 0) < 1:   # one time: clips made full-screen because a cut-out webcam was missed
         st["cutout_redo_v"] = 1
         for cid, c in clips.items():
@@ -2944,8 +2962,11 @@ def main() -> None:
             # but the subtitles on/off you picked when making them always wins.
             c["style"] = {**learn.pick_style(LEARNED_INS, cid), **(c.get("style") or {})}
         sty = {**(c.get("style") or {}), **{k: v for k, v in (c.get("user_layout") or {}).items() if k in ("subs", "punch")}}
-        if not c.get("asis") and not c.get("part") and not c.get("full"):   # your full video / parts stay whole (no trims)
+        if not c.get("asis") and not c.get("part") and not c.get("full") and c.get("source") != "upload":
+            # your clips were already cut around the moment on whole sentences (setup -> payoff): no second trim,
+            # it was cutting off the setup / the payoff. Stream clips get trimmed to the best part.
             raw = best_part(raw, cid, tmp, c)
+        if not c.get("asis") and not c.get("part") and not c.get("full"):   # your full video / parts stay whole
             raw = cut_dead_air(raw, cid, tmp)
         if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and c.get("cam") \
                 and (c.get("cam_only") or gameplay_is_black(raw, c.get("cam") or "")):
