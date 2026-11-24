@@ -625,13 +625,29 @@ def make(job: dict, num: int = 0) -> dict:
     master = make_master(src)
     dur = duration_of(master)
     status(job, "making", "Watching your footage")
-    scenes = watch(master, game)
+    if job.get("fake_ai"):   # test of everything but the AI (voice, edit, upload) when Google's daily limit is used up
+        scenes = [{"t": float(t), "what": "test", "where": "", "ui": "", "tip": "", "score": 5, "boring": False}
+                  for t in range(0, int(dur), 2)]
+    else:
+        scenes = watch(master, game)
     if len(scenes) < 5:
         raise RuntimeError("Google's free AI daily limit is used up for today - tap Try again tomorrow" if DAILY["hit"]
                            else "the AI couldn't watch the footage (Google's free AI is busy) - tap Try again in a bit")
     status(job, "making", "Writing the script")
     plan = None
     for _ in range(3):
+        if job.get("fake_ai"):
+            q = dur / 5
+            plan = clean_plan({"title": "Test: GTA 6 tips", "description": "Test video.", "tags": ["GTA6"],
+                               "thumbnail": {"t": q, "text": "TEST TIPS"},
+                               "sections": [{"title": "", "start": 0, "end": min(12, q), "speed": 1,
+                                             "lines": [{"at": 0, "text": "Here are three GTA six tips you probably missed, and the last one is the best."}]}]
+                               + [{"title": f"Tip number {k}", "start": q * k, "end": q * k + q * 0.9, "speed": 1.5 if k == 2 else 1,
+                                   "lines": [{"at": q * k + 1, "text": f"This is tip number {k}, shown right here on the screen."},
+                                             {"at": q * k + q * 0.4, "text": "Watch how it works, it saves you a lot of time."}]} for k in (1, 2, 3)]
+                               + [{"title": "", "start": q * 4, "end": q * 4 + 8, "speed": 1,
+                                   "lines": [{"at": q * 4, "text": "Subscribe for more GTA six tips."}]}]}, dur)
+            break
         plan = write_script(scenes, dur, game, job.get("topic", ""))
         if plan:
             plan = clean_plan(plan, dur)
