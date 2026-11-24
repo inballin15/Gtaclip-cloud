@@ -2079,7 +2079,7 @@ function osa(a, b) { const d = []; for (let i = 0; i <= a.length; i++) { d[i] = 
   return d[a.length][b.length]; }
 function letterDiff(a, b) { const m = {}; for (const ch of a) m[ch] = (m[ch] || 0) + 1; for (const ch of b) m[ch] = (m[ch] || 0) - 1; return Object.values(m).reduce((s, v) => s + Math.abs(v), 0); }
 function fixNames(text) {
-  return String(text || '').replace(/[A-Za-z0-9]+/g, (w) => { const lw = w.toLowerCase(); if (lw.length < 5) return w;
+  return String(text || '').replace(/\bnick[\s-]*(?:eh|a)[\s-]*30\b/gi, (m) => (m === 'NickEh30' ? m : 'Nick Eh 30')).replace(/[A-Za-z0-9]+/g, (w) => { const lw = w.toLowerCase(); if (lw.length < 5) return w;
     for (const nm of RIGHT_NAMES) { const ln = nm.toLowerCase();
       if (lw === ln) return (w === lw || w[0] === w[0].toUpperCase() && w.slice(1) === w.slice(1).toLowerCase()) ? nm : w;
       if (lw[0] !== ln[0] || Math.abs(lw.length - ln.length) > 1) continue;

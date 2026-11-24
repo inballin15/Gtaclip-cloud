@@ -333,6 +333,9 @@ def fix_names(text: str) -> str:
             if len(t) >= 6 and t.lower() not in ("delirious", "stable", "gaming"):   # real words stay words
                 names.add(t)
 
+    text = re.sub(r"\bnick[\s-]*(?:eh|a)[\s-]*30\b", lambda m: m.group(0) if m.group(0) == "NickEh30" else "Nick Eh 30",
+                  text or "", flags=re.I)   # Nickeh 30 / nick eh30 / Nick A30 -> Nick Eh 30
+
     def one(m):
         w = m.group(0)
         lw = w.lower()
@@ -2213,7 +2216,7 @@ def apply_quick_edits(clips: dict, edits: dict) -> None:
         if not c or e.get("at", 0) <= max(c.get("quick_at", 0), c.get("rendered", 0) or 0):
             continue
         if e.get("hook"):
-            c["hook"] = e["hook"]
+            c["hook"] = fix_names(e["hook"])   # streamer names spelled right
             c.pop("no_hook", None)
             c["hook_by_user"] = True
         if "caption" in e:
@@ -2693,6 +2696,13 @@ def main() -> None:
                 for k in ("final_hash", "final_v", "clean_v", "trim"):
                     c.pop(k, None)
                 log(f"{cid}: re-cutting {c['moment']['start']}-{c['moment']['end']} s (setup + payoff)")
+    if MINE and st.get("mine_hook_fix_v", 0) < 4:   # clip 3: "Nickeh 30" -> "Nick Eh 30"
+        st["mine_hook_fix_v"] = 4
+        c3 = clips.get("upmwuw3jf8_3")
+        if c3 and c3.get("hook") and fix_names(c3["hook"]) != c3["hook"]:
+            c3["hook"] = fix_names(c3["hook"])
+            for k in ("final_hash", "final_v", "clean_v"):
+                c3.pop(k, None)
     if st.get("subs_off_v", 0) < 1:   # one time (Nov 24): subtitles off - re-make the clips that have them burned in
         st["subs_off_v"] = 1
         n = 0
