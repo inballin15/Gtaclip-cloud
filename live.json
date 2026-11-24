@@ -403,7 +403,7 @@
    }
   ]
  },
- "updated": "2026-11-24T13:25:55Z",
+ "updated": "2026-11-24T13:30:21Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1141,6 +1141,34 @@
   "vod2937998841_7955"
  ],
  "posts": {
+  "SpookyHorribleMuleBabyRage-0yBY5UZSn_pb8r8-": {
+   "id": "SpookyHorribleMuleBabyRage-0yBY5UZSn_pb8r8-",
+   "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "why": "posted by Nicholas",
+   "manual": true,
+   "posted_at": "2026-11-24T13:30:21Z",
+   "platforms": [
+    "youtube"
+   ],
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "len": "s16",
+    "hooklen": "story",
+    "start": "build",
+    "subs": "off",
+    "punch": "off"
+   },
+   "hook_variant": "lowcaps",
+   "seconds": 30,
+   "tiktok": "",
+   "youtube": "",
+   "manual_on": {
+    "youtube": "2026-11-24T13:30:21Z"
+   }
+  },
   "CalmFrozenCrocodilePeanutButterJellyTime-OwUM1VvaCFBCpYSS": {
    "id": "CalmFrozenCrocodilePeanutButterJellyTime-OwUM1VvaCFBCpYSS",
    "hook": "Why was xQc SHOCKED by GTA 6 world detail?",
@@ -3056,6 +3084,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T13:25:55Z",
- "log": []
+ "stats_updated": "2026-11-24T13:30:21Z",
+ "log": [
+  "[13:30:24Z] marked as posted manually: SpookyHorribleMuleBabyRage-0yBY5UZSn_pb8r8-"
+ ]
 }
