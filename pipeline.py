@@ -666,7 +666,7 @@ CLIP_KEEP_S = 16   # top clip pages' median length   # length of the trimmed par
 def cut_dead_air(src: Path, cid: str, tmp: Path, min_gap: float = 0.8) -> Path:
     """Auto-Editor's method with its tested defaults: anything quieter than 4% of the clip's loudest sound is
     "dead air"; gaps of at least `min_gap` s are cut, keeping 0.2 s of padding on each side so cuts don't feel
-    abrupt. Short pauses (timing, reactions) are left alone."""
+    abrupt. Short pauses (timing, reactions) are left alone. Capped at 20% of the clip (see budget below)."""
     import viral
     try:
         a = viral._audio(src)
@@ -687,6 +687,15 @@ def cut_dead_air(src: Path, cid: str, tmp: Path, min_gap: float = 0.8) -> Path:
                 i = j
             else:
                 i += 1
+        # Budget (Nov 24): in GTA clips "quiet" is often the streamer silently watching the action - part of the
+        # joke - and cutting all of it turned a 33 s clip into 10 s. So cut at most 20% of the clip, never below
+        # 15 s, longest pauses first.
+        budget = min(0.2 * dur, max(0.0, dur - 15.0))
+        picked, used = [], 0.0
+        for g in sorted(gaps, key=lambda g: g[0] - g[1]):   # longest first
+            if used + (g[1] - g[0]) <= budget:
+                picked.append(g); used += g[1] - g[0]
+        gaps = sorted(picked)
         if not gaps or sum(b - a for a, b in gaps) < 0.4:
             return src
         keep, t = [], 0.0
@@ -1970,6 +1979,12 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
+    if st.get("short_redo_v", 0) < 1:   # one time: re-make queued clips the old dead-air cut left under 15 s
+        st["short_redo_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new" and c.get("source") != "upload" and (c.get("final_s") or 99) < 15 \
+                    and (c.get("seconds") or 0) >= 16 and not c.get("hook_by_user"):
+                c.pop("final_hash", None); c.pop("final_s", None)
     if st.get("kai_chat_v", 0) < 1:   # one time: re-make queued Kai clips whose webcam crop still showed his chat
         st["kai_chat_v"] = 1
         for c in clips.values():
