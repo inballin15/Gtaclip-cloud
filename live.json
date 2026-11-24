@@ -403,7 +403,7 @@
    }
   ]
  },
- "updated": "2026-11-24T21:35:45Z",
+ "updated": "2026-11-24T21:40:55Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1127,12 +1127,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-24",
-  "used": 12,
+  "used": 13,
   "cap": 28,
   "slots": 6,
-  "remain30": 721,
-  "reset30": "2026-12-18T22:03:26Z",
-  "remain24": 591,
+  "remain30": 720,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 590,
   "active": [
    [
     8,
@@ -1251,11 +1251,11 @@
    "posted_at": "2026-11-24T21:10:57Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2939504732_8321_final.mp4?v=28106c4f0b&r=1795552894",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2939504732_8321.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711848494805372191",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b05fd65da2eab4595a719b3",
      "error": ""
     }
@@ -2500,6 +2500,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7711848494805372191",
+   "sent": "2026-11-24T21:11:43.195Z",
+   "hook": "Kai Cenat lost it after pulling off the smoothest bank heist in GTA 6",
+   "clip": "vod2939504732_8321",
+   "streamer": "Kai Cenat",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7711801683826855182",
    "sent": "2026-11-24T18:10:31.885Z",
    "hook": "Lacy panicked after choosing to take the deal in GTA 6",
@@ -3451,6 +3465,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T21:35:45Z",
+ "stats_updated": "2026-11-24T21:40:55Z",
  "log": []
 }
