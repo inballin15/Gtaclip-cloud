@@ -1213,14 +1213,53 @@ def find_bars(path: Path, secs=None) -> tuple[int, int, int, int] | None:
     return x0, y0, w, h
 
 
-def bars_vf(src: Path, crop) -> str | None:
-    """ffmpeg filter for cutting clips from an upload: bars off + 120 fps phone video down to 60, in the same pass."""
-    cap = cv2.VideoCapture(str(src))
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30
+_FILTERS = {}
+
+
+def _has_filter(name: str) -> bool:
+    if name not in _FILTERS:
+        out = subprocess.run([FF, "-hide_banner", "-filters"], capture_output=True, text=True).stdout
+        _FILTERS[name] = bool(re.search(rf"\s{re.escape(name)}\s", out))
+    return _FILTERS[name]
+
+
+def src_fps(path: Path) -> float:
+    """Frame rate, the higher of the average and the container's rate (iPhone screen recordings are variable-rate:
+    ~60 on average but stored as 120 - copying that would double every frame)."""
+    cap = cv2.VideoCapture(str(path))
+    f = cap.get(cv2.CAP_PROP_FPS) or 30
     cap.release()
+    err = subprocess.run([FF, "-hide_banner", "-i", str(path)], capture_output=True, text=True).stderr
+    m = re.search(r"([\d.]+)k? tbr", err)
+    return max(f, float(m.group(1)) if m else 0.0)
+
+
+def is_hdr(path: Path) -> bool:
+    """iPhone screen recordings (and phone camera video) are HDR (PQ / HLG). Copied straight into a normal video
+    they look grey and washed out - they have to be converted."""
+    err = subprocess.run([FF, "-hide_banner", "-i", str(path)], capture_output=True, text=True).stderr
+    return bool(re.search(r"smpte2084|arib-std-b67", err))
+
+
+# HDR -> normal (SDR) colours, as the recording looked on screen: the phone puts normal white at 203 nits
+HDR_TO_SDR = ("zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=clip:desat=0,"
+              "zscale=t=bt709:m=bt709:r=tv,format=yuv420p")
+
+
+def bars_vf(src: Path, crop) -> str | None:
+    """ffmpeg filter for cutting clips from an upload, all in one pass: bars off, 120 fps phone video down to 60,
+    HDR converted to normal colours."""
+    fps = src_fps(src)
     f = [f"crop={crop[2]}:{crop[3]}:{crop[0]}:{crop[1]}"] if crop else []
     if fps > 61:
         f.append("fps=60")
+    if is_hdr(src):
+        if _has_filter("zscale") and _has_filter("tonemap"):
+            f.append(HDR_TO_SDR)
+            log(f"{src.name}: HDR phone video -> converting to normal colours")
+        else:
+            log("HDR video but this ffmpeg can't convert it (no zscale) - colours may look washed out")
+            f.append("format=yuv420p")
     return ",".join(f) or None
 
 
@@ -1233,10 +1272,9 @@ def crop_bars(raw: Path, tmp: Path, crop: tuple | None = None) -> list | None:
             return None
         x, y, w, h = crop
         tmp_out = tmp / f"{raw.stem}_nobars.mp4"
-        cap = cv2.VideoCapture(str(raw))
-        fps = cap.get(cv2.CAP_PROP_FPS) or 30
-        cap.release()
-        ff("-i", str(raw), "-vf", f"crop={w}:{h}:{x}:{y}" + (",fps=60" if fps > 61 else ""),   # 120 fps phone video -> 60
+        fps = src_fps(raw)
+        ff("-i", str(raw), "-vf", f"crop={w}:{h}:{x}:{y}" + (",fps=60" if fps > 61 else "")   # 120 fps phone video -> 60
+           + ("," + HDR_TO_SDR if is_hdr(raw) and _has_filter("zscale") else ""),
            "-c:v", "libx264", "-preset", "fast", "-crf", "14",
            "-c:a", "copy", "-movflags", "+faststart", str(tmp_out))
         shutil.move(str(tmp_out), raw)
@@ -1715,6 +1753,34 @@ def split_parts(src: Path) -> tuple[list[tuple[float, float]], int]:
 _UPLOAD_SRC = {}   # upload commit -> the whole video, put back together (once per run)
 
 
+def _name_tokens() -> list[tuple[str, list[str]]]:
+    out = []
+    for login, s_ in (CFG.get("streamers") or {}).items():
+        nm = (s_ or {}).get("name") or login
+        common = {"stable", "adapt", "the", "gaming"}   # everyday words: a hook using them isn't naming anyone
+        toks = [t for t in re.findall(r"[a-z]+", nm.lower()) if len(t) >= 3 and t not in common]
+        if login.lower() not in common:
+            toks.append(login.lower())
+        if toks:
+            out.append((nm, toks))
+    return out
+
+
+def names_ok(hook: str, allowed: str) -> bool:
+    """A hook may only name a streamer who is in what the AI was given (the clip's streamer, what was said, the
+    title, who they're watching). Stops the AI inventing 'Lacy' for a clip of someone else when the name is unknown."""
+    h, a = (hook or "").lower(), (allowed or "").lower()
+    for nm, toks in _name_tokens():
+        hit = [t for t in toks if re.search(rf"\b{re.escape(t)}\b", h)]
+        if hit and not any(re.search(rf"\b{re.escape(t)}\b", a) for t in toks):
+            return False
+    return True
+
+
+def hook_context(c: dict) -> str:
+    return " ".join(str(c.get(k) or "") for k in ("streamer", "login", "transcript", "title", "watching", "hook"))
+
+
 def upload_source(c: dict, cid: str, tmp: Path) -> Path:
     """An uploaded FILE again, from the commit its pieces were uploaded in. The upload branch is deleted after the
     clips are made, but GitHub keeps the commit - we find it from the branch's history if it wasn't saved."""
@@ -1914,6 +1980,9 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     rec.update(part=m["part"], parts=m["parts"], title=f"{job.get('name', 'Your video')} · Part {m['part']}",
                                hook=f"Part {m['part']}", hook_kind="user", hook_by_user=True)
                     m.pop("hook", None)
+                if m.get("hook_ai") and not names_ok(m["hook"], f"{name} {login} {m.get('text') or ''} {job.get('name') or ''}"):
+                    log(f"AI hook for {cid} named someone who isn't in the clip - not used: {m['hook']}")
+                    m["hook_ai"], m["hook"] = False, ""
                 if m.get("hook_ai"):
                     rec.update(hook=m["hook"], hook_kind="ai")
                 elif m.get("hook"):
@@ -2434,18 +2503,31 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
-    if MINE and st.get("mine_cam_redo_v", 0) < 2:   # one time (Nov 24): your clips that went full-screen or got a
-        st["mine_cam_redo_v"] = 2                    # blurry face crop - bars off, find the streamer's own webcam
+    if MINE and st.get("mine_cam_redo_v", 0) < 3:   # one time (Nov 24): your clips that went full-screen or got a
+        st["mine_cam_redo_v"] = 3                    # blurry face crop - bars off, find the streamer's own webcam
         tmp0 = Path(tempfile.mkdtemp())              # across all clips of that upload, re-make them
         groups, src_bars = {}, {}
         for cid, c in clips.items():
             if c.get("source") == "upload" and c["status"] == "new" and not c.get("asis") and not c.get("user_layout") \
                     and not c.get("full") and not c.get("part") and cid.startswith("up"):
                 groups.setdefault(cid.rsplit("_", 1)[0], []).append(cid)
+        fixes = {   # your Jynxzi upload (Nov 24): the AI didn't know whose stream it was and guessed wrong names
+            "upmwuw3jf8_1": "Jynxzi says Nick Eh 30 is the FUNNIEST GTA 6 streamer",
+            "upmwuw3jf8_2": "Jynxzi ROASTED Nick Eh 30 for being too family friendly",
+            "upmwuw3jf8_3": "Nick Eh 30 PANICS on his family friendly stream",
+            "upmwuw3jf8_4": "Nick Eh 30 wants a FAMILY FRIENDLY mode in GTA 6",
+        }
+        for cid, hk in fixes.items():
+            if cid in clips:
+                clips[cid].update(streamer="Jynxzi", login="jynxzi", tag="#Jynxzi", hook=hk, hook_kind="user",
+                                  hook_by_user=True, watching="Nick Eh 30")
+                clips[cid].pop("hook_auto", None)
         for gid, cids in groups.items():
             try:
                 for cid in list(cids):
                     raw = RAW / f"{cid}.mp4"
+                    if raw.exists() and is_hdr(raw) and not clips[cid].get("src_link"):
+                        raw.unlink()   # cut from an HDR phone recording without converting: washed out - cut again
                     if not raw.exists():
                         try:
                             if not clips[cid].get("src_link") and not clips[cid].get("bars"):
@@ -2729,6 +2811,9 @@ def main() -> None:
                     log(f"AI removed {cid}: {r['why']}")
                     continue
                 if r["hook"] and len(r["hook"]) >= 12 and (c.get("hook_auto") or not c.get("hook")) and not c.get("hook_by_user"):
+                    if not names_ok(r["hook"], hook_context({**c, "hook": ""})):
+                        log(f"AI hook for {cid} named someone who isn't in the clip - kept the old one: {r['hook']}")
+                        continue
                     c.update(hook=(f"Part {c['part']}: " if c.get("part") else "") + r["hook"], hook_kind="ai")
                     c.pop("hook_auto", None)
             if not res and re.search(r"429|quota|exhaust|rate", ai_status, re.I):
@@ -2753,9 +2838,12 @@ def main() -> None:
                 got.update(viral.ai_shorten(dict(list(part.items())[:30]), log, tiny=tiny))
         if got:
             for cid, h in got.items():
+                clips[cid]["hook_short_tried"] = True
+                if not names_ok(h, clips[cid].get("hook", "")):   # a shorter hook can't bring in a new name
+                    log(f"shorter hook for {cid} changed who it's about - kept the old one: {h}")
+                    continue
                 log(f"shorter hook {cid}: {h}")
                 clips[cid]["hook"] = h
-                clips[cid]["hook_short_tried"] = True
             if got:
                 log(f"shortened {len(got)} long hooks")
     except Exception as e:  # noqa: BLE001
@@ -2921,7 +3009,8 @@ def main() -> None:
                         c.update(status="skip", skip_reason="react clip: couldn't tell which webcam is the streamer's")
                         log(f"skipped {cid}: react clip, streamer's webcam not found")
                         return job
-                if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower():
+                if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower() \
+                        and names_ok(vhook, hook_context(c) + " " + (vis.get("watching") or "")):
                     c["hook"], c["hook_kind"], c["hook_variant"] = (f"Part {c['part']}: " if c.get("part") else "") + vhook, "ai", var
                     c.pop("hook_short_tried", None)   # a fresh hook gets its own length check
                     hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]

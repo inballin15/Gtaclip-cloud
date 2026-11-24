@@ -32,6 +32,17 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
+      - name: ffmpeg that can convert iPhone HDR video to normal colours
+        shell: bash
+        run: |
+          ff=$(python -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())")
+          if "$ff" -hide_banner -filters 2>/dev/null | grep -qw zscale; then
+            echo "bundled ffmpeg has zscale"
+          else
+            echo "bundled ffmpeg has no zscale - using Ubuntu's ffmpeg"
+            sudo apt-get install -y -qq ffmpeg >/dev/null
+            echo "IMAGEIO_FFMPEG_EXE=$(command -v ffmpeg)" >> "$GITHUB_ENV"
+          fi
       - name: cache your clips' downloads + speech model
         uses: actions/cache@v4
         with:

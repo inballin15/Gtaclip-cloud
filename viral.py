@@ -502,6 +502,8 @@ def ai_score_clips(items: list[dict], log=print, budget_s: int = 60) -> tuple[di
             "dramatic or relatable moment, a clear payoff, makes sense without context, big-name streamer appeal.\n"
             "Give 0-10 for anything sexual, hateful, about strippers/clubs, harming animals, or where nothing happens.\n"
             "Also write the on-screen hook. " + hook_style() +
+            "If a clip's streamer is empty, their name is UNKNOWN: never guess one (no names from the examples) - "
+            "only use a name that is said in that clip's transcript or title.\n" +
             "Return JSON list: [{\"id\": \"...\", \"score\": 0-100, \"why\": \"max 12 words\", \"hook\": \"...\"}]\n\n"
             "Clips:\n" + _json.dumps(batch))
         body = {"contents": [{"parts": [{"text": prompt}]}],
