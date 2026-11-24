@@ -1619,6 +1619,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         # streamer's own webcam - the whole box - big underneath, on a blurred background.
         g = react_geometry(raw, w, h, view)
         cb, fw, fh = g["cb"], g["fw"], g["fh"]
+        info["cam_px"] = [int(fw), int(fh)]
         punch = ""
         if punch_at is not None:
             a, b = punch_at - 0.15, punch_at + 2.0
@@ -1635,6 +1636,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         # webcam: the WHOLE webcam box (nothing cropped off), only as big as its pixels allow so it stays sharp
         # (max ~3.6x with the AI-upscaled webcam, 2.8x without), centred on a blurred copy of itself
         fw, fh = _cam_fit(raw, w, h, T, 3.6 if cam_video else 2.8)
+        info["cam_px"] = [int(fw), int(fh)]
         punch = ""
         if punch_at is not None:   # "punch into the reaction": webcam zooms in 10% on the big moment, then back
             a, b = punch_at - 0.15, punch_at + 2.0
@@ -1731,6 +1733,20 @@ def view_check(video: Path, lay: str, info: dict | None) -> tuple[bool, str]:
         return False, "the video won't open"
     if max(float(cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).mean()) for f in frames) < 22:
         probs.append("the picture is black / too dark")
+    cp = (info or {}).get("cam_px")
+    if cp and lay in ("split", "react") and cp[0] < 500 and cp[1] < 400:
+        probs.append("the webcam is too small to see (low-quality webcam)")
+    if lay == "split":   # the game part is a blank page / plain screen (a document, a desktop) most of the time
+        flat = 0
+        for f in frames:
+            Hh = f.shape[0]
+            sc = Hh / 1920
+            reg = f[int(TOP_H * sc):int((1920 - SAFE_BOTTOM) * sc)].reshape(-1, 3).astype(np.int16)
+            med = np.median(reg, axis=0)
+            if float((np.abs(reg - med).max(axis=1) < 14).mean()) > 0.85:
+                flat += 1
+        if flat >= 3:
+            probs.append("the game part is a blank / plain screen")
     if lay in ("split", "react", "cam") or lay.startswith("irl"):
         good = 0
         for f in frames:
@@ -2781,6 +2797,29 @@ def main() -> None:
                     log(f"view check skipped {cid}: {e}")
         if n:
             log(f"safe area: re-making {n} reaction clips with the hook below TikTok's top bar")
+    if st.get("safe_view_v", 0) < 2:   # one time: re-check the queue with the webcam-size / blank-screen checks too
+        st["safe_view_v"] = 2
+        for cid, c in clips.items():
+            fin, raw = VID / f"{cid}_final.mp4", RAW / f"{cid}.mp4"
+            lay0 = c.get("layout_used") or c.get("layout") or "split"
+            if c["status"] != "new" or not fin.exists() or not c.get("final_hash"):
+                continue
+            inf = {}
+            try:
+                if raw.exists() and c.get("cam") and lay0 in ("split", "react"):
+                    x0, y0, w0, h0 = [float(v) for v in (c.get("cam_used") or c["cam"]).split(",")]
+                    if lay0 == "split":
+                        T0 = int((c.get("user_layout") or {}).get("top_h") or learn.CAM_PX.get((c.get("style") or {}).get("cam", ""), TOP_H))
+                        inf["cam_px"] = list(_cam_fit(raw, w0, h0, T0, 3.6 if c.get("hd") else 2.8))
+                    else:
+                        g0 = react_geometry(raw, w0, h0, c.get("react_view") or None)
+                        inf["cam_px"] = [g0["fw"], g0["fh"]]
+                vok, vwhy = view_check(fin, lay0, inf)
+                c["view_ok"], c["view_why"] = vok, vwhy
+                if not vok:
+                    log(f"view check {cid}: {vwhy} - held back from posting")
+            except Exception as e:  # noqa: BLE001
+                log(f"view check skipped {cid}: {e}")
     if st.get("caps_v", 0) < 1:   # one time (Nov 24): at most one CAPS word in our own hooks (yours stay as you wrote)
         st["caps_v"] = 1
         import viral
