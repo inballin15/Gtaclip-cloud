@@ -404,12 +404,12 @@
    }
   ]
  },
- "updated": "2026-11-24T03:45:26Z",
+ "updated": "2026-11-24T03:48:20Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-24T13:37:00Z",
- "up_next": "CalmFrozenCrocodilePeanutButterJellyTime-OwUM1VvaCFBCpYSS",
+ "up_next": "TemperedPerfectAnacondaTF2John-n1GQDNLZKIjo867Q",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7711546592687377695",
@@ -1129,6 +1129,34 @@
   "vod2937998841_7955"
  ],
  "posts": {
+  "CalmFrozenCrocodilePeanutButterJellyTime-OwUM1VvaCFBCpYSS": {
+   "id": "CalmFrozenCrocodilePeanutButterJellyTime-OwUM1VvaCFBCpYSS",
+   "hook": "Why was xQc SHOCKED by GTA 6 world detail?",
+   "streamer": "xQc",
+   "campaign": "",
+   "why": "posted by Nicholas",
+   "manual": true,
+   "posted_at": "2026-11-24T03:48:20Z",
+   "platforms": [
+    "youtube"
+   ],
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "len": "s16",
+    "hooklen": "story",
+    "start": "build",
+    "subs": "on",
+    "punch": "on"
+   },
+   "hook_variant": "question",
+   "seconds": 56,
+   "tiktok": "",
+   "youtube": "",
+   "manual_on": {
+    "youtube": "2026-11-24T03:48:20Z"
+   }
+  },
   "AdorableFlaccidKaleRalpherZ-ER-Yna5U3_zjbvB4": {
    "id": "AdorableFlaccidKaleRalpherZ-ER-Yna5U3_zjbvB4",
    "hook": "IShowSpeed freaked out after finding a Hulk character in GTA 6",
@@ -3002,6 +3030,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T03:45:26Z",
- "log": []
+ "stats_updated": "2026-11-24T03:48:20Z",
+ "log": [
+  "[03:48:22Z] marked as posted manually: CalmFrozenCrocodilePeanutButterJellyTime-OwUM1VvaCFBCpYSS"
+ ]
 }
