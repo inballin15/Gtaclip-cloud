@@ -751,8 +751,8 @@ def best_part(raw: Path, cid: str, tmp: Path, c: dict) -> Path:
             start = float(max(cand, key=lambda t: (db[t] - db[t - 1]) - 0.4 * abs(t - want)) if cand else max(0, want))
             start = max(0.0, start)
         end = float(min(secs, max(start + keep_s, p + 4)))
-        if end - start < 8:                       # moment near the end: keep at least 8 s
-            start = float(max(0, end - 8))
+        if end - start < keep_s:                  # moment near the end of the Twitch clip: start earlier instead of
+            start = float(max(0, end - keep_s))   # making a short clip (a 60 s clip was coming out 11 s - Nov 24)
         if end - start > 30:
             end = start + 30
         if secs - end < 3:                        # don't leave a tiny leftover at the end
@@ -2006,8 +2006,8 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
-    if st.get("short_redo_v", 0) < 1:   # one time: re-make queued clips the old dead-air cut left under 15 s
-        st["short_redo_v"] = 1
+    if st.get("short_redo_v", 0) < 2:   # one time: re-make queued clips that came out under 15 s (dead-air cut /
+        st["short_redo_v"] = 2           # moment near the end of the Twitch clip)
         for c in clips.values():
             if c["status"] == "new" and c.get("source") != "upload" and (c.get("final_s") or 99) < 15 \
                     and (c.get("seconds") or 0) >= 16 and not c.get("hook_by_user"):
