@@ -1296,6 +1296,7 @@ PART_MIN, PART_MAX_S = 25.0, 30.0   # your pasted links/uploads: 25-30 s parts, 
 PART_MAX = 32                        # at most 32 parts (about 15 minutes) per link
 
 
+UPLOAD_MAX_CLIPS = 4   # funniest moments made from one pasted link / upload
 FULL_MAX_S = 180.0   # one full video per link, up to 3 minutes (longest YouTube Short)
 
 
@@ -1382,7 +1383,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
             _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
             continue
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": "Got your clip — adding it to the queue (a few minutes)." if job.get("asis")
-                                                              else "Got your video — making it into one full video (usually 5–15 min)."})
+                                                              else "Got your video — finding the funniest moments, same as the Twitch clips (usually 5–15 min)."})
         src = tmp / f"upload_{job.get('id', num)}.mp4"
         link = job.get("url") or ""
         offset = 0.0
@@ -1399,7 +1400,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 if not job.get("name") or job["name"] == "Link":
                     job["name"] = (info.get("title") or "TikTok")[:60]
                 link = ""   # cut from the downloaded file, not the (short-lived) TikTok stream
-                if duration_of(src) <= 75:   # already a short: use the whole thing, re-captioned in our style
+                if duration_of(src) <= 30:   # already a tiny clip - nothing to cut: use it whole, in our style
                     job["asis"] = True
             elif link:
                 src, offset, title = fetch_link_audio(link, job.get("section"), tmp)
@@ -1417,12 +1418,12 @@ def process_uploads(st: dict, tmp: Path) -> None:
                             "text": transcript(src) if d0 < 180 else "", "hook": (job.get("hook") or "").strip()}]
                 if moments[0]["hook"]:
                     moments[0]["hook_ai"] = True
-            else:   # your pasted link / upload: ONE full video, start to finish (no parts - posting many back to back looks spammy)
-                d0 = full_length(src)
-                end = min(d0, FULL_MAX_S)
-                moments = [{"start": 0.0, "end": end, "score": 1.0, "reasons": ["full video"], "text": "", "full": True}]
-                if d0 > FULL_MAX_S + 1:
-                    job["cut_short"] = int(FULL_MAX_S // 60)
+            else:   # your pasted link / upload: made exactly like the Twitch clips (Nov 24) - find the funniest
+                    # moments (laughs, yelling, big reactions), cut each to the best ~16-22 s with the peak mid-clip,
+                    # AI hook from what's said and shown. Up to 4 clips per video so one video can't flood the queue.
+                moments = viral.find_moments(src, max_clips=UPLOAD_MAX_CLIPS, log=log)[:UPLOAD_MAX_CLIPS]
+                if not moments:
+                    raise RuntimeError("couldn't find any moments with talking or reactions in it")
         except Exception as e:  # noqa: BLE001
             log(f"upload {num} failed: {e}")
             hint = ("YouTube blocked the download from GitHub's servers — save the video and use Upload instead."
@@ -1495,9 +1496,9 @@ def process_uploads(st: dict, tmp: Path) -> None:
                             f"({', '.join(m['reasons']) or 'good moment'}) — {rec.get('hook') or ''}")
             except Exception as e:  # noqa: BLE001
                 log(f"cutting clip {cid} failed: {e}")
-        msg = (f"Made the full video **{job.get('name', 'your video')}** — it's in Your clips (it doesn't auto-post)"
-               + (f". Long video: it's the first {job['cut_short']} minutes — paste it again with a time range for another part" if job.get("cut_short") else "") + ":\n"
-               + "\n".join(made)) if made else "Couldn't make parts from this video — try uploading the file instead."
+        msg = (f"Made {len(made)} clip{'s' if len(made) != 1 else ''} from the funniest moments of **{job.get('name', 'your video')}** "
+               "— they're in Your clips (they don't auto-post):\n" + "\n".join(made)) if made \
+            else "Couldn't make clips from this video — try uploading the file instead."
         _gh("POST", f"/repos/{REPO}/issues/{num}/comments", {"body": msg})
         _gh("PATCH", f"/repos/{REPO}/issues/{num}", {"state": "closed"})
         if ref:

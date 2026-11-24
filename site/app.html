@@ -1328,10 +1328,10 @@ function renderMine(v, ql) {
   const up = el('button', 'big alt', '＋ Make clips — paste a link or upload'); up.style.marginBottom = '10px'; up.onclick = () => openUpload(); v.append(up);
   for (const u of uploads.filter((x) => Date.now() - x.at < 2 * 86400e3).slice(0, 4)) v.append(uploadItem(u));
   const mine = ql.filter((r) => r.source === 'upload'); const ready = mine.filter((r) => r.final); const prep = mine.length - ready.length;
-  v.append(Object.assign(el('div', 'mut', `${ready.length} ready${prep ? ` · ${prep} being made` : ''} · one full video per link · never auto-posted: tap Ship it now or post them yourself`), { style: 'margin:0 2px 10px' }));
+  v.append(Object.assign(el('div', 'mut', `${ready.length} ready${prep ? ` · ${prep} being made` : ''} · funniest moments from each link · never auto-posted: tap Ship it now or post them yourself`), { style: 'margin:0 2px 10px' }));
   if (!ready.length) { v.append(el('div', 'empty', prep ? 'Your parts are being made — they show up here in a few minutes.' : 'Paste a link above — its parts show up here, separate from the stream clips.')); return; }
   const ord = (r) => r.found || r.created || '';
-  ready.sort((a, b) => ((ord(b) > ord(a)) - (ord(b) < ord(a))) || ((a.part || 0) - (b.part || 0)));   // newest video first, its parts in order
+  ready.sort((a, b) => ((ord(b) > ord(a)) - (ord(b) < ord(a))) || ((a.part || 0) - (b.part || 0)));   // newest video first, its clips in order
   let last = '';
   ready.forEach((r, i) => {
     const vid = (r.title || '').replace(/ · Part \d+$/, '');
@@ -1839,7 +1839,7 @@ function openUpload(which) {
     if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB)'); return; }
     closeSheet(); uploadVideo(file, who.value, credit());
   };
-  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It makes the whole thing into one full video (up to 3 minutes). Add a time range for longer videos.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
+  sheet('Make clips', [seg, el('div', 'mut', 'Paste a Twitch, Kick or TikTok link (use streamers\' own TikToks, not other clippers\') OR upload a video. It finds the funniest moments (like the Twitch clips) and makes up to 4 short clips with hooks. Add a time range for long videos.'), link, sec, el('label', null, '— or upload a video —'), f, el('label', null, 'Whose stream is it?'), who, other, go]);
 }
 function b64(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }); }
 async function uploadVideo(file, login, streamer, extra = {}) {
