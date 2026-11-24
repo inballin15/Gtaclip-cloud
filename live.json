@@ -404,7 +404,7 @@
    }
   ]
  },
- "updated": "2026-11-24T00:28:55Z",
+ "updated": "2026-11-24T00:34:03Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1006,12 +1006,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-23",
-  "used": 16,
+  "used": 17,
   "cap": 28,
   "slots": 6,
-  "remain30": 737,
-  "reset30": "2026-12-18T22:03:25Z",
-  "remain24": 587,
+  "remain30": 736,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 586,
   "active": [
    [
     8,
@@ -1129,11 +1129,11 @@
    "posted_at": "2026-11-24T00:09:01Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/WimpyPuzzledChimpanzeeMikeHogu-Fw9ZRjhgHysCfB-__final.mp4?v=3da12dc94e&r=1795468424",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/WimpyPuzzledChimpanzeeMikeHogu-Fw9ZRjhgHysCfB-_.jpg",
-   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711523305009728781",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711523305009728781",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b04d5a29a4bd32ca3dc8511",
      "error": ""
     }
@@ -2071,6 +2071,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7711523305009728781",
+   "sent": "2026-11-24T00:10:48.173Z",
+   "hook": "DarkViperAU lost it when his wing fell off during a flight mission",
+   "clip": "WimpyPuzzledChimpanzeeMikeHogu-Fw9ZRjhgHysCfB-_",
+   "streamer": "DarkViperAU",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7711476381607120141",
    "sent": "2026-11-23T21:08:04.010Z",
    "hook": "caseoh_ roasted an NPC after hitting their scooter",
@@ -2924,6 +2938,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T00:28:55Z",
+ "stats_updated": "2026-11-24T00:34:03Z",
  "log": []
 }
