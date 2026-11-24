@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-24T14:01:07Z",
- "videos": 44,
+ "updated": "2026-11-24T16:02:30Z",
+ "videos": 46,
  "v": 4,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 12.57,
+   "x": 12.84,
    "n": 3
   },
   {
@@ -30,7 +30,7 @@
   {
    "feature": "streamer",
    "value": "Kai Cenat",
-   "x": 3.71,
+   "x": 3.74,
    "n": 4
   },
   {
@@ -52,12 +52,6 @@
    "n": 6
   },
   {
-   "feature": "style:cam",
-   "value": "small",
-   "x": 0.34,
-   "n": 5
-  },
-  {
    "feature": "hook style",
    "value": "formula",
    "x": 0.39,
@@ -70,130 +64,136 @@
    "n": 13
   },
   {
-   "feature": "hook length",
-   "value": "long (90+)",
-   "x": 0.41,
-   "n": 4
-  },
-  {
    "feature": "CAPS words",
    "value": "4-6",
    "x": 0.43,
    "n": 5
   },
   {
-   "feature": "streamer",
-   "value": "Clix",
-   "x": 0.49,
+   "feature": "hook length",
+   "value": "long (90+)",
+   "x": 0.45,
+   "n": 4
+  },
+  {
+   "feature": "style:cam",
+   "value": "small",
+   "x": 0.46,
    "n": 6
   },
   {
    "feature": "style:box",
    "value": "black",
-   "x": 0.49,
+   "x": 0.48,
    "n": 4
   },
   {
-   "feature": "style:hooklen",
-   "value": "tiny",
+   "feature": "streamer",
+   "value": "Clix",
    "x": 0.51,
-   "n": 8
+   "n": 6
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 1.89,
+   "x": 1.91,
    "n": 16
-  },
-  {
-   "feature": "style:box",
-   "value": "white",
-   "x": 0.53,
-   "n": 12
-  },
-  {
-   "feature": "has a number",
-   "value": "no",
-   "x": 0.56,
-   "n": 11
   },
   {
    "feature": "hook style",
    "value": "unknown",
-   "x": 1.77,
-   "n": 28
+   "x": 1.7,
+   "n": 29
   },
   {
-   "feature": "clip length",
-   "value": "23 s+",
-   "x": 0.58,
+   "feature": "style:box",
+   "value": "white",
+   "x": 0.59,
    "n": 13
   },
   {
-   "feature": "streamer",
-   "value": "?",
-   "x": 1.64,
-   "n": 10
+   "feature": "style:hooklen",
+   "value": "tiny",
+   "x": 0.59,
+   "n": 9
   },
   {
    "feature": "posted",
    "value": "morning (7-11)",
-   "x": 1.56,
+   "x": 1.67,
    "n": 8
   },
   {
-   "feature": "hook length",
-   "value": "medium (60-90)",
-   "x": 1.46,
-   "n": 6
+   "feature": "style:len",
+   "value": "s22",
+   "x": 1.61,
+   "n": 3
+  },
+  {
+   "feature": "style:start",
+   "value": "build",
+   "x": 1.61,
+   "n": 3
+  },
+  {
+   "feature": "has a number",
+   "value": "no",
+   "x": 0.64,
+   "n": 12
+  },
+  {
+   "feature": "clip length",
+   "value": "23 s+",
+   "x": 0.64,
+   "n": 14
   }
  ],
  "guidance": [
   "AVOID: emotion word = STUNNED (0.32x views, 6 videos)",
-  "AVOID: has a number = no (0.56x views, 11 videos)",
+  "AVOID: has a number = no (0.64x views, 12 videos)",
   "DO: hook length = medium (60-90) (1.46x views, 6 videos)"
  ],
  "weights": {
-  "formula": 0.399,
-  "news": 0.19,
+  "formula": 0.396,
+  "news": 0.198,
   "quote": 0.077,
-  "question": 0.088,
-  "lowcaps": 0.246
+  "question": 0.087,
+  "lowcaps": 0.242
  },
  "style_weights": {
   "box": {
-   "white": 0.723,
-   "black": 0.277
+   "white": 0.735,
+   "black": 0.265
   },
   "cam": {
-   "small": 0.338,
-   "medium": 0.662
+   "small": 0.356,
+   "medium": 0.644
   },
   "len": {
-   "s16": 0.282,
-   "s22": 0.718
+   "s16": 0.273,
+   "s22": 0.727
   },
   "hooklen": {
-   "tiny": 0.179,
-   "story": 0.821
+   "tiny": 0.188,
+   "story": 0.812
   },
   "start": {
    "fast": 0.116,
    "build": 0.884
   },
   "subs": {
-   "off": 0.496,
-   "on": 0.504
+   "off": 0.509,
+   "on": 0.491
   },
   "punch": {
-   "off": 0.504,
-   "on": 0.496
+   "off": 0.491,
+   "on": 0.509
   }
  },
  "top": [
   {
    "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
-   "views": 1345
+   "views": 1362
   },
   {
    "hook": "Speed found him",
@@ -214,42 +214,57 @@
  ],
  "style_counts": {
   "formula": 7,
-  "news": 1,
+  "news": 2,
   "quote": 3,
   "question": 3,
   "lowcaps": 2
  },
  "style_tested": {
   "box": {
-   "white": 12,
+   "white": 13,
    "black": 4
   },
   "cam": {
-   "small": 5,
+   "small": 6,
    "medium": 13
   },
   "len": {
    "s16": 0,
-   "s22": 2
+   "s22": 3
   },
   "hooklen": {
-   "tiny": 8,
+   "tiny": 9,
    "story": 2
   },
   "start": {
    "fast": 8,
-   "build": 2
+   "build": 3
   },
   "subs": {
-   "off": 1,
+   "off": 2,
    "on": 1
   },
   "punch": {
    "off": 1,
-   "on": 1
+   "on": 2
   }
  },
  "feed": [
+  {
+   "at": "2026-11-24T16:02:30Z",
+   "kind": "data",
+   "text": "judged 46 videos (was 44)"
+  },
+  {
+   "at": "2026-11-24T16:02:30Z",
+   "kind": "shift",
+   "text": "punch: off -> on"
+  },
+  {
+   "at": "2026-11-24T16:02:30Z",
+   "kind": "shift",
+   "text": "subs: on -> off"
+  },
   {
    "at": "2026-11-24T14:01:07Z",
    "kind": "data",
@@ -384,21 +399,6 @@
    "at": "2026-11-23T01:36:39Z",
    "kind": "shift",
    "text": "start: fast -> build"
-  },
-  {
-   "at": "2026-11-23T01:36:39Z",
-   "kind": "shift",
-   "text": "hooklen: short -> story"
-  },
-  {
-   "at": "2026-11-23T01:36:39Z",
-   "kind": "shift",
-   "text": "len: normal -> s22"
-  },
-  {
-   "at": "2026-11-22T23:41:15Z",
-   "kind": "data",
-   "text": "judged 29 videos (was 27)"
   }
  ]
 }
