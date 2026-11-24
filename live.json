@@ -403,12 +403,12 @@
    }
   ]
  },
- "updated": "2026-11-24T18:03:34Z",
+ "updated": "2026-11-24T18:08:49Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-24T18:07:00Z",
- "up_next": "SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj",
+ "next_slot": "2026-11-24T21:07:00Z",
+ "up_next": "SarcasticPopularGoshawkDeIlluminati-1bd4lZBpuzlHDndR",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7711778357830094093",
@@ -1091,12 +1091,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-24",
-  "used": 7,
+  "used": 9,
   "cap": 28,
   "slots": 6,
-  "remain30": 726,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 596,
+  "remain30": 724,
+  "reset30": "2026-12-18T22:03:26Z",
+  "remain24": 594,
   "active": [
    [
     8,
@@ -1203,6 +1203,44 @@
   "vod2937998841_7955"
  ],
  "posts": {
+  "SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj": {
+   "id": "SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj",
+   "hook": "Lacy PANICKED after choosing to take the deal in GTA 6",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "campaign": "Lacy",
+   "tag": "#Lacy",
+   "caption": "",
+   "why": "1:07 PM slot",
+   "posted_at": "2026-11-24T18:08:49Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj_final.mp4?v=8ecde2feb9&r=1795508333",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b05d2b4bd6e90a328201177",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "formula",
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "len": "s22",
+    "hooklen": "tiny",
+    "start": "build",
+    "subs": "on",
+    "punch": "off"
+   },
+   "viral": 82,
+   "seconds": 60
+  },
   "GrotesqueHonorableAlbatrossStrawBeary-_bDswzVWJVmAobIy": {
    "id": "GrotesqueHonorableAlbatrossStrawBeary-_bDswzVWJVmAobIy",
    "hook": "Kai Cenat LOST IT watching Lucia beat up an NPC in GTA 6",
@@ -3314,8 +3352,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T18:03:34Z",
+ "stats_updated": "2026-11-24T18:08:49Z",
  "log": [
-  "[18:03:36Z] hook learner: 46 videos, 3 lessons"
+  "[18:08:51Z] posting SilkyAmazonianChimpanzeeTheTarFu-Gs1RhmoUefC_5UQj (1:07 PM slot) to tiktok: Lacy PANICKED after choosing to take the deal in GTA 6",
+  "[18:09:03Z]   tiktok: uploading "
  ]
 }
