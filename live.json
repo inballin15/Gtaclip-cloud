@@ -403,7 +403,7 @@
    }
   ]
  },
- "updated": "2026-11-24T17:02:36Z",
+ "updated": "2026-11-24T17:07:45Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1091,12 +1091,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-24",
-  "used": 6,
+  "used": 7,
   "cap": 28,
   "slots": 6,
-  "remain30": 727,
-  "reset30": "2026-12-18T22:03:26Z",
-  "remain24": 597,
+  "remain30": 726,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 596,
   "active": [
    [
     8,
@@ -1215,11 +1215,11 @@
    "posted_at": "2026-11-24T16:39:07Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/GrotesqueHonorableAlbatrossStrawBeary-_bDswzVWJVmAobIy_final.mp4?v=bb7c243c47&r=1795529064",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/GrotesqueHonorableAlbatrossStrawBeary-_bDswzVWJVmAobIy.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711778357830094093",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b05bdaf3cafd3d6823f9165",
      "error": ""
     }
@@ -2377,6 +2377,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7711778357830094093",
+   "sent": "2026-11-24T16:39:53.651Z",
+   "hook": "Kai Cenat lost it watching Lucia beat up an NPC in GTA 6",
+   "clip": "GrotesqueHonorableAlbatrossStrawBeary-_bDswzVWJVmAobIy",
+   "streamer": "Kai Cenat",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7711732315809991950",
    "sent": "2026-11-24T13:41:27.590Z",
    "hook": "ohnePixel lost it when Jenna confessed to throwing up on a bride's mom",
@@ -3300,6 +3314,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-24T17:02:36Z",
+ "stats_updated": "2026-11-24T17:07:45Z",
  "log": []
 }
