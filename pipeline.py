@@ -1483,6 +1483,8 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     sc = int(m["ai_score"] * 10)
                     rec.update(viral=sc, viral_verdict="post" if sc >= 70 else "maybe" if sc >= 45 else "skip",
                                viral_why=", ".join(m.get("reasons", []))[:90])
+                if job.get("subs") in ("on", "off"):   # you picked subtitles on / off when you made it
+                    rec["style"] = {**(rec.get("style") or {}), "subs": job["subs"]}
                 if job.get("asis"):
                     rec.update(cam="0,0,1,1", cam_q="none", layout="fill", asis=True, title=job.get("name") or "Your clip")
                     if job.get("hook"):
@@ -2282,9 +2284,12 @@ def main() -> None:
         cid, raw, hh, ch, need_f, need_c = job
         c = clips[cid]
         lay = c.get("layout", "split")
-        if not c.get("style") and not c.get("user_layout") and not c.get("asis") and c.get("source") != "upload" \
-                and not c.get("final_hash"):
-            c["style"] = learn.pick_style(LEARNED_INS, cid)   # dynamic model: test looks, keep what gets views
+        mine_new = c.get("source") == "upload" and set(c.get("style") or {}) <= {"subs"} and not c.get("full") and not c.get("part")
+        if (not c.get("style") or mine_new) and not c.get("user_layout") and not c.get("asis") and not c.get("final_hash") \
+                and (c.get("source") != "upload" or mine_new):
+            # dynamic model: test looks, keep what gets views. Your pasted clips get the same looks (Nov 24) -
+            # but the subtitles on/off you picked when making them always wins.
+            c["style"] = {**learn.pick_style(LEARNED_INS, cid), **(c.get("style") or {})}
         sty = {**(c.get("style") or {}), **{k: v for k, v in (c.get("user_layout") or {}).items() if k in ("subs", "punch")}}
         if not c.get("asis") and not c.get("part") and not c.get("full"):   # your full video / parts stay whole (no trims)
             raw = best_part(raw, cid, tmp, c)
