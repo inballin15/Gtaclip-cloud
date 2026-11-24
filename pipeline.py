@@ -1117,6 +1117,27 @@ def _cam_fg_top(raw: Path, w: float, h: float) -> int:
 REACT_TOP = 340   # react layout: where the watched screen starts (the hook sits above it)
 
 
+def cam_is_live(raw: Path, cam: str) -> bool:
+    """A real webcam is never perfectly still (people move, cameras have noise). If the box looks the same in every
+    frame, it's a picture in the stream overlay (art, a logo, a game character), not a camera."""
+    try:
+        x, y, w, h = [float(v) for v in cam.split(",")]
+        cap = cv2.VideoCapture(str(raw))
+        dur = (cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0) / (cap.get(cv2.CAP_PROP_FPS) or 30)
+        cap.release()
+        crops = []
+        for fr in _frames(raw, [max(0.3, dur * p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)]):
+            H, W = fr.shape[:2]
+            g = cv2.cvtColor(fr[int(y * H):int((y + h) * H), int(x * W):int((x + w) * W)], cv2.COLOR_BGR2GRAY)
+            crops.append(cv2.resize(g, (96, 54)).astype(np.float32))
+        if len(crops) < 3:
+            return True
+        change = max(float(np.mean(np.abs(a - b))) for a, b in zip(crops, crops[1:]))
+        return change >= 1.5    # still pictures: ~0-1 (video compression only); real webcams: 3+
+    except Exception:  # noqa: BLE001
+        return True   # can't tell: don't throw the clip away
+
+
 def react_cam(frame, box) -> str | None:
     """The channel owner's webcam in a react clip, from the AI's box ([ymin, xmin, ymax, xmax], 0-1000).
     Only used if a face really is inside it (so we never show the face from the video being watched by mistake)."""
@@ -2064,6 +2085,12 @@ def main() -> None:
             if cid.startswith("upmwtgx8fl2_"):
                 c.update(hook="", no_hook=True, hook_by_user=True, hook_kind="user")
                 c.pop("hook_auto", None); c.pop("final_hash", None)
+    if st.get("big_only_v", 0) < 1:   # one time (Nov 24, big streamers only): small streamers' clips leave the queue
+        st["big_only_v"] = 1
+        for c in clips.values():
+            if c["status"] == "new" and c.get("source") not in ("upload",) and c.get("login") not in CFG["streamers"] \
+                    and (c.get("views") or 0) < 1000 and not c.get("post_now") and not c.get("hook_by_user"):
+                c.update(status="expired", skip_reason="small streamer (big streamers only)")
     if st.get("short_redo_v", 0) < 2:   # one time: re-make queued clips that came out under 15 s (dead-air cut /
         st["short_redo_v"] = 2           # moment near the end of the Twitch clip)
         for c in clips.values():
@@ -2497,6 +2524,18 @@ def main() -> None:
         if auto and lay == "split" and (c.get("irl_x") or -1) >= 0:
             lay = f"irl:{c['irl_x']:.3f}"
             log(f"no gameplay in {cid}: full-screen shot on the streamer")
+        if lay == "split" and cam and not ul.get("cam") and c.get("source") != "upload" and not cam_is_live(raw, cam):
+            # the "webcam" never changes: it's a picture in the stream overlay (Nov 24: GTA artwork of Jason's face
+            # was taken for a webcam), not a camera -> no webcam: big clips go full-screen gameplay, the rest are skipped
+            if (c.get("views") or 0) >= NOCAM_MIN_VIEWS:
+                lay = "fill"
+                c.update(layout="fill", cam="0,0,1,1", cam_q="none", nocam=True)
+                cam = c["cam"]
+                log(f"{cid}: the webcam box is a still picture - full-screen gameplay instead")
+            elif not c.get("post_now"):
+                c.update(status="skip", skip_reason="no webcam (the box was a still picture)")
+                log(f"skipped {cid}: webcam box is a still picture, not a camera")
+                return job
         if lay == "split" and cam and not ul.get("cam"):
             scfg = CFG["streamers"].get(c.get("login", ""), {})
             cam2 = cam_without_chat(raw, cam, bool(scfg.get("chat_on_cam")), scfg.get("chat_cut"))

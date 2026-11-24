@@ -182,7 +182,8 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
         for c in sorted(gclips, key=lambda c: c["view_count"], reverse=True):
             login = (c.get("broadcaster_name") or "").lower().replace(" ", "")
             if (c["id"] in seen or c["id"] in have or c.get("language", "en") not in ("en", "") or not login
-                    or c["view_count"] < d.get("game_wide_min_views", 40)
+                    or c["view_count"] < (d.get("game_wide_min_views", 40) if login in CFG["streamers"]
+                                          else d.get("game_wide_min_views_unknown", 1000))   # big streamers only
                     or not d["min_seconds"] <= c["duration"] <= d["max_seconds"]
                     or any(w in c["title"].lower() for w in bad) or per.get(login, 0) >= 2):
                 continue

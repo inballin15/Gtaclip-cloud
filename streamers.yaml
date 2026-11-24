@@ -10,9 +10,10 @@ discovery:
   max_seconds: 60
   max_per_streamer: 4
   max_total: 10            # per run (runs every 10 min) - keeps each run short
-  min_live_viewers: 1500   # any English GTA 6 stream this big that's live now (Nicholas joined every campaign)
+  min_live_viewers: 8000   # BIG streamers only (Nov 24): a live stream not on our list needs 8,000+ viewers
   game_wide: true          # + the most-watched fresh GTA 6 clips from ANY streamer on Twitch
-  game_wide_min_views: 150   # all-of-Twitch picks must already be proven (views)
+  game_wide_min_views: 150   # all-of-Twitch picks from streamers ON our list: already proven (views)
+  game_wide_min_views_unknown: 1000   # ...from streamers NOT on our list: only big hits (Nov 24: no small streamers)
   game_wide_max: 15
   discover_live: true
   skip_title_words: ["abuse", "abusing", "lady", "women", "girl", "freaky", "strip", "horny",

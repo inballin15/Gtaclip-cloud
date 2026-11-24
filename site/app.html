@@ -1805,10 +1805,10 @@ function openEditor(r) {
 const STREAMERS = [['', 'Me / someone else'], ['clix', 'Clix'], ['lacy', 'Lacy'], ['kaicenat', 'Kai Cenat'], ['yourragegaming', 'YourRAGE'], ['jynxzi', 'Jynxzi'], ['xqc', 'xQc'], ['ishowspeed', 'IShowSpeed'], ['jasontheween', 'JasonTheWeen'], ['stableronaldo', 'Stable Ronaldo'], ['marlon', 'Marlon'], ['adapt', 'Adapt']];
 function uploadItem(u) {
   const d = el('div', 'upitem'); const top = el('div', 'row'); top.append(el('b', null, u.name));
-  const lbl = { uploading: `Uploading ${u.pct}%`, processing: 'Finding the best moments…', done: 'Clips ready ✓', failed: 'Problem' }[u.state];
-  top.append(badge({ cls: u.state === 'done' ? 's-live' : u.state === 'failed' ? 's-err' : 's-busy', txt: lbl, spin: u.state === 'uploading' || u.state === 'processing' })); d.append(top);
+  const lbl = { uploading: `Uploading ${u.pct}%`, processing: 'Finding the funniest moments…', making: 'Making your clips…', done: 'Clips ready ✓', failed: 'Problem' }[u.state];
+  top.append(badge({ cls: u.state === 'done' ? 's-live' : u.state === 'failed' ? 's-err' : 's-busy', txt: lbl, spin: u.state === 'uploading' || u.state === 'processing' || u.state === 'making' })); d.append(top);
   if (u.state === 'uploading') { const b = el('div', 'bar'); const f = el('div'); f.style.width = u.pct + '%'; b.append(f); d.append(b, el('div', 'mut', u.msg || `Keep this page open and the phone unlocked until it reaches 100%${u.size ? ` (${Math.round(u.size / 1e6)} MB)` : ''}.`)); }
-  if (u.state === 'processing') d.append(el('div', 'mut', 'Usually 5–20 minutes. Clips show up below tagged "Your video". You can close the site.'));
+  if (u.state === 'processing' || u.state === 'making') d.append(el('div', 'mut', u.state === 'making' ? 'Found the moments — turning them into videos now (usually 10–20 min). You can close the site.' : 'Usually 5–20 minutes in total. You can close the site.'));
   if (u.msg && u.state !== 'uploading') d.append(el('div', 'mut', u.msg.split('\n')[0]));
   if (u.state === 'done' || u.state === 'failed') { const x = el('button', 'btn ghost', 'Dismiss'); x.onclick = () => { uploads = uploads.filter((y) => y !== u); saveUploads(); lastSig = ''; render(); }; d.append(x); }
   return d;
@@ -1921,9 +1921,15 @@ async function checkUploads() {
     try {
       const iss = await gh('GET', `/issues/${u.issue}`); const cm = await gh('GET', `/issues/${u.issue}/comments?per_page=10`);
       const last = cm.length ? cm[cm.length - 1].body : '';
-      if (iss.state === 'closed') { u.state = /^Made \d+ clips?/.test(last) ? 'done' : 'failed'; u.msg = last; changed = true; }
+      if (iss.state === 'closed') { u.state = /^Made \d+ clips?/.test(last) ? 'making' : 'failed'; u.msg = last; changed = true; }
       else if (last && last !== u.msg) { u.msg = last; changed = true; }
     } catch (e) { /* later */ }
+  }
+  // cut into clips -> now being made into videos: only "done" once they're really in Your clips
+  for (const u of uploads.filter((x) => x.state === 'making')) {
+    const n = (Q.ready || []).filter((r) => r.id.startsWith('up' + u.id + '_') && r.final).length;
+    if (n) { u.state = 'done'; u.msg = `${n} clip${n > 1 ? 's' : ''} ready in Your clips`; changed = true; }
+    else if (Date.now() - u.at > 3 * 3600e3) { u.state = 'failed'; u.msg = 'The clips never showed up — try again or send me a screenshot.'; changed = true; }
   }
   if (changed) { saveUploads(); await refreshQueue(); lastSig = ''; render(); }
 }
