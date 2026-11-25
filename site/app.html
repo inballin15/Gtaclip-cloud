@@ -1874,10 +1874,11 @@ function openEditor(r) {
   function reactGeo(W, H) {
     const [vx, vy, vw, vh] = (r.react_view && used === 'react' ? r.react_view : '0,0,1,1').split(',').map(Number);
     const [, , w, h] = S.cam || [0, 0, 0.3, 0.3]; const pw = Math.max(2, W * w), ph = Math.max(2, H * h);
-    const avail = 1920 - 400 - 30 - 300; const chFull = 1080 * (H * vh) / (W * vw); const fhCap = 1080 * ph / pw;
-    let c_h, f_h; if (chFull + fhCap <= avail) { c_h = chFull; f_h = fhCap; } else { c_h = Math.min(chFull, Math.max(avail - fhCap, 0.55 * avail)); f_h = Math.min(fhCap, avail - c_h); }
-    const c_w = Math.min(1080, c_h * (W * vw) / (H * vh)), f_w = Math.min(1080, f_h * pw / ph);
-    return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 400 + c_h + 30, fw: f_w, fh: f_h }; }
+    // same as the clip maker (Nov 25): the webcam big - nearly full width, down near the bottom - what they watch gets the rest
+    const avail = 1920 - 400 - 24 - 110; const chFull = 1080 * (H * vh) / (W * vw); const fhCap = Math.min(1040 * ph / pw, ph * 2.6);
+    const c_h = Math.min(chFull, Math.max(avail - fhCap, 0.40 * avail)); const f_h = Math.min(fhCap, avail - c_h);
+    const c_w = Math.min(1080, c_h * (W * vw) / (H * vh)), f_w = Math.min(1040, f_h * pw / ph);
+    return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 400 + c_h + 24, fw: f_w, fh: f_h }; }
   let capBox = null;
   function draw() {
     if (!img.complete || !img.naturalWidth || !CW) return;

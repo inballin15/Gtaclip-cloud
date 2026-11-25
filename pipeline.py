@@ -1210,6 +1210,7 @@ def _cam_fg_top(raw: Path, w: float, h: float) -> int:
 REACT_TOP = 400   # react layout: where the watched screen starts (the hook sits above it, below TikTok's top bar)
 SAFE_TOP = 150    # TikTok / Shorts put their top bar (Following | For You, search) over the top ~150 px of 1920
 SAFE_BOTTOM = 300 # ...and the caption / username / music over the bottom ~300 px: keep faces and text out of both
+REACT_GAP, REACT_BOTTOM, REACT_CAM_W = 24, 110, 1040   # react layout (Nov 25): webcam nearly full width, down near the bottom
 
 
 def react_view(box, cam: str) -> str | None:
@@ -1531,6 +1532,15 @@ def widen_cam(frames, box: str) -> str:
         return box
 
 
+def small_cam(cam: str) -> bool:
+    """A small webcam box (under ~15% of the screen's width): fine on top of gameplay, too small for the
+    reaction layout's big webcam (Nov 25: Kai's tiny GTA webcam ended up a small box in a big empty band)."""
+    try:
+        return float(cam.split(",")[2]) < 0.15
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def same_spot(a: str, b: str) -> bool:
     """Two webcam boxes point at the same webcam (each one's centre is inside the other)."""
     try:
@@ -1569,27 +1579,25 @@ def react_cam(frames, box) -> str | None:
 
 
 def react_geometry(raw: Path, w: float, h: float, view: str | None = None) -> dict:
-    """React layout sizes (1080x1920), like the big react pages: the hook, then what the streamer is watching
-    (only that part of the screen when we know it, in its own shape - a vertical TikTok shows tall, a stream
-    shows wide), then the streamer's own webcam, big - the reaction is the point - but never past 2.4x its
-    real pixels so the face stays sharp. Content and webcam share the height so neither ends up tiny."""
+    """React layout sizes (1080x1920) - the look you liked (Nov 24 morning): the hook, what the streamer is
+    watching right under it, then the streamer's webcam BIG - nearly the full width, down close to the bottom.
+    The webcam comes first (the reaction is the point): it's sized full-width (never past 2.6x its real pixels, so
+    the face stays sharp) and what they're watching gets the rest (at least 40% of the space). The face sits in
+    the middle of the webcam, above TikTok's caption - only shoulders / desk go under it."""
     cap = cv2.VideoCapture(str(raw))
     W = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1920
     H = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1080
     cap.release()
     vx, vy, vw, vh = [float(v) for v in view.split(",")] if view else (0.0, 0.0, 1.0, 1.0)
     pw, ph = max(2.0, W * w), max(2.0, H * h)                 # webcam pixels
-    gap, bottom = 30, SAFE_BOTTOM                             # space between them / TikTok's caption area under
+    gap, bottom = REACT_GAP, REACT_BOTTOM
     avail = 1920 - REACT_TOP - gap - bottom
-    ch_full = 1080 * (H * vh) / (W * vw)                      # content at full width
-    fh_cap = min(1080 * ph / pw, ph * 2.4)                    # webcam at full width, but sharp
-    if ch_full + fh_cap <= avail:
-        ch, fh = ch_full, fh_cap
-    else:
-        ch = min(ch_full, max(avail - fh_cap, 0.55 * avail))
-        fh = min(fh_cap, avail - ch)
+    ch_full = 1080 * (H * vh) / (W * vw)                      # what they watch, at full width
+    fh_cap = min(REACT_CAM_W * ph / pw, ph * 2.6)             # webcam nearly full width, but sharp
+    ch = min(ch_full, max(avail - fh_cap, 0.40 * avail))
+    fh = min(fh_cap, avail - ch)
     cw = min(1080.0, ch * (W * vw) / (H * vh))
-    fw = min(1080.0, fh * pw / ph)
+    fw = min(float(REACT_CAM_W), fh * pw / ph)
     cw, ch, fw, fh = [int(v) // 2 * 2 for v in (cw, ch, fw, fh)]
     ct = REACT_TOP                                            # fixed: the site's editor puts the hook right above it
     cb = ct + ch + gap
@@ -1638,18 +1646,15 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             a, b = punch_at - 0.15, punch_at + 2.0
             punch = (f",fps=30,zoompan=z='1+0.10*max(0,min(1,min((it-{a:.2f})/0.2,({b:.2f}-it)/0.4)))'"
                      f":x='iw/2-(iw/zoom/2)':y='ih/2.4-(ih/zoom/2.4)':d=1:s={fw}x{fh}:fps=30")
-        band_h = (1920 - (cb - 20) + 1) // 2 * 2
         # background = a blur of WHAT THEY'RE WATCHING (not the whole recording: a phone recording's black bars /
         # dark edges made a black band at the top or bottom - Nov 25)
         base = ("[0:v]split=3[a][b][c];"
                 f"[a]crop=w=iw*{g['vw']}:h=ih*{g['vh']}:x=iw*{g['vx']}:y=ih*{g['vy']},"
-                "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.16,setsar=1[bg];"
+                "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.18,setsar=1[bg];"
                 f"[b]crop=w=iw*{g['vw']}:h=ih*{g['vh']}:x=iw*{g['vx']}:y=ih*{g['vy']},scale={g['cw']}:{g['ch']}:flags=lanczos,setsar=1[ct];"
-                f"[c]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,setsar=1,split=2[c1][c2];"
-                # the blurred webcam fills everything under what they're watching, to the bottom edge (Nov 25: no black gap)
-                f"[c1]scale=1080:{band_h}:force_original_aspect_ratio=increase,crop=1080:{band_h},boxblur=24:2,eq=brightness=-0.16,setsar=1[cband];"
-                f"[c2]scale={fw}:{fh}:flags=lanczos,unsharp=5:5:0.7:5:5:0.0,setsar=1{punch}[cm];"
-                f"[bg][ct]overlay=(W-w)/2:{g['ct']}[t1];[t1][cband]overlay=0:{cb - 20}[t2];[t2][cm]overlay=(W-w)/2:{cb}")
+                f"[c]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,"
+                f"scale={fw}:{fh}:flags=lanczos,unsharp=5:5:0.7:5:5:0.0,setsar=1{punch}[cm];"
+                f"[bg][ct]overlay=(W-w)/2:{g['ct']}[t1];[t1][cm]overlay=(W-w)/2:{cb}")
     else:
         # webcam: the WHOLE webcam box (nothing cropped off), only as big as its pixels allow so it stays sharp
         # (max ~3.6x with the AI-upscaled webcam, 2.8x without), centred on a blurred copy of itself
@@ -2654,8 +2659,8 @@ def main() -> None:
                 else:
                     cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(c["login"]))
                     usual = ",".join(str(v) for v in (s.get("facecam") or []))
-                    if not cam and usual and box_has_face(raw, dur, usual):
-                        cam, q = usual, "learned"
+                    if usual and (not cam or not same_spot(cam, usual)) and box_has_face(raw, dur, usual):
+                        cam, q = usual, "learned"   # his usual webcam spot has his face: that's the webcam (Nov 25)
                     if not cam and (c.get("view_count") or 0) >= NOCAM_MIN_VIEWS:
                         # no webcam, but already proven on Twitch (lots of views): full-screen gameplay instead of skipping
                         rec.update(cam="0,0,1,1", cam_q="none", layout="fill", nocam=True, cam_v=CAM_V)
@@ -3006,6 +3011,31 @@ def main() -> None:
             gone.append(c0.get("streamer") or who)
     if gone:
         log(f"took {len(gone)} clips of other streamers out of the queue: {', '.join(sorted(set(gone)))}")
+    if st.get("react_fill_v", 0) < 3:   # one time (Nov 25 pm): reaction layout back to the big webcam you liked
+        st["react_fill_v"] = 3
+        n = 0
+        for cid0, c0 in clips.items():
+            if c0["status"] != "new" or (c0.get("layout_used") or c0.get("layout")) != "react" or c0.get("user_layout"):
+                continue
+            rv0 = c0.get("react_view") or ""
+            if c0.get("cam") and small_cam(c0["cam"]) and rv0 in ("", "0.0000,0.0000,1.0000,1.0000"):
+                c0.update(layout="split", react=False)   # gameplay with friends' webcams (Kai + Speed), not a reaction
+                c0.pop("react_view", None)
+                c0.pop("layout_used", None)
+                log(f"{cid0}: small webcam over gameplay - webcam + game layout instead of reaction")
+            for k in ("final_hash", "clean_v", "final_v"):
+                c0.pop(k, None)
+            n += 1
+        log(f"reaction clips: {n} re-made with the big webcam layout")
+    if st.get("ronaldo_cam_v", 0) < 1:   # one time (Nov 25): Stable Ronaldo's webcam is bottom-left (the "webcam"
+        st["ronaldo_cam_v"] = 1           # found was his GTA character's face -> his own webcam never showed)
+        usual = ",".join(str(v) for v in (CFG["streamers"].get("stableronaldo", {}).get("facecam") or []))
+        for cid0, c0 in clips.items():
+            if c0["status"] == "new" and c0.get("login") == "stableronaldo" and usual and not c0.get("user_layout"):
+                c0.update(cam=usual, cam_q="learned", layout="split", irl_x=-1, cam_v=CAM_V, in_game=True)
+                for k in ("final_hash", "clean_v", "final_v", "react", "react_view", "cam_used", "layout_used"):
+                    c0.pop(k, None)
+                log(f"{cid0}: Stable Ronaldo's own webcam (bottom-left) on top")
     if st.get("react_fill_v", 0) < 2:   # one time (Nov 25): reaction clips re-made with no black gaps (bottom + top)
         st["react_fill_v"] = 2
         n = 0
@@ -3532,6 +3562,8 @@ def main() -> None:
                 if ok is not None:
                     c["pic_ok"] = ok
                 vis = dict(getattr(viral, "LAST_VISUAL", {}) or {})
+                if ok is not None and vis.get("in_game") is True:
+                    c["in_game"] = True
                 if ok is not None and vis.get("in_game") is False and not c.get("hook_by_user"):
                     # not the game on screen (real life, a browser, another game): the hook mustn't say "in GTA 6"
                     c["in_game"] = False
@@ -3567,6 +3599,10 @@ def main() -> None:
                         if rv and not view_ok(fr, rv, rcam):
                             log(f"react clip {cid}: the AI's 'watched video' box would cut off picture - showing the whole screen")
                             rv = ""
+                        if not rv and small_cam(rcam) and vis.get("in_game") is not False:
+                            log(f"{cid}: friends' webcams over gameplay, not a reaction - webcam + game layout")
+                            rcam = None
+                    if rcam:
                         c.update(layout="react", cam=rcam, cam_q=c.get("cam_q") if rcam == known else "ai-react",
                                  react=True, watching=vis.get("watching", ""), react_view=rv)
                         c.pop("irl_x", None); c.pop("cam_only", None)
@@ -3624,7 +3660,7 @@ def main() -> None:
                 ix = None
                 log(f"no-gameplay check skipped {cid}: {e}")
             c["irl_x"] = ix if ix is not None else -1
-        if auto and lay == "split" and (c.get("irl_x") or -1) >= 0:
+        if auto and lay == "split" and (c.get("irl_x") or -1) >= 0 and c.get("in_game") is not True:
             lay = f"irl:{c['irl_x']:.3f}"
             log(f"no gameplay in {cid}: full-screen shot on the streamer")
         if lay == "split" and cam and not ul.get("cam") and c.get("source") != "upload" and not cam_is_live(raw, cam):

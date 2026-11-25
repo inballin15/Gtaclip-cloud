@@ -34,7 +34,7 @@ streamers:
   vanossgaming: {name: "Vanoss",       tag: "#Vanoss",   facecam: null}
   h2odelirious: {name: "H2O Delirious", tag: "#Vanoss",  facecam: null}
   ishowspeed:  {name: "IShowSpeed",    tag: "#IShowSpeed", facecam: null, boost: 2.0}
-  stableronaldo: {name: "Stable Ronaldo", tag: "#StableRonaldo", facecam: null}
+  stableronaldo: {name: "Stable Ronaldo", tag: "#StableRonaldo", facecam: [0.02, 0.53, 0.23, 0.29]}   # cut-out cam, bottom left above the map (Nov 25)
   jasontheween: {name: "JasonTheWeen", tag: "#JasonTheWeen", facecam: null}
   nickmercs:   {name: "NICKMERCS",     tag: "#Nickmercs", facecam: null}
   nickeh30:    {name: "Nick Eh 30",    tag: "#NickEh30",  facecam: [0, 0.15, 0.23, 0.46], boost: 1.5}   # cut-out cam, left side (no border - detector missed it)   # added Nov 23: popping off in GTA 6
