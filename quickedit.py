@@ -151,10 +151,8 @@ def main() -> None:
         out = Path("/tmp/edits") / out_name
         out.parent.mkdir(parents=True, exist_ok=True)
         print("STEP 2/3 adding your text")
-        subprocess.run([FF, "-y", "-loglevel", "error", "-i", str(clean), "-i", png, "-filter_complex",
-                        f"[0:v][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]", "-map", "[out]", "-map", "0:a?",
-                        "-c:v", "libx264", "-preset", "fast", "-crf", "17", "-maxrate", "12000k", "-bufsize", "24M",
-                        "-c:a", "copy", "-movflags", "+faststart", str(out)], check=True)
+        import engage   # hook + the follow pop-up (+ progress bar if this clip tests it), like every posted video
+        engage.hooked(FF, clean, png, out, lay, hy, T, WORK, pbar=sty.get("pbar") == "on")
     # keep this clip's newest edit only; drop edits (and their videos) older than 3 days
     old = edits.get(cid, {}).get("video")
     rec = {**full, "at": int(time.time()), "video": out_name or (prev.get("video") if base else "")}

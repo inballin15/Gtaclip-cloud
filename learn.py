@@ -40,10 +40,13 @@ STYLE_DIMS = {
     "hooklen": {"tiny": "short hook (max ~60 chars)", "story": "story-sentence hook (8-15 words)"},
     # (subtitles: no longer tested - off unless switched on for a clip in the Studio; Nov 24, they were inaccurate)
     "punch": {"off": "steady webcam", "on": "webcam punches in on the big reaction"},
+    # Nov 25: viewers leave early -> does a bar showing how short the clip is keep them to the end?
+    "pbar": {"off": "no progress bar", "on": "progress bar along the top"},
 }
 STYLE_PRIOR = {"box": {"white": 0.75, "black": 0.25}, "cam": {"small": 0.3, "medium": 0.7},   # top pages:
                "hooklen": {"tiny": 0.25, "story": 0.75},
-               "punch": {"off": 0.5, "on": 0.5}}   # new tests: no data yet, 50/50   # Nov 22 study: winners peak ~middle of ~25 s clips, ~13-word hooks
+               "punch": {"off": 0.5, "on": 0.5},
+               "pbar": {"off": 0.5, "on": 0.5}}   # new tests: no data yet, 50/50   # Nov 22 study: winners peak ~middle of ~25 s clips, ~13-word hooks
 CAM_PX = {"small": 560, "medium": 672}
 
 EMOTIONS = ["LOSES IT", "SHOCKED", "DEVASTATED", "DISAPPOINTED", "FURIOUS", "CRYING", "SCARED", "CONFUSED", "SPEECHLESS",

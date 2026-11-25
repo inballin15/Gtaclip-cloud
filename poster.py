@@ -331,6 +331,22 @@ def natural(t: str) -> str:
     return re.sub(r"\bnpcs\b", "NPCs", " ".join(out), flags=re.I)
 
 
+# Nov 25: every post asks one easy question (comments push a video further on both apps) and asks for the follow.
+QUESTIONS = ["Would you have reacted the same way?", "What would you have done here?", "Be honest, did you see that coming?",
+             "Rate this moment from 1 to 10", "Who did it better, {s} or chat?", "Was {s} wrong for this?",
+             "Funniest part? Wrong answers only", "Drop a comment if this got you too"]
+
+
+def engage_lines(c: dict) -> tuple[str, str, str]:
+    """(question, TikTok follow line, YouTube subscribe line) - same question for a clip every time."""
+    import hashlib
+    s = (c.get("streamer") or "").strip()
+    qs = [q for q in QUESTIONS if s or "{s}" not in q]
+    q = qs[int(hashlib.md5((c.get("id") or c.get("hook") or "").encode()).hexdigest(), 16) % len(qs)].replace("{s}", s)
+    who = f"{s} " if s else ""
+    return q, f"Follow for daily {who}clips", f"Subscribe for daily {who}clips"
+
+
 def texts(c: dict) -> tuple[str, str, str]:
     """Captions written for SEARCH too: our best TikTok got 78% of its views from people searching
     ('gta 6 shoe store'), so every caption carries the plain sentence + streamer + game keywords."""
@@ -343,9 +359,10 @@ def texts(c: dict) -> tuple[str, str, str]:
         tags, game = "#gaming #streamer", ""
     plain = natural(hook)
     kw = (f"{streamer} {game} stream highlight" if streamer else f"{game} highlight").replace("  ", " ").strip()
-    tt = cap or f"{plain}\n\n{kw}{f' 🎥 @{login}' if login else ''}\n\n{tag} {tags} #fyp".replace("\n\n ", "\n\n").strip()
+    q, fol, sub = engage_lines(c)
+    tt = cap or f"{plain}\n\n{q}\n{fol}\n\n{kw}{f' 🎥 @{login}' if login else ''}\n\n{tag} {tags} #fyp".replace("\n\n ", "\n\n").strip()
     credit = (f" Credit: {streamer} (https://www.twitch.tv/{login})" if login else f" Credit: {streamer}" if streamer else "")
-    yt = cap or f"{plain}\n\n{kw}.{credit}\n\n{tag} {tags} #Shorts".replace("\n\n ", "\n\n").strip()
+    yt = cap or f"{plain}\n\n{q}\n{sub}\n\n{kw}.{credit}\n\n{tag} {tags} #Shorts".replace("\n\n ", "\n\n").strip()
     title = plain if game.lower().replace(" ", "") in plain.lower().replace(" ", "") else f"{plain} | {(streamer + ' ' + game).strip()}".strip(" |")
     title = (title[:88] + " #Shorts").strip()
     return tt, yt, title

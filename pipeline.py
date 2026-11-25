@@ -81,6 +81,7 @@ SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "1600"))       # stream clips on
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v3-textonly-capcut"
+FINAL_V = LAYOUT_V + "-follow1"   # posted videos only (not the clean copies): + follow pop-up / progress bar (Nov 25)
 TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
@@ -1598,7 +1599,8 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                  layout: str = "split", cut: float = 0.0, cam_video: Path | None = None,
                  hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0,
                  hook_style: str = "white", hook_scale: float = 1.0, top_h: int | None = None,
-                 subs: list | None = None, punch_at: float | None = None, view: str | None = None) -> None:
+                 subs: list | None = None, punch_at: float | None = None, view: str | None = None,
+                 cta: bool = False, pbar: bool = False) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     No subtitles on any video (Nov 24): whatever is passed in, none are drawn.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
@@ -1707,6 +1709,14 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     if hook:
         flt += f";[{last}][1:v]overlay=(W-w)/2:{oy}[vh]"
         last = "vh"
+        if cta or pbar:   # follow pop-up at the start + progress bar (engage.py) - posted videos only
+            try:
+                import engage
+                inputs, flt, last = engage.add(inputs, flt, last, duration_of(raw), tmp, float(oy), float(hh),
+                                               layout, cta=cta, pbar=pbar)
+                info["cta"], info["pbar"] = cta, pbar
+            except Exception as e:  # noqa: BLE001
+                log(f"follow pop-up skipped for {cid}: {e}")
     flt += f";[{last}]format=yuv420p[out]"
     # clean, even sound (FFmpeg loudnorm to TikTok/YouTube's -14 LUFS): no more too-quiet or blaring clips
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
@@ -2335,7 +2345,7 @@ def apply_quick_edits(clips: dict, edits: dict) -> None:
             c["user_layout"] = ul
         c["quick_at"] = e["at"]
         if c.get("final_hash"):   # the edited video stands in for the final one: don't re-make it for the new words
-            c["final_hash"] = c["final_v"] = hashlib.sha1((c["hook"] + c.get("cam", "") + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+            c["final_hash"] = c["final_v"] = hashlib.sha1((c["hook"] + c.get("cam", "") + FINAL_V + c.get("layout", "")).encode()).hexdigest()[:10]
         log(f"quick edit applied: {cid}")
 
 
@@ -2574,9 +2584,10 @@ def main() -> None:
         for r in ready:
             r["video"] = f"v/{r['id']}_final.mp4"
             r["poster"] = f"v/{r['id']}.jpg"
-            _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + LAYOUT_V + r.get("layout", "")).encode()).hexdigest()[:10]
-            r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"
-                          if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and r.get("final_v") == _hh
+            _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + FINAL_V + r.get("layout", "")).encode()).hexdigest()[:10]
+            _hh_old = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + LAYOUT_V + r.get("layout", "")).encode()).hexdigest()[:10]
+            r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"   # (a video from before the follow pop-up still counts)
+                          if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and r.get("final_v") in (_hh, _hh_old)
                           and (VID / f"{r['id']}_final.mp4").exists() else "")
             r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
             r["clean"] = (f"v/{r['id']}_clean.mp4?v={r['clean_v']}"
@@ -3272,7 +3283,7 @@ def main() -> None:
             # your pasted / uploaded clips: the original isn't kept between runs and has no Twitch address.
             # Finished video already on the site -> keep it as is. Needs a re-make -> fetch the link again.
             if (VID / f"{cid}_final.mp4").exists() and c.get("final_hash"):
-                hh0 = hashlib.sha1(((c.get("hook") or "") + c.get("cam", "") + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+                hh0 = hashlib.sha1(((c.get("hook") or "") + c.get("cam", "") + FINAL_V + c.get("layout", "")).encode()).hexdigest()[:10]
                 if c.get("final_hash") == hh0:
                     continue
             try:
@@ -3302,7 +3313,7 @@ def main() -> None:
                 log(f"auto hook {cid}: {c['hook']}")
             if c.get("hook") or c.get("no_hook"):   # no_hook: the video already has its own text - no box from us
                 c["hook"] = c.get("hook") or ""
-                hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+                hh = hashlib.sha1((c["hook"] + c["cam"] + FINAL_V + c.get("layout", "")).encode()).hexdigest()[:10]
                 ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + c.get("layout", "")).encode()).hexdigest()[:10]
                 need_f = c.get("final_hash") != hh or not (VID / f"{cid}_final.mp4").exists()
                 need_c = (c.get("clean_v") != ch or not (VID / f"{cid}_clean.mp4").exists()) and not c.get("no_clean")
@@ -3415,7 +3426,7 @@ def main() -> None:
                     c.update(layout="split", react=False)
                     c.pop("react_by", None); c.pop("react_view", None)
                     lay = "split"
-                    hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + "split").encode()).hexdigest()[:10]
+                    hh = hashlib.sha1((c["hook"] + c["cam"] + FINAL_V + "split").encode()).hexdigest()[:10]
                     ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + "split").encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, True)
                     need_f = need_c = True
@@ -3441,7 +3452,7 @@ def main() -> None:
                                  react=True, watching=vis.get("watching", ""), react_view=rv)
                         c.pop("irl_x", None); c.pop("cam_only", None)
                         lay = "react"
-                        hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + "react").encode()).hexdigest()[:10]
+                        hh = hashlib.sha1((c["hook"] + c["cam"] + FINAL_V + "react").encode()).hexdigest()[:10]
                         ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + "react").encode()).hexdigest()[:10]
                         job = (cid, job[1], hh, ch, True, True)
                         need_f = need_c = True
@@ -3454,7 +3465,7 @@ def main() -> None:
                         and names_ok(vhook, hook_context(c) + " " + (vis.get("watching") or "")):
                     c["hook"], c["hook_kind"], c["hook_variant"] = (f"Part {c['part']}: " if c.get("part") else "") + viral.limit_caps(vhook), "ai", var
                     c.pop("hook_short_tried", None)   # a fresh hook gets its own length check
-                    hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+                    hh = hashlib.sha1((c["hook"] + c["cam"] + FINAL_V + c.get("layout", "")).encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, need_c)
                     need_f = True
                 mine_ok = c.get("source") == "upload" and not re.search(r"nud|sex|gore|blood|explicit|naked", why or "", re.I)
@@ -3571,7 +3582,8 @@ def main() -> None:
         except Exception as e:  # noqa: BLE001
             log(f"subtitles/punch-in skipped for {cid}: {e}")
         if need_f:
-            rinfo = render_final(raw, cid, cam, None if c.get("no_hook") else c["hook"], tmp, **opts)
+            rinfo = render_final(raw, cid, cam, None if c.get("no_hook") else c["hook"], tmp, **opts,
+                                 cta=True, pbar=sty.get("pbar") == "on")
             try:   # would it look right on TikTok / Shorts? (checked before it can be posted)
                 vok, vwhy = view_check(VID / f"{cid}_final.mp4", lay, rinfo)
                 c["view_ok"], c["view_why"] = vok, vwhy
@@ -3625,7 +3637,7 @@ def main() -> None:
     for cid, c in clips.items():
         if c["status"] != "new" or not c.get("hook") or not c.get("cam"):
             continue
-        hh = hashlib.sha1((c["hook"] + c["cam"] + LAYOUT_V + c.get("layout", "")).encode()).hexdigest()[:10]
+        hh = hashlib.sha1((c["hook"] + c["cam"] + FINAL_V + c.get("layout", "")).encode()).hexdigest()[:10]
         raw = RAW / f"{cid}.mp4"
         if c.get("final_hash") and c["final_hash"] != hh and raw.exists():
             redo.append((cid, raw, hh, c.get("clean_v"), True, False))

@@ -179,10 +179,8 @@ def main() -> None:
         oy = (f"H*{hy:.3f}-h/2" if hy is not None else "(H-h)/2" if lay == "full" else "'max(60,340-h-26)'" if lay == "react" else "H*0.2-h/2" if lay == "fill"
               else "H*0.6" if lay.startswith("irl") else "H*0.12" if lay == "cam" else f"{T}-h*0.2")
         png = render_hook(hook, str(WORK / "hook.png"), style, scale)
-        subprocess.run([FF, "-y", "-loglevel", "error", "-i", str(newclean), "-i", png, "-filter_complex",
-                        f"[0:v][1:v]overlay=(W-w)/2:{oy},format=yuv420p[out]", "-map", "[out]", "-map", "0:a",
-                        "-c:v", "libx264", "-preset", "fast", "-crf", "17", "-maxrate", "12000k", "-bufsize", "24M",
-                        "-c:a", "copy", "-movflags", "+faststart", str(out)], check=True)
+        import engage   # hook + the follow pop-up (+ progress bar if this clip tests it), like every posted video
+        engage.hooked(FF, newclean, png, out, lay, hy, T, WORK, pbar=sty.get("pbar") == "on")
     else:
         import shutil
         shutil.copy(newclean, out)
