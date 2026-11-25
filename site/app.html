@@ -321,6 +321,7 @@ nav .ind{transition:transform .45s var(--spring),width .45s var(--spring)!import
 .qsec{font-size:13px;font-weight:700;color:var(--mut);margin:16px 2px 8px}
 .row2{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.row2 .btn{flex:1}
 .empty{color:var(--mut);text-align:center;padding:30px 10px;font-size:13px}
+.lshorts{margin-top:12px;display:grid;gap:8px}.lshorts .vrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.lshorts .t{flex:1;min-width:160px}
 /* ===== beginner help ===== */
 .ttl .q{width:18px;height:18px;border-radius:50%;border:1px solid #ffffff33;background:none;color:#b9b0c9;font:700 10px var(--mono);margin-left:8px;padding:0;vertical-align:middle}
 .needs{border:1px solid #ff2e8866;background:linear-gradient(90deg,#2a0d22,#160c1c);border-radius:10px;padding:12px 14px;margin-bottom:12px}
@@ -1321,6 +1322,13 @@ function longCard(x) {
       b.append(el('div', 'mut', 'Thumbnails \u2014 tap one to open it, then save it to upload with the video'), tr);
     }
     b.append(row);
+    if ((x.shorts || []).length) {   // tip Shorts cut from this video - post on the same channel, link back to it
+      const sc = el('div', 'lshorts'); sc.append(el('div', 'mut', `Shorts from this video \u00b7 ${x.shorts.length} \u2014 post them on the same channel, then in YouTube Studio set each one's \u201cRelated video\u201d to this video`));
+      x.shorts.forEach((sh, i) => { const r2 = el('div', 'vrow'); const t = el('div', 't'); t.append(el('div', null, sh.title), el('div', 'mut', `Tip ${sh.tip} \u00b7 ${sh.seconds}s`));
+        const bs = el('div', 'btns'); const w = el('a', 'btn cyan', '\u2b07 Save'); w.href = sh.url; w.target = '_blank'; w.rel = 'noopener';
+        const cp = el('button', 'btn', 'Copy caption'); cp.onclick = () => copy(sh.caption || sh.title, 'Caption'); bs.append(w, cp); r2.append(t, bs); sc.append(r2); });
+      b.append(sc);
+    }
     if (x.msg) b.append(el('div', 'note warn', x.msg));
     if ((x.script || []).length) {
       const det = el('details'); det.append(el('summary', null, 'Script'));

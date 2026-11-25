@@ -1041,6 +1041,85 @@ def preview(full: Path, out: Path, secs: float) -> None:
        "-movflags", "+faststart", str(out))
 
 
+def _short_text(kicker: str, title: str, path: Path) -> None:
+    """Top text of a tip Short: a small pink kicker + the tip in big white caps (black outline), 1080 wide."""
+    from PIL import Image, ImageDraw, ImageFont
+    words, lines = title.upper().split(), []
+    size = 92
+    while True:
+        f = ImageFont.truetype(FONT, size)
+        lines, cur = [], ""
+        for w in words:
+            t = (cur + " " + w).strip()
+            if f.getlength(t) > 960 and cur:
+                lines.append(cur)
+                cur = w
+            else:
+                cur = t
+        lines.append(cur)
+        if len(lines) <= 2 or size <= 60:
+            break
+        size -= 6
+    fk = ImageFont.truetype(FONT, 44)
+    sw = max(5, round(size * 0.1))
+    h = 70 + len(lines) * int(size * 1.12) + 20
+    im = Image.new("RGBA", (1080, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    kw = fk.getlength(kicker)
+    d.rounded_rectangle(((1080 - kw) / 2 - 18, 0, (1080 + kw) / 2 + 18, 58), radius=14, fill=(255, 46, 136, 255))
+    d.text(((1080 - kw) / 2, 5), kicker, font=fk, fill=(255, 255, 255, 255))
+    y = 74
+    for ln in lines:
+        w = f.getlength(ln)
+        d.text(((1080 - w) / 2, y), ln, font=f, fill=(255, 255, 255, 255), stroke_width=sw, stroke_fill=(0, 0, 0, 255))
+        y += int(size * 1.12)
+    im.save(path)
+
+
+def make_shorts(plan: dict, body: Path, full: Path, secs: float, game: str, n: int = 3) -> list[dict]:
+    """2-3 vertical Shorts cut from the long video's best tips (the last tip - the 'most important' one - and the
+    longest others): the gameplay big in the middle, the tip on top, the narrator's voice + game sound from the
+    finished video. No subtitles (like the clip page). Each one should link to the full video on YouTube."""
+    secs_l = plan["sections"]
+    cand = []
+    for i, s_ in enumerate(secs_l):
+        if s_.get("kind", "tip") != "tip" or not s_.get("title"):
+            continue
+        a = float(s_.get("out_start", 0))
+        b = float(secs_l[i + 1]["out_start"]) if i + 1 < len(secs_l) else secs
+        if 8 <= b - a <= 58:
+            cand.append((i, a, b))
+    if not cand:
+        return []
+    tipno = {i: k + 1 for k, (i, _, _) in enumerate(c for c in cand)}
+    last = cand[-1]
+    rest = sorted(cand[:-1], key=lambda c: -(c[2] - c[1]))
+    pick = sorted([last] + rest[:max(0, n - 1)], key=lambda c: c[1])
+    tag = re.sub(r"\W", "", game)
+    out = []
+    for k, (i, a, b) in enumerate(pick):
+        s_ = secs_l[i]
+        png = WORK / f"short{k}.png"
+        _short_text(f"{game.upper()} TIP", s_["title"], png)
+        end = WORK / f"short{k}_end.png"
+        _short_text("FULL GUIDE", "Watch the full video", end)
+        dst = WORK / f"short{k}.mp4"
+        d = b - a
+        flt = ("[0:v]split=2[bg][fg];"
+               "[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=28:2,eq=brightness=-0.18[b];"
+               "[fg]crop=w='min(iw,ih*1080/1216)':h=ih,scale=1080:1216[f];"
+               "[b][f]overlay=0:352[v1];[v1][2:v]overlay=0:150[v2];"
+               f"[v2][3:v]overlay=0:1180:enable='gte(t,{max(0.0, d - 2.6):.2f})',format=yuv420p[v]")
+        ff("-ss", f"{a:.3f}", "-t", f"{d:.3f}", "-i", str(body), "-ss", f"{a:.3f}", "-t", f"{d:.3f}", "-i", str(full),
+           "-i", str(png), "-i", str(end), "-filter_complex", flt, "-map", "[v]", "-map", "1:a",
+           "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-r", str(FPS), "-c:a", "aac", "-b:a", "192k",
+           "-ar", "48000", "-movflags", "+faststart", "-shortest", str(dst))
+        title = f"{s_['title']} ({game})"[:90]
+        out.append({"path": dst, "title": title, "tip": tipno.get(i, k + 1), "seconds": round(d),
+                    "caption": f"{s_['title']} - full guide on my channel #{tag} #{tag}tips #gaming #shorts"})
+    return out
+
+
 def chapters(plan: dict) -> list[dict]:
     out, tip = [], 0
     word = "Mistake" if "mistake" in plan.get("title", "").lower() else "Tip"
@@ -1270,6 +1349,23 @@ def make(job: dict, num: int = 0) -> dict:
         log(f"script not saved: {e}")
     entry["thumb_full"] = release_upload(thumb, f"{job['id']}.jpg", "image/jpeg")
     entry["thumbs"] = [entry["thumb_full"]] + [release_upload(t_, f"{job['id']}_t{k + 2}.jpg", "image/jpeg") for k, t_ in enumerate(thumbs[1:])]
+    try:   # AI thumbnails added before (Higgsfield) stay first when a video is re-made
+        cur_l = json.loads(git("show", "origin/gh-pages:longs.json"))
+        prev_e = next((v for v in cur_l.get("videos", []) if v.get("id") == job["id"]), {})
+        ai_t = [t for t in prev_e.get("thumbs", []) if "_ai" in t]
+        if ai_t:
+            entry["thumbs"] = ai_t + entry["thumbs"]
+            entry["thumb_full"] = ai_t[0]
+    except Exception:  # noqa: BLE001
+        pass
+    try:   # tip Shorts for the same channel - each links to this video
+        shorts = make_shorts(plan, WORK / "body.mp4", full, secs, job.get("game") or "GTA 6")
+        entry["shorts"] = [{k: v for k, v in sh.items() if k != "path"} |
+                           {"url": release_upload(sh["path"], f"{job['id']}_s{n + 1}.mp4", "video/mp4")}
+                           for n, sh in enumerate(shorts)]
+        log(f"{len(shorts)} tip Shorts made from this video")
+    except Exception as e:  # noqa: BLE001
+        log(f"Shorts not made: {e}")
     if (WORK / "subs.srt").exists():   # the same subtitles as a file, for YouTube's own captions (upload it in Studio)
         entry["srt"] = release_upload(WORK / "subs.srt", f"{job['id']}.srt", "application/x-subrip")
     publish_site(entry, {f"v/l/{job['id']}.jpg": thumb, f"v/l/{job['id']}_preview.mp4": prev})
