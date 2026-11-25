@@ -387,7 +387,7 @@
    }
   ]
  },
- "updated": "2026-11-25T18:33:44Z",
+ "updated": "2026-11-25T18:39:08Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1185,6 +1185,7 @@
   "youtube": "2026-11-23T20:05:18Z"
  },
  "ai_off": false,
+ "follow_voice": "am_puck",
  "channel_check": {
   "at": "2026-11-25T18:33:44Z",
   "youtube": "ok",
@@ -3731,6 +3732,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T18:33:44Z",
+ "stats_updated": "2026-11-25T18:39:08Z",
  "log": []
 }
