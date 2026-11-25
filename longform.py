@@ -153,7 +153,7 @@ def make_master(src: Path) -> Path:
 DAILY = {"hit": False}
 
 
-def ai(parts: list, log_name: str, tries: int = 10, temperature: float = 0.4) -> dict | list | None:
+def ai(parts: list, log_name: str, tries: int = 10, temperature: float = 0.4, strong: bool = False) -> dict | list | None:
     """One Gemini request -> parsed JSON. Google's free tier limits requests per minute: on "too many requests" it
     waits (as long as Google says) and tries again - it doesn't give up on a model for a busy minute."""
     import urllib.error
@@ -167,6 +167,13 @@ def ai(parts: list, log_name: str, tries: int = 10, temperature: float = 0.4) ->
     body = {"contents": [{"parts": parts}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": temperature}}
     models = [m for m in viral.gemini_models(key, log)] or ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview"]
+    models = sorted(models, key=lambda m: "lite" in m)   # the full models first, the small "lite" ones last
+    if strong:   # writing / fact-checking the script: the small models mix up times and invent things (Nov 25 test)
+        models = [m for m in models if "lite" not in m]
+        if not models:
+            log(f"{log_name}: only the small AI model is free right now - waiting for a better one")
+            DAILY["hit"] = True
+            return None
     for attempt in range(tries):
         wait, daily = 0, 0
         for model in models:
@@ -304,9 +311,9 @@ def write_script(scenes: list[dict], dur: float, game: str, topic: str = "") -> 
         "Title: max 70 characters, makes people curious, true to the video. Thumbnail: the most striking moment's "
         "second + 2-4 BIG words. Description: 2-3 sentences + 5 tags.\n"
         "Return JSON: {\"title\": \"\", \"description\": \"\", \"tags\": [\"\"], \"thumbnail\": {\"t\": 0, \"text\": \"\"}, "
-        "\"sections\": [{\"title\": \"short title shown on screen\", \"start\": 0, \"end\": 0, \"speed\": 1, "
+        "\"sections\": [{\"kind\": \"intro|tip|outro\", \"title\": \"short title shown on screen\", \"start\": 0, \"end\": 0, \"speed\": 1, "
         "\"lines\": [{\"at\": 0, \"text\": \"\"}]}]}\n\nFOOTAGE LOG:\n" + "\n".join(lines))
-    plan = ai([{"text": prompt}], "writing the script", temperature=0.7)
+    plan = ai([{"text": prompt}], "writing the script", temperature=0.7, strong=True)
     if isinstance(plan, list):
         plan = plan[0] if plan else None
     return plan if isinstance(plan, dict) else None
@@ -337,8 +344,14 @@ def clean_plan(plan: dict, dur: float) -> dict:
                 at = a
             lines.append({"at": max(a, min(at, b - 0.5)), "text": txt})
         lines.sort(key=lambda x: x["at"])
-        secs.append({"title": re.sub(r"\s+", " ", str(s.get("title", "")))[:60].strip(), "start": a, "end": b,
-                     "speed": sp, "lines": lines})
+        k = str(s.get("kind", "")).lower().strip()
+        secs.append({"kind": k if k in ("intro", "tip", "outro") else "", "title": re.sub(r"\s+", " ", str(s.get("title", "")))[:60].strip(),
+                     "start": a, "end": b, "speed": sp, "lines": lines})
+    if secs and not any(x["kind"] for x in secs):   # the AI didn't say: first = intro, last = outro (if there are tips between)
+        for i, x in enumerate(secs):
+            x["kind"] = "intro" if i == 0 and len(secs) > 2 else "outro" if i == len(secs) - 1 and len(secs) > 2 else "tip"
+    for x in secs:
+        x["kind"] = x["kind"] or "tip"
     plan["sections"] = secs
     th = plan.get("thumbnail") or {}
     try:
@@ -359,7 +372,7 @@ def fix_tip_count(plan: dict) -> None:
     """'5 Hidden Mechanics' with only 4 tips -> '4 Hidden Mechanics' (title, intro, outro, description).
     Never touches the game's own number (GTA 6 / Grand Theft Auto six)."""
     secs = plan.get("sections") or []
-    n = len(secs) - 2 if len(secs) > 2 else len(secs)
+    n = sum(1 for x in secs if x.get("kind", "tip") == "tip")
     if n < 2:
         return
     num = r"(\d{1,2}|" + "|".join(NUMW[2:]) + r")"
@@ -383,59 +396,82 @@ def fix_tip_count(plan: dict) -> None:
     old = plan.get("title", "")
     plan["title"] = fix(old)
     plan["description"] = fix(plan.get("description", ""))
-    for s in (secs[0], secs[-1]) if len(secs) > 2 else ():
-        for ln in s["lines"]:
-            ln["text"] = fix(ln["text"])
+    for s in secs:
+        if s.get("kind") in ("intro", "outro"):
+            for ln in s["lines"]:
+                ln["text"] = fix(ln["text"])
     if plan["title"] != old:
         log(f"title said a different number of tips than the video has ({n}) - now: {plan['title']}")
 
 
-def check_script(plan: dict, scenes: list[dict], game: str) -> None:
-    """A second AI pass: every line is checked against what the footage log says is on screen right then, and
-    anything the footage doesn't show (an invented item, mission, number, place, mechanic) is rewritten."""
+def check_script(plan: dict, scenes: list[dict], game: str, dur: float) -> None:
+    """A second AI pass, like an editor with the whole footage log: is each tip on footage that really shows it
+    (else move it to where the log shows it), is each line at the second it talks about, and does it say only what
+    the log shows (an invented item, mission, number, place or mechanic gets rewritten)."""
     secs = plan["sections"]
-    items = []
-    for si, s in enumerate(secs):
-        is_intro = si == 0 and len(secs) > 2
-        is_outro = si == len(secs) - 1 and len(secs) > 2
-        if is_outro:
-            continue
-        for li, ln in enumerate(s["lines"]):
-            if is_intro:
-                ctx = "this is the intro hook; the video's tips are: " + "; ".join(x["title"] for x in secs[1:-1])
-            else:
-                near = [r for r in scenes if ln["at"] - 3 <= r["t"] <= ln["at"] + 8 and s["start"] - 1 <= r["t"] <= s["end"] + 1]
-                ctx = " / ".join(f"{int(r['t'])}s: {r['what']}" + (f" [screen: {r['ui']}]" if r["ui"] else "") +
-                                 (f" (tip: {r['tip']})" if r["tip"] else "") for r in near) or "(no log)"
-            items.append((si, li, ln["text"], ctx))
-    if not items:
+    tips = [i for i, x in enumerate(secs) if x["kind"] == "tip"]
+    if not tips:
         return
-    prompt = (f"You fact-check the narration of a {game} tips video against a log of what is on screen. For each "
-              "numbered line you get the line and what the log says is on screen at that moment. Rewrite a line ONLY "
-              "if it says something the log doesn't show (an invented item, mission, story detail, number, place, "
-              "control, or mechanic), or it talks about something that isn't on screen then. A rewrite keeps the "
-              "same idea where the log supports it, talks to 'you', is energetic, 8-22 words, no emojis, numbers as "
-              "words. Lines that are fine stay exactly as they are.\n"
-              "Return JSON: [{\"i\": 0, \"ok\": true, \"text\": \"the line (rewritten if not ok)\"}]\n\n" +
-              "\n".join(f"{k}. LINE: {t}\n   ON SCREEN: {c}" for k, (_, _, t, c) in enumerate(items)))
-    res = ai([{"text": prompt}], "checking the script against the footage", temperature=0.2)
-    rows = res if isinstance(res, list) else (res or {}).get("lines", []) if isinstance(res, dict) else []
+    log_txt = "\n".join(f"{int(r['t'])}s | {r['what']}" + (f" [screen: {r['ui']}]" if r["ui"] else "") +
+                        (f" (tip: {r['tip']})" if r["tip"] else "") + (" boring" if r["boring"] else "") for r in scenes)
+    draft = [{"i": k, "kind": secs[i]["kind"], "title": secs[i]["title"], "start": secs[i]["start"], "end": secs[i]["end"],
+              "lines": [{"at": ln["at"], "text": ln["text"]} for ln in secs[i]["lines"]]}
+             for k, i in enumerate(i for i, x in enumerate(secs) if x["kind"] in ("intro", "tip"))]
+    prompt = (f"You are the editor of a narrated {game} tips video. Below: the FOOTAGE LOG (what is on screen every "
+              "few seconds) and the DRAFT script (sections with their footage start/end in seconds, and lines with "
+              "the second 'at' they talk about). Fix the draft so it is TRUE TO THE FOOTAGE:\n"
+              "1) a tip section must sit on footage that shows that tip - if the log shows it somewhere else, change "
+              "start/end to that stretch (keep a similar length, 10-30 s);\n"
+              "2) each line's 'at' must be the second when the log shows what the line says (inside its section);\n"
+              "3) a line may only say what the log shows - rewrite anything invented (items, missions, story, numbers, "
+              "places, controls, mechanics); keep it energetic, talking to 'you', 8-22 words, no emojis;\n"
+              "4) don't talk about streamer webcams, chat or overlays - only the game.\n"
+              "Keep everything that is already right exactly as it is. Keep the same sections in the same order "
+              "(same 'i'). The intro is a hook over the most eye-catching moment - only check its words.\n"
+              "Return JSON: {\"sections\": [{\"i\": 0, \"start\": 0, \"end\": 0, \"lines\": [{\"at\": 0, \"text\": \"\"}]}], "
+              "\"changes\": [\"short note of each fix\"]}\n\nDRAFT:\n" + json.dumps(draft) + "\n\nFOOTAGE LOG:\n" + log_txt)
+    res = ai([{"text": prompt}], "checking the script against the footage", temperature=0.2, strong=True)
+    if not isinstance(res, dict) or not isinstance(res.get("sections"), list):
+        log("script check: no answer from the AI - keeping the first draft")
+        return
+    order = [i for i, x in enumerate(secs) if x["kind"] in ("intro", "tip")]
     fixed = 0
-    for r in rows:
+    for r in res["sections"]:
         try:
             k = int(r.get("i"))
+            i = order[k]
+            a, b = float(r.get("start")), float(r.get("end"))
         except Exception:  # noqa: BLE001
             continue
-        if not (0 <= k < len(items)) or r.get("ok") is not False:
+        sec = secs[i]
+        a, b = max(0.0, min(a, dur - 1)), max(0.0, min(b, dur))
+        if b - a < 4:
             continue
-        txt = re.sub(r"\s+", " ", str(r.get("text", ""))).strip()
-        txt = re.sub(r"[\U0001F000-\U0001FFFF☀-➿]", "", txt)
-        if 5 <= len(txt.split()) <= 26:
-            si, li, old, _ = items[k]
-            secs[si]["lines"][li]["text"] = txt
+        lines = []
+        for ln in r.get("lines") or []:
+            txt = re.sub(r"\s+", " ", str((ln or {}).get("text", ""))).strip()
+            txt = re.sub(r"[\U0001F000-\U0001FFFF☀-➿]", "", txt)
+            try:
+                at = float(ln.get("at", a))
+            except Exception:  # noqa: BLE001
+                at = a
+            if 4 <= len(txt.split()) <= 26:
+                lines.append({"at": max(a, min(at, b - 0.5)), "text": txt})
+        if not lines:
+            continue
+        lines.sort(key=lambda x: x["at"])
+        before = (round(sec["start"]), round(sec["end"]), [x["text"] for x in sec["lines"]])
+        if sec["kind"] == "intro":   # only its words
+            for old, new in zip(sec["lines"], lines):
+                old["text"] = new["text"]
+        else:
+            sec.update(start=a, end=b, lines=lines)
+        after = (round(sec["start"]), round(sec["end"]), [x["text"] for x in sec["lines"]])
+        if after != before:
             fixed += 1
-            log(f"fixed a line the footage didn't back up: '{old[:50]}' -> '{txt[:60]}'")
-    log(f"script checked against the footage: {fixed} of {len(items)} lines fixed")
+    for c in (res.get("changes") or [])[:12]:
+        log(f"script check: {str(c)[:140]}")
+    log(f"script checked against the footage: {fixed} of {len(order)} sections changed")
 
 
 def tidy_outro(plan: dict, dur: float) -> None:
@@ -443,8 +479,10 @@ def tidy_outro(plan: dict, dur: float) -> None:
     secs = plan["sections"]
     if len(secs) < 3:
         return
+    if secs[-1]["kind"] != "outro":
+        return
     o = secs[-1]
-    used = [(s["start"], s["end"]) for s in secs[1:-1]]
+    used = [(s["start"], s["end"]) for s in secs if s["kind"] == "tip"]
     hit = lambda a, b: any(x < b and a < y for x, y in used)
     if not hit(o["start"], o["end"]):
         return
@@ -580,9 +618,7 @@ def render(master: Path, plan: dict, out: Path) -> float:
            "-c:a", "aac", "-b:a", "192k", "-ar", "48000", str(seg))
         real = duration_of(seg)
         lst.append(f"file '{seg}'")
-        is_intro = i == 0 and len(plan["sections"]) > 2
-        is_outro = i == len(plan["sections"]) - 1 and len(plan["sections"]) > 2
-        if s["title"] and not is_intro and not is_outro:
+        if s["title"] and s.get("kind", "tip") == "tip":
             tip_no += 1
             png = sdir / f"card{i:02d}.png"
             card_png(s["title"], tip_no, png)
@@ -641,11 +677,10 @@ def preview(full: Path, out: Path, secs: float) -> None:
 
 def chapters(plan: dict) -> list[dict]:
     out, tip = [], 0
-    n = len(plan["sections"])
     for i, s in enumerate(plan["sections"]):
-        if i == 0 and n > 2:
+        if s.get("kind") == "intro":
             name = "Intro"
-        elif i == n - 1 and n > 2:
+        elif s.get("kind") == "outro":
             name = "Outro"
         else:
             tip += 1
@@ -766,8 +801,10 @@ def make(job: dict, num: int = 0) -> dict:
         plan = write_script(scenes, dur, game, job.get("topic", ""))
         if plan:
             plan = clean_plan(plan, dur)
-            if len(plan["sections"]) >= 2:
+            ntip = sum(1 for x in plan["sections"] if x["kind"] == "tip")
+            if ntip >= 2:
                 break
+            log(f"script had only {ntip} tip(s) - asking again")
         plan = None
         time.sleep(30)
     if not plan:
@@ -775,7 +812,7 @@ def make(job: dict, num: int = 0) -> dict:
     log(f"script: '{plan['title']}' - {len(plan['sections'])} sections, "
         f"{sum(len(s['lines']) for s in plan['sections'])} lines")
     if not job.get("fake_ai"):
-        check_script(plan, scenes, game)
+        check_script(plan, scenes, game, dur)
     (WORK / "plan.json").write_text(json.dumps(plan, indent=1))
     status(job, "making", "Recording the voice")
     voice_lines(plan, voice)
