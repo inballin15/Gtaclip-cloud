@@ -296,8 +296,18 @@ def write_script(scenes: list[dict], dur: float, game: str, topic: str = "") -> 
            "'GTA 6 money tips', 'GTA 6 driving tricks').\n") +
         f"Make a video about {int(L // 60)}-{int(L // 60) + 2} minutes long: the sections' footage (after speed-ups) "
         f"should add up to about {int(L)} seconds, so give each tip 10-30 s of footage and 2-4 lines.\n"
-        "STRUCTURE: an intro section (8-15 s) on the most eye-catching moment with a hook that promises what they'll "
-        "learn, then 4-10 tip sections, then a short outro (ask them to subscribe for more " + game + " tips).\n"
+        "STRUCTURE (copy how the biggest " + game + " guide channels do it): an intro section (10-18 s) on the most "
+        "eye-catching moment. The intro's FIRST line is a warning/command with stakes, e.g. 'Do not start your next "
+        "mission until you watch this video' or 'Stop playing " + game + " until you know these', then why it matters "
+        "(you'll waste money / miss things you can't get back), then the promise with the exact count ('I'm going "
+        "through N mistakes I wish someone warned me about'), then a tease that the list goes from something useful "
+        "'all the way to' the biggest one. Then 4-10 tip sections, then a short outro.\n"
+        "Each tip's FIRST line names it with its number and a link from the last one, e.g. 'Now that you've got "
+        "your money sorted, mistake number two is...' / 'Tip number three is a big one.' Put the strongest tip near "
+        "the end and say it's the most important. ONE time, at the start of a tip about halfway through, add a quick "
+        "playful subscribe joke, e.g. 'The biggest mistake you can make is not subscribing. Nah, I'm kidding - but "
+        "subscribe anyway, this channel covers everything " + game + ".' The outro: a short heartfelt last line "
+        "(enjoy the game your own way) + subscribe for more " + game + " tips.\n"
         "EACH SECTION uses ONE continuous stretch of the footage that SHOWS that tip (start/end in seconds from the "
         "log), and its narration lines are tied to the moment they talk about: 'at' = the second in the footage when "
         "that thing is on screen. Use speed 1.5 or 2 for driving / travel stretches, 1 when the tip is happening.\n"
@@ -309,8 +319,15 @@ def write_script(scenes: list[dict], dur: float, game: str, topic: str = "") -> 
         "Ignore streamer webcams / overlays / chat in the footage - talk only about the game. "
         "Keep enough footage per line: the voice reads about 2.2 words a second, so a section needs about "
         "(words / 2.2 + 1) seconds of footage after its speed-up.\n"
-        "Title: max 70 characters, makes people curious, true to the video. Thumbnail: the most striking moment's "
-        "second + 2-4 BIG words. Description: 2-3 sentences + 5 tags.\n"
+        "TITLE in the style of top GTA guide channels: a number + a strong claim + a CAPS word + the game in brackets, "
+        "e.g. '9 Early Game Mistakes NOBODY Warned Me About (GTA 6)', 'Every SECRET Money Spot in GTA 6', "
+        "'7 Things You MISSED in Chapter 1 (GTA 6)'. Max 70 characters, one or two CAPS words, true to the video - "
+        "never promise something the footage doesn't show. Each tip section's title: 2-5 punchy words "
+        "(e.g. 'Missing Free Money', 'Save Before Missions'). Thumbnail: the most striking moment's "
+        "second + 2-4 BIG words. DESCRIPTION: line 1 a short urgent hook in title case ending in '...' "
+        "(e.g. 'Do NOT Finish Chapter 1 Until You Do THIS...'), line 2 'The ULTIMATE " + game + " <topic> Guide: "
+        "<the title's promise> (NO SPOILERS)' (only say NO SPOILERS if the narration has no story spoilers), then 1 "
+        "sentence on what the video covers. 5 tags. Talk casually like a real gamer, never robotic.\n"
         "Return JSON: {\"title\": \"\", \"description\": \"\", \"tags\": [\"\"], \"thumbnail\": {\"t\": 0, \"text\": \"\"}, "
         "\"sections\": [{\"kind\": \"intro|tip|outro\", \"title\": \"short title shown on screen\", \"start\": 0, \"end\": 0, \"speed\": 1, "
         "\"lines\": [{\"at\": 0, \"text\": \"\"}]}]}\n\nFOOTAGE LOG:\n" + "\n".join(lines))
@@ -634,23 +651,22 @@ def fit(plan: dict, dur: float) -> None:
         s["out"] = out
 
 
-def card_png(text: str, idx: int, path: Path) -> None:
-    """Tip title shown at the start of each tip (lower left)."""
+def card_png(text: str, idx: int, path: Path, w: int = 1920) -> None:
+    """Tip title shown big across the top at the start of each tip (white caps, thick black outline) - the
+    guide-channel look. Sized to fit the frame width."""
     from PIL import Image, ImageDraw, ImageFont
-    f1 = ImageFont.truetype(FONT, 58)
-    f0 = ImageFont.truetype(FONT, 34)
-    label = f"TIP {idx}" if idx > 0 else ""
-    tw = max(f1.getlength(text), f0.getlength(label) if label else 0)
-    bw, bh = int(tw + 80), 170 if label else 110
-    im = Image.new("RGBA", (bw + 20, bh + 20), (0, 0, 0, 0))
+    text = text.upper()
+    size = round(w * 0.05)
+    f1 = ImageFont.truetype(FONT, size)
+    while f1.getlength(text) > w * 0.86 and size > 30:
+        size -= 2
+        f1 = ImageFont.truetype(FONT, size)
+    sw = max(4, round(size * 0.11))
+    tw = int(f1.getlength(text))
+    im = Image.new("RGBA", (tw + sw * 2 + 20, int(size * 1.35) + sw * 2 + 10), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle((10, 10, 10 + bw, 10 + bh), radius=22, fill=(12, 12, 16, 225))
-    d.rounded_rectangle((10, 10, 22, 10 + bh), radius=6, fill=(255, 46, 136, 255))
-    y = 22
-    if label:
-        d.text((50, y), label, font=f0, fill=(255, 46, 136, 255))
-        y += 50
-    d.text((50, y), text, font=f1, fill=(255, 255, 255, 255))
+    d.text((sw + 10 + 4, sw + 6), text, font=f1, fill=(0, 0, 0, 150))   # soft drop shadow
+    d.text((sw + 10, sw), text, font=f1, fill=(255, 255, 255, 255), stroke_width=sw, stroke_fill=(0, 0, 0, 255))
     im.save(path)
 
 
@@ -843,11 +859,11 @@ def sub_events(plan: dict) -> list[tuple[float, float, str]]:
             for w in toks:
                 chunk.append(w)
                 text = " ".join(x[0] for x in chunk)
-                if len(chunk) >= 7 or len(text) >= 32 or (w[0][-1:] in ".,!?;:" and len(chunk) >= 3):
+                if len(chunk) >= 5 or len(text) >= 24 or (w[0][-1:] in ".,!?;:" and len(chunk) >= 2):
                     groups.append(chunk)
                     chunk = []
             if chunk:
-                if groups and len(chunk) <= 2 and len(" ".join(x[0] for x in groups[-1] + chunk)) <= 40:
+                if groups and len(chunk) <= 1 and len(" ".join(x[0] for x in groups[-1] + chunk)) <= 28:
                     groups[-1] += chunk
                 else:
                     groups.append(chunk)
@@ -868,18 +884,44 @@ def _ts(t: float, srt: bool = False) -> str:
     return f"{h:02d}:{m:02d}:{int(s):02d},{int(round((s % 1) * 1000)) % 1000:03d}" if srt else f"{h}:{m:02d}:{s:05.2f}"
 
 
+_STOP = set("the a an and or but to of in on at for with is are was were be it its this that you your youre "
+             "you're can will just get got have has had not dont don't then than so if as by from up out into "
+             "about there their they them what when where which who how all any one".split())
+
+
+def _hot(words: list[str]) -> int:
+    """Which word of a caption gets the colour: a number first, else the longest word that isn't filler."""
+    best, bi = -1, -1
+    for k, w in enumerate(words):
+        c = re.sub(r"[^\w$#%']", "", w).lower()
+        if not c or c in _STOP:
+            continue
+        sc = 100 if re.search(r"\d|\$", c) else len(c)
+        if sc > best:
+            best, bi = sc, k
+    return bi if best >= 4 else -1
+
+
 def write_subs(ev: list, w: int, h: int, ass: Path, srt: Path) -> None:
-    fs = max(28, round(h * 0.052))
+    """Burned-in subtitles in the guide-channel look: big white CAPS with a thick black outline, a few words at a
+    time, one key word coloured (pink / blue in turn). The .srt keeps normal case for YouTube's own captions."""
+    fs = max(30, round(h * 0.06))
     head = ("[Script Info]\nScriptType: v4.00+\nWrapStyle: 2\nScaledBorderAndShadow: yes\n"
             f"PlayResX: {w}\nPlayResY: {h}\n\n[V4+ Styles]\n"
             "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, "
             "Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, "
             "MarginR, MarginV, Encoding\n"
-            f"Style: Sub,Inter,{fs},&H00FFFFFF,&H00FFFFFF,&H00000000,&H96000000,-1,0,0,0,100,100,0,0,1,"
-            f"{max(2, round(fs * 0.075))},{max(1, round(fs * 0.04))},2,{round(w * 0.08)},{round(w * 0.08)},{round(h * 0.07)},1\n\n"
+            f"Style: Sub,Inter,{fs},&H00FFFFFF,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,1,0,1,"
+            f"{max(3, round(fs * 0.12))},{max(1, round(fs * 0.05))},2,{round(w * 0.08)},{round(w * 0.08)},{round(h * 0.075)},1\n\n"
             "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
-    lines = [f"Dialogue: 0,{_ts(a)},{_ts(b)},Sub,,0,0,0,,{t.replace(chr(92), '').replace('{', '(').replace('}', ')')}"
-             for a, b, t in ev]
+    cols = ["&HD84FFF&", "&HFFC21E&"]   # pink, blue (ASS is BGR)
+    lines = []
+    for n, (a, b, t) in enumerate(ev):
+        words = t.replace(chr(92), "").replace("{", "(").replace("}", ")").upper().split()
+        k = _hot(words)
+        if k >= 0:
+            words[k] = "{\\c" + cols[n % 2] + "}" + words[k] + "{\\c&HFFFFFF&}"
+        lines.append(f"Dialogue: 0,{_ts(a)},{_ts(b)},Sub,,0,0,0,,{' '.join(words)}")
     ass.write_text(head + "\n".join(lines) + "\n", encoding="utf-8")
     srt.write_text("\n".join(f"{i + 1}\n{_ts(a, True)} --> {_ts(b, True)}\n{t}\n" for i, (a, b, t) in enumerate(ev)),
                    encoding="utf-8")
@@ -909,6 +951,9 @@ def render(master: Path, plan: dict, out: Path) -> float:
     lst = []
     t0, tip_no = 0.0, 0
     voice_track = []
+    m_w = re.search(r"Video:.*?(\d{3,5})x(\d{3,5})", subprocess.run([FF, "-hide_banner", "-i", str(master)],
+                                                                  capture_output=True, text=True).stderr)
+    VW = int(m_w.group(1)) if m_w else 1920
     cards = []
     for i, s in enumerate(plan["sections"]):
         seg = sdir / f"{i:02d}.mp4"
@@ -924,8 +969,8 @@ def render(master: Path, plan: dict, out: Path) -> float:
         if s["title"] and s.get("kind", "tip") == "tip":
             tip_no += 1
             png = sdir / f"card{i:02d}.png"
-            card_png(s["title"], tip_no, png)
-            cards.append((png, t0 + 0.2, t0 + min(4.5, real - 0.3)))   # top-left: the subtitles are at the bottom
+            card_png(s["title"], tip_no, png, VW)
+            cards.append((png, t0 + 0.2, t0 + min(4.5, real - 0.3)))   # top centre: the subtitles are at the bottom
         for ln in s["lines"]:
             voice_track.append((t0 + ln["pos"], ln["wav"]))
         s["out_start"] = t0
@@ -975,7 +1020,7 @@ def render(master: Path, plan: dict, out: Path) -> float:
     flt, last = "", "0:v"
     for k, (png, a, b) in enumerate(cards):
         inputs += ["-i", str(png)]
-        flt += f"[{last}][{k + k0}:v]overlay=60:60:enable='between(t,{a:.2f},{b:.2f})'[c{k}];"
+        flt += f"[{last}][{k + k0}:v]overlay=(W-w)/2:H*0.045:enable='between(t,{a:.2f},{b:.2f})'[c{k}];"
         last = f"c{k}"
     esc = lambda p: str(p).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
     flt += (f"[{last}]ass='{esc(WORK / 'subs.ass')}':fontsdir='{esc(ROOT / 'fonts')}',format=yuv420p[vout];"
@@ -998,6 +1043,7 @@ def preview(full: Path, out: Path, secs: float) -> None:
 
 def chapters(plan: dict) -> list[dict]:
     out, tip = [], 0
+    word = "Mistake" if "mistake" in plan.get("title", "").lower() else "Tip"
     for i, s in enumerate(plan["sections"]):
         if s.get("kind") == "intro":
             name = "Intro"
@@ -1005,7 +1051,7 @@ def chapters(plan: dict) -> list[dict]:
             name = "Outro"
         else:
             tip += 1
-            name = f"Tip {tip}: {s['title']}" if s["title"] else f"Tip {tip}"
+            name = f"{word} #{tip} - {s['title']}" if s["title"] else f"{word} #{tip}"
         out.append({"t": round(s.get("out_start", 0), 1), "title": name})
     if out:
         out[0]["t"] = 0
@@ -1188,7 +1234,7 @@ def make(job: dict, num: int = 0) -> dict:
     preview(full, prev, secs)
     chap = chapters(plan)
     desc = (plan.get("description") or "").strip()
-    desc_full = desc + "\n\n" + "\n".join(f"{mmss(c['t'])} {c['title']}" for c in chap) + \
+    desc_full = desc + "\n\nTimestamps:\n" + "\n".join(f"{mmss(c['t'])} {c['title']}" for c in chap) + \
         ("\n\n" + " ".join("#" + re.sub(r"\W", "", t) for t in plan.get("tags", [])[:6] if t) if plan.get("tags") else "")
     script = [{"section": s["title"], "t": round(s.get("out_start", 0) + ln["pos"], 1), "text": ln["text"]}
               for s in plan["sections"] for ln in s["lines"]]
