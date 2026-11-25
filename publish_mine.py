@@ -34,8 +34,8 @@ def mine_json() -> bytes:
     """queue.json of the your-clips run -> mine.json with every video path pointing into v/m/ (edits stay in v/e/)."""
     q = json.loads((SITE / "queue.json").read_text())
     txt = json.dumps({"updated": q.get("updated"), "ready": q.get("ready", [])}, indent=1, ensure_ascii=False)
-    txt = re.sub(r'"v/(?!e/|m/)', '"v/m/', txt)
-    txt = re.sub(re.escape(PAGES) + r"/v/(?!e/|m/)", PAGES + "/v/m/", txt)
+    txt = re.sub(r'"v/(?!e/|m/|ed/)', '"v/m/', txt)   # (v/ed/: the live editor's footage - served from one place)
+    txt = re.sub(re.escape(PAGES) + r"/v/(?!e/|m/|ed/)", PAGES + "/v/m/", txt)
     return txt.encode()
 
 

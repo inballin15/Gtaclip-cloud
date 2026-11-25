@@ -1945,7 +1945,7 @@ function openHookEdit(r) {
 const LOCALV = {};   // clip id -> { url, blob, at } : the video your phone made from your last edit (this visit)
 function localOf(r) { const v = LOCALV[r.id]; if (!v || !v.url) return null; if ((r.rendered || 0) * 1000 > v.at + 60000) return null; return v; }
 function edSrc(r) {   // the footage the editor plays: full quality when the clip has it, else the small Trim preview
-  if (r.ed_src && r.ed) return { src: PAGES + r.ed_src, t0: +r.ed.t0, t1: +r.ed.t1, full: true };
+  if (r.ed_src && r.ed) return { src: PAGES + r.ed_src.replace(/^v\/m\/ed\//, 'v/ed/'), t0: +r.ed.t0, t1: +r.ed.t1, full: true };
   if (r.wide_src && r.wide) return { src: PAGES + r.wide_src, t0: +r.wide.t0, t1: +r.wide.t1, full: false };
   return null;
 }
