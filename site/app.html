@@ -816,6 +816,7 @@ async function quickText(r, t) {   // INSTANT: saved + shown right away; the pos
   EDITS[r.id] = { ...(EDITS[r.id] || {}), ...t, at: Math.floor(Date.now() / 1000) + 600, local: true, sent: Date.now(), unsent: true, _t: { ...prevT, ...t } };
   const loc = ls.get('gc-edits', {}); loc[r.id] = EDITS[r.id]; ls.set('gc-edits', loc);
   applyEdits(Q); lastSig = ''; render();
+  phoneText(r);   // the finished video, made on your phone right away (GitHub's copy follows)
   if (!(await ghTap('text: ' + r.id, JSON.stringify(EDITS[r.id]._t)))) {
     toast(ghKey() ? 'Saved on your phone — it couldn\'t reach GitHub yet, it sends by itself when it can' : 'Saved on your phone — connect GitHub (Settings) and it sends by itself');
     return false; }
@@ -1184,12 +1185,8 @@ function inspPane(r) {
     if (c.m) { const out = { ...ul, hook_style: S.box, hook_scale: S.scale, pan: S.pan, punch: S.punch }; if (S.y != null) out.hook_y = S.y; if (S.hook.trim() !== cur.hook.trim()) out.hook = S.hook.trim();
       if (await ghTap('layout: ' + r.id, JSON.stringify(out))) {
         // instant: your phone makes it from the full footage (GitHub's posting copy follows in the background)
-        const ED = edSrc(r); const lay = r.layout_used || r.layout || 'split'; const mode = lay.startsWith('irl') ? 'irl' : lay;
-        if (ED && ED.full && S.punch !== 'on' && ['split', 'react', 'full', 'irl'].includes(mode) && window.VideoEncoder && !((ul.speed || 1) > 1.01)) {
-          const S2 = { mode, cam: (r.cam_used || r.cam || '0,0,0.3,0.3').split(',').map(Number), pan: S.pan || 0, zoom: ul.zoom || 1,
-            irl_x: mode === 'irl' ? parseFloat(lay.split(':')[1] || '0.5') : 0.5, top_h: +(ul.top_h || CAM_PX[(r.style || {}).cam] || TOP),
-            hook: S.hook, hook_style: S.box, hook_scale: S.scale, hook_y: S.y, span: r.span ? r.span.map(Number) : null, speed: 1 };
-          localMake(r, S2, ED); return; }
+        const ED = edSrc(r); const S2 = ED && ED.full && S.punch !== 'on' && window.VideoEncoder ? curLayout(r) : null;
+        if (S2) { Object.assign(S2, { pan: S.pan || 0, hook: S.hook, hook_style: S.box, hook_scale: S.scale, hook_y: S.y }); localMake(r, S2, ED); return; }
         startJob(r.id, 'remake'); toast('Saved — re-making the video'); lastSig = ''; render(); } else sv.disabled = false; return; }
     const t = {}; if (S.hook.trim() !== cur.hook.trim() && S.hook.trim()) t.hook = S.hook.trim(); if (S.box !== cur.box) t.hook_style = S.box; if (Math.abs(S.scale - cur.scale) > 0.01) t.hook_scale = S.scale; if (S.y !== cur.y && S.y != null) t.hook_y = S.y;
     await quickText(r, t); sv.disabled = false; };
@@ -1791,7 +1788,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=4');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=5');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1991,7 +1988,7 @@ function drawLayout(g, src, W, H, S, cw, ch, view) {   // your layout from one f
   }
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=4');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=5');
   if (!mod.supported()) throw new Error('this browser can’t make videos');
   const lay = S.mode === 'irl' ? `irl:${(S.irl_x ?? 0.5).toFixed(3)}` : S.mode;
   const r2 = { ...r, layout_used: lay, layout: lay, user_layout: { ...(r.user_layout || {}), top_h: S.top_h } };
@@ -2002,9 +1999,19 @@ async function phoneEdit(r, S, ED, onPct) {   // the finished video from your ed
   const view = (r.layout_used || r.layout) === 'react' ? r.react_view : null;
   return mod.phoneRender({ src: ED.src, a: Math.max(0, cut[0] - ED.t0), b: cut[1] - ED.t0, hook: hk, hookY: top,
     ctaY: hk ? ctaCenter(r2, top, hk.height) : 900, pbar: (r.style || {}).pbar === 'on', onPct,
-    compose: (g, frame, W, H) => drawLayout(g, frame, W, H, S, 1080, 1920, view) });
+    compose: (g, frame, W, H) => drawLayout(g, frame, W, H, S, 1080, 1920, view), fps: 'auto' });
 }
+const LOCALBUSY = {};   // clip id -> the newest edit waiting while your phone is still making the previous one
 async function localMake(r, S, ED) {
+  const id = r.id;
+  if (LOCALBUSY[id]) { LOCALBUSY[id] = { r, S, ED }; return; }   // one at a time per clip: the newest edit goes next
+  LOCALBUSY[id] = true;
+  try { return await localMake1(r, S, ED); } finally {
+    const nx = LOCALBUSY[id]; delete LOCALBUSY[id];
+    if (nx && nx !== true) localMake(nx.r, nx.S, nx.ED);
+  }
+}
+async function localMake1(r, S, ED) {
   const id = r.id; JOBS[id] = { kind: 'phone', at: Date.now(), pct: 1, label: 'Making it on your phone…' }; saveJobs(); lastSig = ''; render(); pollJobs();
   const t0 = Date.now();
   try {
@@ -2019,6 +2026,19 @@ async function localMake(r, S, ED) {
     JOBS[id] = { kind: 'remake', at: t0, pct: 5, label: 'Being made on GitHub (about 3 min)' }; saveJobs(); pollJobs();
     return false;
   }
+}
+function curLayout(r) {   // the clip's layout as it is now, as editor settings (for phone renders of quick edits)
+  const ul = r.user_layout || {}; const lay = r.layout_used || r.layout || 'split'; const mode = lay.startsWith('irl') ? 'irl' : lay;
+  if (!['split', 'react', 'full', 'irl'].includes(mode) || (r.style || {}).punch === 'on' || (ul.speed || 1) > 1.01) return null;
+  return { mode, cam: (r.cam_used || r.cam || '0,0,0.3,0.3').split(',').map(Number), pan: ul.pan || 0, zoom: ul.zoom || 1,
+    irl_x: mode === 'irl' ? parseFloat(lay.split(':')[1] || '0.5') : 0.5, top_h: +(ul.top_h || CAM_PX[(r.style || {}).cam] || TOP),
+    hook: r.hook || '', hook_style: ul.hook_style || (r.style || {}).box || 'white', hook_scale: ul.hook_scale || 1, hook_y: ul.hook_y ?? null,
+    span: r.span ? r.span.map(Number) : null, speed: 1 };
+}
+function phoneText(r) {
+  const ED = edSrc(r); const S = ED && ED.full && window.VideoEncoder ? curLayout(r) : null; if (!S) return;
+  const pv = r._preview || {}; S.hook = pv.hook || r.hook || ''; if (pv.style) S.hook_style = pv.style; if (pv.scale) S.hook_scale = pv.scale; if (pv.y != null) S.hook_y = pv.y;
+  localMake(r, S, ED);
 }
 function openEditor(r) {
   if (!r.src) { sheet('Edit', [el('div', 'note warn', 'This clip was made before the editor existed. Its still frame appears after its next re-make (a few minutes) — try again soon.')]); return; }

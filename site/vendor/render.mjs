@@ -4,7 +4,7 @@
 // Libraries: mp4box.js (reads MP4, BSD-3) and mp4-muxer (writes MP4, MIT), both in this folder.
 import { Muxer, ArrayBufferTarget } from './mp4-muxer.min.mjs';
 
-const W = 1080, H = 1920, FPS = 30;
+const W = 1080, H = 1920;
 
 function loadScript(src) {
   return new Promise((res, rej) => {
@@ -60,7 +60,7 @@ function drawCta(g, t, cy) {
  * compose(g, frame, w, h): draw the LAYOUT yourself from a source frame (the live editor's full footage: webcam +
  * game, reaction, full screen...) onto the 1080x1920 canvas - without it the frame is drawn full size (no-caption copy).
  */
-export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY = 0, ctaY = 800, pbar = false, onPct = () => {}, compose = null }) {
+export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY = 0, ctaY = 800, pbar = false, onPct = () => {}, compose = null, fps = 30 }) {
   if (!supported()) throw new Error('this phone can\'t make videos in the browser');
   await loadScript(new URL('./mp4box.all.js', import.meta.url).href);
   const buf = await (await fetch(src)).arrayBuffer();
@@ -90,12 +90,17 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   const dur = (vs.length ? (vs[vs.length - 1].cts + vs[vs.length - 1].duration - vShift) / vs[0].timescale : 0);
   b = Math.min(b, dur); a = Math.max(0, Math.min(a, b - 0.5));
 
-  // ---- encoder: the best H.264 profile this phone has
-  let cfg = null;
-  for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42e028', 'avc1.640033']) {
-    const c = { codec, width: W, height: H, bitrate: 14_000_000, framerate: FPS, avc: { format: 'avc' }, hardwareAcceleration: 'prefer-hardware' };
-    try { if ((await window.VideoEncoder.isConfigSupported(c)).supported) { cfg = c; break; } } catch (e) { /* try the next */ }
-    try { delete c.hardwareAcceleration; if ((await window.VideoEncoder.isConfigSupported(c)).supported) { cfg = c; break; } } catch (e) { /* */ }
+  // ---- encoder: the phone's video chip, highest quality it takes - 60 fps footage stays 60 fps (High profile,
+  // level 4.2, ~22 Mbps), else 30 fps at ~16 Mbps. Falls back step by step so every phone gets the best it can do.
+  const srcFps = vs.length > 1 ? (vs.length - 1) / Math.max(0.1, (vs[vs.length - 1].cts - vs[0].cts) / vs[0].timescale) : 30;
+  const tries = [];
+  if (fps === 'auto' ? srcFps >= 50 : fps >= 50) for (const codec of ['avc1.64002a', 'avc1.640033', 'avc1.4d002a']) tries.push({ codec, fr: 60, br: 22_000_000 });
+  for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42e028', 'avc1.640033']) tries.push({ codec, fr: 30, br: 16_000_000 });
+  let cfg = null, FPS = 30;
+  for (const t of tries) {
+    const c = { codec: t.codec, width: W, height: H, bitrate: t.br, framerate: t.fr, avc: { format: 'avc' }, hardwareAcceleration: 'prefer-hardware' };
+    try { if ((await window.VideoEncoder.isConfigSupported(c)).supported) { cfg = c; FPS = t.fr; break; } } catch (e) { /* try the next */ }
+    try { delete c.hardwareAcceleration; if ((await window.VideoEncoder.isConfigSupported(c)).supported) { cfg = c; FPS = t.fr; break; } } catch (e) { /* */ }
   }
   if (!cfg) throw new Error('no H.264 encoder on this phone');
   const target = new ArrayBufferTarget();
@@ -123,7 +128,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
       const t = frame.timestamp / 1e6; const frameDur = frame.duration;
       if (t < a - 0.001 || t >= b || failed) { frame.close(); return; }
       const rt = t - a;
-      if (lastT >= 0 && rt < lastT + 1 / FPS - 0.004) { frame.close(); return; }   // 60 fps footage -> 30 fps out: half the work
+      if (lastT >= 0 && rt < lastT + 1 / FPS - 0.004) { frame.close(); return; }   // only when the phone can't do 60: 60 -> 30 fps
       lastT = rt;
       try {
         if (compose) compose(g, frame, frame.displayWidth || frame.codedWidth, frame.displayHeight || frame.codedHeight);

@@ -3961,7 +3961,7 @@ def main() -> None:
         log(f"trim previews: made {made_w}")
     made_e, t_e = 0, time.time()   # the live editor's full-quality footage: a few per run (your clips first)
     for cid, c in sorted(clips.items(), key=lambda kv: (kv[1].get("source") != "upload", -(kv[1].get("viral") or 0))):
-        if c["status"] != "new" or made_e >= int(os.environ.get("ED_PER_RUN", "8")) or time.time() - t_e > 300:
+        if c["status"] != "new" or made_e >= int(os.environ.get("ED_PER_RUN", "12")) or time.time() - t_e > 420:
             continue
         try:
             made_e += make_ed(cid, c)
