@@ -35,7 +35,7 @@ function ctaState(t) {
   const x = (u - IN_S - HOLD_S) / OUT_S; return [1 - 0.25 * x, Math.max(0, 1 - x)];
 }
 export const CTA_H = 104;
-function drawCta(g, t, cy) {
+export function drawCta(g, t, cy) {
   const st = ctaState(t); if (!st) return;
   const [s, a] = st; const TEXT = 'Follow & Subscribe', TEXT2 = 'for daily clips';
   g.save(); g.globalAlpha = a;
@@ -56,8 +56,8 @@ function drawCta(g, t, cy) {
 // ---- the sound like engage.py: the clip, a "pop" as the button appears, and the spoken follow line right after it
 // (the clip dips ~3 dB for the pop and ~11 dB under the voice, then straight back). Made by the phone's audio
 // engine (OfflineAudioContext) and its AAC encoder (WebCodecs). null = this phone can't: the sound is copied as is.
-const POP_AT = START + 0.06, SAY_AT = POP_AT + 0.22, SAY_DUCK = 0.28, SAY_GAIN = 1.8;
-function popBuffer(ctx) {
+export const POP_AT = START + 0.06, SAY_AT = POP_AT + 0.22, SAY_DUCK = 0.28, SAY_GAIN = 1.8;
+export function popBuffer(ctx) {
   const sr = ctx.sampleRate, n = Math.round(sr * 0.22); const b = ctx.createBuffer(2, n, sr);
   const L = b.getChannelData(0), R = b.getChannelData(1); let ph = 0, seed = 7;
   const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };

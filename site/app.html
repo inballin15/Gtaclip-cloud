@@ -1793,7 +1793,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=6');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=7');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1882,7 +1882,7 @@ const VOICES = [['am_michael', 'Michael', 'US male'], ['am_puck', 'Puck', 'hype 
 const VOICE_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/${v}.mp3`;
 const FOLLOW_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/follow_${v}.wav`;
 const VAU = new Audio();
-function voicePicker(pick, onPick, sample = VOICE_SAMPLE, extra = [], fav = null) {   // tap a voice = hear it + pick it; ☆ = favorite
+function voicePicker(pick, onPick, sample = VOICE_SAMPLE, extra = [], fav = null, quiet = false) {   // tap a voice = hear it + pick it; ☆ = favorite
   const list = el('div', 'vlist');
   const hear = (id) => { if (id === 'off') { VAU.pause(); return; } VAU.src = sample(id); VAU.currentTime = 0; VAU.play().catch(() => toast('That sample is still being made — try again in a few minutes')); };
   const draw = () => { list.textContent = ''; for (const [id, name, kind] of [...extra, ...VOICES]) {
@@ -1893,7 +1893,7 @@ function voicePicker(pick, onPick, sample = VOICE_SAMPLE, extra = [], fav = null
     if (fav) { const isF = id === fav.get(); const fb = el('button', 'vfav' + (isF ? ' on' : ''), isF ? '★' : '☆');
       fb.setAttribute('aria-label', isF ? name + ' is your favorite' : 'Make ' + name + ' your favorite');
       fb.onclick = (e) => { e.stopPropagation(); if (id !== fav.get()) { fav.set(id); haptic(); draw(); } }; row.append(fb); }
-    row.onclick = () => { pick = id; onPick(id); hear(id); draw(); }; list.append(row); } };
+    row.onclick = () => { pick = id; onPick(id); if (!quiet) hear(id); draw(); }; list.append(row); } };
   draw(); return list;
 }
 function openLongVoice(x) {   // same script, same edit, a new narrator (about 10 minutes, no AI needed)
@@ -2008,7 +2008,7 @@ async function followAudio(v) {   // the spoken follow line's audio for your pho
   catch (e) { return null; }
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=6');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=7');
   if (!mod.supported()) throw new Error('this browser can’t make videos');
   const lay = S.mode === 'irl' ? `irl:${(S.irl_x ?? 0.5).toFixed(3)}` : S.mode;
   const r2 = { ...r, layout_used: lay, layout: lay, user_layout: { ...(r.user_layout || {}), top_h: S.top_h } };
@@ -2089,7 +2089,7 @@ function openEditor(r) {
   const restore = () => { S = JSON.parse(hist[hi]); ls.set(draftKey, { S, at: Date.now() }); updBar(); refreshPanel(); draw(); };
   ub.onclick = () => { if (hi > 0) { hi--; restore(); haptic(); } };
   rb.onclick = () => { if (hi < hist.length - 1) { hi++; restore(); haptic(); } };
-  const close = () => { ov.classList.add('out'); document.body.style.overflow = ''; if (mv) { mv.pause(); mv.removeAttribute('src'); try { mv.load(); } catch (x) { /* */ } } setTimeout(() => ov.remove(), 250); };
+  const close = () => { ov.classList.add('out'); document.body.style.overflow = ''; try { unschedule(); if (ac) ac.close(); } catch (e) { /* */ } if (mv) { mv.pause(); mv.removeAttribute('src'); try { mv.load(); } catch (x) { /* */ } } setTimeout(() => ov.remove(), 250); };
   xb.onclick = () => { if (hist.length > 1) toast('Draft kept — open Edit to continue'); close(); };
   // ---- canvas size (sharp on retina)
   const img = new Image(); img.crossOrigin = 'anonymous'; img.src = PAGES + r.src;
@@ -2110,14 +2110,52 @@ function openEditor(r) {
     const loop = () => { if (!ov.isConnected || mv.paused) return;
       const c = cutNow(); if (mv.currentTime >= c[1] - ED.t0 - 0.02 || mv.currentTime < c[0] - ED.t0 - 0.3) seekCut(0);
       draw(); updTime(); if (mv.requestVideoFrameCallback) mv.requestVideoFrameCallback(loop); else requestAnimationFrame(loop); };
-    mv.addEventListener('play', () => { pbtn.textContent = '\u275a\u275a'; loop(); });
-    mv.addEventListener('pause', () => { pbtn.textContent = '\u25b6'; });
+    mv.addEventListener('play', () => { pbtn.textContent = '\u275a\u275a'; loop(); scheduleExtras(); });
+    mv.addEventListener('pause', () => { pbtn.textContent = '\u25b6'; unschedule(); });
+    mv.addEventListener('seeked', () => { if (!mv.paused) scheduleExtras(); });
     mv.addEventListener('error', () => { pbar.hidden = true; });
-    pbtn.onclick = () => { if (mv.paused) { mv.muted = false; mv.playbackRate = S.speed || 1; const c = cutNow();
+    pbtn.onclick = () => { if (mv.paused) { audioOn(); mv.muted = false; mv.playbackRate = S.speed || 1; const c = cutNow();
       if (mv.currentTime < c[0] - ED.t0 - 0.05 || mv.currentTime >= c[1] - ED.t0 - 0.05) seekCut(0); const p = mv.play(); if (p && p.catch) p.catch(() => {}); } else mv.pause(); };
     scrub.addEventListener('pointerdown', (e) => { const rc = scrub.getBoundingClientRect(); seekCut(Math.min(1, Math.max(0, (e.clientX - rc.left) / rc.width))); });
     try { mv.load(); } catch (x) { /* */ }
   } else pbar.hidden = true;
+  // ---- LIVE sound, on your phone: the pop + the spoken follow line play right in the preview, with the clip dipping
+  // under the voice (same timing as the finished video). Pick a voice and you hear it on the clip instantly.
+  let RM = null; import(PAGES + 'vendor/render.mjs?v=7').then((m) => { RM = m; draw(); }).catch(() => {});
+  let ac = null, duck = null, pass = 0, sched = []; const fvDec = {};
+  function audioOn() {   // has to start inside a tap on iPhone
+    if (!mv) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    if (!ac) { try { ac = new AC(); const sn = ac.createMediaElementSource(mv); duck = ac.createGain(); sn.connect(duck); duck.connect(ac.destination); } catch (e) { ac = null; return; } }
+    if (ac.state === 'suspended') ac.resume().catch(() => {});
+  }
+  async function voiceDec(v) {
+    if (!ac || !v || v === 'off') return null; if (fvDec[v]) return fvDec[v];
+    try { const ab = await followAudio(v); if (!ab) return null; fvDec[v] = await ac.decodeAudioData(ab.slice(0)); return fvDec[v]; } catch (e) { return null; }
+  }
+  function unschedule() { pass++; for (const n of sched) { try { n.stop(); } catch (e) { /* */ } } sched = [];
+    if (duck && ac) { duck.gain.cancelScheduledValues(0); duck.gain.setValueAtTime(1, ac.currentTime); } }
+  async function scheduleExtras() {   // from wherever the playhead is now
+    if (!ac || !mv || mv.paused) return;
+    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=7'); } catch (e) { return; } }
+    unschedule(); const my = pass;
+    const vb = await voiceDec(S.follow_voice || favFollow()); if (my !== pass || mv.paused) return;
+    const c = cutNow(); const rate = mv.playbackRate || 1; const ct = mv.currentTime + ED.t0 - c[0]; const now = ac.currentTime;
+    const at = (t) => now + Math.max(0, t - ct) / rate;
+    const P = RM.POP_AT, D = RM.SAY_DUCK;
+    const pts = vb ? [[0, 1], [P - 0.06, 1], [P, 0.7], [RM.SAY_AT + 0.04, D], [RM.SAY_AT + vb.duration / rate * rate + 0.05, D], [RM.SAY_AT + vb.duration + 0.35, 1]]
+      : [[0, 1], [P - 0.06, 1], [P, 0.7], [P + 0.27, 0.7], [P + 0.45, 1]];
+    const f = (t) => { for (let i = 1; i < pts.length; i++) if (t <= pts[i][0]) { const [t0, v0] = pts[i - 1], [t1, v1] = pts[i]; return v0 + (v1 - v0) * Math.max(0, Math.min(1, (t - t0) / Math.max(1e-3, t1 - t0))); } return 1; };
+    const G = duck.gain; G.cancelScheduledValues(now); G.setValueAtTime(f(ct), now);
+    for (const [t, v] of pts) if (t > ct) G.linearRampToValueAtTime(v, at(t));
+    if (ct < P) { const ps = ac.createBufferSource(); ps.buffer = RM.popBuffer(ac); const pg = ac.createGain(); pg.gain.value = 0.85; ps.connect(pg); pg.connect(ac.destination); ps.start(at(P)); sched.push(ps); }
+    if (vb && ct < RM.SAY_AT + vb.duration - 0.15) {
+      const vs = ac.createBufferSource(); vs.buffer = vb; vs.playbackRate.value = rate; const vg = ac.createGain(); vg.gain.value = RM.SAY_GAIN; vs.connect(vg); vg.connect(ac.destination);
+      vs.start(at(Math.max(ct, RM.SAY_AT)), Math.max(0, ct - RM.SAY_AT)); sched.push(vs);
+    }
+  }
+  function hearFromStart() {   // a voice was picked: play the clip from the top so you hear it on the clip right away
+    if (!mv) return; audioOn(); mv.muted = false; mv.playbackRate = S.speed || 1; seekCut(0);
+    if (mv.paused) { const p = mv.play(); if (p && p.catch) p.catch(() => {}); } }
   const dpr = Math.min(2, window.devicePixelRatio || 1); let CW = 270, CH = 480;
   function sizeCanvas() {
     const h = Math.max(180, Math.min(stage.clientHeight - 12, (stage.clientWidth - 24) * 16 / 9)); CH = h; CW = h * 9 / 16;
@@ -2181,6 +2219,9 @@ function openEditor(r) {
       if (S.hook_style === 'outline') { ctx.lineWidth = fs * 0.2; ctx.strokeStyle = '#000'; ctx.lineJoin = 'round'; ctx.strokeText(l, cw / 2, yy); }
       ctx.fillStyle = S.hook_style === 'white' ? '#000' : '#fff'; ctx.fillText(l, cw / 2, yy); });
     capBox = [bx / cw, by / ch, (bx + bw) / cw, (by + bh) / ch];
+    if (RM && mv && mv.readyState >= 2) {   // the Follow & Subscribe pop-up, exactly when it shows in the video
+      const tc = mv.currentTime + ED.t0 - cutNow()[0]; const cy1 = Math.min(1620 - 60, capBox[3] * 1920 + 18 + 60);
+      ctx.save(); ctx.scale(cw / 1080, ch / 1920); try { RM.drawCta(ctx, tc, cy1); } catch (e) { /* */ } ctx.restore(); }
     // seam handle (drag to resize the webcam)
     if (S.mode === 'split' && tool === 'layout') { ctx.fillStyle = '#29e3ff'; ctx.fillRect(cw / 2 - 30 * dpr, tp - 3 * dpr, 60 * dpr, 6 * dpr); }
   }
@@ -2304,8 +2345,9 @@ function openEditor(r) {
       seekTo(toV(cur()[0]));
     } else if (tool === 'voice') {   // the spoken follow line on THIS clip
       const cur0 = S.follow_voice || favFollow();
-      const list = voicePicker(cur0, (id) => { S.follow_voice = id; commit(); }, FOLLOW_SAMPLE, [['off', 'No voice', 'just the pop sound']], { get: favFollow, set: (id) => { setFavFollow(id); } });
-      panel.append(el('div', 'mut', 'Tap a voice to hear it · it’s used on this clip when you Save · ★ makes it your favorite for every clip'), list);
+      const list = voicePicker(cur0, (id) => { S.follow_voice = id; commit(); VAU.pause(); hearFromStart(); }, FOLLOW_SAMPLE, [['off', 'No voice', 'just the pop sound']], { get: favFollow, set: (id) => { setFavFollow(id); } }, !!mv);
+      panel.append(el('div', 'mut', mv ? 'Tap a voice: the clip plays from the start with that voice, right here \u00b7 Save keeps it on this clip \u00b7 \u2605 makes it your favorite for every clip'
+        : 'Tap a voice to hear it \u00b7 Save keeps it on this clip \u00b7 \u2605 makes it your favorite for every clip'), list);
     } else if (tool === 'speed') {
       panel.append(chips([[1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']], S.speed, (v) => { S.speed = v; if (mv) mv.playbackRate = v; updTime(); }), el('div', 'mut', 'Speeds up the video and the voice together. 1.25× keeps viewers watching without sounding off.'));
     } else if (tool === 'reset') {
