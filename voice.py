@@ -116,6 +116,8 @@ def samples() -> None:
         wav_write(wav, x)
         subprocess.run([qe.FF, "-y", "-loglevel", "error", "-i", str(wav), "-b:a", "96k", str(mp3)], check=True)
         up(mp3, "audio/mpeg")
+        if rel_big:
+            up(mp3, "audio/mpeg", rel_big, have_big, f"v__vs__{v}.mp3")   # the site plays it from v/vs/<voice>.mp3
         # the spoken follow line for clips (engage.py mixes it in right after the pop): trimmed, loudness-matched
         raw = WORK / f"follow_{v}_raw.wav"
         wav_write(raw, tts("Don't forget to follow and subscribe for daily clips!", v, 1.05))

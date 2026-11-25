@@ -223,7 +223,14 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   if (failed) throw failed;
   if (!n) throw new Error('no frames came out');
   // ---- sound: the mix made above (pop + follow line), else copied as is (no quality loss)
-  if (mixed) { for (const [c, m] of mixed.chunks) muxer.addAudioChunk(c, m); }
+  if (mixed) {   // (some phones leave out the AAC setup bytes: AAC-LC 48 kHz stereo = 0x11 0x90)
+    let first = true;
+    for (const [c, m] of mixed.chunks) {
+      let meta = m;
+      if (first) { const dc = (m && m.decoderConfig) || {}; if (!dc.description) meta = { decoderConfig: { codec: 'mp4a.40.2', sampleRate: mixed.sr, numberOfChannels: 2, description: new Uint8Array([0x11, 0x90]) } }; first = false; }
+      muxer.addAudioChunk(c, meta);
+    }
+  }
   else if (aCfg && as.length) {
     const aShift = shift(file.getTrackById(at.id)); const ats = as[0].timescale; let firstA = true;
     for (const s of as) {

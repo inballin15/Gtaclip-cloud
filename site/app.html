@@ -196,6 +196,9 @@ html,body,button,a,input,select,textarea,label,.btn,.clip,.vrow{touch-action:man
 input,select,textarea{font-size:max(16px,1em)!important}
 .edx-sw{flex:1;min-height:0;display:flex;flex-direction:column}
 .vrow .vname{flex:1;min-width:0}
+.lthumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 10px}
+.lthumb{display:block;color:var(--mut);font-size:12px;text-align:center;text-decoration:none}
+.lthumb img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;display:block;margin-bottom:4px;background:#111}
 .vfav{border:0;background:none;color:#8a8399;font-size:24px;line-height:1;padding:4px 8px;cursor:pointer;flex:none}
 .vfav.on{color:#ffc93c}
 .edx-src{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0}
@@ -1577,6 +1580,11 @@ function longCard(x) {
     row.append(ct, cd);
     if (x.thumb_full || x.thumb) { const th = el('a', 'btn', 'Thumbnail'); th.href = x.thumb_full || (PAGES + x.thumb); th.target = '_blank'; th.rel = 'noopener'; row.append(th); }
     if (x.plan && x.commit) { const cv = el('button', 'btn', '\ud83c\udf99 Change voice'); cv.onclick = () => openLongVoice(x); row.append(cv); }
+    if ((x.thumbs || []).length > 1) {   // 3 thumbnail options from your footage: tap one to open / save it
+      const tr = el('div', 'lthumbs'); x.thumbs.forEach((u, i) => { const ln = el('a', 'lthumb'); ln.href = u; ln.target = '_blank'; ln.rel = 'noopener';
+        const im = el('img'); im.src = u; im.alt = 'Thumbnail option ' + (i + 1); im.loading = 'lazy'; ln.append(im, el('span', null, 'Option ' + (i + 1))); tr.append(ln); });
+      b.append(el('div', 'mut', 'Thumbnails \u2014 tap one to open it, then save it to upload with the video'), tr);
+    }
     b.append(row);
     if (x.msg) b.append(el('div', 'note warn', x.msg));
     if ((x.script || []).length) {
@@ -1793,7 +1801,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=8');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=9');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1879,8 +1887,8 @@ const VOICES = [['am_michael', 'Michael', 'US male'], ['am_puck', 'Puck', 'hype 
   ['bm_george', 'George', 'British male'], ['bm_lewis', 'Lewis', 'British male'], ['bm_daniel', 'Daniel', 'British male'], ['bm_fable', 'Fable', 'British male'],
   ['af_heart', 'Heart', 'US female'], ['af_bella', 'Bella', 'US female'], ['af_nicole', 'Nicole', 'soft US female'], ['af_sarah', 'Sarah', 'US female'],
   ['af_nova', 'Nova', 'US female'], ['af_sky', 'Sky', 'US female'], ['bf_emma', 'Emma', 'British female'], ['bf_isabella', 'Isabella', 'British female']];
-const VOICE_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/${v}.mp3`;
-const FOLLOW_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/follow_${v}.wav`;
+const VOICE_SAMPLE = (v) => PAGES + `v/vs/${v}.mp3`;   // served by the site (iPhone won't play GitHub's download links)
+const FOLLOW_SAMPLE = (v) => PAGES + `v/fv/follow_${v}.wav`;
 const VAU = new Audio();
 function voicePicker(pick, onPick, sample = VOICE_SAMPLE, extra = [], fav = null, quiet = false) {   // tap a voice = hear it + pick it; ☆ = favorite
   const list = el('div', 'vlist');
@@ -1963,10 +1971,19 @@ function baseCutOf(r) {   // the clip's current start / end on its footage
   const up = r.source === 'upload'; const mom = r.moment || {};
   return (r.span || (up && mom.end != null ? [mom.start, mom.end] : (r.trim || [0, r.seconds || 20]))).map(Number);
 }
+function dImg(g, src, W, H, sx, sy, sw, sh, dx, dy, dw, dh) {   // drawImage that never reads outside the picture (iPhone draws NOTHING if it does)
+  if (!(sw > 0 && sh > 0 && dw > 0 && dh > 0)) return;
+  const kx = dw / sw, ky = dh / sh;
+  if (sx < 0) { dx -= sx * kx; dw += sx * kx; sw += sx; sx = 0; }
+  if (sy < 0) { dy -= sy * ky; dh += sy * ky; sh += sy; sy = 0; }
+  if (sx + sw > W) { const o = sx + sw - W; sw -= o; dw -= o * kx; }
+  if (sy + sh > H) { const o = sy + sh - H; sh -= o; dh -= o * ky; }
+  if (sw >= 1 && sh >= 1 && dw > 0 && dh > 0) g.drawImage(src, sx, sy, sw, sh, dx, dy, dw, dh);
+}
 const SCR = document.createElement('canvas'); SCR.width = 48; SCR.height = 85;
-function softBg(g, src, sx, sy, sw, sh, cw, ch, dim) {   // blurred, darker background: works on every phone (no canvas filter needed)
+function softBg(g, src, sx, sy, sw, sh, cw, ch, dim, W = 1e9, H = 1e9) {   // blurred, darker background: works on every phone (no canvas filter needed)
   const t = 9 / 16; if (sw / sh > t) { const nw = sh * t; sx += (sw - nw) / 2; sw = nw; } else { const nh = sw / t; sy += (sh - nh) / 2; sh = nh; }
-  const s = SCR.getContext('2d'); s.imageSmoothingEnabled = true; s.drawImage(src, sx, sy, sw, sh, 0, 0, SCR.width, SCR.height);
+  const s = SCR.getContext('2d'); s.imageSmoothingEnabled = true; s.clearRect(0, 0, SCR.width, SCR.height); dImg(s, src, W, H, sx, sy, sw, sh, 0, 0, SCR.width, SCR.height);
   g.save(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(SCR, 0, 0, SCR.width, SCR.height, 0, 0, cw, ch);
   if (dim) { g.fillStyle = `rgba(0,0,0,${dim})`; g.fillRect(0, 0, cw, ch); } g.restore();
 }
@@ -1982,22 +1999,22 @@ function drawLayout(g, src, W, H, S, cw, ch, view) {   // your layout from one f
   g.fillStyle = '#000'; g.fillRect(0, 0, cw, ch);
   const top = S.top_h || TOP; const tp = top / 1920 * ch; const k = cw / 1080;
   if (S.mode === 'split') {
-    if (S.cam) { const [x, y, w, h] = S.cam; const sw = w * W, sh = Math.min(h * H, sw / (1080 / top)); g.drawImage(src, x * W, y * H, sw, sh, 0, 0, cw, tp); }
+    if (S.cam) { const [x, y, w, h] = S.cam; const sw = Math.min(W, w * W), sh = Math.min(H, h * H, sw / (1080 / top)); dImg(g, src, W, H, Math.max(0, Math.min(x * W, W - sw)), Math.max(0, Math.min(y * H, H - sh)), sw, sh, 0, 0, cw, tp); }
     const z = S.zoom || 1, pan = S.pan || 0; const sw = W / z, sh = H / z, sx = (W - sw) / 2 * (1 + pan), sy = (H - sh) / 2;
     const scale = (ch - tp) / sh; const vis = Math.min(sw, cw / scale); const vx = sx + (sw - vis) / 2 * (1 + pan);
-    g.drawImage(src, Math.max(0, vx), sy, vis, sh, 0, tp, cw, ch - tp);
+    dImg(g, src, W, H, Math.max(0, vx), sy, vis, sh, 0, tp, cw, ch - tp);
   } else if (S.mode === 'react') {
     const gg = reactGeom(W, H, S.cam, view);
-    if (S.cam) { const [x0, y0, w0, h0] = S.cam; softBg(g, src, (x0 + w0 * 0.15) * W, (y0 + h0 * 0.15) * H, w0 * 0.7 * W, h0 * 0.7 * H, cw, ch, 0.32); }   // blurred webcam behind (never black)
-    else softBg(g, src, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, cw, ch, 0.3);
-    g.drawImage(src, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, (cw - gg.cw * k) / 2, 400 * k, gg.cw * k, gg.ch * k);
-    if (S.cam) { const [x, y, w, h] = S.cam; g.drawImage(src, x * W, y * H, w * W, h * H, (cw - gg.fw * k) / 2, gg.cb * k, gg.fw * k, gg.fh * k); }
+    if (S.cam) { const [x0, y0, w0, h0] = S.cam; softBg(g, src, (x0 + w0 * 0.15) * W, (y0 + h0 * 0.15) * H, w0 * 0.7 * W, h0 * 0.7 * H, cw, ch, 0.32, W, H); }   // blurred webcam behind (never black)
+    else softBg(g, src, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, cw, ch, 0.3, W, H);
+    dImg(g, src, W, H, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, (cw - gg.cw * k) / 2, 400 * k, gg.cw * k, gg.ch * k);
+    if (S.cam) { const [x, y, w, h] = S.cam; dImg(g, src, W, H, x * W, y * H, w * W, h * H, (cw - gg.fw * k) / 2, gg.cb * k, gg.fw * k, gg.fh * k); }
   } else if (S.mode === 'irl') {
     const h = H / (S.zoom || 1), w = h * 9 / 16; const x = Math.min(Math.max(W * (S.irl_x ?? 0.5) - w / 2, 0), W - w);
-    g.drawImage(src, x, (H - h) / 2, w, h, 0, 0, cw, ch);
+    dImg(g, src, W, H, x, (H - h) / 2, w, h, 0, 0, cw, ch);
   } else {
-    softBg(g, src, 0, 0, W, H, cw, ch, 0.12);
-    const fh = H * cw / W; g.drawImage(src, 0, 0, W, H, 0, (ch - fh) / 2, cw, fh);
+    softBg(g, src, 0, 0, W, H, cw, ch, 0.12, W, H);
+    const fh = H * cw / W; dImg(g, src, W, H, 0, 0, W, H, 0, (ch - fh) / 2, cw, fh);
   }
 }
 const FVBUF = {};
@@ -2008,7 +2025,7 @@ async function followAudio(v) {   // the spoken follow line's audio for your pho
   catch (e) { return null; }
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=8');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=9');
   if (!mod.supported()) throw new Error('this browser can’t make videos');
   const lay = S.mode === 'irl' ? `irl:${(S.irl_x ?? 0.5).toFixed(3)}` : S.mode;
   const r2 = { ...r, layout_used: lay, layout: lay, user_layout: { ...(r.user_layout || {}), top_h: S.top_h } };
@@ -2019,8 +2036,8 @@ async function phoneEdit(r, S, ED, onPct) {   // the finished video from your ed
   const view = (r.layout_used || r.layout) === 'react' ? r.react_view : null;
   return mod.phoneRender({ src: ED.src, a: Math.max(0, cut[0] - ED.t0), b: cut[1] - ED.t0, hook: hk, hookY: top,
     ctaY: hk ? ctaCenter(r2, top, hk.height) : 900, pbar: (r.style || {}).pbar === 'on', onPct,
-    compose: (g, frame, W, H) => drawLayout(g, frame, W, H, S, 1080, 1920, view), fps: 'auto',
-    voice: await followAudio(S.follow_voice || (r.user_layout || {}).follow_voice || favFollow()) });
+    compose: (g, frame, W, H) => drawLayout(g, frame, W, H, S, 1080, 1920, view), fps: S._simple ? 30 : 'auto',
+    voice: S._simple ? undefined : await followAudio(S.follow_voice || (r.user_layout || {}).follow_voice || favFollow()) });
 }
 const LOCALBUSY = {};   // clip id -> the newest edit waiting while your phone is still making the previous one
 async function localMake(r, S, ED) {
@@ -2032,11 +2049,29 @@ async function localMake(r, S, ED) {
     if (nx && nx !== true) localMake(nx.r, nx.S, nx.ED);
   }
 }
+function playsOk(blob) {   // true only if this phone can actually load and play the video it just made
+  return new Promise((res) => {
+    if (!blob || blob.size < 20000) return res(false);
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto';
+    const u = URL.createObjectURL(blob); let done = false;
+    const end = (ok) => { if (done) return; done = true; clearTimeout(t); v.removeAttribute('src'); try { v.load(); } catch (e) { /* */ } URL.revokeObjectURL(u); res(ok); };
+    const t = setTimeout(() => end(false), 8000);
+    v.addEventListener('loadeddata', () => end(v.videoWidth > 0 && v.duration > 0.5), { once: true });
+    v.addEventListener('error', () => end(false), { once: true });
+    v.src = u; try { v.load(); } catch (e) { end(false); }
+  });
+}
 async function localMake1(r, S, ED) {
   const id = r.id; JOBS[id] = { kind: 'phone', at: Date.now(), pct: 1, label: 'Making it on your phone…' }; saveJobs(); lastSig = ''; render(); pollJobs();
   const t0 = Date.now();
   try {
-    const blob = await phoneEdit(r, S, ED, (p) => { if (JOBS[id]) { JOBS[id].pct = Math.max(1, p * 100); JOBS[id].label = 'Making it on your phone…'; paintJobs(); } });
+    const prog = (p) => { if (JOBS[id]) { JOBS[id].pct = Math.max(1, p * 100); JOBS[id].label = 'Making it on your phone…'; paintJobs(); } };
+    let blob = await phoneEdit(r, S, ED, prog);
+    if (!(await playsOk(blob))) {   // didn't play on this phone: once more the simplest way (30 fps, the clip's own sound)
+      console.warn('phone video did not play - trying the simple way');
+      blob = await phoneEdit(r, { ...S, _simple: true }, ED, prog);
+      if (!(await playsOk(blob))) throw new Error('the phone-made video would not play');
+    }
     const old = LOCALV[id]; if (old && old.url) URL.revokeObjectURL(old.url);
     LOCALV[id] = { url: URL.createObjectURL(blob), blob, at: Date.now() };
     JOBS[id] = { kind: 'phone', at: t0, pct: 100, done: true, end: Date.now(), label: `Done ✓ — made on your phone in ${Math.max(1, Math.round((Date.now() - t0) / 1000))}s` };
@@ -2044,7 +2079,8 @@ async function localMake1(r, S, ED) {
     return true;
   } catch (e) {
     console.warn('phone edit:', e);
-    JOBS[id] = { kind: 'remake', at: t0, pct: 5, label: 'Being made on GitHub (about 3 min)' }; saveJobs(); pollJobs();
+    delete LOCALV[id];   // never leave a broken video on the clip
+    JOBS[id] = { kind: 'remake', at: t0, pct: 5, label: 'Being made on GitHub (about 4 min)' }; saveJobs(); lastSig = ''; render(); pollJobs();
     return false;
   }
 }
@@ -2121,7 +2157,7 @@ function openEditor(r) {
   } else pbar.hidden = true;
   // ---- LIVE sound, on your phone: the pop + the spoken follow line play right in the preview, with the clip dipping
   // under the voice (same timing as the finished video). Pick a voice and you hear it on the clip instantly.
-  let RM = null; import(PAGES + 'vendor/render.mjs?v=8').then((m) => { RM = m; draw(); }).catch(() => {});
+  let RM = null; import(PAGES + 'vendor/render.mjs?v=9').then((m) => { RM = m; draw(); }).catch(() => {});
   let ac = null, duck = null, pass = 0, sched = []; const fvDec = {};
   function audioOn() {   // has to start inside a tap on iPhone
     if (!mv) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
@@ -2136,7 +2172,7 @@ function openEditor(r) {
     if (duck && ac) { duck.gain.cancelScheduledValues(0); duck.gain.setValueAtTime(1, ac.currentTime); } }
   async function scheduleExtras() {   // from wherever the playhead is now
     if (!ac || !mv || mv.paused) return;
-    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=8'); } catch (e) { return; } }
+    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=9'); } catch (e) { return; } }
     unschedule(); const my = pass;
     const vb = await voiceDec(S.follow_voice || favFollow()); if (my !== pass || mv.paused) return;
     const c = cutNow(); const rate = mv.playbackRate || 1; const ct = mv.currentTime + ED.t0 - c[0]; const now = ac.currentTime;

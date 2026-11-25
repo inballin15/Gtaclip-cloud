@@ -3136,6 +3136,26 @@ def main() -> None:
                 c0.pop(k, None)
             n += 1
         log(f"reaction clips: {n} re-made with the big webcam layout")
+    if st.get("usual_cam_v", 0) < 1:   # one time (Nov 25 eve): a streamer's set webcam spot (streamers.yaml) wins
+        st["usual_cam_v"] = 1           # when his face is there (ohnePixel: a GTA character's face was taken for it)
+        for cid0, c0 in clips.items():
+            s0 = CFG["streamers"].get(c0.get("login") or "", {})
+            usual = ",".join(str(v) for v in (s0.get("facecam") or []))
+            raw0 = RAW / f"{cid0}.mp4"
+            if (c0["status"] != "new" or not usual or c0.get("source") == "upload" or (c0.get("user_layout") or {}).get("cam")
+                    or not raw0.exists() or (c0.get("cam") and same_spot(c0["cam"], usual))):
+                continue
+            try:
+                if not box_has_face(raw0, duration_of(raw0), usual):
+                    continue
+            except Exception:  # noqa: BLE001
+                continue
+            c0.update(cam=usual, cam_q="learned", cam_v=CAM_V, irl_x=-1)
+            if c0.get("layout") in ("irl", "full", "fill"):
+                c0["layout"] = "split"
+            for k in ("final_hash", "clean_v", "final_v", "cam_used", "layout_used"):
+                c0.pop(k, None)
+            log(f"{cid0}: {c0.get('streamer')}'s own webcam spot (was {c0.get('cam')})")
     if st.get("ronaldo_cam_v", 0) < 1:   # one time (Nov 25): Stable Ronaldo's webcam is bottom-left (the "webcam"
         st["ronaldo_cam_v"] = 1           # found was his GTA character's face -> his own webcam never showed)
         usual = ",".join(str(v) for v in (CFG["streamers"].get("stableronaldo", {}).get("facecam") or []))

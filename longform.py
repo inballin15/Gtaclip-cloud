@@ -654,35 +654,162 @@ def card_png(text: str, idx: int, path: Path) -> None:
     im.save(path)
 
 
-def thumbnail(master: Path, plan: dict, out: Path) -> None:
-    from PIL import Image, ImageDraw, ImageFont, ImageEnhance
-    fr = WORK / "thumb_src.jpg"
-    ff("-ss", f"{plan['thumbnail']['t']:.2f}", "-i", str(master), "-frames:v", "1", "-q:v", "2", str(fr))
-    im = Image.open(fr).convert("RGB").resize((1280, 720))
-    im = ImageEnhance.Contrast(ImageEnhance.Color(im).enhance(1.35)).enhance(1.15)
-    ov = Image.new("RGBA", im.size, (0, 0, 0, 0))
-    d = ImageDraw.Draw(ov)
-    for x in range(700):   # dark fade on the left for the words
-        d.line([(x, 0), (x, 720)], fill=(0, 0, 0, int(190 * (1 - x / 700))))
-    im = Image.alpha_composite(im.convert("RGBA"), ov)
-    words = (plan["thumbnail"]["text"] or "GTA 6 TIPS").upper().split()
-    rows, cur = [], ""
-    for w_ in words:
-        if len(cur + " " + w_) > 10 and cur:
-            rows.append(cur)
-            cur = w_
-        else:
-            cur = (cur + " " + w_).strip()
-    rows.append(cur)
-    size = 118 if len(rows) <= 2 else 92
-    f = ImageFont.truetype(FONT, size)
+THUMB_FONT = str(Path(__file__).resolve().parent / "fonts" / "Anton-Regular.ttf")   # heavy display font (OFL)
+
+
+def _thumb_frames(master: Path, plan: dict, n: int = 3) -> list:
+    """The best real frames for a thumbnail: sharp, colourful, well lit - picked from the intro, every tip and the
+    AI's pick, at least 20 s apart (so the 3 options look different)."""
+    import cv2
+    import numpy as np
+    from PIL import Image
+    ts = [float(plan["thumbnail"]["t"])]
+    for sec in plan["sections"]:
+        a, b = float(sec["start"]), float(sec["end"])
+        ts += [a + (b - a) * f for f in (0.25, 0.5, 0.75)]
+    scored = []
+    for k, t in enumerate(ts):
+        fr = WORK / f"thc_{k}.jpg"
+        try:
+            ff("-ss", f"{max(0.0, t):.2f}", "-i", str(master), "-frames:v", "1", "-q:v", "2", "-vf", "scale=1280:-2", str(fr))
+            im = cv2.imread(str(fr))
+            if im is None:
+                continue
+            g = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+            sharp = cv2.Laplacian(g, cv2.CV_64F).var()
+            b_, g_, r_ = [im[:, :, i].astype(float) for i in range(3)]
+            rg, yb = np.abs(r_ - g_), np.abs(0.5 * (r_ + g_) - b_)
+            colour = np.sqrt(rg.std() ** 2 + yb.std() ** 2) + 0.3 * np.sqrt(rg.mean() ** 2 + yb.mean() ** 2)
+            light = g.mean()
+            # menus / phone screens / map UI look flat: lots of blocks with almost no texture -> not thumbnail material
+            sm = cv2.resize(g, (128, 72)).astype(float)
+            blocks = sm.reshape(9, 8, 16, 8).std(axis=(1, 3))
+            flat = float((blocks < 6).mean())
+            score = np.log1p(sharp) * 1.0 + colour / 25 - abs(light - 120) / 60 - flat * 4 + (2.5 if k == 0 else 0)   # the script's own pick first
+            scored.append((score, t, Image.open(fr).convert("RGB")))
+        except Exception:  # noqa: BLE001
+            continue
+    scored.sort(key=lambda x: -x[0])
+    out = []
+    for sc, t, im in scored:
+        if all(abs(t - t2) > 20 for _, t2, _ in out):
+            out.append((sc, t, im))
+        if len(out) >= n:
+            break
+    return [im for _, _, im in out] or [s_[2] for s_ in scored[:1]]
+
+
+def _grade(im):
+    """Punchy but real: a slight zoom (cuts the game's corner HUD), auto levels, colour, contrast, sharpening and
+    a soft vignette - what a thumbnail editor does by hand."""
+    from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
+    w, h = im.size
+    z = 1.12
+    cw, ch = int(w / z), int(h / z)
+    im = im.crop(((w - cw) // 2, (h - ch) // 2, (w - cw) // 2 + cw, (h - ch) // 2 + ch)).resize((1280, 720), Image.LANCZOS)
+    im = ImageOps.autocontrast(im, cutoff=1)
+    im = ImageEnhance.Color(im).enhance(1.4)
+    im = ImageEnhance.Contrast(im).enhance(1.15)
+    im = im.filter(ImageFilter.UnsharpMask(radius=2, percent=140, threshold=2))
+    vig = Image.new("L", (1280, 720), 0)
+    d = ImageDraw.Draw(vig)
+    for i in range(60):   # radial vignette
+        a = int(255 * (i / 60) ** 2)
+        d.ellipse([-260 + i * 9, -200 + i * 6, 1540 - i * 9, 920 - i * 6], fill=a)
+    vig = vig.filter(ImageFilter.GaussianBlur(60))
+    dark = Image.new("RGB", (1280, 720), (0, 0, 0))
+    return Image.composite(im, Image.blend(im, dark, 0.55), vig)
+
+
+def _fit_font(text: str, max_w: int, max_size: int, min_size: int = 60):
+    from PIL import ImageFont
+    size = max_size
+    while size > min_size:
+        f = ImageFont.truetype(THUMB_FONT, size)
+        if f.getbbox(text)[2] <= max_w:
+            return f
+        size -= 6
+    return ImageFont.truetype(THUMB_FONT, min_size)
+
+
+def _bold_text(im, xy, text, font, fill, stroke=10, anchor="la"):
+    """Big thumbnail lettering: hard drop shadow + thick black outline (reads at phone size)."""
+    from PIL import ImageDraw
     d = ImageDraw.Draw(im)
-    y = 360 - len(rows) * (size + 10) // 2
-    for i, r in enumerate(rows):
-        col = (255, 220, 40) if i == len(rows) - 1 else (255, 255, 255)
-        d.text((56, y), r, font=f, fill=col, stroke_width=8, stroke_fill=(0, 0, 0))
-        y += size + 10
-    im.convert("RGB").save(out, quality=90)
+    x, y = xy
+    d.text((x + 9, y + 10), text, font=font, fill=(0, 0, 0), stroke_width=stroke, stroke_fill=(0, 0, 0), anchor=anchor)
+    d.text((x, y), text, font=font, fill=fill, stroke_width=stroke, stroke_fill=(0, 0, 0), anchor=anchor)
+
+
+def _thumb_words(plan: dict) -> tuple[str, str]:
+    """Two short lines: the hook number/words big on top, the payoff under it (e.g. '9 TIPS' / 'YOU NEED')."""
+    words = (plan["thumbnail"].get("text") or "").upper().replace("-", " ").split()
+    if not words:
+        n = sum(1 for x in plan["sections"] if x.get("kind") == "tip")
+        words = [str(n), "TIPS", "YOU", "NEED"] if n else ["GTA", "6", "TIPS"]
+    if len(words) <= 2:
+        return " ".join(words), ""
+    cut = 2 if words[0].isdigit() or len(words[0]) <= 3 else 1
+    return " ".join(words[:cut]), " ".join(words[cut:cut + 3])
+
+
+def thumbnail(master: Path, plan: dict, out: Path) -> list[Path]:
+    """3 hand-made-style thumbnail options from REAL frames of your footage (no AI art): the best-looking moments,
+    graded like a thumbnail editor would, with big bold lettering in 3 proven layouts. `out` = option 1 (the one
+    used by default); returns all 3."""
+    from PIL import Image, ImageDraw
+    frames = _thumb_frames(master, plan, 3)
+    top, bot = _thumb_words(plan)
+    outs = []
+    for k in range(3):
+        base = _grade(frames[k % len(frames)]).convert("RGBA")
+        ov = Image.new("RGBA", base.size, (0, 0, 0, 0))
+        d = ImageDraw.Draw(ov)
+        if k == 0:   # 1) words left, dark fade behind them, yellow payoff
+            for x in range(760):
+                d.line([(x, 0), (x, 720)], fill=(0, 0, 0, int(200 * (1 - x / 760) ** 1.4)))
+            im = Image.alpha_composite(base, ov).convert("RGB")
+            f1 = _fit_font(top, 600, 250)
+            f2 = _fit_font(bot, 600, 150) if bot else None
+            h1 = f1.getbbox(top)[3]
+            y = 360 - (h1 + (f2.getbbox(bot)[3] + 10 if f2 else 0)) // 2
+            _bold_text(im, (60, y), top, f1, (255, 255, 255))
+            if f2:
+                _bold_text(im, (64, y + h1 + 12), bot, f2, (255, 214, 0))
+        elif k == 1:   # 2) one huge line across the bottom on a yellow bar, small label on top
+            for y_ in range(300):
+                d.line([(0, 720 - y_), (1280, 720 - y_)], fill=(0, 0, 0, int(170 * (1 - y_ / 300))))
+            im = Image.alpha_composite(base, ov).convert("RGB")
+            line = (top + " " + bot).strip()
+            f = _fit_font(line, 1120, 170)
+            dd = ImageDraw.Draw(im)
+            bb = dd.textbbox((0, 0), line, font=f)
+            bw, bh = bb[2] - bb[0], bb[3] - bb[1]
+            x0 = (1280 - bw) // 2 - bb[0]
+            y0 = 672 - bh - bb[1]   # the bar sits fully inside the picture
+            bx = dd.textbbox((x0, y0), line, font=f)
+            dd.rounded_rectangle([bx[0] - 30, bx[1] - 22, bx[2] + 30, bx[3] + 22], radius=16, fill=(255, 214, 0))
+            dd.text((x0, y0), line, font=f, fill=(12, 12, 12))
+        else:   # 3) big number in a red badge on the right, words on the left
+            im = Image.alpha_composite(base, ov).convert("RGB")
+            num = next((w for w in (top + " " + bot).split() if w.isdigit()), "")
+            rest = " ".join(w for w in (top + " " + bot).split() if w != num) or "GTA 6"
+            dd = ImageDraw.Draw(im)
+            if num:
+                dd.ellipse([980, 50, 1230, 300], fill=(225, 30, 45), outline=(255, 255, 255), width=10)
+                fn = _fit_font(num, 180, 200)
+                _bold_text(im, (1105, 178), num, fn, (255, 255, 255), stroke=6, anchor="mm")
+            parts = rest.split()
+            l1, l2 = " ".join(parts[:2]), " ".join(parts[2:4])
+            f1 = _fit_font(l1, 860, 180)
+            _bold_text(im, (56, 520 if l2 else 660), l1, f1, (255, 255, 255), anchor="ls")
+            if l2:
+                f2 = _fit_font(l2, 860, 150)
+                _bold_text(im, (60, 675), l2, f2, (255, 214, 0), anchor="ls")
+        p = out if k == 0 else out.with_name(out.stem + f"_{k + 1}.jpg")
+        im.save(p, quality=92)
+        outs.append(p)
+    return outs
 
 
 def sub_events(plan: dict) -> list[tuple[float, float, str]]:
@@ -1056,7 +1183,7 @@ def make(job: dict, num: int = 0) -> dict:
     full = WORK / f"{job['id']}.mp4"
     secs = render(master, plan, full)
     thumb = WORK / f"{job['id']}.jpg"
-    thumbnail(master, plan, thumb)
+    thumbs = thumbnail(master, plan, thumb)
     prev = WORK / f"{job['id']}_preview.mp4"
     preview(full, prev, secs)
     chap = chapters(plan)
@@ -1096,6 +1223,7 @@ def make(job: dict, num: int = 0) -> dict:
     except Exception as e:  # noqa: BLE001
         log(f"script not saved: {e}")
     entry["thumb_full"] = release_upload(thumb, f"{job['id']}.jpg", "image/jpeg")
+    entry["thumbs"] = [entry["thumb_full"]] + [release_upload(t_, f"{job['id']}_t{k + 2}.jpg", "image/jpeg") for k, t_ in enumerate(thumbs[1:])]
     if (WORK / "subs.srt").exists():   # the same subtitles as a file, for YouTube's own captions (upload it in Studio)
         entry["srt"] = release_upload(WORK / "subs.srt", f"{job['id']}.srt", "application/x-subrip")
     publish_site(entry, {f"v/l/{job['id']}.jpg": thumb, f"v/l/{job['id']}_preview.mp4": prev})

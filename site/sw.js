@@ -1,8 +1,8 @@
 // Clip Studio app: opens instantly (the app itself is kept on the phone) and always shows fresh clips.
 // Videos are never touched here (they need byte-range answers straight from the server).
-const V = 'gc-live-editor-8';
+const V = 'gc-live-editor-9';
 const SHELL = ['/app', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png',
-  '/vendor/render.mjs?v=8', '/vendor/mp4-muxer.min.mjs', '/vendor/Inter-Bold.otf', '/vendor/mp4box.all.js'];
+  '/vendor/render.mjs?v=9', '/vendor/mp4-muxer.min.mjs', '/vendor/Inter-Bold.otf', '/vendor/mp4box.all.js'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(V).then((c) => c.addAll(SHELL)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== V).map((k) => caches.delete(k))))
   .then(() => self.clients.claim())); });
