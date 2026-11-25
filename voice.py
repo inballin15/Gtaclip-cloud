@@ -89,7 +89,7 @@ def main() -> None:
     c = clips[cid]
     print("STEP 1/5 getting the clip", cid, voice)
     clean = WORK / "clean.mp4"
-    urllib.request.urlretrieve(qe.PAGES + f"{qe.clip_dir(cid)}{cid}_clean.mp4?t={int(time.time())}", clean)
+    qe.site_get(f"{qe.clip_dir(cid)}{cid}_clean.mp4?t={int(time.time())}", clean)
     FF = qe.FF
     mm = re.search(r"Duration: (\d+):(\d+):([\d.]+)", subprocess.run([FF, "-i", str(clean)], capture_output=True, text=True).stderr)
     dur = int(mm.group(1)) * 3600 + int(mm.group(2)) * 60 + float(mm.group(3))

@@ -10,6 +10,7 @@ If the site changed in the meantime (the auto finder published), it starts again
 """
 from __future__ import annotations
 
+import os
 import json
 import re
 import subprocess
@@ -18,7 +19,7 @@ import time
 from pathlib import Path
 
 SITE = Path("_minesite")
-PAGES = "https://inballin15.github.io/Gtaclip-cloud"
+PAGES = os.environ.get("SITE_URL", "https://gtaclip-studio.pages.dev")   # Cloudflare since Nov 25 (GitHub Pages was capped at 1 GB)
 
 
 def git(*args: str, inp: bytes | None = None, env: dict | None = None) -> str:

@@ -29,7 +29,7 @@ import numpy as np
 ROOT = Path(__file__).parent
 REPO = os.environ.get("GITHUB_REPOSITORY", "inballin15/Gtaclip-cloud")
 TOKEN = os.environ.get("GH_TOKEN", "")
-PAGES = "https://inballin15.github.io/Gtaclip-cloud"
+PAGES = os.environ.get("SITE_URL", "https://gtaclip-studio.pages.dev")   # Cloudflare since Nov 25 (GitHub Pages was capped at 1 GB)
 WORK = Path(os.environ.get("LF_WORK", "/tmp/lf"))
 WORK.mkdir(parents=True, exist_ok=True)
 try:
@@ -854,17 +854,31 @@ def make(job: dict, num: int = 0) -> dict:
     master = make_master(src)
     dur = duration_of(master)
     status(job, "making", "Watching your footage")
-    if job.get("fake_ai"):   # test of everything but the AI (voice, edit, upload) when Google's daily limit is used up
+    given = None
+    if job.get("plan_ref"):   # the script was written by Claude in chat (no Google AI needed): use it as is
+        ref = str(job["plan_ref"])
+        subprocess.run(["git", "fetch", "-q", "--depth=1", "origin", f"+{ref}:refs/remotes/origin/{ref}"], check=True)
+        given = json.loads(subprocess.run(["git", "show", f"origin/{ref}:plan.json"], capture_output=True, text=True, check=True).stdout)
+        sl = subprocess.run(["git", "show", f"origin/{ref}:scene_log.json"], capture_output=True, text=True)
+        scenes = json.loads(sl.stdout) if sl.returncode == 0 and sl.stdout.strip() else []
+        for r in scenes:
+            for k, d in (("what", ""), ("where", ""), ("ui", ""), ("tip", ""), ("score", 5), ("boring", False)):
+                r.setdefault(k, d)
+        log(f"using the script written in chat ({ref}) - no Google AI needed")
+    elif job.get("fake_ai"):   # test of everything but the AI (voice, edit, upload) when Google's daily limit is used up
         scenes = [{"t": float(t), "what": "test", "where": "", "ui": "", "tip": "", "score": 5, "boring": False}
                   for t in range(0, int(dur), 2)]
     else:
         scenes = watch(master, game)
-    if len(scenes) < 5:
+    if len(scenes) < 5 and not given:
         raise RuntimeError("Google's free AI daily limit is used up for today - tap Try again tomorrow" if DAILY["hit"]
                            else "the AI couldn't watch the footage (Google's free AI is busy) - tap Try again in a bit")
     status(job, "making", "Writing the script")
     plan = None
     for _ in range(3):
+        if given:
+            plan = clean_plan(given, dur)
+            break
         if job.get("fake_ai"):
             q = dur / 5
             plan = clean_plan({"title": "Test: GTA 6 tips", "description": "Test video.", "tags": ["GTA6"],
@@ -890,7 +904,7 @@ def make(job: dict, num: int = 0) -> dict:
         raise RuntimeError("the AI couldn't write a script right now (Google's free AI is busy)")
     log(f"script: '{plan['title']}' - {len(plan['sections'])} sections, "
         f"{sum(len(s['lines']) for s in plan['sections'])} lines")
-    if not job.get("fake_ai"):
+    if not job.get("fake_ai") and not given:
         place_sections(plan, scenes, dur)
         check_script(plan, scenes, game, dur)
         place_sections(plan, scenes, dur)

@@ -29,7 +29,20 @@ TOKEN = os.environ["GH_TOKEN"]
 ISSUE = json.loads(os.environ["ISSUE_JSON"])
 FF = imageio_ffmpeg.get_ffmpeg_exe()
 OWNER, NAME = REPO.split("/")
-PAGES = f"https://{OWNER.lower()}.github.io/{NAME}/"
+PAGES = os.environ.get("SITE_URL", "https://gtaclip-studio.pages.dev") + "/"
+# where to download site files from, freshest first (the GitHub copy has no wait for the Cloudflare upload)
+SITE_SOURCES = [f"https://raw.githubusercontent.com/{OWNER}/{NAME}/gh-pages/", PAGES, f"https://{OWNER.lower()}.github.io/{NAME}/"]
+
+
+def site_get(path: str, out) -> None:
+    last = None
+    for base in SITE_SOURCES:
+        try:
+            urllib.request.urlretrieve(base + path, out)
+            return
+        except Exception as e:  # noqa: BLE001
+            last = e
+    raise last
 WORK = Path("/tmp/qe")
 WORK.mkdir(exist_ok=True)
 TOP_H = 672
@@ -121,7 +134,7 @@ def main() -> None:
 
     clean = WORK / "clean.mp4"
     try:
-        urllib.request.urlretrieve(PAGES + f"{clip_dir(cid)}{cid}_clean.mp4?t={int(time.time())}", clean)
+        site_get(f"{clip_dir(cid)}{cid}_clean.mp4?t={int(time.time())}", clean)
     except Exception as e:  # noqa: BLE001
         fallback(cid, edit, f"no clean copy: {e}", ul)
         return

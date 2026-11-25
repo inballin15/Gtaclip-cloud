@@ -546,7 +546,29 @@ header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-
 const BUILD = '__BUILD__';
 const DEV = !/^[0-9a-f]{10}$/.test(BUILD);
 const REPO = 'inballin15/Gtaclip-cloud';
-const PAGES = 'https://inballin15.github.io/Gtaclip-cloud/';
+// Nov 25: the site moved to Cloudflare (no 1 GB limit). The old GitHub address forwards here and brings your
+// saved settings (GitHub key, drafts) along, since browsers keep those per address.
+const CF_SITE = 'https://gtaclip-studio.pages.dev';
+(function () {
+  if (/github\.io$/.test(location.hostname) && !/[?&]stay\b/.test(location.search)) {
+    const data = {};
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gc-')) data[k] = localStorage.getItem(k); } } catch (e) { /* */ }
+    let enc = ''; try { enc = btoa(unescape(encodeURIComponent(JSON.stringify(data)))); } catch (e) { /* */ }
+    const path = location.pathname.replace(/^\/Gtaclip-cloud/i, '') || '/app.html';
+    const h = location.hash || '';
+    location.replace(CF_SITE + path + location.search + h + (enc && enc.length < 300000 ? (h ? '&' : '#') + 'gcimport=' + enc : ''));
+    throw new Error('moved to ' + CF_SITE);
+  }
+  const m = location.hash.match(/[#&]gcimport=([^&]+)/);
+  if (m) {
+    try { const d = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+      for (const k in d) if (k.startsWith('gc-') && localStorage.getItem(k) == null) localStorage.setItem(k, d[k]); } catch (e) { /* */ }
+    const rest = location.hash.replace(/[#&]gcimport=[^&]+/, '').replace(/^&/, '#');
+    history.replaceState(null, '', location.pathname + location.search + (rest === '#' ? '' : rest));
+  }
+})();
+const PAGES = /github\.io$/.test(location.hostname) ? 'https://inballin15.github.io/Gtaclip-cloud/'
+  : /^https?:$/.test(location.protocol) && !/^(localhost|127\.)/.test(location.hostname) ? location.origin + '/' : CF_SITE + '/';
 const SLOTS = [[7, 7], [8, 37], [10, 7], [11, 37], [13, 7], [14, 37], [16, 7], [17, 37], [19, 7], [20, 37], [22, 7]];
 const CR = { Clix: 'https://contentrewards.com/discover/7a6a234b-1e9e-4da3-a600-54cc3142e710',
              Lacy: 'https://contentrewards.com/c/campaigns/4479e5e2-9a00-489e-8b0c-345834f37cc7?group=1',

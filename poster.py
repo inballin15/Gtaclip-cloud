@@ -19,6 +19,8 @@ import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
+
+SITE = os.environ.get("SITE_URL", "https://gtaclip-studio.pages.dev")   # the site moved to Cloudflare (Nov 25)
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -721,7 +723,7 @@ def main() -> None:
         if e and e.get("at", 0) > (r.get("rendered") or 0):
             if e.get("url") or e.get("video"):   # the instant link is live right away; the website copy can lag
                 r["final"] = e.get("video") or e["url"]
-                r["final_abs"] = e.get("url") or f"https://inballin15.github.io/Gtaclip-cloud/{e['video']}"
+                r["final_abs"] = e.get("url") or f"{SITE}/{e['video']}"
             if e.get("hook"):
                 r["hook"] = e["hook"]
             if "caption" in e:
@@ -906,7 +908,7 @@ def main() -> None:
             recs[cid] = {
                 "id": cid, "hook": c.get("hook", ""), "streamer": c.get("streamer", ""), "login": c.get("login", ""),
                 "campaign": c.get("campaign", ""), "tag": c.get("tag", ""), "caption": c.get("caption", ""), "why": why, "posted_at": iso(NOW), "video": c["final_abs"],
-                "poster": f"https://inballin15.github.io/Gtaclip-cloud/{c.get('poster', '')}",
+                "poster": f"{SITE}/{c.get('poster', '')}",
                 "tiktok": "", "youtube": "", "status": res, "platforms": want,
                 "hook_kind": c.get("hook_kind", ""), "hook_variant": c.get("hook_variant", ""), "style": c.get("style") or {},
                 "viral": c.get("viral"), "seconds": c.get("seconds"),
