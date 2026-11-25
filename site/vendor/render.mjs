@@ -56,7 +56,7 @@ export function drawCta(g, t, cy) {
 // ---- the sound like engage.py: the clip, a "pop" as the button appears, and the spoken follow line right after it
 // (the clip dips ~3 dB for the pop and ~11 dB under the voice, then straight back). Made by the phone's audio
 // engine (OfflineAudioContext) and its AAC encoder (WebCodecs). null = this phone can't: the sound is copied as is.
-export const POP_AT = START + 0.06, SAY_AT = POP_AT + 0.22, SAY_DUCK = 0.28, SAY_GAIN = 1.8;
+export const POP_AT = START + 0.06, SAY_AT = POP_AT + 0.22, SAY_DUCK = 0.12, SAY_GAIN = 1.8;
 export function popBuffer(ctx) {
   const sr = ctx.sampleRate, n = Math.round(sr * 0.22); const b = ctx.createBuffer(2, n, sr);
   const L = b.getChannelData(0), R = b.getChannelData(1); let ph = 0, seed = 7;

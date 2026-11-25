@@ -82,7 +82,7 @@ QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v4-hq"   # Nov 25: highest quality re-make of every unposted clip (final + no-caption copy)
 LAYOUT_V_OLD = "v3-textonly-capcut"
-FINAL_V = LAYOUT_V + "-follow5"   # posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
+FINAL_V = LAYOUT_V + "-follow6"   # posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
 TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
@@ -2634,7 +2634,7 @@ def main() -> None:
             FINAL_V = LAYOUT_V + "-follow3"   # nothing re-made until the voice exists (then they all get it)
             engage.VOICE = "off"
         elif engage.VOICE != "am_puck":
-            FINAL_V = LAYOUT_V + "-follow5-" + engage.VOICE
+            FINAL_V = LAYOUT_V + "-follow6-" + engage.VOICE
     except Exception as e:  # noqa: BLE001
         log(f"follow voice: {e}")
     for c in clips.values():
@@ -2779,7 +2779,7 @@ def main() -> None:
             _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + FINAL_V + r.get("layout", "")).encode()).hexdigest()[:10]
             _olds = {hashlib.sha1((r.get("hook", "") + r.get("cam", "") + v_ + r.get("layout", "")).encode()).hexdigest()[:10]
                      for v_ in (LAYOUT_V_OLD, LAYOUT_V_OLD + "-follow1", LAYOUT_V_OLD + "-follow2", LAYOUT_V_OLD + "-follow3",
-                                LAYOUT_V + "-follow2", LAYOUT_V + "-follow3", LAYOUT_V + "-follow4")}
+                                LAYOUT_V + "-follow2", LAYOUT_V + "-follow3", LAYOUT_V + "-follow4", LAYOUT_V + "-follow5")}
             r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"   # (an older video still counts until it's re-made)
                           if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and (r.get("final_v") == _hh or r.get("final_v") in _olds)
                           and (VID / f"{r['id']}_final.mp4").exists() else "")

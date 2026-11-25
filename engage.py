@@ -161,7 +161,7 @@ def pop_wav(path: Path) -> Path:
 # (voice.py --samples, on the "voices" release); which voice = Settings on the site (control.json "follow_voice")
 FOLLOW_LINE = "Don't forget to follow and subscribe for daily clips!"
 SAY_AT = POP_AT + 0.22            # right after the pop
-SAY_DUCK = 0.28                   # the clip's sound under the voice (x0.28 = about -11 dB), straight back after
+SAY_DUCK = 0.12                   # the clip's sound under the voice (x0.12 = about -18 dB), straight back after
 SAY_GAIN = 1.8                    # the voice itself (+5 dB): clearly on top of a loud stream
 VOICE = None                      # set by the clip maker from your settings; None = read them here
 REPO = "inballin15/Gtaclip-cloud"
