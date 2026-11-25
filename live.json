@@ -380,12 +380,12 @@
    }
   ]
  },
- "updated": "2026-11-25T13:59:03Z",
+ "updated": "2026-11-25T14:04:04Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-25T16:37:00Z",
- "up_next": "HeartlessCreativePizzaPhilosoraptor-yCzQjO64c1vj_twP",
+ "up_next": "ObliviousRoughDelicataFutureMan-CS3ZEl3poE2C9fMP",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7712103088034745614",
@@ -1140,12 +1140,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-25",
-  "used": 3,
+  "used": 4,
   "cap": 29,
   "slots": 6,
-  "remain30": 711,
-  "reset30": "2026-12-18T22:03:26Z",
-  "remain24": 581,
+  "remain30": 710,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 580,
   "active": [
    [
     8,
@@ -1272,11 +1272,11 @@
    "posted_at": "2026-11-25T13:38:48Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/ProtectivePopularDolphinTriHard-HRhwsu8sBkw2jmY1_final.mp4?v=ca69d69f5a&r=1795599061",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/ProtectivePopularDolphinTriHard-HRhwsu8sBkw2jmY1.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712103088034745614",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b06e4ec24eceb1185ce856e",
      "error": ""
     }
@@ -2628,6 +2628,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7712103088034745614",
+   "sent": "2026-11-25T13:39:34.479Z",
+   "hook": "IShowSpeed lost it when he pulled off a massive backflip in GTA 6",
+   "clip": "ProtectivePopularDolphinTriHard-HRhwsu8sBkw2jmY1",
+   "streamer": "IShowSpeed",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://www.tiktok.com/@gtaclip96/video/7710848913573432590?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
    "sent": "2026-11-22T04:32:18.000Z",
    "hook": "Kai Cenat stunned that NPCs remembered him 🎥 @kaicenat #KaiCenat #GTA6 #GTAVI #gaming #fyp",
@@ -3691,6 +3705,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T13:59:03Z",
+ "stats_updated": "2026-11-25T14:04:04Z",
  "log": []
 }
