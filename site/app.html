@@ -529,15 +529,82 @@ header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-
 .mc svg{height:60px}
 .call{cursor:pointer}
 .bar{cursor:pointer}
+
+/* ================= v4 (Nov 25 redesign): same look - dark, hot pink, bold type - cleaner + a real desktop layout === */
+:root{--bg:#07060c;--p1:#110e19;--p2:#17131f;--p3:#201b2c;--line:#ffffff14;--line2:#ffffff22;--fg:#f4f2fa;--mut:#948eab;--pink:#ff2e88;--violet:#8b5cf6;
+  --ui:Inter,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;--glow:0 0 0 1px #ff2e8840,0 8px 30px #ff2e8826}
+html,body{font-family:var(--ui)}
+body{background:radial-gradient(1200px 600px at 85% -10%,#ff2e8814,transparent 60%),radial-gradient(900px 500px at -10% 10%,#8b5cf614,transparent 60%),var(--bg);background-attachment:fixed}
+/* header: just the brand, the status and three buttons */
+header{display:flex!important;align-items:center!important;gap:12px!important;border-bottom:0!important;margin:0!important;padding:calc(12px + env(safe-area-inset-top)) 16px 12px!important}
+header .logo{width:40px;height:40px;border-radius:12px;flex:none;box-shadow:0 6px 18px #ff2e8840;background:none}
+header .brand h1{font-size:30px!important;line-height:1!important}
+header .brand .sub{margin-top:5px;font:600 11px/1.2 var(--mono,ui-monospace,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.icbtn{margin-left:auto!important;gap:8px!important}
+.icbtn button{width:40px!important;height:40px!important;border-radius:12px!important;background:var(--p1)!important;border:1px solid var(--line)!important;transition:background .2s,border-color .2s}
+.icbtn button:hover{background:var(--p2)!important;border-color:var(--line2)!important}
+/* panels + cards: one style everywhere */
+.pane,.card{background:linear-gradient(180deg,#141020,#0e0b16)!important;border:1px solid var(--line)!important;border-radius:18px!important;
+  box-shadow:inset 0 1px 0 #ffffff0d,0 12px 32px #0000004d}
+.pane{padding:16px!important}
+.ttl{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.ttl>span{font:800 13px/1.2 var(--ui)!important;letter-spacing:.02em!important;text-transform:none!important;color:var(--fg)}
+.ttl>b{font:600 10.5px/1 var(--mono,ui-monospace,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.ttl>b.p{color:var(--pink)}
+.call,.credit,.pane.kit{display:none!important}
+/* buttons: clear primary / secondary */
+.btn,.big{border-radius:14px!important;font-weight:700!important;transition:transform .12s,background .2s,box-shadow .2s}
+.btn:active,.big:active{transform:scale(.97)}
+.btn.pink,.big.go{background:linear-gradient(135deg,#ff2e88,#c026d3)!important;color:#fff!important;border:0!important;box-shadow:0 8px 22px #ff2e8838}
+.btn.pink:hover,.big.go:hover{box-shadow:0 10px 28px #ff2e8855}
+/* clip cards */
+.clip{border-radius:20px!important;overflow:hidden;border:1px solid var(--line)!important;background:var(--p1)!important;box-shadow:0 14px 36px #00000059}
+.clip .vbox{border-radius:0!important}
+.clip .hook{font-weight:800;line-height:1.25}
+.pill{border-radius:999px!important}
+/* bottom bar (phone) */
+nav{background:#100d18ee!important;border:1px solid var(--line)!important;box-shadow:0 18px 40px #000a!important}
+/* sheets: rounded, roomy */
+.sheet .in{background:linear-gradient(180deg,#15111f,#0f0c17)!important;border:1px solid var(--line)}
+/* ---------- computer: side menu, wide content, grids ---------- */
+@media (min-width:1100px){
+  body{padding-left:252px}
+  nav{position:fixed!important;left:16px!important;right:auto!important;top:16px!important;bottom:16px!important;transform:none!important;
+    width:220px!important;max-width:none!important;margin:0!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;
+    gap:6px!important;padding:88px 12px 16px!important;border-radius:22px!important}
+  nav::before{content:"";position:absolute;left:18px;top:20px;width:48px;height:48px;border-radius:14px;background:url(/icons/icon-192.png) center/cover;box-shadow:0 8px 22px #ff2e8840}
+  nav::after{content:"Your clip page";position:absolute;left:78px;top:36px;font:700 11px/1 var(--mono,ui-monospace,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+  nav .ind{display:none!important}
+  nav button{flex:0 0 auto!important;flex-direction:row!important;justify-content:flex-start!important;gap:12px!important;padding:12px 14px!important;
+    border-radius:14px!important;font:700 14px/1 var(--ui)!important;letter-spacing:0!important;text-transform:none!important;color:var(--mut)}
+  nav button:hover{background:#ffffff0a;color:var(--fg)}
+  nav button[aria-selected="true"]{background:linear-gradient(135deg,#ff2e8830,#8b5cf630)!important;color:#fff!important;box-shadow:inset 0 0 0 1px #ff2e8840}
+  nav button b{position:static!important;margin-left:auto!important}
+  header{position:sticky;padding:20px 32px 14px!important;background:linear-gradient(var(--bg) 70%,#07060c00)!important}
+  header .logo{display:none}
+  header .brand h1{font-size:40px!important}
+  main{max-width:1400px!important;margin:0 auto!important;padding:8px 32px 56px!important}
+  .studio{grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr)!important;gap:18px!important}
+  main[data-tab="clips"] .view{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;align-items:start}
+  main[data-tab="clips"] .view>:not(.clip){grid-column:1 / -1}
+  main[data-tab="clips"] .clip{margin:0!important}
+  main[data-tab="results"] .view{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+  main[data-tab="results"] .view>*{margin:0!important}
+  main[data-tab="results"] .view>.wide,main[data-tab="results"] .view>h2{grid-column:1 / -1}
+  .sheet{align-items:center!important}
+  .sheet .in{max-width:620px!important;border-radius:24px!important;max-height:86vh;transition:transform .3s var(--ease),opacity .25s!important}
+  .sheet:not(.open) .in{opacity:0;transform:translateY(24px) scale(.98)!important;visibility:hidden}   /* centred: closed = gone */
+  .sheet.open .in{opacity:1;visibility:visible}
+  .toast{bottom:28px!important}
+}
+@media (min-width:1600px){main[data-tab="clips"] .view{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo">GC</div>
-  <div class="brand"><div class="k">Project / gta_vi_clips</div><h1 id="ttl">Clip Studio<i>/ VI</i></h1>
-    <div class="sub"><span class="o">Opus 5.5 &nbsp;×&nbsp; 16 tools &nbsp;·&nbsp; </span><span class="dot" id="dot"></span> <span id="livetxt">loading…</span></div></div>
-  <div class="topr">Edit preview</div>
-  <div class="ship">Clip it.<br>Ship it.</div>
+  <img class="logo" src="/icons/icon-192.png" alt="" width="40" height="40">
+  <div class="brand"><h1 id="ttl">Clip Studio<i>/ VI</i></h1>
+    <div class="sub"><span class="dot" id="dot"></span> <span id="livetxt">loading…</span></div></div>
   <div class="icbtn"><button id="help" aria-label="How it works">?</button><button id="reboot" aria-label="Get newest version">↻</button><button id="gear" aria-label="Settings">⚙︎</button></div>
 </header>
 <main id="main"></main>
@@ -975,7 +1042,7 @@ function needsCard(ql) {
 }
 const ONB = [
   ['Welcome', 'Your clip page runs itself', ['A robot in the cloud watches every GTA 6 streamer on Twitch — Kai, Lacy, Speed, Clix, YourRAGE and anyone else blowing up.', 'It finds the best moments, cuts them into phone videos, adds a hook, and posts them to TikTok and YouTube — about 6 times a day.', 'You don\'t have to do anything. This site lets you watch it work and step in when you want.']],
-  ['Studio', 'The main screen', ['<b>Media bin</b> — every clip ready to post. Tap one.', '<b>Program</b> — watch it.', '<b>Inspector</b> — change the words on the video (instant).', '<b>Output</b> — Ship it now, Save it, or mark it Posted ✓.']],
+  ['Studio', 'The main screen', ['<b>Up next</b> — every clip ready to post. Tap one.', '<b>Preview</b> — watch it.', '<b>Edit</b> — change the words on the video (instant).', '<b>Posting copy</b> — Ship it now, Save it, or mark it Posted ✓.']],
   ['Getting paid', 'Content Rewards', ['You joined the Content Rewards campaigns, so every posted video can earn.', 'After a video posts, tap <b>$ Get paid</b>: it copies the link and opens Content Rewards. Paste it there and tap ✓.', 'The "Needs you" box at the top tells you when there\'s one to submit.']],
   ['Results', 'It learns what works', ['The <b>Results</b> tab shows views and what the AI is learning.', 'It keeps testing hooks, subtitles, zooms and timing — and uses more of whatever gets views.', 'Tap <b>?</b> on any box for help. That\'s it!']]];
 function openOnboarding() {
@@ -998,7 +1065,8 @@ function selClip(ql) { const rs = ready(ql); return rs.find((r) => r.id === SEL)
 const box = (cls, kids) => { const d = el('div', cls); kids.forEach((k) => k && d.append(k)); return d; };
 const ttl = (left, right, pink, help) => { const d = el('div', 'ttl'); const sp = el('span', null, left); if (help) sp.append(helpBtn(help)); d.append(sp, el('b', pink ? 'p' : '', right || '')); return d; };
 const CALLHELP = { Reframe: 'program', Type: 'insp', Select: 'bin', Motion: 'insp', Captions: 'seq', Trim: 'seq', Audio: 'seq' };
-const call = (txt, cls, css) => { const c = el('span', 'call ' + cls, txt); Object.assign(c.style, css); const k = CALLHELP[txt.split(' ').pop()]; if (k) c.onclick = (e) => { e.stopPropagation(); sheet('What is this?', [el('p', null, HELP[k])]); }; return c; };
+const call = (txt, cls, css) => { if (true) return document.createComment(txt);   // (Nov 25 redesign: no fake cursors)
+ const c = el('span', 'call ' + cls, txt); Object.assign(c.style, css); const k = CALLHELP[txt.split(' ').pop()]; if (k) c.onclick = (e) => { e.stopPropagation(); sheet('What is this?', [el('p', null, HELP[k])]); }; return c; };
 function stageBar(r) {
   const S = sysState(); const step = S.running ? (RUNSTEP[S.running.id] || 'starting up') : '';
   const up = S.upscale && S.upscale.status !== 'completed';
@@ -1010,7 +1078,7 @@ function stageBar(r) {
   return d;
 }
 function programPane(r, n) {
-  const d = el('div', 'pane prog'); d.append(ttl('Program / source_' + String(n || 1).padStart(2, '0'), r && r.style && r.style.start === 'fast' ? 'Fast start' : 'Original speed', false, 'program'));
+  const d = el('div', 'pane prog'); d.append(ttl('Preview', r && r.style && r.style.start === 'fast' ? 'Fast start' : 'Original speed', false, 'program'));
   if (!r) { d.append(el('div', 'empty', 'No clips ready yet — the clip maker is working on it')); return d; }
   const s16 = el('div', 'src16'); s16.append(el('div', 'cap0', `${r.streamer || ''} / ${r.layout_used === 'cam' ? 'reaction' : 'gameplay'}`));
   const mon = el('div', 'mon'); mon.dataset.mon = r.id;
@@ -1025,7 +1093,6 @@ function programPane(r, n) {
   { const sc0 = +((r._preview && r._preview.scale) || ulb.hook_scale || 1); if (Math.abs(sc0 - 1) > 0.01) hb.style.transform = `scale(${sc0})`; }
   for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) { const h = el('i'); h.style.left = x ? 'calc(100% - 4px)' : '-4px'; h.style.top = y ? 'calc(100% - 4px)' : '-4px'; hb.append(h); }
   hb.append(call('15 Type', 'c-peach', { right: '-6px', bottom: '-22px' })); hb.style.cursor = 'text'; hb.onclick = () => { const t = document.querySelector('.insp textarea'); if (t) { t.scrollIntoView({ behavior: 'smooth', block: 'center' }); t.focus(); } }; d.append(hb);
-  d.append(el('div', 'credit', `${r.source === 'vod' ? 'Twitch VOD' : 'Twitch clip'} + faster-whisper`));
   const tp = el('div', 'transport'); const pb = el('button', null, '▶'); const tc = el('div', 'tc', '00:00:00');
   const names = [...new Set(ready(queueList()).map((x) => x.streamer))]; tp.append(pb, tc, el('span', 'tr', `${ready(queueList()).length} clips + ${names.length} creators`));
   d.append(tp); const sc = el('div', 'scrub'); const si = el('i'); sc.append(si); d.append(sc);
@@ -1038,7 +1105,7 @@ function programPane(r, n) {
   return d;
 }
 function binPane(ql, r) {
-  const d = el('div', 'pane'); const rs = ready(ql); d.append(ttl('Media bin / source moments', `${rs.length} ready`, false, 'bin'));
+  const d = el('div', 'pane'); const rs = ready(ql); d.append(ttl('Up next', `${rs.length} ready`, false, 'bin'));
   const mine = (x) => x.source === 'upload';
   const group = (list, label, emptyTxt) => { if (label) d.append(el('div', 'binlab', label)); const bin = el('div', 'bin');
   list.forEach((x) => { const w = el('div', 'wrap'); const b = el('button', x.id === (r && r.id) ? 'sel' : ''); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (x.vposter || x.poster)})`; b.append(th);
@@ -1053,7 +1120,7 @@ function binPane(ql, r) {
   return d;
 }
 function inspPane(r) {
-  const d = el('div', 'pane insp'); d.append(ttl('Inspector / live edit', 'Keyframes', true, 'insp'));
+  const d = el('div', 'pane insp'); d.append(ttl('Edit', '', true, 'insp'));
   if (!r) return d;
   if (JOBS[r.id]) d.append(jobBar(r.id));
   const ul = r.user_layout || {}; const sty = r.style || {};
@@ -1098,7 +1165,7 @@ function inspPane(r) {
   return d;
 }
 function outPane(r, n) {
-  const d = el('div', 'pane'); d.append(ttl('9:16 / output preview', r && r.nowing ? 'Posting now' : '', true, 'out'));
+  const d = el('div', 'pane'); d.append(ttl('Posting copy', r && r.nowing ? 'Posting now' : '', true, 'out'));
   if (!r) return d;
   const o = el('div', 'outp'); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
   const m = el('div', 'meta'); m.append(el('div', 'nm', 'Short_' + String(n || 1).padStart(2, '0')), el('div', 'sp', '9:16  /  H.264'), el('div', 'sp g', `Video + captions`));
@@ -1118,7 +1185,7 @@ function outPane(r, n) {
 }
 function seqPane(r, n) {
   const T = r ? (+r.seconds || 20) : 25;
-  const d = el('div', 'pane seq'); d.append(ttl('Sequence / short_' + String(n || 1).padStart(2, '0'), `Snap  •  ${T.toFixed(2)} sec`, true, 'seq'));
+  const d = el('div', 'pane seq'); d.append(ttl('Timeline', `Snap  •  ${T.toFixed(2)} sec`, true, 'seq'));
   if (!r) return d;
   const ru = el('div', 'ruler'); ru.style.marginLeft = '72px'; for (let i = 0; i <= 5; i++) ru.append(el('span', null, String(Math.round(T * i / 5)).padStart(2, '0'))); d.append(ru);
   const tr = el('div', 'tracks');
@@ -1165,7 +1232,7 @@ function renderStudio(v, ql) {
   const left = el('div'); left.style.display = 'grid'; left.style.gap = '12px'; left.style.alignContent = 'start'; left.append(programPane(r, n));
   const right = el('div'); right.style.display = 'grid'; right.style.gap = '12px'; right.style.alignContent = 'start';
   right.append(binPane(ql, r), inspPane(r), outPane(r, n));
-  st.append(left, right, seqPane(r, n), kitPane());
+  st.append(left, right, seqPane(r, n));
   v.append(st);
   const yt = yourTurnCard(ql); if (yt) v.append(yt);
   v.append(heroCard(ql));
