@@ -76,7 +76,8 @@ CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
 def hd_key(cid: str, c: dict) -> str:
     """File name for a clip's webcam in the upscaler branches (a new suffix = a fresh upscale from a new source)."""
     return cid + c.get("hd_sfx", "")
-SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "600"))        # smaller site = GitHub Pages publishes faster (edits show up sooner); 1 GB is the hard limit
+SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "1600"))       # stream clips on the site (Cloudflare since Nov 25 - no 1 GB limit;
+                                                               # this just keeps the GitHub working copy a sensible size)
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v3-textonly-capcut"

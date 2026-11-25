@@ -41,8 +41,8 @@ FONT = str(ROOT / "fonts" / "Inter-Bold.otf")
 W, H, FPS = 1920, 1080, 30
 SR = 24000                       # Kokoro voice sample rate
 WPS = 2.6                        # narration speed: words per second (Kokoro at speed 1.0 is ~2.6-2.9)
-KEEP_PREVIEWS = 1                # long-video previews kept on the site (Pages has a 1 GB limit, shared with the clips);
-PREVIEW_MAX_MB = 45              # the full-quality files stay on the "longform" release
+KEEP_PREVIEWS = 4                # long-video previews kept on the site (Pages has a 1 GB limit, shared with the clips);
+PREVIEW_MAX_MB = 100             # the full-quality files stay on the "longform" release
 
 
 def log(msg: str) -> None:
