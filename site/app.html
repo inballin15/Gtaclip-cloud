@@ -701,17 +701,40 @@ async function refreshEdits() {
     EDITS = key ? await getJSON(`https://api.github.com/repos/${REPO}/contents/edits.json?ref=edits&t=${Date.now()}`, { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github.raw+json' })
       : await getJSON(`https://raw.githubusercontent.com/${REPO}/edits/edits.json?t=${Date.now()}`);
     // your newest saves stay until the server has them (it makes the posting copy in about a minute)
-    for (const [id, loc] of Object.entries(ls.get('gc-edits', {}))) { if (loc && loc.local && Date.now() - (loc.sent || 0) < 30 * 60000 && !(EDITS[id] && EDITS[id].at * 1000 >= (loc.sent || 0) - 20000)) EDITS[id] = loc; }
+    for (const [id, loc] of Object.entries(ls.get('gc-edits', {}))) { if (loc && loc.local && (Date.now() - (loc.sent || 0) < 30 * 60000 || (loc.unsent && Date.now() - (loc.sent || 0) < 864e5)) && !(EDITS[id] && EDITS[id].at * 1000 >= (loc.sent || 0) - 20000)) EDITS[id] = loc; }
     ls.set('gc-edits', EDITS);
   } catch (e) { /* none yet */ }
   applyEdits(Q);
+  resendUnsent();
+}
+// an edit saved while GitHub couldn't be reached (no key on this address yet, no signal...) is sent again
+// automatically as soon as it can be - nothing is lost and you don't have to redo it (Nov 25)
+let resending = false;
+async function resendUnsent() {
+  if (resending || !ghKey()) return; resending = true;
+  try {
+    const loc = ls.get('gc-edits', {});
+    for (const [id, e] of Object.entries(loc)) {
+      if (!e || !e.unsent || !e._t) continue;
+      const okSent = await ghTap('text: ' + id, JSON.stringify(e._t));
+      if (!okSent) break;
+      const l2 = ls.get('gc-edits', {}); if (l2[id]) { delete l2[id].unsent; l2[id].sent = Date.now(); ls.set('gc-edits', l2); }
+      if (EDITS[id]) { delete EDITS[id].unsent; EDITS[id].sent = Date.now(); }
+      toast('Sent your saved edit ✓');
+    }
+  } finally { resending = false; }
 }
 function startJob(id, kind) { JOBS[id] = { kind, at: Date.now(), pct: 2, label: 'Sending your edit…' }; saveJobs(); pollJobs(); }
 async function quickText(r, t) {   // INSTANT: saved + shown right away; the posting copy is made in the background
-  EDITS[r.id] = { ...(EDITS[r.id] || {}), ...t, at: Math.floor(Date.now() / 1000) + 600, local: true, sent: Date.now() };
+  const prevT = (EDITS[r.id] && EDITS[r.id].unsent && EDITS[r.id]._t) || {};
+  EDITS[r.id] = { ...(EDITS[r.id] || {}), ...t, at: Math.floor(Date.now() / 1000) + 600, local: true, sent: Date.now(), unsent: true, _t: { ...prevT, ...t } };
   const loc = ls.get('gc-edits', {}); loc[r.id] = EDITS[r.id]; ls.set('gc-edits', loc);
-  applyEdits(Q); lastSig = ''; render(); toast('Saved ✓');
-  if (!(await ghTap('text: ' + r.id, JSON.stringify(t)))) { if (ghKey()) toast('Couldn\'t reach GitHub — try Save again'); return false; }   // no key: the Settings sheet already says so
+  applyEdits(Q); lastSig = ''; render();
+  if (!(await ghTap('text: ' + r.id, JSON.stringify(EDITS[r.id]._t)))) {
+    toast(ghKey() ? 'Saved on your phone — it couldn\'t reach GitHub yet, it sends by itself when it can' : 'Saved on your phone — connect GitHub (Settings) and it sends by itself');
+    return false; }
+  const l2 = ls.get('gc-edits', {}); if (l2[r.id]) { delete l2[r.id].unsent; ls.set('gc-edits', l2); } delete EDITS[r.id].unsent;
+  toast('Saved ✓ — the posting copy is ready in about a minute');
   return true;
 }
 function jobBar(id) {
@@ -1527,7 +1550,8 @@ async function burnVideo(r, onPct, gesture) {
   const pv = r._preview; const hk = await hookCanvas(pv.hook || '', pv.style, pv.scale);
   const AC = window.AudioContext || window.webkitAudioContext; const ac = gesture.ac || new AC();
   const v = document.createElement('video'); v.crossOrigin = 'anonymous'; v.playsInline = true; v.preload = 'auto'; v.src = U(r.clean);
-  await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('video did not load')); });
+  await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('video did not load'));
+    setTimeout(() => rej(new Error('your phone wouldn\'t load the video')), 12000); try { v.load(); } catch (e) { /* */ } });
   const W = 1080, H = 1920; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
   const y = hk ? hookTop(r, hk.height, pv.y) : 0;
   const node = ac.createMediaElementSource(v); const dst = ac.createMediaStreamDestination(); node.connect(dst);
@@ -1654,7 +1678,21 @@ async function saveVideo(r, btn, which) {
       const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${e.video}?ref=edits&t=${Date.now()}`, { headers: { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github.raw+json' } });
       if (res.ok) blob = await res.blob();
     }
-    if (!blob && edited && r._preview && r.clean && r.layout_used !== 'cam') {   // edit not made yet: your phone makes it
+    if (!blob && edited && !e.unsent && ghKey()) {   // edit sent, its video is being made on GitHub (~1 min): wait for it
+      const until = Date.now() + 4 * 60000;
+      while (!blob && Date.now() < until) {
+        btn.textContent = `Making your edited video… ${Math.max(1, Math.round((until - Date.now()) / 60000))} min`;
+        await new Promise((res) => setTimeout(res, 8000));
+        await refreshEdits();
+        const e2 = EDITS[r.id];
+        if (e2 && e2.video && !e2.local) {
+          const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${e2.video}?ref=edits&t=${Date.now()}`, { headers: { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github.raw+json' } });
+          if (res.ok) blob = await res.blob();
+        }
+      }
+      if (!blob) throw new Error('your edited video is taking longer than usual');
+    }
+    if (!blob && edited && r._preview && r.clean && r.layout_used !== 'cam') {   // not sent to GitHub: your phone makes it
       const ac = new (window.AudioContext || window.webkitAudioContext)();
       const again = () => new Promise((res) => { btn.disabled = false; btn.textContent = 'Tap to make the video'; btn.onclick = () => { btn.disabled = true; res(); }; });
       btn.textContent = 'Adding your words… 0%';
