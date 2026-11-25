@@ -1797,9 +1797,14 @@ def make_ed(cid: str, c: dict) -> bool:
     rate (up to 1920 wide, 60 fps), a keyframe every half second so jumps are instant. It lives on the 'site-big'
     release and the site serves it at v/ed/<cid>_<key>.mp4 (the Cloudflare function passes it through)."""
     raw = RAW / f"{cid}.mp4"
+    up = c.get("source") == "upload"
+    if GH_TOKEN and not raw.exists() and up and c.get("raw_asset"):
+        try:   # your clip's footage from its saved copy (fast)
+            raw_get(c, raw, cid)
+        except Exception:  # noqa: BLE001
+            pass
     if not GH_TOKEN or not raw.exists() or c.get("asis"):
         return False
-    up = c.get("source") == "upload"
     mom = c.get("moment") or {}
     win0 = float((c.get("raw_win") or [mom.get("start", 0)])[0]) if up else 0.0
     rs = duration_of(raw)
