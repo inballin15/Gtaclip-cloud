@@ -1720,7 +1720,7 @@ def make_wide(cid: str, c: dict) -> bool:
     the Studio's Trim shows the real picture when you move the start earlier or the end later."""
     raw = RAW / f"{cid}.mp4"
     out = VID / f"{cid}_wide.mp4"
-    if not raw.exists():
+    if not raw.exists() or c.get("no_wide"):
         return False
     up = c.get("source") == "upload"
     mom = c.get("moment") or {}
@@ -1729,8 +1729,8 @@ def make_wide(cid: str, c: dict) -> bool:
     key = f"q2-{win0:.2f}-{rs:.1f}-{raw.stat().st_size}"   # q2: sharper preview (Nov 25: the first one was too soft)
     if out.exists() and c.get("wide", {}).get("k") == key:
         return False
-    ff("-i", str(raw), "-vf", "scale=854:-2:flags=lanczos,fps=30", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
-       "-maxrate", "1600k", "-bufsize", "3200k", "-g", "30",       # a keyframe every second: jumps land instantly
+    ff("-i", str(raw), "-vf", "scale=854:-2:flags=lanczos,fps=30", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24",
+       "-maxrate", "1200k", "-bufsize", "2400k", "-g", "30",       # a keyframe every second: jumps land instantly
        "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", str(out))
     c["wide"] = {"k": key, "t0": round(win0, 2), "t1": round(win0 + rs, 2)}
     return True
@@ -3691,6 +3691,14 @@ def main() -> None:
     if made_w:
         log(f"trim previews: made {made_w}")
     mb = site_mb()
+    if mb > SITE_MAX_MB:   # very first: Trim previews of the weaker half (Trim then uses the clip itself) - never cost a clip
+        ranked = sorted([(clip_quality(c), cid) for cid, c in clips.items() if c["status"] == "new" and c.get("wide")])
+        for _, cid in ranked[: max(1, len(ranked) // 2)]:
+            if mb <= SITE_MAX_MB:
+                break
+            (VID / f"{cid}_wide.mp4").unlink(missing_ok=True)
+            clips[cid].pop("wide", None); clips[cid]["no_wide"] = True
+            mb = site_mb()
     if mb > SITE_MAX_MB:   # first: no-caption spare copies of the weaker half of the queue (the posted copy stays;
         ranked = sorted([(clip_quality(c), cid) for cid, c in clips.items()   # edits still work - they just take a remake)
                          if c["status"] == "new" and c.get("source") != "upload" and not c.get("hook_by_user")])
