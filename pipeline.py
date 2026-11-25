@@ -2549,10 +2549,12 @@ def main() -> None:
     try:   # the voice that says "Don't forget to follow and subscribe..." (Settings on the site)
         import engage
         engage.VOICE = str(control.get("follow_voice") or "am_puck")
-        if engage.VOICE != "am_puck":
-            FINAL_V = LAYOUT_V + "-follow4-" + engage.VOICE
         if engage.VOICE != "off" and not engage.follow_voice(Path(tempfile.gettempdir()) / "engage"):
-            log(f"follow line in voice {engage.VOICE} not made yet - clips get the pop only for now")
+            log(f"follow line in voice {engage.VOICE} not made yet - clips stay as they are (pop only) for now")
+            FINAL_V = LAYOUT_V + "-follow3"   # nothing re-made until the voice exists (then they all get it)
+            engage.VOICE = "off"
+        elif engage.VOICE != "am_puck":
+            FINAL_V = LAYOUT_V + "-follow4-" + engage.VOICE
     except Exception as e:  # noqa: BLE001
         log(f"follow voice: {e}")
     for c in clips.values():
