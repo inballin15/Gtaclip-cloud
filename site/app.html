@@ -193,6 +193,7 @@ nav button b:empty{display:none}
 .edx-stage canvas{border-radius:14px;touch-action:none;background:#111}
 .edx-vid{max-height:100%;max-width:100%;border-radius:14px;background:#111}
 .edx-sw{flex:1;min-height:0;display:flex;flex-direction:column}
+.edx-src{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0}
 .edx-pbar{display:flex;align-items:center;gap:10px;padding:8px 14px 2px;flex:none;width:100%;max-width:760px;margin:0 auto;box-sizing:border-box}
 .edx-pbar[hidden]{display:none}
 .edx-pp{width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#0a0a0e;font-size:15px;font-weight:800;flex:none;cursor:pointer}
@@ -1790,7 +1791,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=3');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=4');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1989,7 +1990,7 @@ function drawLayout(g, src, W, H, S, cw, ch, view) {   // your layout from one f
   }
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=3');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=4');
   if (!mod.supported()) throw new Error('this browser can’t make videos');
   const lay = S.mode === 'irl' ? `irl:${(S.irl_x ?? 0.5).toFixed(3)}` : S.mode;
   const r2 = { ...r, layout_used: lay, layout: lay, user_layout: { ...(r.user_layout || {}), top_h: S.top_h } };
@@ -2060,6 +2061,7 @@ function openEditor(r) {
   const seekCut = (f) => { if (!mv) return; const c = cutNow(); try { mv.currentTime = Math.max(0, c[0] - ED.t0 + f * (c[1] - c[0])); } catch (x) { /* not loaded yet */ } };
   if (mv) {
     mv.muted = true; mv.playsInline = true; mv.setAttribute('playsinline', ''); mv.preload = 'auto'; mv.crossOrigin = 'anonymous'; mv.src = ED.src;
+    mv.className = 'edx-src'; stageWrap.append(mv);   // on the page (iPhones only hand over frames from a video that's on the page)
     let first = true;
     mv.addEventListener('loadeddata', () => { if (first) { first = false; seekCut(0); } draw(); updTime(); });
     mv.addEventListener('seeked', () => { draw(); updTime(); });

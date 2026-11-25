@@ -116,13 +116,15 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   // ---- drawing surface
   const cv = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(W, H) : Object.assign(document.createElement('canvas'), { width: W, height: H });
   const g = cv.getContext('2d');
-  let n = 0;
+  let n = 0, lastT = -1;
   const total = Math.max(0.1, b - a);
   const dec = new window.VideoDecoder({
     output: (frame) => {
       const t = frame.timestamp / 1e6; const frameDur = frame.duration;
       if (t < a - 0.001 || t >= b || failed) { frame.close(); return; }
       const rt = t - a;
+      if (lastT >= 0 && rt < lastT + 1 / FPS - 0.004) { frame.close(); return; }   // 60 fps footage -> 30 fps out: half the work
+      lastT = rt;
       try {
         if (compose) compose(g, frame, frame.displayWidth || frame.codedWidth, frame.displayHeight || frame.codedHeight);
         else g.drawImage(frame, 0, 0, W, H);
@@ -131,7 +133,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
       if (hook) g.drawImage(hook, (W - hook.width) / 2, hookY);
       drawCta(g, rt, ctaY);
       if (pbar) { g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(0, 0, W, 10); g.fillStyle = '#ff2e88'; g.fillRect(0, 0, W * Math.min(1, rt / total), 10); }
-      const vf = new window.VideoFrame(cv, { timestamp: Math.round(rt * 1e6), duration: Math.round(frameDur || 1e6 / FPS) });
+      const vf = new window.VideoFrame(cv, { timestamp: Math.round(rt * 1e6), duration: Math.round(1e6 / FPS) });
       enc.encode(vf, { keyFrame: n % (FPS * 2) === 0 });
       vf.close(); n++;
       onPct(Math.min(0.99, rt / total));
