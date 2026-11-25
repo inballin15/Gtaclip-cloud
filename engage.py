@@ -199,5 +199,5 @@ def hooked(ff_exe: str, clean: Path, png: str, out: Path, lay: str, hy: float | 
     else:
         amap = ["-map", "0:a?", "-c:a", "copy"]
     subprocess.run([ff_exe, "-y", "-loglevel", "error", *inputs, "-filter_complex", flt, "-map", "[out]", *amap,
-                    "-c:v", "libx264", "-preset", "fast", "-crf", "17", "-maxrate", "12000k", "-bufsize", "24M",
+                    "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-maxrate", "16000k", "-bufsize", "32M", "-profile:v", "high",
                     "-movflags", "+faststart", str(out)], check=True)

@@ -80,7 +80,8 @@ SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "1600"))       # stream clips on
                                                                # this just keeps the GitHub working copy a sensible size)
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
-LAYOUT_V = "v3-textonly-capcut"
+LAYOUT_V = "v4-hq"   # Nov 25: highest quality re-make of every unposted clip (final + no-caption copy)
+LAYOUT_V_OLD = "v3-textonly-capcut"
 FINAL_V = LAYOUT_V + "-follow3"   # posted videos only (not the clean copies): + follow pop-up / progress bar (Nov 25)
 TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
@@ -1624,7 +1625,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                 f"crop=1080:1920:x='(iw-ow)/2*(1+{pan:.3f})':y='(ih-oh)/2',unsharp=3:3:0.4:3:3:0.0,setsar=1")
     elif layout == "full":
         base = ("[0:v]split=2[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-                "boxblur=20:2,setsar=1[bg];[b]scale=1080:-2,setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
+                "boxblur=20:2,setsar=1[bg];[b]scale=1080:-2:flags=lanczos,setsar=1[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2")
     elif layout == "react":
         # REACTION clips (Nov 24): the streamer watching someone else's stream / video. Nothing is cut off:
         # the WHOLE screen (what they're watching) full-width on top, the hook above it, and the reacting
@@ -1723,10 +1724,11 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                 log(f"follow pop-up skipped for {cid}: {e}")
     flt += f";[{last}]format=yuv420p[out]"
     # clean, even sound (FFmpeg loudnorm to TikTok/YouTube's -14 LUFS): no more too-quiet or blaring clips
+    out_fps = 60 if src_fps(raw) >= 50 else 30   # keep 60 fps gameplay smooth (TikTok + Shorts play 60 fps)
     amap = (["-map", "[aout]"] if info.get("pop") else
             ["-map", "0:a?", *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000"] if has_audio(raw) else [])])
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", *amap,
-       "-c:v", "libx264", "-preset", "fast", *enc_args(out), "-r", "30",   # fast: same look at this quality, ~2x quicker
+       "-c:v", "libx264", "-preset", "medium", *enc_args(out), "-r", str(out_fps),   # medium: best detail per bit
        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
     return info
 
@@ -1814,9 +1816,9 @@ def enc_args(out: str) -> list:
     The no-caption copy is only a working copy for edits / saving without the hook: a bit lighter."""
     # Nov 25: no more 1 GB site -> sharper again (the no-caption copy is what edits are made from, so it gets the
     # same quality - every re-encode of a soft copy looked worse)
-    if out == "_clean":
-        return ["-crf", "18", "-maxrate", "9000k", "-bufsize", "18M"]
-    return ["-crf", "18", "-maxrate", "9000k", "-bufsize", "18M"]
+    # Nov 25 (2): highest quality - near-lossless to the eye (CRF 16, up to 16 Mbps, High profile). TikTok / YouTube
+    # re-compress every upload, so the cleaner the file we give them, the better it still looks after.
+    return ["-crf", "16", "-maxrate", "16000k", "-bufsize", "32M", "-profile:v", "high"]
 
 
 def shrink_site_videos(st: dict) -> None:
@@ -2660,9 +2662,10 @@ def main() -> None:
             r["video"] = f"v/{r['id']}_final.mp4"
             r["poster"] = f"v/{r['id']}.jpg"
             _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + FINAL_V + r.get("layout", "")).encode()).hexdigest()[:10]
-            _hh_old = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + LAYOUT_V + r.get("layout", "")).encode()).hexdigest()[:10]
-            r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"   # (a video from before the follow pop-up still counts)
-                          if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and r.get("final_v") in (_hh, _hh_old)
+            _olds = {hashlib.sha1((r.get("hook", "") + r.get("cam", "") + v_ + r.get("layout", "")).encode()).hexdigest()[:10]
+                     for v_ in (LAYOUT_V_OLD, LAYOUT_V_OLD + "-follow1", LAYOUT_V_OLD + "-follow2", LAYOUT_V_OLD + "-follow3")}
+            r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"   # (an older video still counts until it's re-made)
+                          if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and (r.get("final_v") == _hh or r.get("final_v") in _olds)
                           and (VID / f"{r['id']}_final.mp4").exists() else "")
             r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
             r["clean"] = (f"v/{r['id']}_clean.mp4?v={r['clean_v']}"

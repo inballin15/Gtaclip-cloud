@@ -91,7 +91,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   // ---- encoder: the best H.264 profile this phone has
   let cfg = null;
   for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42e028', 'avc1.640033']) {
-    const c = { codec, width: W, height: H, bitrate: 9_000_000, framerate: FPS, avc: { format: 'avc' }, hardwareAcceleration: 'prefer-hardware' };
+    const c = { codec, width: W, height: H, bitrate: 14_000_000, framerate: FPS, avc: { format: 'avc' }, hardwareAcceleration: 'prefer-hardware' };
     try { if ((await window.VideoEncoder.isConfigSupported(c)).supported) { cfg = c; break; } } catch (e) { /* try the next */ }
     try { delete c.hardwareAcceleration; if ((await window.VideoEncoder.isConfigSupported(c)).supported) { cfg = c; break; } } catch (e) { /* */ }
   }
@@ -118,7 +118,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   const total = Math.max(0.1, b - a);
   const dec = new window.VideoDecoder({
     output: (frame) => {
-      const t = frame.timestamp / 1e6;
+      const t = frame.timestamp / 1e6; const frameDur = frame.duration;
       if (t < a - 0.001 || t >= b || failed) { frame.close(); return; }
       const rt = t - a;
       g.drawImage(frame, 0, 0, W, H);
@@ -126,7 +126,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
       if (hook) g.drawImage(hook, (W - hook.width) / 2, hookY);
       drawCta(g, rt, ctaY);
       if (pbar) { g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(0, 0, W, 10); g.fillStyle = '#ff2e88'; g.fillRect(0, 0, W * Math.min(1, rt / total), 10); }
-      const vf = new window.VideoFrame(cv, { timestamp: Math.round(rt * 1e6), duration: Math.round(1e6 / FPS) });
+      const vf = new window.VideoFrame(cv, { timestamp: Math.round(rt * 1e6), duration: Math.round(frameDur || 1e6 / FPS) });
       enc.encode(vf, { keyFrame: n % (FPS * 2) === 0 });
       vf.close(); n++;
       onPct(Math.min(0.99, rt / total));
