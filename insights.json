@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-25T08:10:26Z",
- "videos": 52,
+ "updated": "2026-11-25T10:11:54Z",
+ "videos": 53,
  "v": 4,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 13.13,
+   "x": 13.01,
    "n": 3
   },
   {
@@ -22,34 +22,34 @@
    "n": 5
   },
   {
-   "feature": "streamer",
-   "value": "Lacy",
-   "x": 0.29,
-   "n": 9
-  },
-  {
    "feature": "hook style",
    "value": "question",
-   "x": 0.31,
+   "x": 0.3,
    "n": 3
   },
   {
    "feature": "hook style",
    "value": "lowcaps",
-   "x": 3.19,
+   "x": 3.26,
    "n": 5
   },
   {
    "feature": "streamer",
    "value": "Kai Cenat",
-   "x": 3.06,
+   "x": 3.04,
    "n": 5
   },
   {
    "feature": "emotion word",
    "value": "STUNNED",
-   "x": 0.34,
+   "x": 0.33,
    "n": 6
+  },
+  {
+   "feature": "streamer",
+   "value": "Lacy",
+   "x": 0.34,
+   "n": 10
   },
   {
    "feature": "hook length",
@@ -60,13 +60,13 @@
   {
    "feature": "hook style",
    "value": "formula",
-   "x": 0.4,
+   "x": 0.39,
    "n": 7
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 2.36,
+   "x": 2.35,
    "n": 20
   },
   {
@@ -96,13 +96,13 @@
   {
    "feature": "style:cam",
    "value": "small",
-   "x": 0.55,
+   "x": 0.54,
    "n": 7
   },
   {
    "feature": "streamer",
    "value": "IShowSpeed",
-   "x": 1.8,
+   "x": 1.81,
    "n": 8
   },
   {
@@ -112,16 +112,16 @@
    "n": 9
   },
   {
-   "feature": "CAPS words",
-   "value": "2-3",
-   "x": 0.61,
-   "n": 27
-  },
-  {
    "feature": "style:hooklen",
    "value": "story",
-   "x": 1.57,
+   "x": 1.59,
    "n": 6
+  },
+  {
+   "feature": "CAPS words",
+   "value": "2-3",
+   "x": 0.63,
+   "n": 28
   },
   {
    "feature": "style:punch",
@@ -130,36 +130,36 @@
    "n": 5
   },
   {
-   "feature": "hook style",
-   "value": "unknown",
-   "x": 1.52,
-   "n": 31
-  },
-  {
    "feature": "style:box",
    "value": "black",
-   "x": 0.66,
+   "x": 0.65,
    "n": 5
+  },
+  {
+   "feature": "hook style",
+   "value": "unknown",
+   "x": 1.5,
+   "n": 32
   },
   {
    "feature": "posted",
    "value": "morning (7-11)",
    "x": 1.49,
-   "n": 11
+   "n": 12
   }
  ],
  "guidance": [
-  "AVOID: emotion word = STUNNED (0.34x views, 6 videos)",
+  "AVOID: emotion word = STUNNED (0.33x views, 6 videos)",
   "AVOID: has a number = no (0.52x views, 14 videos)",
-  "DO: has a number = yes (1.27x views, 38 videos)",
-  "DO: hook length = medium (60-90) (1.25x views, 12 videos)"
+  "DO: has a number = yes (1.27x views, 39 videos)",
+  "DO: hook length = medium (60-90) (1.26x views, 13 videos)"
  ],
  "weights": {
-  "formula": 0.343,
-  "news": 0.174,
+  "formula": 0.341,
+  "news": 0.173,
   "quote": 0.076,
-  "question": 0.077,
-  "lowcaps": 0.331
+  "question": 0.076,
+  "lowcaps": 0.333
  },
  "style_weights": {
   "box": {
@@ -167,22 +167,22 @@
    "black": 0.263
   },
   "cam": {
-   "small": 0.333,
-   "medium": 0.667
+   "small": 0.332,
+   "medium": 0.668
   },
   "hooklen": {
-   "tiny": 0.173,
-   "story": 0.827
+   "tiny": 0.171,
+   "story": 0.829
   },
   "punch": {
-   "off": 0.674,
-   "on": 0.326
+   "off": 0.678,
+   "on": 0.322
   }
  },
  "top": [
   {
    "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-   "views": 1474
+   "views": 1707
   },
   {
    "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
@@ -227,6 +227,11 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-25T10:11:54Z",
+   "kind": "data",
+   "text": "judged 53 videos (was 52)"
+  },
   {
    "at": "2026-11-25T08:10:26Z",
    "kind": "data",
@@ -371,11 +376,6 @@
    "at": "2026-11-23T19:46:30Z",
    "kind": "new",
    "text": "DO: emotion word = none (1.41x views, 18 videos)"
-  },
-  {
-   "at": "2026-11-23T19:46:30Z",
-   "kind": "new",
-   "text": "AVOID: emotion word = STUNNED (0.29x views, 6 videos)"
   }
  ]
 }
