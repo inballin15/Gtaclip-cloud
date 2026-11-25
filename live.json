@@ -387,7 +387,7 @@
    }
   ]
  },
- "updated": "2026-11-25T17:22:09Z",
+ "updated": "2026-11-25T17:26:48Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [
@@ -1142,7 +1142,7 @@
  ],
  "videos_checked": "2026-11-25T17:22:09Z",
  "buffer_ok": true,
- "buffer_error": "",
+ "buffer_error": "couldn't read posts from Buffer",
  "buffer_off": false,
  "buffer_wait": "",
  "split": true,
@@ -1198,6 +1198,11 @@
  },
  "errors": [
   {
+   "at": "2026-11-25T17:26:48Z",
+   "id": "upmwuw3jf8_3",
+   "error": "Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
+  },
+  {
    "at": "2026-11-25T17:22:09Z",
    "id": "upmwuw3jf8_3",
    "error": "Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
@@ -1239,11 +1244,6 @@
   },
   {
    "at": "2026-11-25T16:41:47Z",
-   "id": "upmwuw3jf8_3",
-   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
-  },
-  {
-   "at": "2026-11-25T16:38:04Z",
    "id": "upmwuw3jf8_3",
    "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
   }
@@ -3737,9 +3737,14 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T17:22:09Z",
+ "stats_updated": "2026-11-25T17:26:48Z",
  "log": [
-  "[17:22:13Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
-  "[17:22:13Z]   youtube: error Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
+  "[17:26:50Z] post list query failed (full): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[17:26:50Z] post list query failed (lite): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[17:26:50Z] duplicate check skipped: couldn't read posts from Buffer",
+  "[17:26:50Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
+  "[17:26:50Z]   youtube: error Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[17:26:50Z] post list query failed (full): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[17:26:50Z] post list query failed (lite): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
  ]
 }
