@@ -387,11 +387,11 @@
    }
   ]
  },
- "updated": "2026-11-25T18:02:48Z",
+ "updated": "2026-11-25T18:08:25Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-25T18:07:00Z",
+ "next_slot": "2026-11-25T21:07:00Z",
  "up_next": "ObliviousRoughDelicataFutureMan-CS3ZEl3poE2C9fMP",
  "videos": [
   {
@@ -1136,7 +1136,7 @@
  ],
  "videos_checked": "2026-11-25T18:02:48Z",
  "buffer_ok": true,
- "buffer_error": "",
+ "buffer_error": "couldn't read posts from Buffer",
  "buffer_off": false,
  "buffer_wait": "",
  "split": true,
@@ -3731,6 +3731,10 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T18:02:48Z",
- "log": []
+ "stats_updated": "2026-11-25T18:08:25Z",
+ "log": [
+  "[18:08:26Z] slot skipped — today's Buffer budget is used (31/29)",
+  "[18:08:26Z] post list query failed (full): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[18:08:26Z] post list query failed (lite): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
+ ]
 }
