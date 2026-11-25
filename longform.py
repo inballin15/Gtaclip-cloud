@@ -95,6 +95,8 @@ def get_source(job: dict) -> tuple[Path, str]:
         return src, job.get("commit", "")
     ref = job.get("ref") or f"upload-{job['id']}"
     sha = job.get("commit") or ""
+    if sha:   # a change of voice / a re-make: the footage's commit (the upload branch is gone by then)
+        git("fetch", "-q", "--depth=1", "origin", sha)
     if not sha:
         try:
             git("fetch", "-q", "--depth=1", "origin", f"+{ref}:refs/remotes/origin/{ref}")
@@ -902,6 +904,19 @@ def release_upload(path: Path, name: str, ctype: str) -> str:
     return r.json().get("browser_download_url", "")
 
 
+def release_get(name: str) -> bytes | None:
+    """A file from the long videos' release (the saved script of a video, for a change of voice)."""
+    import requests
+    code, rel = gh("GET", "/releases/tags/longform")
+    for a in (rel.get("assets") or []) if code == 200 else []:
+        if a.get("name") == name:
+            r = requests.get(a["url"], timeout=120, headers={"Authorization": f"Bearer {TOKEN}",
+                                                             "Accept": "application/octet-stream"})
+            r.raise_for_status()
+            return r.content
+    return None
+
+
 def publish_site(entry: dict, files: dict[str, Path]) -> None:
     """Add this video to the site's longs.json + its preview / thumbnail in v/l/, on top of the live site."""
     blob = {p: git("hash-object", "-w", str(f)) for p, f in files.items()}
@@ -912,6 +927,10 @@ def publish_site(entry: dict, files: dict[str, Path]) -> None:
             cur = json.loads(git("show", "origin/gh-pages:longs.json"))
         except RuntimeError:
             cur = {"videos": []}
+        old = next((v for v in cur.get("videos", []) if v.get("id") == entry["id"]), None)
+        if old and old.get("status") == "done" and "preview" not in entry:
+            # a new voice / re-make in progress: keep the finished video's details (title, links, script) meanwhile
+            entry = {**old, **{k: v for k, v in entry.items() if k in ("status", "msg")}}
         vids = [v for v in cur.get("videos", []) if v.get("id") != entry["id"]]
         vids.insert(0, entry)
         keep_prev = {v["id"] for v in vids[:KEEP_PREVIEWS]}
@@ -968,7 +987,13 @@ def make(job: dict, num: int = 0) -> dict:
     dur = duration_of(master)
     status(job, "making", "Watching your footage")
     given = None
-    if job.get("plan_ref"):   # the script was written by Claude in chat (no Google AI needed): use it as is
+    if job.get("revoice"):   # same video, new voice: the saved script, no AI needed (Nov 25)
+        raw_plan = release_get(f"{job['id']}_plan.json")
+        if not raw_plan:
+            raise RuntimeError("this video was made before scripts were saved - make it again from your footage")
+        given, scenes = json.loads(raw_plan), []
+        log(f"new voice ({voice}) on the saved script - no Google AI needed")
+    elif job.get("plan_ref"):   # the script was written by Claude in chat (no Google AI needed): use it as is
         ref = str(job["plan_ref"])
         subprocess.run(["git", "fetch", "-q", "--depth=1", "origin", f"+{ref}:refs/remotes/origin/{ref}"], check=True)
         given = json.loads(subprocess.run(["git", "show", f"origin/{ref}:plan.json"], capture_output=True, text=True, check=True).stdout)
@@ -1065,6 +1090,11 @@ def make(job: dict, num: int = 0) -> dict:
         log("test results on the longtest branch")
         return entry
     entry["full"] = release_upload(full, f"{job['id']}.mp4", "video/mp4")
+    try:   # the script + the footage's commit: "Change voice" on the site re-makes it with no AI at all
+        entry["plan"] = release_upload(WORK / "plan.json", f"{job['id']}_plan.json", "application/json")
+        entry["commit"] = sha
+    except Exception as e:  # noqa: BLE001
+        log(f"script not saved: {e}")
     entry["thumb_full"] = release_upload(thumb, f"{job['id']}.jpg", "image/jpeg")
     if (WORK / "subs.srt").exists():   # the same subtitles as a file, for YouTube's own captions (upload it in Studio)
         entry["srt"] = release_upload(WORK / "subs.srt", f"{job['id']}.srt", "application/x-subrip")
@@ -1094,7 +1124,10 @@ def main() -> None:
             gh("DELETE", f"/git/refs/heads/{ref}")   # the commit stays: it can be made again from it
     except Exception as e:  # noqa: BLE001
         log(f"long video failed: {e}")
-        status(job, "failed", str(e)[:200])
+        if job.get("revoice"):   # the video you had stays as it was
+            status(job, "done", f"Couldn't change the voice: {str(e)[:150]}")
+        else:
+            status(job, "failed", str(e)[:200])
         comment(num, f"Couldn't make the long video: {str(e)[:300]}")
         sys.exit(1)
 
