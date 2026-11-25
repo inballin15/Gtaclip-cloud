@@ -8,6 +8,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clip Studio">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <meta name="theme-color" content="#07060c">
 <style>
 :root{--bg:#08080d;--p1:#13131c;--p2:#1b1b27;--p3:#242434;--line:#ffffff12;--fg:#f5f5fa;--mut:#9898ad;--pink:#ff3d8b;--cyan:#29e3ff;--green:#2ee59d;--amber:#f5b544;--red:#ff6b6b;
@@ -84,6 +90,8 @@ h2{font-size:15px;margin:0 0 10px;letter-spacing:-.1px}
 .clip.now{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink)}
 .vbox{position:relative;aspect-ratio:9/16;max-height:70vh;margin:0 auto;background:#000 center/contain no-repeat;cursor:pointer}
 .vbox video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.appsec{margin-top:18px;padding-top:14px;border-top:1px solid #ffffff1a;display:flex;flex-direction:column;gap:8px}
+.appsec .k{font:700 12px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;opacity:.7}
 .trimtag{position:absolute;left:8px;bottom:56px;z-index:3;pointer-events:none;font:700 11px Inter,sans-serif;background:#000b;color:#fff;padding:4px 8px;border-radius:8px}
 .play{position:absolute;inset:0;display:grid;place-items:center;border:0;background:linear-gradient(#0000 60%,#000a)}
 .play i{width:62px;height:62px;border-radius:50%;background:#fffffff0;display:grid;place-items:center;font-style:normal;color:#000;font-size:22px;padding-left:4px;box-shadow:0 8px 30px #0008;transition:transform .15s var(--ease)}
@@ -561,7 +569,8 @@ const CF_SITE = 'https://gtaclip-studio.pages.dev';
   }
   let pulled = 0; try { pulled = +localStorage.getItem('gc-pulled') || 0; } catch (e) { /* */ }
   let hasKey = false; try { hasKey = !!JSON.parse(localStorage.getItem('gc-gh2') || '""') || !!localStorage.getItem('gc-gh'); } catch (e) { /* */ }
-  if (/pages\.dev$/.test(location.hostname) && !hasKey && !/[#&]gcimport=/.test(location.hash) && Date.now() - pulled > 864e5) {
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  if (/pages\.dev$/.test(location.hostname) && !standalone && !hasKey && !/[#&]gcimport=/.test(location.hash) && Date.now() - pulled > 864e5) {
     try { localStorage.setItem('gc-pulled', String(Date.now())); } catch (e) { /* */ }
     location.replace('https://inballin15.github.io/Gtaclip-cloud' + location.pathname + location.search + location.hash);
     throw new Error('getting your saved settings from the old address');
@@ -2367,7 +2376,45 @@ function openSettings(why) {
   const bs = el('button', 'btn', L && L.buffer_off ? 'Buffer: OFF — tap to manage' : 'Buffer: ON — tap to manage'); bs.onclick = openBufferSwitch;
   const bh = el('button', 'btn ghost', 'Buffer connection help'); bh.onclick = openBufferHelp;
   nodes.push(el('div', 'btns'), ab, bs, bh);
+  nodes.push(appSection());
   sheet('Settings', nodes);
+}
+// ---------------------------------------------------------------- the home-screen app (Nov 25)
+const STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function setupCode() {   // your saved settings (GitHub key, preferences) as one code - the app has its own storage on iPhone
+  const d = {}; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); const v = localStorage.getItem(k);
+    if (k && k.startsWith('gc-') && v && v.length < 4000 && !/^gc-(draft|edits|jobs|trims|pend)/.test(k)) d[k] = v; } } catch (e) { /* */ }
+  return 'CLIPSTUDIO1.' + btoa(unescape(encodeURIComponent(JSON.stringify(d))));
+}
+function useSetupCode(code) {
+  const m = String(code || '').trim().match(/CLIPSTUDIO1\.([A-Za-z0-9+/=]+)/); if (!m) return false;
+  try { const d = JSON.parse(decodeURIComponent(escape(atob(m[1])))); for (const k in d) if (k.startsWith('gc-')) localStorage.setItem(k, d[k]); return true; } catch (e) { return false; }
+}
+function appSection() {
+  const box = el('div', 'appsec');
+  box.append(el('div', 'k', 'Clip Studio app'));
+  if (STANDALONE) {
+    box.append(el('div', 'note ' + (ghKey() ? 'good' : 'warn'), ghKey() ? 'You\u2019re in the app ✓' : 'You\u2019re in the app — paste your setup code to connect it (copy it in Safari: Settings → Copy setup code).'));
+    const pb = el('button', 'btn pink', 'Paste setup code');
+    pb.onclick = async () => { let t = ''; try { t = await navigator.clipboard.readText(); } catch (e) { t = prompt('Paste your setup code') || ''; }
+      if (useSetupCode(t)) { toast('Connected ✓'); setTimeout(() => location.reload(), 600); } else toast('That isn\u2019t a setup code — copy it again in Safari'); };
+    box.append(pb);
+    return box;
+  }
+  box.append(el('div', 'steps', IS_IOS
+    ? ['Get it on your home screen (opens full screen, like any app):', '1. Tap "Copy setup code" below (brings your GitHub connection along).', '2. Tap Safari\u2019s Share button → "Add to Home Screen" → Add.', '3. Open Clip Studio from your home screen → Settings → "Paste setup code".']
+    : ['Install it as an app:', '1. Tap "Copy setup code" below.', '2. In the browser menu choose "Install app" (Chrome / Edge: the install icon in the address bar).', '3. Open the app → Settings → "Paste setup code" if it asks to connect.']));
+  const cb = el('button', 'btn pink', 'Copy setup code');
+  cb.onclick = () => { if (!ghKey()) { toast('Connect GitHub here first'); return; } copy(setupCode(), 'Setup code'); };
+  box.append(cb, el('div', 'mut', 'The code holds your GitHub key — don\u2019t share it with anyone.'));
+  if (window.__installPrompt) { const ib = el('button', 'btn cyan', 'Install the app'); ib.onclick = async () => { window.__installPrompt.prompt(); window.__installPrompt = null; }; box.append(ib); }
+  return box;
+}
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); window.__installPrompt = e; });
+if (STANDALONE && !ghKey()) setTimeout(() => openSettings('Welcome to the Clip Studio app! Paste your setup code to connect it (copy it in Safari: Settings → Copy setup code).'), 1200);
+if ('serviceWorker' in navigator && /pages\.dev$/.test(location.hostname)) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
 }
 function openBufferSwitch() {
   const off = L && L.buffer_off; const want = isPending('buffer:');
