@@ -54,7 +54,7 @@ jobs:
           gh release view site-big >/dev/null 2>&1 || gh release create site-big --title "site files over 25 MB" --notes "Served through Cloudflare (cf/functions). Managed automatically." >/dev/null
           gh release view site-big --json assets --jq '.assets[] | "\(.name) \(.size)"' > /tmp/have.txt || true
           : > /tmp/want.txt
-          routes='"/__big/*"'
+          routes='"/v/*","/__big/*"'
           while IFS= read -r f; do
             p=${f#dist/}; n=${p//\//__}; sz=$(stat -c %s "$f")
             echo "$n" >> /tmp/want.txt
@@ -62,7 +62,7 @@ jobs:
               cp "$f" "/tmp/$n"; gh release upload site-big "/tmp/$n" --clobber || { echo "::error::couldn't upload $p"; exit 1; }
               rm -f "/tmp/$n"; echo "uploaded $p ($((sz/1048576)) MB)"
             fi
-            rm -f "$f"; routes="$routes,\"/$p\""
+            rm -f "$f"; case "$p" in v/*) ;; *) routes="$routes,\"/$p\"";; esac
           done < <(find dist -type f -size +24M)
           printf '{"version":1,"include":[%s],"exclude":[]}\n' "$routes" > dist/_routes.json
           cat dist/_routes.json
@@ -88,7 +88,7 @@ jobs:
           chk "" app.html
           chk "" queue.json
           v=$(python3 -c "import json; r=json.load(open('dist/queue.json'))['ready']; print(next(x['final'] for x in r if x.get('final')).split('?')[0])" 2>/dev/null || true)
-          [ -n "$v" ] && for i in 1 2 3; do chk "-r 0-1" "$v"; done
+          [ -n "$v" ] && for i in 1 2 3; do chk "-r 0-1" "$v"; done && chk "" "$v" && chk "-r 3000000-3000999" "$v"
           [ -n "$v" ] && curl -s -D - -o /dev/null -r 1000-1999 --max-time 30 "$B/$v" | grep -iE "^HTTP|content-range|accept-ranges|etag|cf-cache|content-length"
-          big=$(python3 -c "import json; print(json.load(open('dist/_routes.json'))['include'][1].lstrip('/'))" 2>/dev/null || true)
+          big=$(head -1 /tmp/want.txt 2>/dev/null | sed 's#__#/#g')
           [ -n "$big" ] && chk "-r 0-1023" "$big" && chk "-r 5000000-5001023" "$big"
