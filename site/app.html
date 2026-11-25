@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Clip Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -189,10 +189,15 @@ nav button b:empty{display:none}
 .edx-top{display:flex;align-items:center;gap:6px;padding:8px 10px}
 .edx-ic{width:40px;height:40px;border-radius:50%;border:0;background:#ffffff14;color:#fff;font-size:18px;display:grid;place-items:center}.edx-ic:disabled{opacity:.3}
 .edx-sp{flex:1}.edx-save{border:0;background:var(--pink);color:#000;font-weight:800;padding:10px 20px;border-radius:999px;font-size:15px}.edx-save:disabled{opacity:.6}
-.edx-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.edx-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .edx-stage canvas{border-radius:14px;touch-action:none;background:#111}
 .edx-vid{max-height:100%;max-width:100%;border-radius:14px;background:#111}
+html,body,button,a,input,select,textarea,label,.btn,.clip,.vrow{touch-action:manipulation}   /* no double-tap zoom: taps stay taps, like an app */
+input,select,textarea{font-size:max(16px,1em)!important}
 .edx-sw{flex:1;min-height:0;display:flex;flex-direction:column}
+.vrow .vname{flex:1;min-width:0}
+.vfav{border:0;background:none;color:#8a8399;font-size:24px;line-height:1;padding:4px 8px;cursor:pointer;flex:none}
+.vfav.on{color:#ffc93c}
 .edx-src{position:absolute;width:2px;height:2px;opacity:0;pointer-events:none;left:0;top:0}
 .edx-pbar{display:flex;align-items:center;gap:10px;padding:8px 14px 2px;flex:none;width:100%;max-width:760px;margin:0 auto;box-sizing:border-box}
 .edx-pbar[hidden]{display:none}
@@ -1788,7 +1793,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=5');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=6');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1877,18 +1882,23 @@ const VOICES = [['am_michael', 'Michael', 'US male'], ['am_puck', 'Puck', 'hype 
 const VOICE_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/${v}.mp3`;
 const FOLLOW_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/follow_${v}.wav`;
 const VAU = new Audio();
-function voicePicker(pick, onPick, sample = VOICE_SAMPLE, extra = []) {   // tap a row to pick it, ▶ to hear it
+function voicePicker(pick, onPick, sample = VOICE_SAMPLE, extra = [], fav = null) {   // tap a voice = hear it + pick it; ☆ = favorite
   const list = el('div', 'vlist');
+  const hear = (id) => { if (id === 'off') { VAU.pause(); return; } VAU.src = sample(id); VAU.currentTime = 0; VAU.play().catch(() => toast('That sample is still being made — try again in a few minutes')); };
   const draw = () => { list.textContent = ''; for (const [id, name, kind] of [...extra, ...VOICES]) {
-    const row = el('div', 'vrow' + (id === pick ? ' on' : '')); const pb = el('button', 'btn ghost', id === 'off' ? '\u2014' : '\u25b6');
-    pb.onclick = (e) => { e.stopPropagation(); if (id === 'off') return; VAU.src = sample(id); VAU.play().catch(() => toast('That sample is still being made \u2014 try again in a few minutes')); };
-    const t = el('div'); t.append(el('b', null, name), el('span', 'mut', kind ? ' \u00b7 ' + kind : '')); row.append(pb, t);
-    row.onclick = () => { pick = id; onPick(id); draw(); }; list.append(row); } };
+    const row = el('div', 'vrow' + (id === pick ? ' on' : '')); const pb = el('button', 'btn ghost', id === 'off' ? '—' : '▶');
+    pb.setAttribute('aria-label', 'Hear ' + name); pb.onclick = (e) => { e.stopPropagation(); hear(id); };
+    const t = el('div', 'vname'); t.append(el('b', null, name), el('span', 'mut', kind ? ' · ' + kind : ''));
+    row.append(pb, t);
+    if (fav) { const isF = id === fav.get(); const fb = el('button', 'vfav' + (isF ? ' on' : ''), isF ? '★' : '☆');
+      fb.setAttribute('aria-label', isF ? name + ' is your favorite' : 'Make ' + name + ' your favorite');
+      fb.onclick = (e) => { e.stopPropagation(); if (id !== fav.get()) { fav.set(id); haptic(); draw(); } }; row.append(fb); }
+    row.onclick = () => { pick = id; onPick(id); hear(id); draw(); }; list.append(row); } };
   draw(); return list;
 }
 function openLongVoice(x) {   // same script, same edit, a new narrator (about 10 minutes, no AI needed)
   let pick = x.voice || ls.get('gc-voice', 'am_michael');
-  const list = voicePicker(pick, (id) => { pick = id; });
+  const list = voicePicker(pick, (id) => { pick = id; }, VOICE_SAMPLE, [], { get: () => ls.get('gc-voice', 'am_michael'), set: (id) => { ls.set('gc-voice', id); toast('Favorite narrator ★ — new long videos use it'); } });
   const go = el('button', 'big go', 'Make it with this voice');
   go.onclick = async () => { go.disabled = true; VAU.pause(); ls.set('gc-voice', pick);
     if (await ghTap('longform: ' + x.id, JSON.stringify({ id: x.id, revoice: true, commit: x.commit, voice: pick, name: x.source || '', created: x.created }))) {
@@ -1896,14 +1906,17 @@ function openLongVoice(x) {   // same script, same edit, a new narrator (about 1
     go.disabled = false; };
   sheet('Change the narrator', [el('div', 'mut', 'Same script, same edit and subtitles \u2014 just a different voice. Tap \u25b6 to hear each one, then pick.'), list, go]);
 }
+const favFollow = () => ls.get('gc-fav-follow', (L && L.follow_voice) || 'am_puck');
+async function setFavFollow(id) {   // your favorite follow-line voice: every clip uses it (unless a clip has its own)
+  ls.set('gc-fav-follow', id);
+  if (await ghTap('followvoice: ' + id)) toast(id === 'off' ? 'Follow line: no voice on any clip' : 'Favorite ★ — every clip uses this voice now (re-made in the background)');
+}
 function openFollowVoice() {   // who says "Don't forget to follow and subscribe for daily clips!" in your clips
-  let pick = (L && L.follow_voice) || 'am_puck';
-  const list = voicePicker(pick, (id) => { pick = id; }, FOLLOW_SAMPLE, [['off', 'No voice', 'just the pop sound']]);
-  const go = el('button', 'big go', 'Use this voice');
-  go.onclick = async () => { go.disabled = true; VAU.pause();
-    if (await ghTap('followvoice: ' + pick)) { toast(pick === 'off' ? 'Follow line: no voice' : 'Follow line voice saved \u2014 queued clips get re-made with it'); closeSheet(); }
-    go.disabled = false; };
-  sheet('Follow line voice', [el('div', 'mut', 'Right after the Follow & Subscribe pop-up, a voice says \u201cDon\u2019t forget to follow and subscribe for daily clips!\u201d (the clip\u2019s sound dips a little under it). Tap \u25b6 to hear each one.'), list, go]);
+  let pick = favFollow();
+  const list = voicePicker(pick, (id) => { pick = id; }, FOLLOW_SAMPLE, [['off', 'No voice', 'just the pop sound']], { get: favFollow, set: (id) => { setFavFollow(id); } });
+  const go = el('button', 'big go', '★ Make it my favorite — all clips');
+  go.onclick = async () => { go.disabled = true; VAU.pause(); await setFavFollow(pick); closeSheet(); go.disabled = false; };
+  sheet('Follow line voice', [el('div', 'mut', 'Tap a voice to hear it say “Don’t forget to follow and subscribe for daily clips!”. ★ = your favorite: every clip uses it. To give one clip a different voice: Full editor → Voice.'), list, go]);
 }
 function openVoice(r) {
   let pick = ls.get('gc-voice', 'am_michael'); const au = VAU;
@@ -1987,8 +2000,15 @@ function drawLayout(g, src, W, H, S, cw, ch, view) {   // your layout from one f
     const fh = H * cw / W; g.drawImage(src, 0, 0, W, H, 0, (ch - fh) / 2, cw, fh);
   }
 }
+const FVBUF = {};
+async function followAudio(v) {   // the spoken follow line's audio for your phone's video maker (null = just the pop)
+  if (!v || v === 'off') return null;
+  if (FVBUF[v]) return FVBUF[v];
+  try { const res = await fetch(PAGES + `v/fv/follow_${v}.wav`); if (!res.ok) throw new Error(res.status); FVBUF[v] = await res.arrayBuffer(); return FVBUF[v]; }
+  catch (e) { return null; }
+}
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=5');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=6');
   if (!mod.supported()) throw new Error('this browser can’t make videos');
   const lay = S.mode === 'irl' ? `irl:${(S.irl_x ?? 0.5).toFixed(3)}` : S.mode;
   const r2 = { ...r, layout_used: lay, layout: lay, user_layout: { ...(r.user_layout || {}), top_h: S.top_h } };
@@ -1999,7 +2019,8 @@ async function phoneEdit(r, S, ED, onPct) {   // the finished video from your ed
   const view = (r.layout_used || r.layout) === 'react' ? r.react_view : null;
   return mod.phoneRender({ src: ED.src, a: Math.max(0, cut[0] - ED.t0), b: cut[1] - ED.t0, hook: hk, hookY: top,
     ctaY: hk ? ctaCenter(r2, top, hk.height) : 900, pbar: (r.style || {}).pbar === 'on', onPct,
-    compose: (g, frame, W, H) => drawLayout(g, frame, W, H, S, 1080, 1920, view), fps: 'auto' });
+    compose: (g, frame, W, H) => drawLayout(g, frame, W, H, S, 1080, 1920, view), fps: 'auto',
+    voice: await followAudio(S.follow_voice || (r.user_layout || {}).follow_voice || favFollow()) });
 }
 const LOCALBUSY = {};   // clip id -> the newest edit waiting while your phone is still making the previous one
 async function localMake(r, S, ED) {
@@ -2033,7 +2054,7 @@ function curLayout(r) {   // the clip's layout as it is now, as editor settings 
   return { mode, cam: (r.cam_used || r.cam || '0,0,0.3,0.3').split(',').map(Number), pan: ul.pan || 0, zoom: ul.zoom || 1,
     irl_x: mode === 'irl' ? parseFloat(lay.split(':')[1] || '0.5') : 0.5, top_h: +(ul.top_h || CAM_PX[(r.style || {}).cam] || TOP),
     hook: r.hook || '', hook_style: ul.hook_style || (r.style || {}).box || 'white', hook_scale: ul.hook_scale || 1, hook_y: ul.hook_y ?? null,
-    span: r.span ? r.span.map(Number) : null, speed: 1 };
+    span: r.span ? r.span.map(Number) : null, speed: 1, follow_voice: ul.follow_voice || null };
 }
 function phoneText(r) {
   const ED = edSrc(r); const S = ED && ED.full && window.VideoEncoder ? curLayout(r) : null; if (!S) return;
@@ -2046,7 +2067,7 @@ function openEditor(r) {
   const base = { mode: (ul.mode === 'split' && !ul.v && used === 'react') ? 'react' : ul.mode || (used === 'react' ? 'react' : used.startsWith('irl') || used === 'fill' ? 'irl' : used === 'full' ? 'full' : 'split'), zoom: ul.zoom || 1, pan: ul.pan || 0,
     irl_x: ul.irl_x ?? (used.startsWith('irl') ? parseFloat(used.split(':')[1]) : 0.5), hook_y: ul.hook_y ?? null, cam: null,
     hook: r.hook || '', caption: r.caption || '', hook_style: ul.hook_style || 'white', hook_scale: ul.hook_scale || 1,
-    top_h: ul.top_h || TOP, speed: ul.speed || 1, trim: ul.trim || null, span: ul.span || null };
+    top_h: ul.top_h || TOP, speed: ul.speed || 1, trim: ul.trim || null, span: ul.span || null, follow_voice: ul.follow_voice || null };
   const draftKey = 'gc-draft-' + r.id; const draft = ls.get(draftKey, null);
   let S = draft && draft.S ? { ...base, ...draft.S } : { ...base };
   const hist = [JSON.stringify(S)]; let hi = 0;
@@ -2099,7 +2120,7 @@ function openEditor(r) {
   } else pbar.hidden = true;
   const dpr = Math.min(2, window.devicePixelRatio || 1); let CW = 270, CH = 480;
   function sizeCanvas() {
-    const h = Math.max(300, Math.min(stage.clientHeight - 12, (stage.clientWidth - 24) * 16 / 9)); CH = h; CW = h * 9 / 16;
+    const h = Math.max(180, Math.min(stage.clientHeight - 12, (stage.clientWidth - 24) * 16 / 9)); CH = h; CW = h * 9 / 16;
     cv.style.width = CW + 'px'; cv.style.height = CH + 'px'; cv.width = CW * dpr; cv.height = CH * dpr; draw();
   }
   const ctx = cv.getContext('2d'); const A = () => 1080 / S.top_h;
@@ -2193,7 +2214,7 @@ function openEditor(r) {
   cv.addEventListener('pointerup', gEnd); cv.addEventListener('pointercancel', gEnd);
   // ---- tools (bottom bar, like TikTok)
   let tool = 'text';
-  const TOOLS = [['text', 'Aa', 'Text'], ['layout', '▦', 'Layout'], ['cam', '◉', 'Webcam'], ['trim', '✂', 'Trim'], ['speed', '⏩', 'Speed'], ['reset', '↺', 'Auto']];
+  const TOOLS = [['text', 'Aa', 'Text'], ['layout', '▦', 'Layout'], ['cam', '◉', 'Webcam'], ['trim', '✂', 'Trim'], ['speed', '⏩', 'Speed'], ['voice', '🔊', 'Voice'], ['reset', '↺', 'Auto']];
   const tbtn = {};
   for (const [k, ic, lb] of TOOLS) { const b = el('button', 'edx-tool'); b.append(el('span', 'i', ic), el('span', null, lb)); b.onclick = () => { tool = k; refreshPanel(); draw(); haptic(); }; tools.append(b); tbtn[k] = b; }
   const chips = (opts, cur, set) => { const row = el('div', 'edx-chips'); for (const [v, t] of opts) { const b = el('button', 'edx-chip' + (cur === v ? ' on' : ''), t); b.onclick = () => { set(v); commit(); refreshPanel(); draw(); }; row.append(b); } return row; };
@@ -2281,6 +2302,10 @@ function openEditor(r) {
       panel.append(el('div', 'mut', '\u2212 = earlier, + = later. Grey = the clip as made, pink = your new cut.'), tl,
         row('Start', 0), row('End', 1), lbl, note, play, back); set();
       seekTo(toV(cur()[0]));
+    } else if (tool === 'voice') {   // the spoken follow line on THIS clip
+      const cur0 = S.follow_voice || favFollow();
+      const list = voicePicker(cur0, (id) => { S.follow_voice = id; commit(); }, FOLLOW_SAMPLE, [['off', 'No voice', 'just the pop sound']], { get: favFollow, set: (id) => { setFavFollow(id); } });
+      panel.append(el('div', 'mut', 'Tap a voice to hear it · it’s used on this clip when you Save · ★ makes it your favorite for every clip'), list);
     } else if (tool === 'speed') {
       panel.append(chips([[1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']], S.speed, (v) => { S.speed = v; if (mv) mv.playbackRate = v; updTime(); }), el('div', 'mut', 'Speeds up the video and the voice together. 1.25× keeps viewers watching without sounding off.'));
     } else if (tool === 'reset') {
@@ -2300,6 +2325,7 @@ function openEditor(r) {
     if (S.hook_y != null) out.hook_y = +S.hook_y.toFixed(3);
     if (Math.abs(S.hook_scale - 1) > 0.01) out.hook_scale = +S.hook_scale.toFixed(2);
     if (S.speed > 1.01) out.speed = S.speed;
+    if (S.follow_voice) out.follow_voice = S.follow_voice;
     if (S.span) out.span = S.span.map((v) => +(+v).toFixed(2));
     else if (S.trim) out.trim = S.trim;
     if (S.hook.trim() && S.hook.trim() !== (r.hook || '').trim()) out.hook = S.hook.trim();
@@ -2307,7 +2333,7 @@ function openEditor(r) {
     // only words / text box changed? → quick edit (about a minute) instead of a full re-make
     const b0 = JSON.parse(hist[0]); const near = (a, b) => JSON.stringify(a) === JSON.stringify(b) ||
       (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) < 0.002));
-    const textOnly = ['mode', 'cam', 'pan', 'zoom', 'irl_x', 'top_h', 'speed', 'trim'].every((k) => near(S[k], b0[k]))
+    const textOnly = ['mode', 'cam', 'pan', 'zoom', 'irl_x', 'top_h', 'speed', 'trim', 'follow_voice'].every((k) => near(S[k], b0[k]))
       && (!S.span || near(S.span, b0.span));
     if (textOnly) {
       const t = {};
@@ -2338,6 +2364,8 @@ function openEditor(r) {
   };
   img.onload = () => { startCam(); drawBox(); sizeCanvas(); };
   window.addEventListener('resize', sizeCanvas, { once: true });
+  // the picture always fits the space left (the panel under it changes height with each tool)
+  if (window.ResizeObserver) { let rq = 0; new ResizeObserver(() => { cancelAnimationFrame(rq); rq = requestAnimationFrame(sizeCanvas); }).observe(stage); }
   refreshPanel(); updBar(); requestAnimationFrame(() => { ov.classList.add('in'); sizeCanvas(); });
   if (draft && draft.S) toast('Your unsaved edit was restored');
 }
@@ -2365,7 +2393,7 @@ function openUpload(which) {
   const f = el('input'); f.type = 'file'; f.accept = 'video/*';
   if (mode === 'long') {   // a long tips video from your own gameplay: just the footage (+ which AI voice)
     const vsel = { value: ls.get('gc-voice', 'am_michael') };
-    const vlist = voicePicker(vsel.value, (id) => { vsel.value = id; ls.set('gc-voice', id); });
+    const vlist = voicePicker(vsel.value, (id) => { vsel.value = id; }, VOICE_SAMPLE, [], { get: () => ls.get('gc-voice', 'am_michael'), set: (id) => { ls.set('gc-voice', id); toast('Favorite narrator ★'); } });
     const topic = el('input'); topic.placeholder = 'Optional: what it\u2019s about (leave empty and the AI picks)';
     const go = el('button', 'big go', 'Make the long video');
     go.onclick = () => { const file = f.files && f.files[0]; if (!file) { toast('Pick your gameplay video first'); return; } if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB) \u2014 split it'); return; }

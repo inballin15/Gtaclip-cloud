@@ -53,6 +53,59 @@ function drawCta(g, t, cy) {
   g.restore();
 }
 
+// ---- the sound like engage.py: the clip, a "pop" as the button appears, and the spoken follow line right after it
+// (the clip dips ~3 dB for the pop and ~11 dB under the voice, then straight back). Made by the phone's audio
+// engine (OfflineAudioContext) and its AAC encoder (WebCodecs). null = this phone can't: the sound is copied as is.
+const POP_AT = START + 0.06, SAY_AT = POP_AT + 0.22, SAY_DUCK = 0.28, SAY_GAIN = 1.8;
+function popBuffer(ctx) {
+  const sr = ctx.sampleRate, n = Math.round(sr * 0.22); const b = ctx.createBuffer(2, n, sr);
+  const L = b.getChannelData(0), R = b.getChannelData(1); let ph = 0, seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (let i = 0; i < n; i++) { const t = i / sr; const f = 300 + 1100 * Math.exp(-t / 0.018); ph += 2 * Math.PI * f / sr;
+    const env = Math.min(1, t / 0.002) * Math.exp(-t / 0.045); const click = (rnd() * 2 - 1) * Math.exp(-t / 0.0015) * 0.35;
+    const v = Math.max(-1, Math.min(1, 0.85 * Math.sin(ph) * env + click)) * 0.79; L[i] = v; R[i] = v; }
+  return b;
+}
+export async function mixSound(fileBuf, a, b, voiceBuf) {
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  if (!OAC || typeof window.AudioEncoder !== 'function' || typeof window.AudioData !== 'function') return null;
+  const sr = 48000; const cfg = { codec: 'mp4a.40.2', sampleRate: sr, numberOfChannels: 2, bitrate: 192000 };
+  try { if (!(await window.AudioEncoder.isConfigSupported(cfg)).supported) return null; } catch (e) { return null; }
+  const dur = Math.max(0.2, b - a);
+  const dec = new OAC(2, sr, sr);
+  let src; try { src = await dec.decodeAudioData(fileBuf.slice(0)); } catch (e) { return null; }
+  let voice = null; if (voiceBuf) { try { voice = await dec.decodeAudioData(voiceBuf.slice(0)); } catch (e) { voice = null; } }
+  const off = new OAC(2, Math.ceil(dur * sr), sr);
+  const s = off.createBufferSource(); s.buffer = src; const g = off.createGain(); s.connect(g);
+  const lim = off.createDynamicsCompressor();   // a safety limiter on the mix
+  lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.12;
+  g.connect(lim); lim.connect(off.destination);
+  const G = g.gain; const p0 = Math.max(0, POP_AT - 0.06), p1 = POP_AT + 0.45;
+  G.setValueAtTime(1, 0); G.setValueAtTime(1, p0); G.linearRampToValueAtTime(0.7, p0 + 0.06);
+  if (voice) {
+    const v0 = SAY_AT - 0.08, v1 = SAY_AT + voice.duration + 0.05;
+    G.linearRampToValueAtTime(SAY_DUCK, v0 + 0.12); G.setValueAtTime(SAY_DUCK, v1); G.linearRampToValueAtTime(1, v1 + 0.3);
+    const vs = off.createBufferSource(); vs.buffer = voice; const vg = off.createGain(); vg.gain.value = SAY_GAIN; vs.connect(vg); vg.connect(lim); vs.start(SAY_AT);
+  } else { G.setValueAtTime(0.7, p1 - 0.18); G.linearRampToValueAtTime(1, p1); }
+  const ps = off.createBufferSource(); ps.buffer = popBuffer(off); const pg = off.createGain(); pg.gain.value = 0.85; ps.connect(pg); pg.connect(lim); ps.start(POP_AT);
+  s.start(0, Math.max(0, a), dur);
+  const out = await off.startRendering();
+  const chunks = []; let err = null;
+  const enc = new window.AudioEncoder({ output: (c, m) => chunks.push([c, m]), error: (e) => { err = e; } });
+  enc.configure(cfg);
+  const N = 1024, L = out.getChannelData(0), R = out.getChannelData(1);
+  for (let i = 0; i < out.length && !err; i += N) {
+    const n = Math.min(N, out.length - i); const data = new Float32Array(n * 2); data.set(L.subarray(i, i + n), 0); data.set(R.subarray(i, i + n), n);
+    for (let k = 0; k < data.length; k++) { const v = data[k]; if (v > 0.98) data[k] = 0.98; else if (v < -0.98) data[k] = -0.98; }   // never clips
+    const ad = new window.AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i / sr * 1e6), data });
+    enc.encode(ad); ad.close();
+    if (enc.encodeQueueSize > 30) await new Promise((r) => setTimeout(r, 0));
+  }
+  await enc.flush(); enc.close();
+  if (err || !chunks.length) return null;
+  return { chunks, sr };
+}
+
 /**
  * src: URL of the no-caption copy.  a, b: the part to keep (seconds in that video).
  * hook: canvas/image of the hook box (1080-wide units) or null; hookY: its top (px).  ctaY: centre of the pop-up.
@@ -60,7 +113,7 @@ function drawCta(g, t, cy) {
  * compose(g, frame, w, h): draw the LAYOUT yourself from a source frame (the live editor's full footage: webcam +
  * game, reaction, full screen...) onto the 1080x1920 canvas - without it the frame is drawn full size (no-caption copy).
  */
-export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY = 0, ctaY = 800, pbar = false, onPct = () => {}, compose = null, fps = 30 }) {
+export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY = 0, ctaY = 800, pbar = false, onPct = () => {}, compose = null, fps = 30, voice = undefined }) {
   if (!supported()) throw new Error('this phone can\'t make videos in the browser');
   await loadScript(new URL('./mp4box.all.js', import.meta.url).href);
   const buf = await (await fetch(src)).arrayBuffer();
@@ -104,6 +157,9 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   }
   if (!cfg) throw new Error('no H.264 encoder on this phone');
   const target = new ArrayBufferTarget();
+  // sound with the pop + spoken follow line (voice: the line's audio file; undefined = copy the sound as is)
+  let mixed = null;
+  if (voice !== undefined && at) { try { mixed = await mixSound(buf, a, b, voice); } catch (e) { mixed = null; } }
   let aCfg = null;
   if (at) {
     const esds = file.getTrackById(at.id).mdia.minf.stbl.stsd.entries[0].esds;
@@ -112,7 +168,8 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
              description: dsi ? new Uint8Array(dsi.data) : undefined };
   }
   const muxer = new Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: FPS },
-    audio: aCfg ? { codec: 'aac', sampleRate: aCfg.sampleRate, numberOfChannels: aCfg.numberOfChannels } : undefined,
+    audio: mixed ? { codec: 'aac', sampleRate: mixed.sr, numberOfChannels: 2 }
+      : aCfg ? { codec: 'aac', sampleRate: aCfg.sampleRate, numberOfChannels: aCfg.numberOfChannels } : undefined,
     fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
   let failed = null;
   const enc = new window.VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: (e) => { failed = e; } });
@@ -165,8 +222,9 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   dec.close(); enc.close();
   if (failed) throw failed;
   if (!n) throw new Error('no frames came out');
-  // ---- sound: copied as is (no quality loss)
-  if (aCfg && as.length) {
+  // ---- sound: the mix made above (pop + follow line), else copied as is (no quality loss)
+  if (mixed) { for (const [c, m] of mixed.chunks) muxer.addAudioChunk(c, m); }
+  else if (aCfg && as.length) {
     const aShift = shift(file.getTrackById(at.id)); const ats = as[0].timescale; let firstA = true;
     for (const s of as) {
       const t = (s.cts - aShift) / ats;

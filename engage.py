@@ -161,6 +161,8 @@ def pop_wav(path: Path) -> Path:
 # (voice.py --samples, on the "voices" release); which voice = Settings on the site (control.json "follow_voice")
 FOLLOW_LINE = "Don't forget to follow and subscribe for daily clips!"
 SAY_AT = POP_AT + 0.22            # right after the pop
+SAY_DUCK = 0.28                   # the clip's sound under the voice (x0.28 = about -11 dB), straight back after
+SAY_GAIN = 1.8                    # the voice itself (+5 dB): clearly on top of a loud stream
 VOICE = None                      # set by the clip maker from your settings; None = read them here
 REPO = "inballin15/Gtaclip-cloud"
 
@@ -179,9 +181,10 @@ def follow_voice_id() -> str:
     return VOICE
 
 
-def follow_voice(work: Path) -> tuple[Path, float] | None:
-    """(wav, seconds) of the follow line in your voice - None when off or not made yet."""
-    v = follow_voice_id()
+def follow_voice(work: Path, voice: str | None = None) -> tuple[Path, float] | None:
+    """(wav, seconds) of the follow line - this clip's own voice when you picked one, else your favorite.
+    None when off or not made yet."""
+    v = voice or follow_voice_id()
     if not v or v == "off":
         return None
     p = work / f"follow_{v}.wav"
@@ -198,7 +201,8 @@ def follow_voice(work: Path) -> tuple[Path, float] | None:
         return None
 
 
-def add_audio(inputs: list, flt: str, work: Path, src_a: str = "0:a", say: bool = True) -> tuple[list, str, str]:
+def add_audio(inputs: list, flt: str, work: Path, src_a: str = "0:a", say: bool = True,
+              voice: str | None = None) -> tuple[list, str, str]:
     """The pop sound at the moment the button appears + the spoken "Don't forget to follow and subscribe for daily
     clips!" right after it. The clip's own sound dips a little for the pop (about -3 dB) and a bit more under the
     voice (about -6 dB) so the line is clear, then goes straight back up. Returns (inputs, filter, audio label)."""
@@ -206,20 +210,20 @@ def add_audio(inputs: list, flt: str, work: Path, src_a: str = "0:a", say: bool 
     inputs = inputs + ["-i", str(pop_wav(work / "pop.wav"))]
     a0, a1 = POP_AT - 0.06, POP_AT + 0.45
     ms = int(POP_AT * 1000)
-    fv = follow_voice(work) if say else None
+    fv = follow_voice(work, voice) if say else None
     duck = f"0.3*clip((t-{a0:.3f})/0.06,0,1)*clip(({a1:.3f}-t)/0.18,0,1)"
-    if fv:
+    if fv:   # under the voice the clip drops ~11 dB so the line is clearly heard (Nov 25: -6 dB was too quiet)
         b0, b1 = SAY_AT - 0.08, SAY_AT + fv[1] + 0.05
-        duck = f"max({duck},0.5*clip((t-{b0:.3f})/0.12,0,1)*clip(({b1:.3f}-t)/0.3,0,1))"
+        duck = f"max({duck},{1 - SAY_DUCK}*clip((t-{b0:.3f})/0.12,0,1)*clip(({b1:.3f}-t)/0.3,0,1))"
     flt += (f";[{src_a}]aresample=48000,volume='1-{duck}':eval=frame[adk]"
             f";[{k}:a]aresample=48000,adelay={ms}|{ms},volume=0.85[apop]")
     if fv:
         inputs = inputs + ["-i", str(fv[0])]
         sm = int(SAY_AT * 1000)
-        flt += (f";[{k + 1}:a]aresample=48000,aformat=channel_layouts=stereo,adelay={sm}|{sm},volume=1.0[asay]"
-                f";[adk][apop][asay]amix=inputs=3:duration=first:normalize=0[amix]")
+        flt += (f";[{k + 1}:a]aresample=48000,pan=stereo|c0=c0|c1=c0,adelay={sm}|{sm},volume={SAY_GAIN}[asay]"
+                f";[adk][apop][asay]amix=inputs=3:duration=first:normalize=0,alimiter=limit=0.95:level=false[amix]")
     else:
-        flt += ";[adk][apop]amix=inputs=2:duration=first:normalize=0[amix]"
+        flt += ";[adk][apop]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=false[amix]"
     return inputs, flt, "amix"
 
 
@@ -232,7 +236,7 @@ def hook_top(lay: str, hy: float | None, top_h: int, hh: int) -> int:
 
 
 def hooked(ff_exe: str, clean: Path, png: str, out: Path, lay: str, hy: float | None, top_h: int, work: Path,
-           pbar: bool = False, audio_copy: bool = True) -> None:
+           pbar: bool = False, audio_copy: bool = True, voice: str | None = None) -> None:
     """clean copy + hook + follow pop-up (+ progress bar) -> the posted video (quick edits / new voice)."""
     import re
     import subprocess
@@ -247,7 +251,7 @@ def hooked(ff_exe: str, clean: Path, png: str, out: Path, lay: str, hy: float | 
     flt += f";[{last}]format=yuv420p[out]"
     has_a = "Audio:" in subprocess.run([ff_exe, "-hide_banner", "-i", str(clean)], capture_output=True, text=True).stderr
     if has_a and dur > 4:   # the pop + a small dip of the clip's sound
-        inputs, flt, al = add_audio(inputs, flt, work)
+        inputs, flt, al = add_audio(inputs, flt, work, voice=voice)
         amap = ["-map", f"[{al}]", "-c:a", "aac", "-b:a", "192k"]
     else:
         amap = ["-map", "0:a?", "-c:a", "copy"]

@@ -88,10 +88,20 @@ def samples() -> None:
     have = {a["name"]: a["id"] for a in qe.gh("GET", f"/releases/{rel['id']}/assets?per_page=100")}
     import urllib.request
 
-    def up(path: Path, ctype: str) -> None:
-        if path.name in have:
-            qe.gh("DELETE", f"/releases/assets/{have[path.name]}")
-        req = urllib.request.Request(f"https://uploads.github.com/repos/{qe.REPO}/releases/{rel['id']}/assets?name={path.name}",
+    try:   # the follow lines also go on the site's release, so the site (your phone's video maker) can read them
+        rel_big = qe.gh("GET", "/releases/tags/site-big")
+        have_big = {a["name"]: a["id"] for page in range(1, 20)
+                    for a in (qe.gh("GET", f"/releases/{rel_big['id']}/assets?per_page=100&page={page}") or [])}
+    except Exception:  # noqa: BLE001
+        rel_big, have_big = None, {}
+
+    def up(path: Path, ctype: str, rel_: dict | None = None, have_: dict | None = None, name: str | None = None) -> None:
+        rel_ = rel_ or rel
+        have_ = have if have_ is None else have_
+        name = name or path.name
+        if name in have_:
+            qe.gh("DELETE", f"/releases/assets/{have_[name]}")
+        req = urllib.request.Request(f"https://uploads.github.com/repos/{qe.REPO}/releases/{rel_['id']}/assets?name={name}",
                                      data=path.read_bytes(), method="POST",
                                      headers={"Authorization": f"Bearer {qe.TOKEN}", "Content-Type": ctype,
                                               "Accept": "application/vnd.github+json"})
@@ -115,6 +125,8 @@ def samples() -> None:
                         "silenceremove=start_periods=1:start_threshold=-45dB,areverse,"
                         "loudnorm=I=-15:TP=-1.5:LRA=7,aresample=48000", "-ac", "1", "-c:a", "pcm_s16le", str(fol)], check=True)
         up(fol, "audio/wav")
+        if rel_big:
+            up(fol, "audio/wav", rel_big, have_big, f"v__fv__follow_{v}.wav")   # the site serves it at v/fv/follow_<voice>.wav
         print("sample + follow line:", v)
 
 
@@ -201,7 +213,7 @@ def main() -> None:
               else "H*0.6" if lay.startswith("irl") else "H*0.12" if lay == "cam" else f"{T}-h*0.2")
         png = render_hook(hook, str(WORK / "hook.png"), style, scale)
         import engage   # hook + the follow pop-up (+ progress bar if this clip tests it), like every posted video
-        engage.hooked(FF, newclean, png, out, lay, hy, T, WORK, pbar=sty.get("pbar") == "on")
+        engage.hooked(FF, newclean, png, out, lay, hy, T, WORK, pbar=sty.get("pbar") == "on", voice=(c.get("user_layout") or {}).get("follow_voice"))
     else:
         import shutil
         shutil.copy(newclean, out)

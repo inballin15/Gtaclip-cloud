@@ -82,7 +82,7 @@ QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v4-hq"   # Nov 25: highest quality re-make of every unposted clip (final + no-caption copy)
 LAYOUT_V_OLD = "v3-textonly-capcut"
-FINAL_V = LAYOUT_V + "-follow4"   # posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
+FINAL_V = LAYOUT_V + "-follow5"   # posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
 TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
@@ -226,6 +226,8 @@ def apply_layout(c: dict, body: str) -> str:
                 keep[k] = max(lo, min(hi, float(ul[k])))
         if ul.get("hook_style") in ("white", "black", "outline"):
             keep["hook_style"] = ul["hook_style"]
+        if isinstance(ul.get("follow_voice"), str) and re.match(r"^[a-z]{2}_[a-z]+$|^off$", ul["follow_voice"]):
+            keep["follow_voice"] = ul["follow_voice"]   # this clip's own follow-line voice (else your favorite)
         for k in ("punch",):   # studio switch: punch-in zoom (subtitles are gone for good)
             if ul.get(k) in ("on", "off"):
                 keep[k] = ul[k]
@@ -1614,7 +1616,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                  hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0,
                  hook_style: str = "white", hook_scale: float = 1.0, top_h: int | None = None,
                  subs: list | None = None, punch_at: float | None = None, view: str | None = None,
-                 cta: bool = False, pbar: bool = False) -> None:
+                 cta: bool = False, pbar: bool = False, follow_voice: str | None = None) -> None:
     """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     No subtitles on any video (Nov 24): whatever is passed in, none are drawn.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
@@ -1732,7 +1734,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                                                layout, cta=cta, pbar=pbar)
                 info["cta"], info["pbar"] = cta, pbar
                 if cta and has_audio(raw) and duration_of(raw) > 4:   # the pop sound + a small dip of the clip's sound
-                    inputs, flt, alab = engage.add_audio(inputs, flt, tmp)
+                    inputs, flt, alab = engage.add_audio(inputs, flt, tmp, voice=follow_voice)
                     flt += f";[{alab}]loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[aout]"
                     info["pop"] = True
             except Exception as e:  # noqa: BLE001
@@ -2632,7 +2634,7 @@ def main() -> None:
             FINAL_V = LAYOUT_V + "-follow3"   # nothing re-made until the voice exists (then they all get it)
             engage.VOICE = "off"
         elif engage.VOICE != "am_puck":
-            FINAL_V = LAYOUT_V + "-follow4-" + engage.VOICE
+            FINAL_V = LAYOUT_V + "-follow5-" + engage.VOICE
     except Exception as e:  # noqa: BLE001
         log(f"follow voice: {e}")
     for c in clips.values():
@@ -2777,7 +2779,7 @@ def main() -> None:
             _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + FINAL_V + r.get("layout", "")).encode()).hexdigest()[:10]
             _olds = {hashlib.sha1((r.get("hook", "") + r.get("cam", "") + v_ + r.get("layout", "")).encode()).hexdigest()[:10]
                      for v_ in (LAYOUT_V_OLD, LAYOUT_V_OLD + "-follow1", LAYOUT_V_OLD + "-follow2", LAYOUT_V_OLD + "-follow3",
-                                LAYOUT_V + "-follow2", LAYOUT_V + "-follow3")}
+                                LAYOUT_V + "-follow2", LAYOUT_V + "-follow3", LAYOUT_V + "-follow4")}
             r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"   # (an older video still counts until it's re-made)
                           if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and (r.get("final_v") == _hh or r.get("final_v") in _olds)
                           and (VID / f"{r['id']}_final.mp4").exists() else "")
@@ -3847,7 +3849,8 @@ def main() -> None:
             log(f"subtitles/punch-in skipped for {cid}: {e}")
         if need_f:
             rinfo = render_final(raw, cid, cam, None if c.get("no_hook") else c["hook"], tmp, **opts,
-                                 cta=True, pbar=sty.get("pbar") == "on")
+                                 cta=True, pbar=sty.get("pbar") == "on",
+                                 follow_voice=(c.get("user_layout") or {}).get("follow_voice"))
             try:   # would it look right on TikTok / Shorts? (checked before it can be posted)
                 vok, vwhy = view_check(VID / f"{cid}_final.mp4", lay, rinfo)
                 c["view_ok"], c["view_why"] = vok, vwhy

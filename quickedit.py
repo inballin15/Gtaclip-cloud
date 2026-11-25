@@ -152,7 +152,7 @@ def main() -> None:
         out.parent.mkdir(parents=True, exist_ok=True)
         print("STEP 2/3 adding your text")
         import engage   # hook + the follow pop-up (+ progress bar if this clip tests it), like every posted video
-        engage.hooked(FF, clean, png, out, lay, hy, T, WORK, pbar=sty.get("pbar") == "on")
+        engage.hooked(FF, clean, png, out, lay, hy, T, WORK, pbar=sty.get("pbar") == "on", voice=ul.get("follow_voice"))
     # keep this clip's newest edit only; drop edits (and their videos) older than 3 days
     old = edits.get(cid, {}).get("video")
     rec = {**full, "at": int(time.time()), "video": out_name or (prev.get("video") if base else "")}
