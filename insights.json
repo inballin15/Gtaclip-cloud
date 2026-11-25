@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-25T02:07:09Z",
+ "updated": "2026-11-25T04:08:40Z",
  "videos": 49,
  "v": 4,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 13.23,
+   "x": 13.24,
    "n": 3
   },
   {
@@ -180,7 +180,7 @@
  "top": [
   {
    "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
-   "views": 1463
+   "views": 1465
   },
   {
    "hook": "Speed found him",
