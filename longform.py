@@ -168,11 +168,10 @@ def ai(parts: list, log_name: str, tries: int = 10, temperature: float = 0.4, st
             "generationConfig": {"responseMimeType": "application/json", "temperature": temperature}}
     models = [m for m in viral.gemini_models(key, log)] or ["gemini-3-flash-preview", "gemini-3.1-flash-lite-preview"]
     models = sorted(models, key=lambda m: "lite" in m)   # the full models first, the small "lite" ones last
-    if strong:   # writing / fact-checking the script: the small models mix up times and invent things (Nov 25 test)
+    if strong:   # the fact-check: only the full models (the small one can make a good script worse)
         models = [m for m in models if "lite" not in m]
         if not models:
-            log(f"{log_name}: only the small AI model is free right now - waiting for a better one")
-            DAILY["hit"] = True
+            log(f"{log_name}: only the small AI model is free right now - skipping this step")
             return None
     for attempt in range(tries):
         wait, daily = 0, 0
@@ -313,7 +312,7 @@ def write_script(scenes: list[dict], dur: float, game: str, topic: str = "") -> 
         "Return JSON: {\"title\": \"\", \"description\": \"\", \"tags\": [\"\"], \"thumbnail\": {\"t\": 0, \"text\": \"\"}, "
         "\"sections\": [{\"kind\": \"intro|tip|outro\", \"title\": \"short title shown on screen\", \"start\": 0, \"end\": 0, \"speed\": 1, "
         "\"lines\": [{\"at\": 0, \"text\": \"\"}]}]}\n\nFOOTAGE LOG:\n" + "\n".join(lines))
-    plan = ai([{"text": prompt}], "writing the script", temperature=0.7, strong=True)
+    plan = ai([{"text": prompt}], "writing the script", temperature=0.7)   # full models first, the small one if that's all
     if isinstance(plan, list):
         plan = plan[0] if plan else None
     return plan if isinstance(plan, dict) else None
@@ -377,7 +376,7 @@ def fix_tip_count(plan: dict) -> None:
         return
     num = r"(\d{1,2}|" + "|".join(NUMW[2:]) + r")"
     pat = (r"(?<!gta )(?<!gta)(?<!auto )(?<!\bvi )\b" + num +
-           r"\b(?=\s+(?:[\w'-]+\s+){0,3}(?:tips?|tricks?|mechanics?|things?|secrets?|features?|ways?|hacks?|methods?|"
+           r"\b(?=\s+(?:[\w'-]+\s+){0,4}(?:tips?|tricks?|mechanics?|things?|secrets?|features?|ways?|hacks?|methods?|"
            r"mistakes?|details?|spots?|locations?|facts?|reasons?|items?|weapons?|cars?|skills?)\b)")
 
     def rp(m: re.Match) -> str:
@@ -472,6 +471,86 @@ def check_script(plan: dict, scenes: list[dict], game: str, dur: float) -> None:
     for c in (res.get("changes") or [])[:12]:
         log(f"script check: {str(c)[:140]}")
     log(f"script checked against the footage: {fixed} of {len(order)} sections changed")
+
+
+_STOP = set("""about after again also always before being between both could does doing down during each even every
+from have here into just like make more most much must need only other over really right same should some such sure take
+than that their them then there these they this those through very want when where which while will with without would
+your youre yours what whats gonna gotta know dont game games player players character characters video screen screens
+streamer streamers reacts reacting reaction watching shows showing shown gta grand theft auto vice city""".split())
+
+
+def _toks(txt: str) -> set[str]:
+    return {w[:5] for w in re.findall(r"[a-z]{4,}", (txt or "").lower()) if w not in _STOP}
+
+
+def place_sections(plan: dict, scenes: list[dict], dur: float) -> None:
+    """Without the AI: make sure each tip sits on footage that shows it (words of the tip vs the footage log) and
+    each line is at the moment it talks about. The script AI sometimes puts a tip on the wrong part of the video."""
+    if not scenes:
+        return
+    rows = [(r["t"], _toks(" ".join((r["what"], r["ui"], r["tip"], r["where"])))) for r in scenes]
+
+    def win_score(toks: set, a: float, b: float) -> int:
+        return sum(len(toks & tk) for t, tk in rows if a - 0.5 <= t <= b + 0.5)
+    step = max(1.0, (rows[1][0] - rows[0][0]) if len(rows) > 1 else 2.0)
+    for s in plan["sections"]:
+        if s["kind"] != "tip":
+            continue
+        toks = _toks(s["title"] + " " + " ".join(x["text"] for x in s["lines"]))
+        if len(toks) < 3:
+            continue
+        ln = s["end"] - s["start"]
+        cur = win_score(toks, s["start"], s["end"])
+        best, bt = cur, s["start"]
+        t = 0.0
+        while t + ln <= dur + 0.01:
+            sc = win_score(toks, t, t + ln)
+            if sc > best:
+                best, bt = sc, t
+            t += step
+        if best >= max(4, cur * 2 + 1) and abs(bt - s["start"]) >= ln * 0.5:
+            sh = bt - s["start"]
+            log(f"'{s['title']}' was on the wrong footage ({mmss(s['start'])}) - moved to {mmss(bt)} where it shows")
+            s["start"], s["end"] = bt, bt + ln
+            for x in s["lines"]:
+                x["at"] = x["at"] + sh
+        for x in s["lines"]:   # each line at the moment in its section that matches it best
+            lt = _toks(x["text"])
+            cand = [(len(lt & tk), -abs(t - x["at"]), t) for t, tk in rows if s["start"] <= t <= s["end"] - 1]
+            if cand:
+                m = max(cand)
+                if m[0] >= 2:
+                    x["at"] = m[2]
+            x["at"] = max(s["start"], min(x["at"], s["end"] - 0.5))
+        s["lines"].sort(key=lambda x: x["at"])
+        if s["lines"]:   # no long silent tail after the last line (fit() adds footage back if the voice needs it)
+            last = s["lines"][-1]
+            tail = last["at"] + (len(last["text"].split()) / 2.2 + 3) * s["speed"]
+            if s["end"] > tail + 2 and tail - s["start"] >= 6:
+                log(f"'{s['title']}': cut {s['end'] - tail:.0f}s of silent footage after its last line")
+                s["end"] = tail
+    for s in plan["sections"]:   # the intro: the most eye-catching stretch, not a boring / off-topic one
+        if s["kind"] != "intro":
+            continue
+        ln = s["end"] - s["start"]
+
+        def avg(a: float, b: float) -> float:
+            v = [(0 if r["boring"] else r["score"]) for r in scenes if a - 0.5 <= r["t"] <= b + 0.5]
+            return sum(v) / len(v) if v else 0.0
+        cur = avg(s["start"], s["end"])
+        best, bt, t = cur, s["start"], 0.0
+        while t + ln <= dur + 0.01:
+            a = avg(t, t + ln)
+            if a > best + 0.01:
+                best, bt = a, t
+            t += step
+        if best >= cur + 2 and bt != s["start"]:
+            sh = bt - s["start"]
+            log(f"intro moved to the most eye-catching footage at {mmss(bt)} (score {best:.1f} vs {cur:.1f})")
+            s["start"], s["end"] = bt, bt + ln
+            for x in s["lines"]:
+                x["at"] += sh
 
 
 def tidy_outro(plan: dict, dur: float) -> None:
@@ -812,7 +891,9 @@ def make(job: dict, num: int = 0) -> dict:
     log(f"script: '{plan['title']}' - {len(plan['sections'])} sections, "
         f"{sum(len(s['lines']) for s in plan['sections'])} lines")
     if not job.get("fake_ai"):
+        place_sections(plan, scenes, dur)
         check_script(plan, scenes, game, dur)
+        place_sections(plan, scenes, dur)
     (WORK / "plan.json").write_text(json.dumps(plan, indent=1))
     status(job, "making", "Recording the voice")
     voice_lines(plan, voice)
