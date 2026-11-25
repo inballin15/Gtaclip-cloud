@@ -590,8 +590,12 @@ def voice_lines(plan: dict, voice: str) -> None:
     for si, s in enumerate(plan["sections"]):
         for li, ln in enumerate(s["lines"]):
             wav = vdir / f"{si:02d}_{li:02d}.wav"
-            if not wav.exists():
-                x = V.tts(ln["text"], voice, speed=1.05)
+            if not wav.exists() or not ln.get("words"):
+                try:
+                    x, ln["words"] = V.tts_timed(ln["text"], voice, speed=1.05)
+                except Exception as e:  # noqa: BLE001
+                    log(f"word timings not available ({e}) - subtitles timed by length instead")
+                    x, ln["words"] = V.tts(ln["text"], voice, speed=1.05), []
                 V.wav_write(wav, x)
             ln["wav"] = str(wav)
             ln["secs"] = duration_of(wav)
@@ -679,6 +683,95 @@ def thumbnail(master: Path, plan: dict, out: Path) -> None:
     im.convert("RGB").save(out, quality=90)
 
 
+def sub_events(plan: dict) -> list[tuple[float, float, str]]:
+    """Subtitles straight from the script (so the words are exactly what the narrator says), timed by when the voice
+    actually says each word. Short chunks of a few words, one line, like YouTube captions."""
+    ev = []
+    for s in plan["sections"]:
+        for ln in s["lines"]:
+            base = s.get("out_start", 0) + ln["pos"]
+            toks = []   # (word, start, end) - word pieces the voice splits ("ca"+"n't") joined back together
+            prev_ws = " "
+            for tx, st, en, ws in (ln.get("words") or []):
+                if toks and (prev_ws == "" or not tx[:1].isalnum() and tx[:1] not in "$#"):
+                    w0, s0, e0 = toks[-1]
+                    toks[-1] = (w0 + tx, s0, max(e0, en))
+                else:
+                    toks.append((tx, st, en))
+                prev_ws = ws
+            spoken = " ".join(w for w, _, _ in toks)
+            if not toks or abs(len(spoken) - len(ln["text"])) > max(6, len(ln["text"]) * 0.25):   # by length instead
+                words = ln["text"].split()
+                tot = sum(len(w) + 1 for w in words) or 1
+                span = max(0.5, ln.get("secs", 2) - 0.15)
+                acc, toks = 0.05, []
+                for w in words:
+                    d = span * (len(w) + 1) / tot
+                    toks.append((w, acc, acc + d))
+                    acc += d
+            chunk = []
+            groups = []
+            for w in toks:
+                chunk.append(w)
+                text = " ".join(x[0] for x in chunk)
+                if len(chunk) >= 7 or len(text) >= 32 or (w[0][-1:] in ".,!?;:" and len(chunk) >= 3):
+                    groups.append(chunk)
+                    chunk = []
+            if chunk:
+                if groups and len(chunk) <= 2 and len(" ".join(x[0] for x in groups[-1] + chunk)) <= 40:
+                    groups[-1] += chunk
+                else:
+                    groups.append(chunk)
+            for gi, g in enumerate(groups):
+                a = base + g[0][1]
+                b = base + (groups[gi + 1][0][1] if gi + 1 < len(groups) else g[-1][2] + 0.35)
+                ev.append((a, max(b, a + 0.6), " ".join(x[0] for x in g)))
+    ev.sort()
+    for i in range(len(ev) - 1):   # never two on screen at once
+        if ev[i][1] > ev[i + 1][0]:
+            ev[i] = (ev[i][0], max(ev[i][0] + 0.3, ev[i + 1][0] - 0.02), ev[i][2])
+    return ev
+
+
+def _ts(t: float, srt: bool = False) -> str:
+    t = max(0.0, t)
+    h, m, s = int(t // 3600), int(t % 3600 // 60), t % 60
+    return f"{h:02d}:{m:02d}:{int(s):02d},{int(round((s % 1) * 1000)) % 1000:03d}" if srt else f"{h}:{m:02d}:{s:05.2f}"
+
+
+def write_subs(ev: list, w: int, h: int, ass: Path, srt: Path) -> None:
+    fs = max(28, round(h * 0.052))
+    head = ("[Script Info]\nScriptType: v4.00+\nWrapStyle: 2\nScaledBorderAndShadow: yes\n"
+            f"PlayResX: {w}\nPlayResY: {h}\n\n[V4+ Styles]\n"
+            "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, "
+            "Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, "
+            "MarginR, MarginV, Encoding\n"
+            f"Style: Sub,Inter,{fs},&H00FFFFFF,&H00FFFFFF,&H00000000,&H96000000,-1,0,0,0,100,100,0,0,1,"
+            f"{max(2, round(fs * 0.075))},{max(1, round(fs * 0.04))},2,{round(w * 0.08)},{round(w * 0.08)},{round(h * 0.07)},1\n\n"
+            "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
+    lines = [f"Dialogue: 0,{_ts(a)},{_ts(b)},Sub,,0,0,0,,{t.replace(chr(92), '').replace('{', '(').replace('}', ')')}"
+             for a, b, t in ev]
+    ass.write_text(head + "\n".join(lines) + "\n", encoding="utf-8")
+    srt.write_text("\n".join(f"{i + 1}\n{_ts(a, True)} --> {_ts(b, True)}\n{t}\n" for i, (a, b, t) in enumerate(ev)),
+                   encoding="utf-8")
+
+
+def strip_voices(wav: Path) -> Path | None:
+    """Take every voice out of the footage's own sound (another narrator, a streamer, chat TTS...) and keep the game
+    sounds + music, so only our narrator talks. Uses Demucs (free, runs on the job's computer)."""
+    out_dir = WORK / "sep"
+    try:
+        r = subprocess.run([sys.executable, "-m", "demucs", "--two-stems=vocals", "-n", "htdemucs", "-j", "4",
+                            "-o", str(out_dir), str(wav)], capture_output=True, text=True, timeout=3600)
+        res = out_dir / "htdemucs" / wav.stem / "no_vocals.wav"
+        if r.returncode == 0 and res.exists():
+            return res
+        log(f"couldn't take the voices out of the footage sound: {(r.stderr or r.stdout)[-300:]}")
+    except Exception as e:  # noqa: BLE001
+        log(f"couldn't take the voices out of the footage sound: {e}")
+    return None
+
+
 def render(master: Path, plan: dict, out: Path) -> float:
     """The finished video: each section cut + sped up, tip titles, the voice on top, game sound ducked under it."""
     sdir = WORK / "secs"
@@ -703,7 +796,7 @@ def render(master: Path, plan: dict, out: Path) -> float:
             tip_no += 1
             png = sdir / f"card{i:02d}.png"
             card_png(s["title"], tip_no, png)
-            cards.append((png, t0 + 0.2, t0 + min(4.5, real - 0.3)))
+            cards.append((png, t0 + 0.2, t0 + min(4.5, real - 0.3)))   # top-left: the subtitles are at the bottom
         for ln in s["lines"]:
             voice_track.append((t0 + ln["pos"], ln["wav"]))
         s["out_start"] = t0
@@ -732,16 +825,34 @@ def render(master: Path, plan: dict, out: Path) -> float:
         wf.setsampwidth(2)
         wf.setframerate(SR)
         wf.writeframes((np.clip(vo, -1, 1) * 32767).astype(np.int16).tobytes())
-    # final mix + tip titles
-    inputs = ["-i", str(body), "-i", str(vwav)]
+    # the footage's own sound without any voices in it (only our narrator talks)
+    game = WORK / "game.wav"
+    ff("-i", str(body), "-vn", "-ac", "2", "-ar", "44100", str(game))
+    t_s = time.time()
+    bg = strip_voices(game)
+    if bg:
+        log(f"took the voices out of the footage sound ({time.time() - t_s:.0f}s) - only the narrator talks now")
+    # exact subtitles from the script
+    m_ = re.search(r"Video:.*?(\d{3,5})x(\d{3,5})", subprocess.run([FF, "-hide_banner", "-i", str(body)],
+                                                                   capture_output=True, text=True).stderr)
+    w, h = (int(m_.group(1)), int(m_.group(2))) if m_ else (1920, 1080)
+    ev = sub_events(plan)
+    write_subs(ev, w, h, WORK / "subs.ass", WORK / "subs.srt")
+    log(f"subtitles: {len(ev)} captions, word-timed from the narration")
+    # final mix + tip titles + subtitles
+    inputs = ["-i", str(body), "-i", str(vwav)] + (["-i", str(bg)] if bg else [])
+    ga = "2:a" if bg else "0:a"
+    k0 = len(inputs) // 2
     flt, last = "", "0:v"
     for k, (png, a, b) in enumerate(cards):
         inputs += ["-i", str(png)]
-        flt += f"[{last}][{k + 2}:v]overlay=60:H-h-90:enable='between(t,{a:.2f},{b:.2f})'[c{k}];"
+        flt += f"[{last}][{k + k0}:v]overlay=60:60:enable='between(t,{a:.2f},{b:.2f})'[c{k}];"
         last = f"c{k}"
-    flt += (f"[{last}]format=yuv420p[vout];"
+    esc = lambda p: str(p).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
+    flt += (f"[{last}]ass='{esc(WORK / 'subs.ass')}':fontsdir='{esc(ROOT / 'fonts')}',format=yuv420p[vout];"
             "[1:a]aresample=48000,pan=stereo|c0=c0|c1=c0,volume=1.35,asplit=2[vo1][vo2];"
-            "[0:a]volume=0.6[g];[g][vo1]sidechaincompress=threshold=0.015:ratio=12:attack=15:release=350[gd];"
+            f"[{ga}]aresample=48000,volume={0.7 if bg else 0.45}[g];"
+            "[g][vo1]sidechaincompress=threshold=0.01:ratio=20:attack=10:release=400[gd];"
             "[gd][vo2]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[aout]")
     ff(*inputs, "-filter_complex", flt, "-map", "[vout]", "-map", "[aout]", "-c:v", "libx264", "-preset", "medium",
        "-crf", "20", "-r", str(FPS), "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", str(out))
@@ -940,7 +1051,7 @@ def make(job: dict, num: int = 0) -> dict:
     if job.get("test"):   # a test run: results go to the "longtest" branch for checking, not on your site
         tdir = WORK / "testout"
         tdir.mkdir(exist_ok=True)
-        for f in (prev, thumb, WORK / "plan.json", WORK / "plan_fit.json", WORK / "scene_log.json"):
+        for f in (prev, thumb, WORK / "plan.json", WORK / "plan_fit.json", WORK / "scene_log.json", WORK / "subs.srt"):
             if f.exists():
                 shutil.copy(f, tdir / f.name)
         (tdir / "entry.json").write_text(json.dumps(entry, indent=1))
@@ -955,6 +1066,8 @@ def make(job: dict, num: int = 0) -> dict:
         return entry
     entry["full"] = release_upload(full, f"{job['id']}.mp4", "video/mp4")
     entry["thumb_full"] = release_upload(thumb, f"{job['id']}.jpg", "image/jpeg")
+    if (WORK / "subs.srt").exists():   # the same subtitles as a file, for YouTube's own captions (upload it in Studio)
+        entry["srt"] = release_upload(WORK / "subs.srt", f"{job['id']}.srt", "application/x-subrip")
     publish_site(entry, {f"v/l/{job['id']}.jpg": thumb, f"v/l/{job['id']}_preview.mp4": prev})
     return entry
 

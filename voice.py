@@ -39,6 +39,33 @@ def tts(text: str, voice: str, speed: float = 1.0) -> np.ndarray:
     return np.concatenate(parts) if parts else np.zeros(1, np.float32)
 
 
+def tts_timed(text: str, voice: str, speed: float = 1.0) -> tuple[np.ndarray, list]:
+    """Like tts(), plus when each word is spoken: [(text, start_s, end_s, space_after)] - for exact subtitles."""
+    from kokoro import KPipeline
+    lang = VOICES.get(voice, ("", "a"))[1]
+    if lang not in _PIPES:
+        _PIPES[lang] = KPipeline(lang_code=lang, repo_id="hexgrad/Kokoro-82M")
+    parts, words, off = [], [], 0.0
+    for r in _PIPES[lang](text, voice=voice, speed=speed):
+        a = getattr(r, "audio", None)
+        if a is None:
+            try:
+                a = r[2]
+            except Exception:  # noqa: BLE001
+                a = None
+        if a is None:
+            continue
+        a = np.asarray(a, dtype=np.float32).reshape(-1)
+        for t in (getattr(r, "tokens", None) or []):
+            st, en = getattr(t, "start_ts", None), getattr(t, "end_ts", None)
+            tx = str(getattr(t, "text", "") or "")
+            if st is not None and en is not None and tx.strip():
+                words.append([tx, off + float(st), off + float(en), str(getattr(t, "whitespace", " ") or "")])
+        parts.append(a)
+        off += len(a) / SR
+    return (np.concatenate(parts) if parts else np.zeros(1, np.float32)), words
+
+
 def wav_write(path: Path, x: np.ndarray, sr: int = SR) -> None:
     import soundfile as sf
     sf.write(str(path), x, sr)
