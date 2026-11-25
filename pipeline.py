@@ -2992,6 +2992,20 @@ def main() -> None:
                     log(f"view check {cid}: {vwhy} - held back from posting")
             except Exception as e:  # noqa: BLE001
                 log(f"view check skipped {cid}: {e}")
+    # Nov 25: only YOUR streamers (streamers.yaml). Clips of anyone else (CohhCarnage, BruceGreene...) come out of
+    # the queue every run - your own uploads / links are never touched
+    allowed = {k.lower() for k in (CFG.get("streamers") or {})}
+    gone = []
+    for cid0, c0 in clips.items():
+        if c0["status"] != "new" or c0.get("source") == "upload" or c0.get("src_link") or MINE:
+            continue
+        who = (c0.get("login") or c0.get("streamer") or "").lower().replace(" ", "")
+        if allowed and who and who not in allowed:
+            c0["status"] = "skipped"
+            c0["skip_reason"] = "not one of your streamers"
+            gone.append(c0.get("streamer") or who)
+    if gone:
+        log(f"took {len(gone)} clips of other streamers out of the queue: {', '.join(sorted(set(gone)))}")
     if st.get("react_fill_v", 0) < 2:   # one time (Nov 25): reaction clips re-made with no black gaps (bottom + top)
         st["react_fill_v"] = 2
         n = 0
