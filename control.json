@@ -1,12 +1,6 @@
 {
  "paused": false,
- "postnow": [
-  {
-   "id": "upmwuw3jf8_3",
-   "at": "2026-11-25T15:43:53Z",
-   "to": "youtube"
-  }
- ],
+ "postnow": [],
  "last_slot": "2026-11-25T13:37:00Z",
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
