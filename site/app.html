@@ -2026,6 +2026,10 @@ async function followAudio(v) {   // the spoken follow line's audio for your pho
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
   const mod = await import(PAGES + 'vendor/render.mjs?v=9');
+  if (!S.cam && S.mode !== 'irl' && S.mode !== 'full') {   // never a layout without its webcam
+    const c = String((r.user_layout || {}).cam || r.cam_used || r.cam || '').split(',').map(Number);
+    if (c.length === 4 && c.every((v) => isFinite(v))) S = { ...S, cam: c }; else S = { ...S, mode: 'full' };
+  }
   if (!mod.supported()) throw new Error('this browser can’t make videos');
   const lay = S.mode === 'irl' ? `irl:${(S.irl_x ?? 0.5).toFixed(3)}` : S.mode;
   const r2 = { ...r, layout_used: lay, layout: lay, user_layout: { ...(r.user_layout || {}), top_h: S.top_h } };
@@ -2141,7 +2145,7 @@ function openEditor(r) {
     mv.muted = true; mv.playsInline = true; mv.setAttribute('playsinline', ''); mv.preload = 'auto'; mv.crossOrigin = 'anonymous'; mv.src = ED.src;
     mv.className = 'edx-src'; stageWrap.append(mv);   // on the page (iPhones only hand over frames from a video that's on the page)
     let first = true;
-    mv.addEventListener('loadeddata', () => { if (first) { first = false; seekCut(0); } draw(); updTime(); });
+    mv.addEventListener('loadeddata', () => { if (first) { first = false; seekCut(0); } startCam(); draw(); updTime(); });
     mv.addEventListener('seeked', () => { draw(); updTime(); });
     const loop = () => { if (!ov.isConnected || mv.paused) return;
       const c = cutNow(); if (mv.currentTime >= c[1] - ED.t0 - 0.02 || mv.currentTime < c[0] - ED.t0 - 0.3) seekCut(0);
@@ -2202,8 +2206,8 @@ function openEditor(r) {
   const srcBox = el('div', 'src'); const im2 = el('img'); im2.src = img.src; srcBox.append(im2);
   const box = el('div', 'camb'); box.append(el('div', 'hd')); srcBox.append(box);
   function startCam() {
-    if (S.cam) return;
-    const W = img.naturalWidth || 960, H = img.naturalHeight || 540;
+    if (S.cam) return;   // (no longer waits for the still picture: the footage or plain 16:9 works too - Nov 25)
+    const W = img.naturalWidth || (mv && mv.videoWidth) || 1920, H = img.naturalHeight || (mv && mv.videoHeight) || 1080;
     let [x, y, w, h] = (ul.cam || r.cam_used || r.cam || '0,0,0.25,0.25').split(',').map(Number);
     if (S.mode === 'react') S.cam = [x, y, w, h];   // reaction layout shows the whole webcam box as it is
     else { const ch = Math.min(h, w * W / H / A()); y = y + (h - ch) * 0.1; S.cam = [x, y, w, w * W / H / A()]; }
@@ -2441,6 +2445,7 @@ function openEditor(r) {
     else { sv.disabled = false; sv.textContent = 'Save'; }
   };
   img.onload = () => { startCam(); drawBox(); sizeCanvas(); };
+  img.onerror = () => { startCam(); sizeCanvas(); };   // no still picture: the footage still works
   window.addEventListener('resize', sizeCanvas, { once: true });
   // the picture always fits the space left (the panel under it changes height with each tool)
   if (window.ResizeObserver) { let rq = 0; new ResizeObserver(() => { cancelAnimationFrame(rq); rq = requestAnimationFrame(sizeCanvas); }).observe(stage); }
