@@ -1978,7 +1978,8 @@ function drawLayout(g, src, W, H, S, cw, ch, view) {   // your layout from one f
     g.drawImage(src, Math.max(0, vx), sy, vis, sh, 0, tp, cw, ch - tp);
   } else if (S.mode === 'react') {
     const gg = reactGeom(W, H, S.cam, view);
-    softBg(g, src, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, cw, ch, 0.3);
+    if (S.cam) { const [x0, y0, w0, h0] = S.cam; softBg(g, src, (x0 + w0 * 0.15) * W, (y0 + h0 * 0.15) * H, w0 * 0.7 * W, h0 * 0.7 * H, cw, ch, 0.32); }   // blurred webcam behind (never black)
+    else softBg(g, src, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, cw, ch, 0.3);
     g.drawImage(src, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, (cw - gg.cw * k) / 2, 400 * k, gg.cw * k, gg.ch * k);
     if (S.cam) { const [x, y, w, h] = S.cam; g.drawImage(src, x * W, y * H, w * W, h * H, (cw - gg.fw * k) / 2, gg.cb * k, gg.fw * k, gg.fh * k); }
   } else if (S.mode === 'irl') {
