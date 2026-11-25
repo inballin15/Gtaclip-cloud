@@ -15,6 +15,11 @@
  },
  "errors": [
   {
+   "at": "2026-11-25T16:41:47Z",
+   "id": "upmwuw3jf8_3",
+   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
+  },
+  {
    "at": "2026-11-25T16:38:04Z",
    "id": "upmwuw3jf8_3",
    "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
@@ -58,11 +63,6 @@
    "at": "2026-11-22T17:06:50Z",
    "id": "LittleTallHummingbirdTwitchRPG-aZDk6gYfud9r2-1M",
    "error": "The daily posting limit for this channel has been reached! Please try reducing the amount of times per day in your schedule and try again later."
-  },
-  {
-   "at": "2026-11-22T00:09:20Z",
-   "id": "vod2936518555_10022",
-   "error": "LimitReachedError: You have already scheduled the maximum number of posts YouTube allows in a day (2). Please consider scheduling this post for another day."
   }
  ],
  "returned": [
@@ -77,17 +77,17 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-25T16:38:04Z",
- "stats_at": "2026-11-25T16:38:04Z",
+ "stats_at": "2026-11-25T16:41:47Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-25",
-  "used": 14,
+  "used": 16,
   "cap": 29,
   "slots": 6,
-  "remain30": 700,
+  "remain30": 698,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 590
+  "remain24": 588
  },
  "yt_verified_v": 1,
  "you_post": [
