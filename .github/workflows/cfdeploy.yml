@@ -12,6 +12,7 @@ on:
       - "fast edit"
       - "new voice"
       - "long video (tips from your gameplay)"
+      - "AI thumbnail"
     types: [completed]
 
 concurrency:

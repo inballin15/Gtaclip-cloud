@@ -1,0 +1,34 @@
+name: AI thumbnail
+# Adds an AI thumbnail (made with your Higgsfield credits from the video's own frames) to a long video on the site.
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        description: long video id
+        required: true
+      url:
+        description: picture link (Higgsfield)
+        required: true
+permissions:
+  contents: write
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: add it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LT_ID: ${{ github.event.inputs.id }}
+          LT_URL: ${{ github.event.inputs.url }}
+        run: |
+          pip install -q --disable-pip-version-check -r requirements.txt
+          git config user.name "gtaclip-bot"; git config user.email "gtaclip-bot@users.noreply.github.com"
+          python aithumb.py
