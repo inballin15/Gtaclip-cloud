@@ -1655,7 +1655,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         # black bars made black bands above and under the webcam with a blur of what they watch
         base = ("[0:v]split=3[a][b][c];"
                 f"[a]crop=w=iw*{w * 0.7:.4f}:h=ih*{h * 0.7:.4f}:x=iw*{x + w * 0.15:.4f}:y=ih*{y + h * 0.15:.4f},"   # its middle: no edge bars
-                "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.2,setsar=1[bg];"
+                "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.1,setsar=1[bg];"
                 f"[b]crop=w=iw*{g['vw']}:h=ih*{g['vh']}:x=iw*{g['vx']}:y=ih*{g['vy']},scale={g['cw']}:{g['ch']}:flags=lanczos,setsar=1[ct];"
                 f"[c]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,"
                 f"scale={fw}:{fh}:flags=lanczos,unsharp=5:5:0.7:5:5:0.0,setsar=1{punch}[cm];"
@@ -1872,6 +1872,8 @@ def view_check(video: Path, lay: str, info: dict | None) -> tuple[bool, str]:
         for f in frames:
             g_ = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
             H_ = g_.shape[0]
+            # only the part people actually see: TikTok / Shorts cover the top bar and the caption area anyway
+            g_ = g_[int(H_ * SAFE_TOP / 1920):int(H_ * (1920 - SAFE_BOTTOM) / 1920)]
             rows = (g_.mean(axis=1) < 10) & (g_.std(axis=1) < 6)
             run, best = 0, 0
             for v in rows:
@@ -3101,6 +3103,21 @@ def main() -> None:
             gone.append(c0.get("streamer") or who)
     if gone:
         log(f"took {len(gone)} clips of other streamers out of the queue: {', '.join(sorted(set(gone)))}")
+    if st.get("band_recheck_v", 0) < 1:   # one time (Nov 25): black-band check only looks where people can see
+        st["band_recheck_v"] = 1
+        n = 0
+        for cid0, c0 in clips.items():
+            f0 = VID / f"{cid0}_final.mp4"
+            if c0["status"] == "new" and "black empty gap" in (c0.get("view_why") or "") and f0.exists():
+                try:
+                    ok0, why0 = view_check(f0, c0.get("layout_used") or c0.get("layout") or "split", None)
+                    if "black empty gap" not in why0:
+                        c0["view_ok"], c0["view_why"] = (not why0), why0
+                        n += 1
+                except Exception as e:  # noqa: BLE001
+                    log(f"re-check {cid0}: {e}")
+        if n:
+            log(f"view check: {n} clips no longer held back for a dark band under TikTok's caption")
     if st.get("react_fill_v", 0) < 4:   # one time (Nov 25 pm): reaction layout back to the big webcam you liked
         st["react_fill_v"] = 4
         n = 0
