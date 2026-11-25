@@ -143,7 +143,7 @@ nav button[aria-selected="true"]{color:var(--fg)}
 nav button b{position:absolute;top:2px;left:calc(50% + 8px);background:var(--pink);color:#000;border-radius:999px;font-size:10px;padding:0 5px;min-width:16px;text-align:center}
 nav button b:empty{display:none}
 /* sheet */
-.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:#0000;transition:background .3s;pointer-events:none}
+.sheet{position:fixed;inset:0;z-index:75;display:flex;align-items:flex-end;justify-content:center;background:#0000;transition:background .3s;pointer-events:none}
 .sheet.open{background:#000a;pointer-events:auto}
 .sheet .in{width:100%;max-width:600px;max-height:92vh;overflow:auto;background:var(--p1);border-radius:24px 24px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .35s var(--ease);display:flex;flex-direction:column;gap:11px;overscroll-behavior:contain}
 .sheet.open .in{transform:none}
@@ -159,7 +159,7 @@ nav button b:empty{display:none}
 .in textarea{min-height:100px;resize:vertical}
 .in label{font-size:12px;color:var(--mut);margin-bottom:-6px}
 .steps{white-space:pre-line;font-size:14px}
-.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:60;max-width:92vw;transition:all .3s var(--ease);pointer-events:none}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:95;max-width:92vw;transition:all .3s var(--ease);pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 /* editor */
 .ed{display:grid;grid-template-columns:1fr;gap:12px}
@@ -559,6 +559,13 @@ const CF_SITE = 'https://gtaclip-studio.pages.dev';
     location.replace(CF_SITE + path + location.search + h + (enc && enc.length < 300000 ? (h ? '&' : '#') + 'gcimport=' + enc : ''));
     throw new Error('moved to ' + CF_SITE);
   }
+  let pulled = 0; try { pulled = +localStorage.getItem('gc-pulled') || 0; } catch (e) { /* */ }
+  let hasKey = false; try { hasKey = !!JSON.parse(localStorage.getItem('gc-gh2') || '""') || !!localStorage.getItem('gc-gh'); } catch (e) { /* */ }
+  if (/pages\.dev$/.test(location.hostname) && !hasKey && !/[#&]gcimport=/.test(location.hash) && Date.now() - pulled > 864e5) {
+    try { localStorage.setItem('gc-pulled', String(Date.now())); } catch (e) { /* */ }
+    location.replace('https://inballin15.github.io/Gtaclip-cloud' + location.pathname + location.search + location.hash);
+    throw new Error('getting your saved settings from the old address');
+  }
   const m = location.hash.match(/[#&]gcimport=([^&]+)/);
   if (m) {
     try { const d = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
@@ -704,7 +711,7 @@ async function quickText(r, t) {   // INSTANT: saved + shown right away; the pos
   EDITS[r.id] = { ...(EDITS[r.id] || {}), ...t, at: Math.floor(Date.now() / 1000) + 600, local: true, sent: Date.now() };
   const loc = ls.get('gc-edits', {}); loc[r.id] = EDITS[r.id]; ls.set('gc-edits', loc);
   applyEdits(Q); lastSig = ''; render(); toast('Saved ✓');
-  if (!(await ghTap('text: ' + r.id, JSON.stringify(t)))) { toast('Couldn\'t reach GitHub — try Save again'); return false; }
+  if (!(await ghTap('text: ' + r.id, JSON.stringify(t)))) { if (ghKey()) toast('Couldn\'t reach GitHub — try Save again'); return false; }   // no key: the Settings sheet already says so
   return true;
 }
 function jobBar(id) {
