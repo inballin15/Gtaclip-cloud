@@ -21,7 +21,10 @@ W = Path("/tmp/fe")
 
 
 def main() -> None:
-    issue = json.loads(os.environ.get("ISSUE_JSON") or "{}")
+    issue = json.loads(os.environ.get("ISSUE_JSON") or "{}") if not os.environ.get("FE_CLIP") else {}
+    if os.environ.get("FE_CLIP"):   # test run (workflow_dispatch): this clip exactly as it is, nothing published
+        os.environ["FE_TEST"] = "1"
+        issue = {"number": 0, "title": "layout: " + os.environ["FE_CLIP"].strip(), "body": "{}"}
     title, body = issue.get("title", ""), issue.get("body") or ""
     m = re.match(r"^\s*layout:\s*(?:gtaclip/)?(?:tw_[a-z0-9_]+?_)?([A-Za-z0-9_\-]+)\s*$", title, re.I)
     if not m:
@@ -47,7 +50,10 @@ def main() -> None:
         shutil.copy("/tmp/control.json", W / "posted" / "control.json")
     sys.path.insert(0, str(ROOT))
     import pipeline as P
-    print(P.apply_layout(c, body))
+    if os.environ.get("FE_TEST"):   # test: the clip exactly as it is (its own layout), nothing published
+        print("TEST run: re-making", cid, "with its current layout")
+    else:
+        print(P.apply_layout(c, body))
     # just this clip; the one-time fixes are marked done so nothing else runs
     small = {k: v for k, v in full.items() if k != "clips"}
     small["clips"] = {cid: c}
@@ -62,6 +68,9 @@ def main() -> None:
         raise RuntimeError("the video wasn't made (see the log above)")
     print(f"made in {time.time() - t0:.0f}s: {out.stat().st_size // 1_000_000} MB")
     c2 = json.loads((W / "st" / "state.json").read_text())["clips"][cid]
+    if os.environ.get("FE_TEST"):
+        print("TEST ok:", {k: c2.get(k) for k in ("layout", "layout_used", "view_ok", "view_why", "final_s")})
+        return
     # out like a quick edit: edits.json entry + the video on the edits branch / site / an instant link
     import quickedit as qe
     stamp = int(time.time())

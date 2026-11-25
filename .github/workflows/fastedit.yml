@@ -4,15 +4,20 @@ name: fast edit
 on:
   issues:
     types: [opened]
+  workflow_dispatch:   # test run: re-make one clip exactly as it is, nothing published
+    inputs:
+      clip:
+        description: "clip id to test"
+        required: true
 permissions:
   contents: write
   issues: write
 concurrency:
-  group: fastedit-${{ github.event.issue.number }}
+  group: fastedit-${{ github.event.issue.number || github.run_id }}
   cancel-in-progress: false
 jobs:
   edit:
-    if: startsWith(github.event.issue.title, 'layout:') && github.event.issue.user.login == github.repository_owner
+    if: github.event_name == 'workflow_dispatch' || (startsWith(github.event.issue.title, 'layout:') && github.event.issue.user.login == github.repository_owner)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -43,6 +48,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_JSON: ${{ toJSON(github.event.issue) }}
+          FE_CLIP: ${{ github.event.inputs.clip }}
+          FE_TEST: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
           TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
         run: python fastedit.py
