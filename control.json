@@ -15,6 +15,11 @@
  },
  "errors": [
   {
+   "at": "2026-11-25T17:07:39Z",
+   "id": "upmwuw3jf8_3",
+   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
+  },
+  {
    "at": "2026-11-25T17:01:56Z",
    "id": "upmwuw3jf8_3",
    "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
@@ -58,11 +63,6 @@
    "at": "2026-11-25T16:00:59Z",
    "id": "upmwuw3jf8_3",
    "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
-  },
-  {
-   "at": "2026-11-25T15:43:53Z",
-   "id": "upmwuw3jf8_3",
-   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
   }
  ],
  "returned": [
@@ -77,17 +77,17 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-25T17:01:56Z",
- "stats_at": "2026-11-25T17:01:56Z",
+ "stats_at": "2026-11-25T17:07:39Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-25",
-  "used": 24,
+  "used": 26,
   "cap": 29,
   "slots": 6,
-  "remain30": 690,
+  "remain30": 688,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 580
+  "remain24": 578
  },
  "yt_verified_v": 1,
  "you_post": [

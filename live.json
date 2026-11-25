@@ -387,7 +387,7 @@
    }
   ]
  },
- "updated": "2026-11-25T17:01:56Z",
+ "updated": "2026-11-25T17:07:39Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [
@@ -1153,12 +1153,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-25",
-  "used": 24,
+  "used": 26,
   "cap": 29,
   "slots": 6,
-  "remain30": 690,
+  "remain30": 688,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 580,
+  "remain24": 578,
   "active": [
    [
     8,
@@ -1197,6 +1197,11 @@
   "tiktok": "ok"
  },
  "errors": [
+  {
+   "at": "2026-11-25T17:07:39Z",
+   "id": "upmwuw3jf8_3",
+   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
+  },
   {
    "at": "2026-11-25T17:01:56Z",
    "id": "upmwuw3jf8_3",
@@ -1239,11 +1244,6 @@
   },
   {
    "at": "2026-11-25T16:00:59Z",
-   "id": "upmwuw3jf8_3",
-   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
-  },
-  {
-   "at": "2026-11-25T15:43:53Z",
    "id": "upmwuw3jf8_3",
    "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
   }
@@ -3737,9 +3737,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T17:01:56Z",
+ "stats_updated": "2026-11-25T17:07:39Z",
  "log": [
-  "[17:02:00Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
-  "[17:02:00Z]   youtube: error InvalidInputError: Invalid post: Video could not be read from its URL."
+  "[17:07:42Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
+  "[17:07:43Z]   youtube: error InvalidInputError: Invalid post: Video could not be read from its URL."
  ]
 }
