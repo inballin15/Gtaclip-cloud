@@ -9,6 +9,7 @@ on:
       - "gtaclip your clips (pasted links / uploads)"
       - "gtaclip site (publish dashboard changes right away)"
       - "quick edit"
+      - "fast edit"
       - "new voice"
       - "long video (tips from your gameplay)"
     types: [completed]

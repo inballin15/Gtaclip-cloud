@@ -1,0 +1,70 @@
+name: fast edit
+# Your Studio layout edits (webcam box, layout, trim, speed, text position), re-made right away on their own -
+# no waiting for the clip maker's current run. The tap stays open so the clip maker also saves it on its next run.
+on:
+  issues:
+    types: [opened]
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: fastedit-${{ github.event.issue.number }}
+  cancel-in-progress: false
+jobs:
+  edit:
+    if: startsWith(github.event.issue.title, 'layout:') && github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Getting your clip
+        uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - name: Getting ready
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pip install -q --disable-pip-version-check -r requirements.txt &
+          for b in state mine posted; do git fetch -q --depth=1 origin "$b:refs/remotes/origin/$b" 2>/dev/null || true; done
+          git show origin/state:state.json > /tmp/state.json 2>/dev/null || echo '{"clips":{}}' > /tmp/state.json
+          git show origin/mine:state.json > /tmp/mine_state.json 2>/dev/null || echo '{"clips":{}}' > /tmp/mine_state.json
+          git show origin/posted:control.json > /tmp/control.json 2>/dev/null || true
+          python3 -c "import json;a=json.load(open('/tmp/state.json'));b=json.load(open('/tmp/mine_state.json'));a.setdefault('clips',{}).update(b.get('clips',{}));json.dump(a,open('/tmp/state.json','w'))"
+          U="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git clone -q --depth 1 --branch edits "$U" /tmp/edits 2>/dev/null || { mkdir -p /tmp/edits && cd /tmp/edits && git init -q -b edits && git remote add origin "$U"; }
+          wait
+          ff=$(python -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())")
+          if ! "$ff" -hide_banner -filters 2>/dev/null | grep -qw zscale; then
+            sudo apt-get install -y -qq ffmpeg >/dev/null && echo "IMAGEIO_FFMPEG_EXE=$(command -v ffmpeg)" >> "$GITHUB_ENV"
+          fi
+      - name: Making your edit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_JSON: ${{ toJSON(github.event.issue) }}
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+        run: python fastedit.py
+      - name: Saving
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f /tmp/qe_done ] || exit 0
+          cd /tmp/edits
+          git config user.name gtaclip-bot; git config user.email gtaclip-bot@users.noreply.github.com
+          git add -A && git commit -qm "fast edit $(cat /tmp/qe_done)" || exit 0
+          ok=0; for i in 1 2 3 4 5 6; do git push -q origin HEAD:edits && { ok=1; break; }
+            sleep $((i*2)); git fetch -q origin edits && git reset -q --hard origin/edits
+            python3 - <<'PY'
+          import json, pathlib, shutil
+          e = json.loads(pathlib.Path("/tmp/qe_entry.json").read_text()); f = pathlib.Path("edits.json")
+          d = json.loads(f.read_text()) if f.exists() else {}
+          d[e["id"]] = e["rec"]; f.write_text(json.dumps(d, indent=1, ensure_ascii=False))
+          v = e["rec"].get("video")
+          if v and pathlib.Path("/tmp/qe_video.mp4").exists():
+              pathlib.Path(v).parent.mkdir(parents=True, exist_ok=True); shutil.copy("/tmp/qe_video.mp4", v)
+          PY
+            git add -A && git commit -qm "fast edit $(cat /tmp/qe_done)" || true; done
+          [ $ok = 1 ] || exit 1

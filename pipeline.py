@@ -209,6 +209,47 @@ def set_topic(st: dict, req: dict) -> str:
         return f"Couldn't change the topic ({e})."
 
 
+def apply_layout(c: dict, body: str) -> str:
+    """Your edit from the Studio (layout: tap) onto one clip. Used by the clip maker and the fast edit lane."""
+    try:
+        ul = json.loads(body[body.index("{"):body.rindex("}") + 1])
+        keep = {}
+        if ul.get("mode") in ("split", "full", "irl", "react"):
+            keep["mode"] = ul["mode"]
+        if isinstance(ul.get("v"), int):
+            keep["v"] = ul["v"]   # v2+: the Studio knows the Reaction layout, so "split" really means split
+        if isinstance(ul.get("cam"), str) and re.match(r"^[\d.]+,[\d.]+,[\d.]+,[\d.]+$", ul["cam"]):
+            keep["cam"] = ul["cam"]
+        for k, lo, hi in (("hook_y", 0.05, 0.95), ("zoom", 1.0, 2.5), ("pan", -1.0, 1.0), ("irl_x", 0.0, 1.0),
+                          ("hook_scale", 0.6, 1.6), ("speed", 1.0, 2.0), ("top_h", 420, 1100)):
+            if isinstance(ul.get(k), (int, float)):
+                keep[k] = max(lo, min(hi, float(ul[k])))
+        if ul.get("hook_style") in ("white", "black", "outline"):
+            keep["hook_style"] = ul["hook_style"]
+        for k in ("punch",):   # studio switch: punch-in zoom (subtitles are gone for good)
+            if ul.get(k) in ("on", "off"):
+                keep[k] = ul[k]
+        tr = ul.get("trim")
+        if isinstance(tr, list) and len(tr) == 2 and all(isinstance(v, (int, float)) for v in tr) and tr[1] - tr[0] >= 3:
+            keep["trim"] = [max(0.0, float(tr[0])), float(tr[1])]
+        sp = ul.get("span")   # new start / end on the whole footage (can go earlier / later than the clip)
+        if isinstance(sp, list) and len(sp) == 2 and all(isinstance(v, (int, float)) for v in sp) and 3 <= sp[1] - sp[0] <= 120:
+            keep["span"] = [round(max(0.0, float(sp[0])), 2), round(float(sp[1]), 2)]
+            keep.pop("trim", None)
+        if isinstance(ul.get("hook"), str) and ul["hook"].strip():
+            c["hook"] = fix_names(strip_emoji(ul["hook"]))[:140]
+            c.pop("no_hook", None)
+            c["hook_by_user"] = True
+        if isinstance(ul.get("caption"), str):
+            c["caption"] = ul["caption"].strip()[:2000]
+        c["user_layout"] = keep
+        c.pop("final_hash", None); c.pop("clean_v", None)
+        msg = "Done — the video is being re-made with your layout (next run, a few minutes)."
+    except Exception as e:  # noqa: BLE001
+        msg = f"Couldn't read that layout ({e})."
+    return msg
+
+
 def apply_issues(st: dict) -> None:
     """Dashboard 'Don't post' / 'Edit' taps. Handles EVERY open one, so a tap is never lost
     (GitHub drops queued runs when several taps arrive together)."""
@@ -257,43 +298,7 @@ def apply_issues(st: dict) -> None:
                 c["caption"] = cm.group(1).strip()[:2000]
             msg = "Done — the video was re-made with your hook and caption."
         elif action == "layout":
-            c = st["clips"][cid]
-            try:
-                ul = json.loads(body[body.index("{"):body.rindex("}") + 1])
-                keep = {}
-                if ul.get("mode") in ("split", "full", "irl", "react"):
-                    keep["mode"] = ul["mode"]
-                if isinstance(ul.get("v"), int):
-                    keep["v"] = ul["v"]   # v2+: the Studio knows the Reaction layout, so "split" really means split
-                if isinstance(ul.get("cam"), str) and re.match(r"^[\d.]+,[\d.]+,[\d.]+,[\d.]+$", ul["cam"]):
-                    keep["cam"] = ul["cam"]
-                for k, lo, hi in (("hook_y", 0.05, 0.95), ("zoom", 1.0, 2.5), ("pan", -1.0, 1.0), ("irl_x", 0.0, 1.0),
-                                  ("hook_scale", 0.6, 1.6), ("speed", 1.0, 2.0), ("top_h", 420, 1100)):
-                    if isinstance(ul.get(k), (int, float)):
-                        keep[k] = max(lo, min(hi, float(ul[k])))
-                if ul.get("hook_style") in ("white", "black", "outline"):
-                    keep["hook_style"] = ul["hook_style"]
-                for k in ("punch",):   # studio switch: punch-in zoom (subtitles are gone for good)
-                    if ul.get(k) in ("on", "off"):
-                        keep[k] = ul[k]
-                tr = ul.get("trim")
-                if isinstance(tr, list) and len(tr) == 2 and all(isinstance(v, (int, float)) for v in tr) and tr[1] - tr[0] >= 3:
-                    keep["trim"] = [max(0.0, float(tr[0])), float(tr[1])]
-                sp = ul.get("span")   # new start / end on the whole footage (can go earlier / later than the clip)
-                if isinstance(sp, list) and len(sp) == 2 and all(isinstance(v, (int, float)) for v in sp) and 3 <= sp[1] - sp[0] <= 120:
-                    keep["span"] = [round(max(0.0, float(sp[0])), 2), round(float(sp[1]), 2)]
-                    keep.pop("trim", None)
-                if isinstance(ul.get("hook"), str) and ul["hook"].strip():
-                    c["hook"] = fix_names(strip_emoji(ul["hook"]))[:140]
-                    c.pop("no_hook", None)
-                    c["hook_by_user"] = True
-                if isinstance(ul.get("caption"), str):
-                    c["caption"] = ul["caption"].strip()[:2000]
-                c["user_layout"] = keep
-                c.pop("final_hash", None); c.pop("clean_v", None)
-                msg = "Done — the video is being re-made with your layout (next run, a few minutes)."
-            except Exception as e:  # noqa: BLE001
-                msg = f"Couldn't read that layout ({e})."
+            msg = apply_layout(st["clips"][cid], body)
         else:
             msg = "Not needed anymore — use Start/Stop on the dashboard."
         log(f"{action} {cid}: {msg}")
@@ -1738,7 +1743,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     amap = (["-map", "[aout]"] if info.get("pop") else
             ["-map", "0:a?", *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000"] if has_audio(raw) else [])])
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", *amap,
-       "-c:v", "libx264", "-preset", "medium", *enc_args(out), "-r", str(out_fps),   # medium: best detail per bit
+       "-c:v", "libx264", "-preset", os.environ.get("X264_PRESET", "medium"), *enc_args(out), "-r", str(out_fps),   # medium: best detail per bit
        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
     return info
 
