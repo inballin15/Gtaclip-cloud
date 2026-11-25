@@ -1665,6 +1665,35 @@ const SAVE_READY = {};
 function saveBtn(r, cls, text, which) { const b = el('button', cls, text);
   if (SAVE_READY[r.id]) { b.textContent = 'Tap to save ✓'; b.classList.add('ready'); b.onclick = async () => { const f = SAVE_READY[r.id]; delete SAVE_READY[r.id]; b.classList.remove('ready'); b.textContent = text; b.onclick = () => saveVideo(r, b, which); if (!(await f())) toast('Couldn\'t open Save — press and hold the video instead'); }; }
   else b.onclick = () => saveVideo(r, b, which); return b; }
+// INSTANT edited video (Nov 25): your phone makes it with its own video chip in a few seconds (vendor/render.mjs),
+// same hook, follow pop-up and progress bar as the server's. Text edits, and trims inside the current clip.
+function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, never over the webcam
+  const lay = r.layout_used || r.layout || 'split'; const ch = 120;
+  const below = top + hh + 18, above = top - ch - 18;
+  let y = lay === 'cam' ? above : below;
+  if (y + ch > 1920 - 300) y = above;
+  if (y < 150) y = below + ch <= 1620 ? below : 150;
+  return y + ch / 2;
+}
+function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
+async function phoneMake(r, onPct) {
+  const mod = await import(PAGES + 'vendor/render.mjs');
+  const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
+  const text = pv.hook || (tr && tr.hook) || r.hook || '';
+  const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
+  const scale = pv.scale || (tr && tr.hook_scale) || ul.hook_scale || 1;
+  const y = pv.y != null ? pv.y : (tr && tr.hook_y != null ? tr.hook_y : ul.hook_y);
+  const hk = text ? await hookCanvas(text, style, scale) : null;
+  const top = hk ? Math.max(150, Math.min(1920 - hk.height - 300, hookTop(r, hk.height, y))) : 0;
+  let a = 0, b = Infinity;
+  if (tr && tr.span) {
+    const base = tr.base; if (!base) throw new Error('trim needs the server');
+    a = tr.span[0] - base[0]; b = tr.span[1] - base[0];
+    if (a < -0.05 || b > base[1] - base[0] + 0.05 || tr.speed) throw new Error('longer cut: the server makes this one');
+  }
+  return mod.phoneRender({ src: U(r.clean), a: Math.max(0, a), b, hook: hk, hookY: top, ctaY: hk ? ctaCenter(r, top, hk.height) : 900,
+    pbar: (r.style || {}).pbar === 'on', onPct });
+}
 async function saveVideo(r, btn, which) {
   // 1) get the right video file   2) open Save/Share - phones only allow that right after a tap, so when getting
   // the file took a while, the button turns into "Tap to save ✓" and your next tap opens it straight away
@@ -1677,6 +1706,12 @@ async function saveVideo(r, btn, which) {
       btn.textContent = 'Getting your edited video…';
       const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${e.video}?ref=edits&t=${Date.now()}`, { headers: { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github.raw+json' } });
       if (res.ok) blob = await res.blob();
+    }
+    if (!blob && !clean && (edited || trimOf(r)) && phoneCan(r)) {   // instant: your phone makes it right now
+      try {
+        btn.textContent = 'Making your video… 0%';
+        blob = await phoneMake(r, (p) => { btn.textContent = `Making your video… ${Math.min(99, Math.round(p * 100))}%`; });
+      } catch (err) { console.warn('phone make:', err); blob = null; }
     }
     if (!blob && edited && !e.unsent && ghKey()) {   // edit sent, its video is being made on GitHub (~1 min): wait for it
       const until = Date.now() + 4 * 60000;
