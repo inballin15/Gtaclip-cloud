@@ -17,7 +17,8 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent
 FONT = ROOT / "fonts" / "Inter-Bold.otf"
 FPS = 30
-TEXT = "Follow for daily clips"
+TEXT = "Follow & Subscribe"          # same video goes to TikTok and YouTube
+TEXT2 = "for daily clips"
 PINK = (255, 46, 136)
 SAFE_TOP, SAFE_BOTTOM = 150, 300      # TikTok / Shorts cover these (same numbers as pipeline.py)
 START, IN_S, HOLD_S, OUT_S = 0.7, 0.35, 2.6, 0.3   # appears 0.7 s in (the very first frame stays clean)
@@ -29,11 +30,13 @@ def _button(scale: float, alpha: float, ss: int = 2) -> Image.Image:
     """The button at a given size / opacity, drawn big then shrunk (smooth edges)."""
     fs = 46 * ss
     font = ImageFont.truetype(str(FONT), fs)
+    font2 = ImageFont.truetype(str(ROOT / "fonts" / "Inter-SemiBold.otf"), 34 * ss)
     tw = font.getbbox(TEXT)[2]
+    tw2 = font2.getbbox(TEXT2)[2]
     h = 104 * ss
     circ = 72 * ss
     pad = 16 * ss
-    w = pad + circ + 22 * ss + tw + 34 * ss
+    w = pad + circ + 22 * ss + tw + 14 * ss + tw2 + 36 * ss
     im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     d.rounded_rectangle([0, 0, w - 1, h - 1], radius=h // 2, fill=(255, 255, 255, 255))
@@ -44,7 +47,10 @@ def _button(scale: float, alpha: float, ss: int = 2) -> Image.Image:
     d.rounded_rectangle([cx - arm, cy - th // 2, cx + arm, cy + th // 2], radius=th // 2, fill=(255, 255, 255, 255))
     d.rounded_rectangle([cx - th // 2, cy - arm, cx + th // 2, cy + arm], radius=th // 2, fill=(255, 255, 255, 255))
     tb = font.getbbox(TEXT)
-    d.text((pad + circ + 22 * ss, cy - (tb[1] + tb[3]) / 2), TEXT, font=font, fill=(10, 10, 14, 255))
+    x0 = pad + circ + 22 * ss
+    d.text((x0, cy - (tb[1] + tb[3]) / 2), TEXT, font=font, fill=(10, 10, 14, 255))
+    tb2 = font2.getbbox(TEXT2)
+    d.text((x0 + tw + 14 * ss, cy - (tb2[1] + tb2[3]) / 2 + 2 * ss), TEXT2, font=font2, fill=(110, 106, 128, 255))
     im = im.resize((max(1, int(w / ss * scale)), max(1, int(h / ss * scale))), Image.LANCZOS)
     if alpha < 1:
         a = im.getchannel("A").point(lambda v: int(v * alpha))

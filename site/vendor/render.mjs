@@ -37,16 +37,19 @@ function ctaState(t) {
 export const CTA_H = 104;
 function drawCta(g, t, cy) {
   const st = ctaState(t); if (!st) return;
-  const [s, a] = st; const TEXT = 'Follow for daily clips';
+  const [s, a] = st; const TEXT = 'Follow & Subscribe', TEXT2 = 'for daily clips';
   g.save(); g.globalAlpha = a;
-  g.font = '700 46px Inter, -apple-system, "Helvetica Neue", Arial, sans-serif';
-  const tw = g.measureText(TEXT).width; const h = 104, circ = 72, pad = 16; const w = pad + circ + 22 + tw + 34;
+  const F1 = '700 46px Inter, -apple-system, "Helvetica Neue", Arial, sans-serif', F2 = '600 34px Inter, -apple-system, "Helvetica Neue", Arial, sans-serif';
+  g.font = F1; const tw = g.measureText(TEXT).width; g.font = F2; const tw2 = g.measureText(TEXT2).width;
+  const h = 104, circ = 72, pad = 16; const w = pad + circ + 22 + tw + 14 + tw2 + 36;
   g.translate(W / 2, cy); g.scale(s, s); g.translate(-w / 2, -h / 2);
   g.fillStyle = '#fff'; g.beginPath(); if (g.roundRect) g.roundRect(0, 0, w, h, h / 2); else g.rect(0, 0, w, h); g.fill();
   const cx = pad + circ / 2, cyy = h / 2;
   g.fillStyle = '#ff2e88'; g.beginPath(); g.arc(cx, cyy, circ / 2, 0, Math.PI * 2); g.fill();
   g.fillStyle = '#fff'; g.fillRect(cx - 17, cyy - 3.5, 34, 7); g.fillRect(cx - 3.5, cyy - 17, 7, 34);
-  g.fillStyle = '#0a0a0e'; g.textBaseline = 'middle'; g.fillText(TEXT, pad + circ + 22, cyy + 2);
+  g.textBaseline = 'middle';
+  g.font = F1; g.fillStyle = '#0a0a0e'; g.fillText(TEXT, pad + circ + 22, cyy + 2);
+  g.font = F2; g.fillStyle = '#6e6a80'; g.fillText(TEXT2, pad + circ + 22 + tw + 14, cyy + 4);
   g.restore();
 }
 
