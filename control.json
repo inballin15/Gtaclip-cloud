@@ -1,7 +1,7 @@
 {
  "paused": false,
  "postnow": [],
- "last_slot": "2026-11-25T18:07:00Z",
+ "last_slot": "2026-11-25T21:07:00Z",
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
   "tiktok": "2026-11-19T22:49:33Z",
@@ -71,7 +71,7 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-25T21:06:19Z",
- "stats_at": "2026-11-25T18:08:25Z",
+ "stats_at": "2026-11-25T21:10:05Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
