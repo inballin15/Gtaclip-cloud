@@ -1706,6 +1706,26 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     return info
 
 
+def make_wide(cid: str, c: dict) -> bool:
+    """Small 16:9 preview of ALL the footage this clip has (the whole Twitch clip / your video around the moment), so
+    the Studio's Trim shows the real picture when you move the start earlier or the end later."""
+    raw = RAW / f"{cid}.mp4"
+    out = VID / f"{cid}_wide.mp4"
+    if not raw.exists():
+        return False
+    up = c.get("source") == "upload"
+    mom = c.get("moment") or {}
+    win0 = float((c.get("raw_win") or [mom.get("start", 0)])[0]) if up else 0.0
+    rs = duration_of(raw)
+    key = f"{win0:.2f}-{rs:.1f}-{raw.stat().st_size}"
+    if out.exists() and c.get("wide", {}).get("k") == key:
+        return False
+    ff("-i", str(raw), "-vf", "scale=480:-2,fps=24", "-c:v", "libx264", "-preset", "veryfast", "-crf", "33",
+       "-c:a", "aac", "-b:a", "48k", "-ac", "1", "-movflags", "+faststart", str(out))
+    c["wide"] = {"k": key, "t0": round(win0, 2), "t1": round(win0 + rs, 2)}
+    return True
+
+
 def view_check(video: Path, lay: str, info: dict | None) -> tuple[bool, str]:
     """Would this look right to someone scrolling TikTok / Shorts? Checked on the finished video before it can go out:
     - the hook is fully visible (not under the app's top bar / caption, not a wall of text)
@@ -1983,7 +2003,7 @@ def refetch_upload(c: dict, raw: Path, tmp: Path, cid: str = "") -> None:
     """Get one of your clips again (to re-make it after an edit): same link / uploaded file, same start and end,
     same bars cut off (so the webcam box still fits)."""
     link = c.get("src_link") or ""
-    a, b = float(c["moment"]["start"]), float(c["moment"]["end"])
+    a, b = [float(v) for v in (c.get("raw_win") or [c["moment"]["start"], c["moment"]["end"]])]   # the saved copy's span
     if not link:
         import viral
         src = upload_source(c, cid or raw.stem, tmp)
@@ -2095,7 +2115,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 bars = find_bars(src)
             except Exception as e:  # noqa: BLE001
                 log(f"bar check failed: {e}")
-        cut_ok, crops = {}, {}
+        cut_ok, crops, wins = {}, {}, {}
         src_dur = 0.0
         if not link:
             try:
@@ -2105,14 +2125,21 @@ def process_uploads(st: dict, tmp: Path) -> None:
         for i, m in enumerate(moments):
             cid = f"up{job.get('id', num)}_{i + 1}"
             raw = RAW / f"{cid}.mp4"
+            # the saved copy covers ~20 s more on each side, so the Studio's Trim can show (and use) what's around it
+            pad = 0 if (job.get("asis") or m.get("part") or m.get("full")) else 20.0
+            wa = max(0.0, float(m["start"]) - pad)
+            wb = float(m["end"]) + pad
+            if src_dur:
+                wb = min(src_dur, wb)
+            wins[i] = [round(wa, 2), round(wb, 2)]
             try:
                 import viral
                 if link:
-                    fetch_link_section(link, offset + m["start"], offset + m["end"], raw, tmp)
+                    fetch_link_section(link, offset + wa, offset + wb, raw, tmp)
                     if not job.get("asis"):
                         crops[i] = crop_bars(raw, tmp)
                 else:   # uploaded file: bars (found once on the whole video) come off while cutting - one encode
-                    viral.cut(src, m["start"], m["end"], raw, vf=bars_vf(src, None if job.get("asis") else bars))
+                    viral.cut(src, wa, wb, raw, vf=bars_vf(src, None if job.get("asis") else bars))
                     crops[i] = None if job.get("asis") or not bars else [int(v) for v in bars]
                 cut_ok[i] = raw
             except Exception as e:  # noqa: BLE001
@@ -2126,7 +2153,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                 continue
             try:
                 import viral
-                dur = duration_of(raw)
+                dur = float(m["end"]) - float(m["start"])   # the clip itself (the saved copy has ~20 s more each side)
                 if m.get("part") and not m["text"]:
                     try:
                         m["text"] = transcript(raw)
@@ -2144,7 +2171,7 @@ def process_uploads(st: dict, tmp: Path) -> None:
                     cam, q, frac = None, "none", None
                 rec = {"status": "new", "source": "upload", "streamer": name, "login": login, "src_link": job.get("url") or "",
                        "src_commit": job.get("src_commit") or "", "bars": crops.get(i),
-                       "src_s": round(src_dur, 1) if src_dur else 0,
+                       "src_s": round(src_dur, 1) if src_dur else 0, "raw_win": wins.get(i),
                        "tag": s_cfg.get("tag") or ("#" + re.sub(r"\W", "", name) if name else ""), "campaign": s_cfg.get("campaign", ""),
                        "title": f"{job.get('name', 'Your video')} @ {int(m['start'] // 60)}:{int(m['start'] % 60):02d}",
                        "created": iso(NOW), "found": iso(NOW), "twitch": link, "transcript": m["text"],
@@ -2549,6 +2576,8 @@ def main() -> None:
             if r["clean"] and r.get("rendered"):
                 r["clean"] += f"&r={r['rendered']}"
             r["src"] = f"v/{r['id']}_src.jpg" if (VID / f"{r['id']}_src.jpg").exists() else ""
+            r["wide_src"] = (f"v/{r['id']}_wide.mp4?k={(r.get('wide') or {}).get('k', '')}"
+                             if (VID / f"{r['id']}_wide.mp4").exists() and r.get("wide") else "")
             r["vposter"] = (f"v/{r['id']}_p.jpg?r={r.get('rendered', '')}" if (VID / f"{r['id']}_p.jpg").exists() else "")
             r["clipped"] = r.get("created")
             e = _EDITS.get(r["id"])   # newest quick text edit (still newer than the last full re-make)
@@ -2797,6 +2826,31 @@ def main() -> None:
                     log(f"view check skipped {cid}: {e}")
         if n:
             log(f"safe area: re-making {n} reaction clips with the hook below TikTok's top bar")
+    if MINE and st.get("wide_v", 0) < 1:   # one time: your clips' saved copies re-cut ~20 s wider each side
+        st["wide_v"] = 1
+        tmpw = Path(tempfile.mkdtemp())
+        for cid, c in clips.items():
+            if c["status"] != "new" or c.get("raw_win") or not c.get("moment") or c.get("asis") or c.get("part") or c.get("full"):
+                continue
+            if not (c.get("src_commit") or c.get("src_link")):
+                continue
+            try:
+                a0, b0 = float(c["moment"]["start"]), float(c["moment"]["end"])
+                c["raw_win"] = [round(max(0.0, a0 - 20), 2), round(b0 + 20, 2)]
+                raw = RAW / f"{cid}.mp4"
+                old = raw.with_suffix(".old.mp4")
+                if raw.exists():
+                    raw.replace(old)
+                refetch_upload(c, raw, tmpw, cid)
+                if c.get("src_s"):
+                    c["raw_win"][1] = min(c["raw_win"][1], float(c["src_s"]))
+                old.unlink(missing_ok=True)
+                log(f"{cid}: saved copy now {c['raw_win'][0]:.0f}-{c['raw_win'][1]:.0f}s (Trim can show around the clip)")
+            except Exception as e:  # noqa: BLE001
+                c.pop("raw_win", None)
+                if (RAW / f"{cid}.old.mp4").exists():
+                    (RAW / f"{cid}.old.mp4").replace(RAW / f"{cid}.mp4")
+                log(f"{cid}: couldn't widen the saved copy: {e}")
     if st.get("safe_view_v", 0) < 2:   # one time: re-check the queue with the webcam-size / blank-screen checks too
         st["safe_view_v"] = 2
         for cid, c in clips.items():
@@ -3161,11 +3215,14 @@ def main() -> None:
     # your clip's new start / end goes past what was cut from your video: cut it again from the video, wider
     for cid, c in clips.items():
         sp = (c.get("user_layout") or {}).get("span")
-        if c.get("source") == "upload" and c["status"] == "new" and sp and c.get("moment") \
-                and (sp[0] < float(c["moment"]["start"]) - 0.05 or sp[1] > float(c["moment"]["end"]) + 0.05):
+        win = c.get("raw_win") or ([c["moment"]["start"], c["moment"]["end"]] if c.get("moment") else None)
+        if c.get("source") == "upload" and c["status"] == "new" and sp and win \
+                and (sp[0] < float(win[0]) - 0.05 or sp[1] > float(win[1]) + 0.05):
             if c.get("src_s"):
                 sp = [max(0.0, sp[0]), min(float(c["src_s"]), sp[1])]
-            c["moment"]["start"], c["moment"]["end"] = round(float(sp[0]), 2), round(float(sp[1]), 2)
+            c["raw_win"] = [round(max(0.0, float(sp[0]) - 20), 2), round(float(sp[1]) + 20, 2)]   # new saved copy, wider
+            if c.get("src_s"):
+                c["raw_win"][1] = min(float(c["src_s"]), c["raw_win"][1])
             (RAW / f"{cid}.mp4").unlink(missing_ok=True)
             for k in ("final_hash", "final_v", "clean_v"):
                 c.pop(k, None)
@@ -3183,7 +3240,7 @@ def main() -> None:
         if c["status"] == "used" and age_h < 3:
             continue  # keep the posted video online a few hours (Buffer downloads it from here within minutes)
         if c["status"] != "new":
-            for suf in (".mp4", "_final.mp4", "_clean.mp4", ".jpg", "_src.jpg", "_p.jpg"):
+            for suf in (".mp4", "_final.mp4", "_clean.mp4", ".jpg", "_src.jpg", "_p.jpg", "_wide.mp4"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
             (RAW / f"{cid}.mp4").unlink(missing_ok=True)
             continue
@@ -3256,30 +3313,36 @@ def main() -> None:
             c["style"] = {**learn.pick_style(LEARNED_INS, cid), **(c.get("style") or {})}
         sty = {**(c.get("style") or {}), **{k: v for k, v in (c.get("user_layout") or {}).items() if k in ("subs", "punch")}}
         span_u = (c.get("user_layout") or {}).get("span")   # your own start / end from the Studio's Trim
+        up = c.get("source") == "upload"
+        mom = c.get("moment") or {}
         raw_s = duration_of(raw)
-        win0 = float(c["moment"]["start"]) if c.get("source") == "upload" and c.get("moment") else 0.0
-        if span_u:
-            # exactly the start and end you picked (times on the whole footage: the Twitch clip / your video)
-            a0, b0 = max(0.0, float(span_u[0]) - win0), min(raw_s, float(span_u[1]) - win0)
+        # times are on the whole footage (the Twitch clip / your whole video); the saved copy covers raw_win of it
+        win0 = float((c.get("raw_win") or [mom.get("start", 0)])[0]) if up else 0.0
+        target = span_u or ([float(mom["start"]), float(mom["end"])] if up and c.get("raw_win") and mom.get("end") else None)
+        if target:
+            a0, b0 = max(0.0, float(target[0]) - win0), min(raw_s, float(target[1]) - win0)
             if b0 - a0 >= 3 and (a0 > 0.05 or b0 < raw_s - 0.05):
                 out_s = tmp / f"{cid}_span.mp4"
                 import viral
                 viral.cut(raw, a0, b0, out_s)
                 raw = out_s
             c["span"] = [round(win0 + a0, 2), round(win0 + b0, 2)]
-            log(f"{cid}: your start / end {c['span'][0]:.1f}-{c['span'][1]:.1f}s")
-        else:
-            if not c.get("asis") and not c.get("part") and not c.get("full") and c.get("source") != "upload":
+            if span_u:
+                log(f"{cid}: your start / end {c['span'][0]:.1f}-{c['span'][1]:.1f}s")
+        if not span_u:
+            if not c.get("asis") and not c.get("part") and not c.get("full") and not up:
                 # your clips were already cut around the moment on whole sentences (setup -> payoff): no second trim,
                 # it was cutting off the setup / the payoff. Stream clips get trimmed to the best part.
                 raw = best_part(raw, cid, tmp, c)
             if not c.get("asis") and not c.get("part") and not c.get("full"):   # your full video / parts stay whole
                 raw = cut_dead_air(raw, cid, tmp)
-            tr = c.get("trim") if c.get("source") != "upload" else None
-            c["span"] = [round(win0 + float(tr[0]), 2), round(win0 + float(tr[1]), 2)] if tr else [round(win0, 2), round(win0 + raw_s, 2)]
-        # how far the Trim tool can go: the whole Twitch clip / your whole video
-        c["avail"] = [0.0, round(float(c.get("src_s") or 0) or (win0 + raw_s if c.get("source") == "upload" and not c.get("src_commit")
-                                                                  and not c.get("src_link") else (win0 + raw_s + 60 if c.get("source") == "upload" else raw_s)), 2)]
+            if not target:
+                tr = c.get("trim") if not up else None
+                c["span"] = [round(win0 + float(tr[0]), 2), round(win0 + float(tr[1]), 2)] if tr else [round(win0, 2), round(win0 + raw_s, 2)]
+        # how far the Trim tool can go: what the saved copy covers (the preview shows all of it); your clips can go
+        # further into your video (it's cut again from it)
+        c["avail"] = [round(win0, 2), round(win0 + raw_s, 2)]
+        c["avail_max"] = [0.0, round(float(c.get("src_s") or 0) or (win0 + raw_s + 60), 2)] if up and (c.get("src_commit") or c.get("src_link")) else c["avail"]
         if lay == "split" and not c.get("user_layout") and c.get("source") != "upload" and c.get("cam") \
                 and (c.get("cam_only") or gameplay_is_black(raw, c.get("cam") or "")):
             vs = c.get("viral")
@@ -3588,6 +3651,15 @@ def main() -> None:
             if f.is_file():
                 f.unlink(missing_ok=True)
     shrink_site_videos(st)
+    made_w = 0   # small previews of each clip's whole footage, for the Studio's Trim (cheap: 480 px, ~2 MB a minute)
+    for cid, c in clips.items():
+        if c["status"] == "new" and made_w < 60 and not c.get("asis"):
+            try:
+                made_w += make_wide(cid, c)
+            except Exception as e:  # noqa: BLE001
+                log(f"trim preview skipped {cid}: {e}")
+    if made_w:
+        log(f"trim previews: made {made_w}")
     mb = site_mb()
     if mb > SITE_MAX_MB:   # first: no-caption spare copies of the weaker half of the queue (the posted copy stays;
         ranked = sorted([(clip_quality(c), cid) for cid, c in clips.items()   # edits still work - they just take a remake)
@@ -3625,7 +3697,7 @@ def main() -> None:
             if mb <= SITE_MAX_MB:
                 break
             clips[cid].update(status="expired", skip_reason="site space (lowest rated)")
-            for suf in ("_final.mp4", "_clean.mp4", ".mp4", ".jpg", "_src.jpg", "_p.jpg"):
+            for suf in ("_final.mp4", "_clean.mp4", ".mp4", ".jpg", "_src.jpg", "_p.jpg", "_wide.mp4"):
                 (VID / f"{cid}{suf}").unlink(missing_ok=True)
             mb = site_mb()
         log(f"site size guard: now {mb:.0f} MB")
