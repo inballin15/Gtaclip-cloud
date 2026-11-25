@@ -1638,11 +1638,13 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             a, b = punch_at - 0.15, punch_at + 2.0
             punch = (f",fps=30,zoompan=z='1+0.10*max(0,min(1,min((it-{a:.2f})/0.2,({b:.2f}-it)/0.4)))'"
                      f":x='iw/2-(iw/zoom/2)':y='ih/2.4-(ih/zoom/2.4)':d=1:s={fw}x{fh}:fps=30")
+        band_h = (1920 - (cb - 20) + 1) // 2 * 2
         base = ("[0:v]split=3[a][b][c];"
                 "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.22,setsar=1[bg];"
                 f"[b]crop=w=iw*{g['vw']}:h=ih*{g['vh']}:x=iw*{g['vx']}:y=ih*{g['vy']},scale={g['cw']}:{g['ch']}:flags=lanczos,setsar=1[ct];"
                 f"[c]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,setsar=1,split=2[c1][c2];"
-                f"[c1]scale=1080:{fh + 40}:force_original_aspect_ratio=increase,crop=1080:{fh + 40},boxblur=24:2,eq=brightness=-0.16,setsar=1[cband];"
+                # the blurred webcam fills everything under what they're watching, to the bottom edge (Nov 25: no black gap)
+                f"[c1]scale=1080:{band_h}:force_original_aspect_ratio=increase,crop=1080:{band_h},boxblur=24:2,eq=brightness=-0.16,setsar=1[cband];"
                 f"[c2]scale={fw}:{fh}:flags=lanczos,unsharp=5:5:0.7:5:5:0.0,setsar=1{punch}[cm];"
                 f"[bg][ct]overlay=(W-w)/2:{g['ct']}[t1];[t1][cband]overlay=0:{cb - 20}[t2];[t2][cm]overlay=(W-w)/2:{cb}")
     else:
@@ -1781,6 +1783,19 @@ def view_check(video: Path, lay: str, info: dict | None) -> tuple[bool, str]:
         return False, "the video won't open"
     if max(float(cv2.cvtColor(f, cv2.COLOR_BGR2GRAY).mean()) for f in frames) < 22:
         probs.append("the picture is black / too dark")
+    else:   # Nov 25: a dead black band (an empty gap in the layout) anywhere on screen, in most frames
+        bands = []
+        for f in frames:
+            g_ = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
+            H_ = g_.shape[0]
+            rows = (g_.mean(axis=1) < 10) & (g_.std(axis=1) < 6)
+            run, best = 0, 0
+            for v in rows:
+                run = run + 1 if v else 0
+                best = max(best, run)
+            bands.append(best / H_)
+        if sum(1 for b in bands if b >= 0.07) >= 2:   # >= ~135 px of pure black in 2+ of the frames checked
+            probs.append(f"a black empty gap in the layout ({int(max(bands) * 1920)} px)")
     cp = (info or {}).get("cam_px")
     if cp and lay in ("split", "react") and cp[0] < 500 and cp[1] < 400:
         probs.append("the webcam is too small to see (low-quality webcam)")
@@ -2974,6 +2989,15 @@ def main() -> None:
                     log(f"view check {cid}: {vwhy} - held back from posting")
             except Exception as e:  # noqa: BLE001
                 log(f"view check skipped {cid}: {e}")
+    if st.get("react_fill_v", 0) < 1:   # one time (Nov 25): reaction clips re-made with no black gap under the webcam
+        st["react_fill_v"] = 1
+        n = 0
+        for c0 in clips.values():
+            if c0["status"] == "new" and (c0.get("layout_used") or c0.get("layout")) == "react":
+                c0.pop("final_hash", None)
+                c0.pop("clean_v", None)
+                n += 1
+        log(f"reaction clips: {n} re-made with the blurred webcam filling the bottom")
     if st.get("not_game_v", 0) < 1:   # one time (Nov 25): Lacy's puppy clip is real life, not GTA 6
         st["not_game_v"] = 1
         c0 = clips.get("vod2939638120_6940")
