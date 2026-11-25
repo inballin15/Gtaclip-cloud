@@ -1720,7 +1720,7 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
     flt += f";[{last}]format=yuv420p[out]"
     # clean, even sound (FFmpeg loudnorm to TikTok/YouTube's -14 LUFS): no more too-quiet or blaring clips
     ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
-       "-c:v", "libx264", "-preset", "medium", *enc_args(out), "-r", "30",
+       "-c:v", "libx264", "-preset", "fast", *enc_args(out), "-r", "30",   # fast: same look at this quality, ~2x quicker
        *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000"] if has_audio(raw) else []),
        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
     return info
@@ -1807,9 +1807,11 @@ def enc_args(out: str) -> list:
     """Video quality for saved clips. Posted copy: CRF 20, max 6 Mbps - TikTok re-compresses every upload to ~2-3 Mbps,
     so this looks the same on a phone (the old CRF 17 / 12 Mbps made ~27 MB files and the site only fit ~10 clips).
     The no-caption copy is only a working copy for edits / saving without the hook: a bit lighter."""
+    # Nov 25: no more 1 GB site -> sharper again (the no-caption copy is what edits are made from, so it gets the
+    # same quality - every re-encode of a soft copy looked worse)
     if out == "_clean":
-        return ["-crf", "22", "-maxrate", "4500k", "-bufsize", "9M"]
-    return ["-crf", "20", "-maxrate", "6000k", "-bufsize", "12M"]   # tested Nov 24 on a Kai clip: 26 -> 17 MB, looks identical
+        return ["-crf", "18", "-maxrate", "9000k", "-bufsize", "18M"]
+    return ["-crf", "18", "-maxrate", "9000k", "-bufsize", "18M"]
 
 
 def shrink_site_videos(st: dict) -> None:
@@ -2020,9 +2022,77 @@ def upload_source(c: dict, cid: str, tmp: Path) -> Path:
     return src
 
 
+RAW_REL = "raws"   # your clips' footage, ready to use (colours fixed, bars off) - so a re-make after an edit is fast
+
+
+def _raw_key(c: dict) -> str:
+    return hashlib.sha1(json.dumps([c.get("raw_win"), c.get("bars"), c.get("src_commit"), c.get("src_link"), 1]).encode()).hexdigest()[:10]
+
+
+def raw_get(c: dict, raw: Path, cid: str) -> bool:
+    """The saved footage from the 'raws' release (seconds), instead of the whole upload again + colour fixing (minutes)."""
+    a = c.get("raw_asset") or {}
+    if not a or a.get("key") != _raw_key(c):
+        return False
+    try:
+        import requests
+        with requests.get(f"https://github.com/{REPO}/releases/download/{RAW_REL}/{a['name']}", stream=True, timeout=120) as r:
+            r.raise_for_status()
+            tmp_raw = raw.with_suffix(".dl.mp4")
+            with open(tmp_raw, "wb") as fh:
+                for chunk in r.iter_content(1 << 20):
+                    fh.write(chunk)
+        if tmp_raw.stat().st_size != a.get("size"):
+            tmp_raw.unlink(missing_ok=True)
+            return False
+        tmp_raw.replace(raw)
+        log(f"got your clip's footage from the saved copy (fast): {cid}")
+        return True
+    except Exception as e:  # noqa: BLE001
+        log(f"saved footage copy not available for {cid}: {e}")
+        return False
+
+
+def raw_put(c: dict, raw: Path, cid: str) -> None:
+    """Keep this clip's footage on the 'raws' release so the next edit doesn't redo the slow part."""
+    if not GH_TOKEN or not raw.exists() or raw.stat().st_size > 1_900_000_000:
+        return
+    key = _raw_key(c)
+    if (c.get("raw_asset") or {}).get("key") == key:
+        return
+    try:
+        import requests
+        code, rel = _gh("GET", f"/repos/{REPO}/releases/tags/{RAW_REL}")
+        if code != 200:
+            code, rel = _gh("POST", f"/repos/{REPO}/releases", {"tag_name": RAW_REL, "name": "Your clips' footage (for fast edits)",
+                                                                 "body": "Working copies used when a clip is re-made after an edit. Managed automatically.",
+                                                                 "prerelease": True, "target_commitish": "main"})
+        name = f"{re.sub(r'[^A-Za-z0-9_.-]', '_', cid)}_{key}.mp4"
+        for old in [x for x in (rel.get("assets") or []) if x["name"].startswith(re.sub(r'[^A-Za-z0-9_.-]', '_', cid) + "_")]:
+            _gh("DELETE", f"/repos/{REPO}/releases/assets/{old['id']}")
+        with open(raw, "rb") as fh:
+            r = requests.post(f"https://uploads.github.com/repos/{REPO}/releases/{rel['id']}/assets?name={name}", data=fh,
+                              timeout=600, headers={"Authorization": f"Bearer {GH_TOKEN}", "Content-Type": "video/mp4",
+                                                    "Accept": "application/vnd.github+json"})
+        if r.status_code in (200, 201):
+            c["raw_asset"] = {"name": name, "key": key, "size": raw.stat().st_size}
+            log(f"saved {cid}'s footage for fast edits ({raw.stat().st_size // 1_000_000} MB)")
+        else:
+            log(f"couldn't save {cid}'s footage for fast edits: HTTP {r.status_code}")
+    except Exception as e:  # noqa: BLE001
+        log(f"couldn't save {cid}'s footage for fast edits: {e}")
+
+
 def refetch_upload(c: dict, raw: Path, tmp: Path, cid: str = "") -> None:
     """Get one of your clips again (to re-make it after an edit): same link / uploaded file, same start and end,
-    same bars cut off (so the webcam box still fits)."""
+    same bars cut off (so the webcam box still fits). From the saved copy when there is one (fast)."""
+    if raw_get(c, raw, cid or raw.stem):
+        return
+    _refetch_slow(c, raw, tmp, cid)
+    raw_put(c, raw, cid or raw.stem)
+
+
+def _refetch_slow(c: dict, raw: Path, tmp: Path, cid: str = "") -> None:
     link = c.get("src_link") or ""
     a, b = [float(v) for v in (c.get("raw_win") or [c["moment"]["start"], c["moment"]["end"]])]   # the saved copy's span
     if not link:
@@ -3694,6 +3764,15 @@ def main() -> None:
             if f.is_file():
                 f.unlink(missing_ok=True)
     shrink_site_videos(st)
+    if MINE:   # your clips: keep their footage ready on the 'raws' release, so edits re-make fast (a few per run)
+        n_put = 0
+        for cid, c in clips.items():
+            if n_put >= 8:
+                break
+            raw_f = RAW / f"{cid}.mp4"
+            if c["status"] == "new" and c.get("raw_win") and raw_f.exists() and (c.get("raw_asset") or {}).get("key") != _raw_key(c):
+                raw_put(c, raw_f, cid)
+                n_put += 1
     made_w = 0   # small previews of each clip's whole footage, for the Studio's Trim (cheap: 480 px, ~2 MB a minute)
     for cid, c in clips.items():
         if c["status"] == "new" and made_w < 60 and not c.get("asis"):
