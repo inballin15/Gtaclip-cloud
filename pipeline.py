@@ -367,6 +367,15 @@ def clean_hook(t: str) -> str:
 JUNK_TITLE = re.compile(r"^(lol|lmao|w|l|yo|wow|omg|bro|gta ?6?|clip|meme|\W*)$", re.I)
 
 
+def no_game_in_hook(h: str) -> str:
+    """'Lacy was SHOCKED finding a puppy for sale in GTA 6' -> '... for sale' when GTA 6 isn't actually on screen."""
+    tn = re.escape(fetch_clips_mod.TOPIC.get("name") or "GTA 6")
+    h2 = re.sub(rf"\s*\b(in|inside|on|playing|during)\s+(?:{tn}|GTA\s*(?:6|VI))\b", "", h, flags=re.I)
+    h2 = re.sub(rf"\b(?:{tn}|GTA\s*(?:6|VI))\s*", "", h2, flags=re.I) if re.search(r"\bGTA\b", h2, re.I) else h2
+    h2 = re.sub(r"\s{2,}", " ", h2).strip(" -:,")
+    return h2 if len(h2) >= 12 else h
+
+
 def auto_hook(c: dict) -> tuple[str, str]:
     """Hook for a new clip without AI. Returns (hook, kind): kind "title" = cleaned-up Twitch title
     (good enough to post), "placeholder" = waits for a written hook."""
@@ -1717,11 +1726,12 @@ def make_wide(cid: str, c: dict) -> bool:
     mom = c.get("moment") or {}
     win0 = float((c.get("raw_win") or [mom.get("start", 0)])[0]) if up else 0.0
     rs = duration_of(raw)
-    key = f"{win0:.2f}-{rs:.1f}-{raw.stat().st_size}"
+    key = f"q2-{win0:.2f}-{rs:.1f}-{raw.stat().st_size}"   # q2: sharper preview (Nov 25: the first one was too soft)
     if out.exists() and c.get("wide", {}).get("k") == key:
         return False
-    ff("-i", str(raw), "-vf", "scale=480:-2,fps=24", "-c:v", "libx264", "-preset", "veryfast", "-crf", "33",
-       "-c:a", "aac", "-b:a", "48k", "-ac", "1", "-movflags", "+faststart", str(out))
+    ff("-i", str(raw), "-vf", "scale=854:-2:flags=lanczos,fps=30", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+       "-maxrate", "1600k", "-bufsize", "3200k", "-g", "30",       # a keyframe every second: jumps land instantly
+       "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", str(out))
     c["wide"] = {"k": key, "t0": round(win0, 2), "t1": round(win0 + rs, 2)}
     return True
 
@@ -2874,6 +2884,15 @@ def main() -> None:
                     log(f"view check {cid}: {vwhy} - held back from posting")
             except Exception as e:  # noqa: BLE001
                 log(f"view check skipped {cid}: {e}")
+    if st.get("not_game_v", 0) < 1:   # one time (Nov 25): Lacy's puppy clip is real life, not GTA 6
+        st["not_game_v"] = 1
+        c0 = clips.get("vod2939638120_6940")
+        if c0 and c0["status"] == "new" and not c0.get("hook_by_user"):
+            c0["hook"] = no_game_in_hook(c0.get("hook", ""))
+            c0["in_game"] = False
+            for k in ("final_hash", "final_v"):
+                c0.pop(k, None)
+            log(f"vod2939638120_6940: real life, not GTA 6 - hook now: {c0['hook']}")
     if st.get("caps_v", 0) < 1:   # one time (Nov 24): at most one CAPS word in our own hooks (yours stay as you wrote)
         st["caps_v"] = 1
         import viral
@@ -3382,6 +3401,14 @@ def main() -> None:
                 if ok is not None:
                     c["pic_ok"] = ok
                 vis = dict(getattr(viral, "LAST_VISUAL", {}) or {})
+                if ok is not None and vis.get("in_game") is False and not c.get("hook_by_user"):
+                    # not the game on screen (real life, a browser, another game): the hook mustn't say "in GTA 6"
+                    c["in_game"] = False
+                    h0 = c.get("hook", "")
+                    h1 = no_game_in_hook(h0)
+                    if h1 != h0:
+                        c["hook"] = h1
+                        log(f"{cid}: not {fetch_clips_mod.TOPIC.get('name') or 'GTA 6'} on screen - hook fixed: {h1}")
                 if ok is not None and not vis.get("react") and c.get("react_by") == "faces" and not c.get("user_layout"):
                     # we guessed "reaction" from a second face; the AI looked and says it isn't -> normal layout
                     c.update(layout="split", react=False)

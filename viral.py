@@ -626,13 +626,16 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                       "content being watched (the video / stream / TikTok itself - not the owner's webcam, chat or the "
                       "stream's side decorations; for a vertical TikTok in the middle, just that tall area). "
                       "Otherwise react=false, owner_cam=null, watched_box=null.\n"
+                      f"in_game = true only if the main screen shows {TOPIC.get('name', 'GTA 6')} itself for most of the clip "
+                      "(false for real life / IRL, a desktop or browser page, a video of something else, or another game).\n"
                       "2) Write the on-screen hook about what ACTUALLY happens in these frames and what was said. "
+                      f"Only say '{TOPIC.get('name', 'GTA 6')}' in the hook if in_game is true. "
                       "For a react: the hook is about the streamer's REACTION to what they are watching (name who they "
                       "are watching if you know it). "
                       + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style(variant) +
                       "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\", \"react\": true|false, "
                       "\"watching\": \"...\", \"owner_cam\": [ymin, xmin, ymax, xmax] or null, "
-                      "\"watched_box\": [ymin, xmin, ymax, xmax] or null}."}]
+                      "\"watched_box\": [ymin, xmin, ymax, xmax] or null, \"in_game\": true|false}."}]
     for j in jpegs[:4]:
         parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(j).decode()}})
     body = {"contents": [{"parts": parts}],
@@ -653,7 +656,8 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                     row = row[0] if row else {}
                 LAST_VISUAL.clear()   # react details for the caller (react layout - Nov 24)
                 LAST_VISUAL.update(react=bool(row.get("react")), watching=clean_line(str(row.get("watching") or ""))[:40],
-                                   owner_cam=row.get("owner_cam"), watched_box=row.get("watched_box"))
+                                   owner_cam=row.get("owner_cam"), watched_box=row.get("watched_box"),
+                                   in_game=row.get("in_game"))
                 return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
                         short_hook(str(row.get("hook", ""))))
             except Exception as e:  # noqa: BLE001

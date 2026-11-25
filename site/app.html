@@ -1834,10 +1834,17 @@ function openEditor(r) {
       const base = (r.span || (up && mom.end != null ? [mom.start, mom.end] : (r.trim || [0, r.seconds || 20]))).map(Number);
       const wide = r.wide_src && r.wide ? { src: PAGES + r.wide_src, t0: +r.wide.t0, t1: +r.wide.t1 } : null;
       const avail = (r.avail_max || r.avail || (wide ? [wide.t0, wide.t1] : [0, up ? base[1] + 60 : Math.max(base[1], r.seconds || base[1])])).map(Number);
-      vid = el('video'); vid.playsInline = true; vid.className = 'edx-vid'; vid.preload = 'auto';
-      vid.src = wide ? wide.src : PAGES + (r.clean || r.final);
+      vid = el('video'); vid.playsInline = true; vid.setAttribute('playsinline', ''); vid.className = 'edx-vid'; vid.preload = 'auto';
+      const srcs = [wide ? wide.src : null, r.clean ? PAGES + r.clean : null, r.final ? PAGES + r.final : null].filter(Boolean);
+      let si = 0; vid.src = srcs[0];
+      if (r.src) vid.poster = PAGES + r.src;   // a picture right away while the video loads
       if (wide) vid.style.objectFit = 'contain';
-      stage.append(vid);
+      const vmsg = el('div', 'mut'); vmsg.style.cssText = 'position:absolute;left:12px;bottom:10px;right:12px;text-align:center;pointer-events:none';
+      vid.addEventListener('error', () => { if (++si < srcs.length) { vid.src = srcs[si]; vid.load(); vmsg.textContent = ''; } else vmsg.textContent = 'Couldn\u2019t load the video \u2014 check your connection and tap Play again'; });
+      vid.addEventListener('waiting', () => { vmsg.textContent = 'Loading\u2026'; });
+      vid.addEventListener('playing', () => { vmsg.textContent = ''; });
+      stage.append(vid, vmsg);
+      try { vid.load(); } catch (x) { /* */ }
       const toV = (t) => wide ? t - wide.t0 : t - base[0];          // footage time -> time in the preview video
       const cur = () => (S.span || base).slice();
       const fmt = (d) => Math.abs(d) < 0.05 ? 'as made' : (d < 0 ? `${(-d).toFixed(1)}s earlier` : `${d.toFixed(1)}s later`);
@@ -1860,7 +1867,10 @@ function openEditor(r) {
       vid.addEventListener('timeupdate', () => { if (vid) tHead.style.left = pc((wide ? wide.t0 : base[0]) + vid.currentTime); });
       let stopAt = null;
       vid.addEventListener('timeupdate', () => { if (vid && stopAt != null && vid.currentTime >= stopAt) { vid.pause(); stopAt = null; } });
-      const playFrom = (t0, t1) => { if (!vid) return; try { vid.currentTime = Math.max(0, t0); } catch (x) { /* */ } stopAt = t1; vid.play().catch(() => {}); };
+      // iPhone: play() has to start inside the tap; the jump happens as soon as the video knows its length
+      const seekTo = (t) => { const go = () => { try { vid.currentTime = Math.max(0, t); } catch (x) { /* */ } };
+        if (vid.readyState >= 1) go(); else vid.addEventListener('loadedmetadata', go, { once: true }); };
+      const playFrom = (t0, t1) => { if (!vid) return; stopAt = t1; const p = vid.play(); seekTo(t0); if (p && p.catch) p.catch(() => {}); };
       const nudge = (i, d) => { const was = cur(); const sp = was.slice(); sp[i] = Math.round((sp[i] + d) * 10) / 10;
         sp[0] = Math.max(avail[0], Math.min(sp[0], sp[1] - 5)); sp[1] = Math.min(avail[1], Math.max(sp[1], sp[0] + 5));
         if (sp[1] - sp[0] > 90) { if (i === 0) sp[1] = sp[0] + 90; else sp[0] = sp[1] - 90; }
@@ -1874,7 +1884,7 @@ function openEditor(r) {
       const back = el('button', 'btn', 'Back to how it was made'); back.onclick = () => { S.span = (r.user_layout || {}).span ? base.slice() : null; set(); commit(); playFrom(toV(base[0]), toV(base[0]) + 3); };
       panel.append(el('div', 'mut', '\u2212 = earlier, + = later. Grey = the clip as made, pink = your new cut.'), tl,
         row('Start', 0), row('End', 1), lbl, note, play, back); set();
-      vid.addEventListener('loadedmetadata', () => { try { vid.currentTime = Math.max(0, toV(cur()[0])); } catch (x) { /* */ } }, { once: true });
+      seekTo(toV(cur()[0]));
     } else if (tool === 'speed') {
       panel.append(chips([[1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']], S.speed, (v) => { S.speed = v; }), el('div', 'mut', 'Speeds up the video and the voice together. 1.25× keeps viewers watching without sounding off.'));
     } else if (tool === 'reset') {

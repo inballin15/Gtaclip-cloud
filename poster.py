@@ -337,8 +337,10 @@ def texts(c: dict) -> tuple[str, str, str]:
     cap = (c.get("caption") or "").strip()
     tags = c.get("topic_tags") or "#GTA6 #GTAVI #gaming"
     game = ((c.get("topic") or {}).get("name") if isinstance(c.get("topic"), dict) else c.get("topic")) or "GTA 6"
+    if c.get("in_game") is False:   # real life / not the game on screen: no GTA 6 words or tags (Nov 25)
+        tags, game = "#gaming #streamer", ""
     plain = natural(hook)
-    kw = f"{streamer} {game} stream highlight" if streamer else f"{game} highlight"
+    kw = (f"{streamer} {game} stream highlight" if streamer else f"{game} highlight").replace("  ", " ").strip()
     tt = cap or f"{plain}\n\n{kw}{f' 🎥 @{login}' if login else ''}\n\n{tag} {tags} #fyp".replace("\n\n ", "\n\n").strip()
     credit = (f" Credit: {streamer} (https://www.twitch.tv/{login})" if login else f" Credit: {streamer}" if streamer else "")
     yt = cap or f"{plain}\n\n{kw}.{credit}\n\n{tag} {tags} #Shorts".replace("\n\n ", "\n\n").strip()
