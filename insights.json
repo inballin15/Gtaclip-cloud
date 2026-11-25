@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-25T10:11:54Z",
- "videos": 53,
+ "updated": "2026-11-25T12:13:09Z",
+ "videos": 54,
  "v": 4,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 13.01,
+   "x": 13.32,
    "n": 3
   },
   {
@@ -22,33 +22,33 @@
    "n": 5
   },
   {
-   "feature": "hook style",
-   "value": "question",
-   "x": 0.3,
+   "feature": "style:punch",
+   "value": "off",
+   "x": 4.54,
    "n": 3
   },
   {
    "feature": "hook style",
    "value": "lowcaps",
-   "x": 3.26,
+   "x": 3.35,
    "n": 5
   },
   {
-   "feature": "streamer",
-   "value": "Kai Cenat",
-   "x": 3.04,
-   "n": 5
+   "feature": "hook style",
+   "value": "question",
+   "x": 0.32,
+   "n": 3
   },
   {
    "feature": "emotion word",
    "value": "STUNNED",
-   "x": 0.33,
+   "x": 0.34,
    "n": 6
   },
   {
    "feature": "streamer",
    "value": "Lacy",
-   "x": 0.34,
+   "x": 0.35,
    "n": 10
   },
   {
@@ -61,19 +61,19 @@
    "feature": "hook style",
    "value": "formula",
    "x": 0.39,
-   "n": 7
+   "n": 8
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 2.35,
+   "x": 2.41,
    "n": 20
   },
   {
    "feature": "CAPS words",
    "value": "4-6",
-   "x": 0.45,
-   "n": 5
+   "x": 0.43,
+   "n": 6
   },
   {
    "feature": "streamer",
@@ -82,101 +82,101 @@
    "n": 6
   },
   {
-   "feature": "has a number",
-   "value": "no",
-   "x": 0.52,
-   "n": 14
+   "feature": "streamer",
+   "value": "Kai Cenat",
+   "x": 2.12,
+   "n": 6
   },
   {
    "feature": "style:cam",
    "value": "medium",
    "x": 0.52,
-   "n": 16
+   "n": 17
   },
   {
-   "feature": "style:cam",
-   "value": "small",
-   "x": 0.54,
-   "n": 7
+   "feature": "has a number",
+   "value": "no",
+   "x": 0.53,
+   "n": 14
   },
   {
    "feature": "streamer",
    "value": "IShowSpeed",
-   "x": 1.81,
+   "x": 1.86,
    "n": 8
   },
   {
-   "feature": "style:hooklen",
-   "value": "tiny",
-   "x": 0.59,
-   "n": 9
-  },
-  {
-   "feature": "style:hooklen",
-   "value": "story",
-   "x": 1.59,
-   "n": 6
-  },
-  {
-   "feature": "CAPS words",
-   "value": "2-3",
-   "x": 0.63,
-   "n": 28
-  },
-  {
-   "feature": "style:punch",
-   "value": "on",
-   "x": 0.64,
-   "n": 5
+   "feature": "style:cam",
+   "value": "small",
+   "x": 0.55,
+   "n": 7
   },
   {
    "feature": "style:box",
    "value": "black",
-   "x": 0.65,
-   "n": 5
+   "x": 0.59,
+   "n": 6
+  },
+  {
+   "feature": "style:hooklen",
+   "value": "tiny",
+   "x": 0.6,
+   "n": 9
+  },
+  {
+   "feature": "CAPS words",
+   "value": "2-3",
+   "x": 0.64,
+   "n": 28
   },
   {
    "feature": "hook style",
    "value": "unknown",
-   "x": 1.5,
+   "x": 1.53,
    "n": 32
+  },
+  {
+   "feature": "style:punch",
+   "value": "on",
+   "x": 0.66,
+   "n": 5
   },
   {
    "feature": "posted",
    "value": "morning (7-11)",
-   "x": 1.49,
+   "x": 1.51,
    "n": 12
   }
  ],
  "guidance": [
-  "AVOID: emotion word = STUNNED (0.33x views, 6 videos)",
-  "AVOID: has a number = no (0.52x views, 14 videos)",
-  "DO: has a number = yes (1.27x views, 39 videos)",
-  "DO: hook length = medium (60-90) (1.26x views, 13 videos)"
+  "AVOID: emotion word = STUNNED (0.34x views, 6 videos)",
+  "AVOID: has a number = no (0.53x views, 14 videos)",
+  "DO: hook length = medium (60-90) (1.29x views, 13 videos)",
+  "DO: has a number = yes (1.25x views, 40 videos)"
  ],
  "weights": {
-  "formula": 0.341,
-  "news": 0.173,
+  "formula": 0.332,
+  "news": 0.176,
   "quote": 0.076,
-  "question": 0.076,
-  "lowcaps": 0.333
+  "question": 0.078,
+  "lowcaps": 0.339
  },
  "style_weights": {
   "box": {
-   "white": 0.737,
-   "black": 0.263
+   "white": 0.752,
+   "black": 0.248
   },
   "cam": {
-   "small": 0.332,
-   "medium": 0.668
+   "small": 0.338,
+   "medium": 0.662
   },
   "hooklen": {
-   "tiny": 0.171,
-   "story": 0.829
+   "tiny": 0.185,
+   "story": 0.815
   },
   "punch": {
-   "off": 0.678,
-   "on": 0.322
+   "off": 0.64,
+   "on": 0.36
   }
  },
  "top": [
@@ -202,7 +202,7 @@
   }
  ],
  "style_counts": {
-  "formula": 7,
+  "formula": 8,
   "news": 2,
   "quote": 4,
   "question": 3,
@@ -211,22 +211,27 @@
  "style_tested": {
   "box": {
    "white": 16,
-   "black": 5
+   "black": 6
   },
   "cam": {
    "small": 7,
-   "medium": 16
+   "medium": 17
   },
   "hooklen": {
    "tiny": 9,
-   "story": 6
+   "story": 7
   },
   "punch": {
-   "off": 2,
+   "off": 3,
    "on": 5
   }
  },
  "feed": [
+  {
+   "at": "2026-11-25T12:13:09Z",
+   "kind": "data",
+   "text": "judged 54 videos (was 53)"
+  },
   {
    "at": "2026-11-25T10:11:54Z",
    "kind": "data",
@@ -371,11 +376,6 @@
    "at": "2026-11-23T19:46:30Z",
    "kind": "new",
    "text": "DO: has a number = yes (1.25x views, 27 videos)"
-  },
-  {
-   "at": "2026-11-23T19:46:30Z",
-   "kind": "new",
-   "text": "DO: emotion word = none (1.41x views, 18 videos)"
   }
  ]
 }
