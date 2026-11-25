@@ -1,187 +1,193 @@
 {
  "insights": {
-  "updated": "2026-11-25T06:09:39Z",
-  "videos": 49,
+  "updated": "2026-11-25T08:10:26Z",
+  "videos": 52,
   "v": 4,
   "findings": [
    {
     "feature": "streamer",
     "value": "xQc",
-    "x": 13.24,
+    "x": 13.13,
     "n": 3
-   },
-   {
-    "feature": "clip length",
-    "value": "16-22 s",
-    "x": 0.11,
-    "n": 5
    },
    {
     "feature": "hook style",
     "value": "quote",
-    "x": 0.16,
-    "n": 3
-   },
-   {
-    "feature": "streamer",
-    "value": "Kai Cenat",
-    "x": 3.74,
+    "x": 0.09,
     "n": 4
    },
    {
-    "feature": "hook style",
-    "value": "question",
-    "x": 0.27,
-    "n": 3
+    "feature": "clip length",
+    "value": "16-22 s",
+    "x": 0.13,
+    "n": 5
    },
    {
     "feature": "streamer",
     "value": "Lacy",
-    "x": 0.3,
+    "x": 0.29,
     "n": 9
+   },
+   {
+    "feature": "hook style",
+    "value": "question",
+    "x": 0.31,
+    "n": 3
+   },
+   {
+    "feature": "hook style",
+    "value": "lowcaps",
+    "x": 3.19,
+    "n": 5
+   },
+   {
+    "feature": "streamer",
+    "value": "Kai Cenat",
+    "x": 3.06,
+    "n": 5
    },
    {
     "feature": "emotion word",
     "value": "STUNNED",
-    "x": 0.32,
+    "x": 0.34,
     "n": 6
-   },
-   {
-    "feature": "hook style",
-    "value": "formula",
-    "x": 0.39,
-    "n": 7
-   },
-   {
-    "feature": "style:cam",
-    "value": "medium",
-    "x": 0.42,
-    "n": 14
-   },
-   {
-    "feature": "CAPS words",
-    "value": "4-6",
-    "x": 0.43,
-    "n": 5
    },
    {
     "feature": "hook length",
     "value": "long (90+)",
-    "x": 0.48,
+    "x": 0.36,
     "n": 4
    },
    {
-    "feature": "streamer",
-    "value": "Clix",
-    "x": 0.53,
-    "n": 6
+    "feature": "hook style",
+    "value": "formula",
+    "x": 0.4,
+    "n": 7
    },
    {
     "feature": "CAPS words",
     "value": "0-1",
-    "x": 1.86,
-    "n": 18
+    "x": 2.36,
+    "n": 20
    },
    {
-    "feature": "style:cam",
-    "value": "small",
-    "x": 0.54,
-    "n": 7
-   },
-   {
-    "feature": "posted",
-    "value": "morning (7-11)",
-    "x": 1.81,
-    "n": 8
-   },
-   {
-    "feature": "style:box",
-    "value": "black",
-    "x": 0.58,
+    "feature": "CAPS words",
+    "value": "4-6",
+    "x": 0.45,
     "n": 5
    },
    {
-    "feature": "style:hooklen",
-    "value": "tiny",
-    "x": 0.6,
-    "n": 9
-   },
-   {
-    "feature": "hook style",
-    "value": "unknown",
-    "x": 1.64,
-    "n": 30
-   },
-   {
-    "feature": "style:box",
-    "value": "white",
-    "x": 0.63,
-    "n": 14
-   },
-   {
-    "feature": "style:hooklen",
-    "value": "story",
-    "x": 1.45,
-    "n": 4
-   },
-   {
-    "feature": "style:punch",
-    "value": "on",
-    "x": 1.45,
-    "n": 4
+    "feature": "streamer",
+    "value": "Clix",
+    "x": 0.46,
+    "n": 6
    },
    {
     "feature": "has a number",
     "value": "no",
-    "x": 0.69,
-    "n": 13
+    "x": 0.52,
+    "n": 14
    },
    {
-    "feature": "clip length",
-    "value": "23 s+",
-    "x": 0.7,
+    "feature": "style:cam",
+    "value": "medium",
+    "x": 0.52,
     "n": 16
    },
    {
-    "feature": "question",
-    "value": "yes",
-    "x": 0.72,
-    "n": 3
+    "feature": "style:cam",
+    "value": "small",
+    "x": 0.55,
+    "n": 7
+   },
+   {
+    "feature": "streamer",
+    "value": "IShowSpeed",
+    "x": 1.8,
+    "n": 8
+   },
+   {
+    "feature": "style:hooklen",
+    "value": "tiny",
+    "x": 0.59,
+    "n": 9
+   },
+   {
+    "feature": "CAPS words",
+    "value": "2-3",
+    "x": 0.61,
+    "n": 27
+   },
+   {
+    "feature": "style:hooklen",
+    "value": "story",
+    "x": 1.57,
+    "n": 6
+   },
+   {
+    "feature": "style:punch",
+    "value": "on",
+    "x": 0.64,
+    "n": 5
+   },
+   {
+    "feature": "hook style",
+    "value": "unknown",
+    "x": 1.52,
+    "n": 31
+   },
+   {
+    "feature": "style:box",
+    "value": "black",
+    "x": 0.66,
+    "n": 5
+   },
+   {
+    "feature": "posted",
+    "value": "morning (7-11)",
+    "x": 1.49,
+    "n": 11
    }
   ],
   "guidance": [
-   "AVOID: emotion word = STUNNED (0.32x views, 6 videos)",
-   "AVOID: has a number = no (0.69x views, 13 videos)"
+   "AVOID: emotion word = STUNNED (0.34x views, 6 videos)",
+   "AVOID: has a number = no (0.52x views, 14 videos)",
+   "DO: has a number = yes (1.27x views, 38 videos)",
+   "DO: hook length = medium (60-90) (1.25x views, 12 videos)"
   ],
   "weights": {
-   "formula": 0.392,
-   "news": 0.195,
-   "quote": 0.077,
-   "question": 0.085,
-   "lowcaps": 0.251
+   "formula": 0.343,
+   "news": 0.174,
+   "quote": 0.076,
+   "question": 0.077,
+   "lowcaps": 0.331
   },
   "style_weights": {
    "box": {
-    "white": 0.735,
-    "black": 0.265
+    "white": 0.737,
+    "black": 0.263
    },
    "cam": {
-    "small": 0.358,
-    "medium": 0.642
+    "small": 0.333,
+    "medium": 0.667
    },
    "hooklen": {
-    "tiny": 0.183,
-    "story": 0.817
+    "tiny": 0.173,
+    "story": 0.827
    },
    "punch": {
-    "off": 0.484,
-    "on": 0.516
+    "off": 0.674,
+    "on": 0.326
    }
   },
   "top": [
    {
+    "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
+    "views": 1474
+   },
+   {
     "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
-    "views": 1465
+    "views": 1466
    },
    {
     "hook": "Speed found him",
@@ -194,38 +200,54 @@
    {
     "hook": "Marlon can't handle a night in GTA 6",
     "views": 532
-   },
-   {
-    "hook": "xQc FURIOUS after GTA 6 CRASH",
-    "views": 360
    }
   ],
   "style_counts": {
    "formula": 7,
    "news": 2,
-   "quote": 3,
+   "quote": 4,
    "question": 3,
-   "lowcaps": 4
+   "lowcaps": 5
   },
   "style_tested": {
    "box": {
-    "white": 14,
+    "white": 16,
     "black": 5
    },
    "cam": {
     "small": 7,
-    "medium": 14
+    "medium": 16
    },
    "hooklen": {
     "tiny": 9,
-    "story": 4
+    "story": 6
    },
    "punch": {
-    "off": 1,
-    "on": 4
+    "off": 2,
+    "on": 5
    }
   },
   "feed": [
+   {
+    "at": "2026-11-25T08:10:26Z",
+    "kind": "data",
+    "text": "judged 52 videos (was 49)"
+   },
+   {
+    "at": "2026-11-25T08:10:26Z",
+    "kind": "shift",
+    "text": "punch: on -> off"
+   },
+   {
+    "at": "2026-11-25T08:10:26Z",
+    "kind": "new",
+    "text": "DO: hook length = medium (60-90) (1.25x views, 12 videos)"
+   },
+   {
+    "at": "2026-11-25T08:10:26Z",
+    "kind": "new",
+    "text": "DO: has a number = yes (1.27x views, 38 videos)"
+   },
    {
     "at": "2026-11-24T22:05:45Z",
     "kind": "data",
@@ -355,30 +377,10 @@
     "at": "2026-11-23T19:46:30Z",
     "kind": "new",
     "text": "AVOID: emotion word = STUNNED (0.29x views, 6 videos)"
-   },
-   {
-    "at": "2026-11-23T15:43:48Z",
-    "kind": "data",
-    "text": "judged 35 videos (was 32)"
-   },
-   {
-    "at": "2026-11-23T13:43:35Z",
-    "kind": "data",
-    "text": "judged 32 videos (was 31)"
-   },
-   {
-    "at": "2026-11-23T11:42:05Z",
-    "kind": "data",
-    "text": "judged 31 videos (was 30)"
-   },
-   {
-    "at": "2026-11-23T11:42:05Z",
-    "kind": "dropped",
-    "text": "DO: emotion word = SHOCKED (1.55x views, 6 videos)"
    }
   ]
  },
- "updated": "2026-11-25T08:05:36Z",
+ "updated": "2026-11-25T08:10:26Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1126,12 +1128,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-25",
-  "used": 0,
+  "used": 1,
   "cap": 29,
   "slots": 6,
-  "remain30": 714,
+  "remain30": 713,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 584,
+  "remain24": 583,
   "active": [
    [
     8,
@@ -2659,9 +2661,9 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 0,
-   "likes": 0,
-   "comments": 0,
+   "views": 1444,
+   "likes": 23,
+   "comments": 1,
    "shares": 0,
    "reposts": 0,
    "saves": 0
@@ -2925,7 +2927,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1242,
+   "views": 1245,
    "likes": 19,
    "comments": 0,
    "shares": 0,
@@ -3191,7 +3193,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1253,
+   "views": 1254,
    "likes": 23,
    "comments": 0,
    "shares": 0,
@@ -3205,7 +3207,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 3,
+   "views": 5,
    "likes": 0,
    "comments": 0,
    "shares": 0,
@@ -3563,6 +3565,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T08:05:36Z",
- "log": []
+ "stats_updated": "2026-11-25T08:10:26Z",
+ "log": [
+  "[08:10:28Z] hook learner: 52 videos, 4 lessons"
+ ]
 }
