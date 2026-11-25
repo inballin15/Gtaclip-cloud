@@ -378,7 +378,7 @@
    }
   ]
  },
- "updated": "2026-11-25T00:31:46Z",
+ "updated": "2026-11-25T00:36:41Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1114,12 +1114,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-24",
-  "used": 15,
+  "used": 16,
   "cap": 28,
   "slots": 6,
-  "remain30": 718,
-  "reset30": "2026-12-18T22:03:25Z",
-  "remain24": 588,
+  "remain30": 717,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 587,
   "active": [
    [
     8,
@@ -1238,11 +1238,11 @@
    "posted_at": "2026-11-25T00:11:18Z",
    "video": "https://inballin15.github.io/Gtaclip-cloud/v/RelatedExpensiveEelBleedPurple-EER18eheN5qmhA_W_final.mp4?v=aea922cea9&r=1795563500",
    "poster": "https://inballin15.github.io/Gtaclip-cloud/v/RelatedExpensiveEelBleedPurple-EER18eheN5qmhA_W.jpg",
-   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711894969274895630",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711894969274895630",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b0627aaa2fd17422e702cb4",
      "error": ""
     }
@@ -2522,6 +2522,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7711894969274895630",
+   "sent": "2026-11-25T00:12:04.045Z",
+   "hook": "Caseoh raged after getting stuck in impossible GTA 6 traffic during a mission",
+   "clip": "RelatedExpensiveEelBleedPurple-EER18eheN5qmhA_W",
+   "streamer": "caseoh_",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7711848494805372191",
    "sent": "2026-11-24T21:11:43.195Z",
    "hook": "Kai Cenat lost it after pulling off the smoothest bank heist in GTA 6",
@@ -3487,6 +3501,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T00:31:46Z",
+ "stats_updated": "2026-11-25T00:36:41Z",
  "log": []
 }
