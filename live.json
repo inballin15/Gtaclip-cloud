@@ -387,7 +387,7 @@
    }
   ]
  },
- "updated": "2026-11-25T17:52:35Z",
+ "updated": "2026-11-25T17:57:33Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [
@@ -1198,6 +1198,11 @@
  },
  "errors": [
   {
+   "at": "2026-11-25T17:57:33Z",
+   "id": "upmwuw3jf8_3",
+   "error": "Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
+  },
+  {
    "at": "2026-11-25T17:52:35Z",
    "id": "upmwuw3jf8_3",
    "error": "Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
@@ -1239,11 +1244,6 @@
   },
   {
    "at": "2026-11-25T17:11:55Z",
-   "id": "upmwuw3jf8_3",
-   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
-  },
-  {
-   "at": "2026-11-25T17:07:39Z",
    "id": "upmwuw3jf8_3",
    "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
   }
@@ -3737,14 +3737,14 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T17:52:35Z",
+ "stats_updated": "2026-11-25T17:57:33Z",
  "log": [
-  "[17:52:38Z] post list query failed (full): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
-  "[17:52:38Z] post list query failed (lite): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
-  "[17:52:38Z] duplicate check skipped: couldn't read posts from Buffer",
-  "[17:52:38Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
-  "[17:52:38Z]   youtube: error Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
-  "[17:52:38Z] post list query failed (full): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
-  "[17:52:38Z] post list query failed (lite): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
+  "[17:57:35Z] post list query failed (full): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[17:57:35Z] post list query failed (lite): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[17:57:35Z] duplicate check skipped: couldn't read posts from Buffer",
+  "[17:57:35Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
+  "[17:57:35Z]   youtube: error Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[17:57:35Z] post list query failed (full): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
+  "[17:57:35Z] post list query failed (lite): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
  ]
 }
