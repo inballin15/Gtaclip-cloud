@@ -192,6 +192,14 @@ nav button b:empty{display:none}
 .edx-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
 .edx-stage canvas{border-radius:14px;touch-action:none;background:#111}
 .edx-vid{max-height:100%;max-width:100%;border-radius:14px;background:#111}
+.edx-sw{flex:1;min-height:0;display:flex;flex-direction:column}
+.edx-pbar{display:flex;align-items:center;gap:10px;padding:8px 14px 2px;flex:none}
+.edx-pbar[hidden]{display:none}
+.edx-pp{width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#0a0a0e;font-size:15px;font-weight:800;flex:none;cursor:pointer}
+.edx-scrub{flex:1;height:22px;position:relative;cursor:pointer;touch-action:none}
+.edx-scrub::before{content:'';position:absolute;left:0;right:0;top:9px;height:4px;border-radius:2px;background:rgba(255,255,255,.18)}
+.edx-scrub i{position:absolute;left:0;top:9px;height:4px;border-radius:2px;background:#ff2e88;width:0}
+.edx-tl{font:600 12px/1 ui-monospace,Menlo,monospace;color:#bbb;flex:none;min-width:84px;text-align:right}
 .edx-panel{padding:10px 14px 4px;display:flex;flex-direction:column;gap:10px;max-height:38vh;overflow:auto;background:#0d0d14;border-top:1px solid var(--line)}
 .edx-panel:empty{display:none}
 .edx-panel textarea{width:100%;font:inherit;font-size:16px;color:var(--fg);background:var(--p2);border:1px solid var(--line);border-radius:12px;padding:10px}
@@ -434,7 +442,7 @@ header{border-bottom:1px solid #ffffff14;margin:0 14px;padding-left:4px;padding-
 .prog .mon .crop .x{position:absolute;bottom:10px;left:6px;font:700 8.5px var(--mono);background:#7ee0d0;color:#063;padding:2px 5px;border-radius:3px}
 .prog .mon .crop:before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid #7ee0d066}
 .prog .mon .ov{display:none}
-@font-face{font-family:HookInter;src:url(https://raw.githubusercontent.com/inballin15/Gtaclip-cloud/main/fonts/Inter-Bold.otf) format('opentype');font-weight:700;font-display:swap}
+@font-face{font-family:HookInter;src:url(/vendor/Inter-Bold.otf) format('opentype'),url(https://raw.githubusercontent.com/inballin15/Gtaclip-cloud/main/fonts/Inter-Bold.otf) format('opentype');font-weight:700;font-display:swap}
 .hookbox{position:relative;margin:12px auto 0;max-width:78%;width:fit-content;border-radius:10px;background:#fff;color:#000;padding:8px 14px;text-align:center;font:700 clamp(17px,4.4vw,26px)/1.22 HookInter,Inter,Arial,sans-serif;text-transform:none;letter-spacing:0;min-height:40px;outline:2px dashed #e8b77c66;outline-offset:6px;transform-origin:center top}
 .hookbox.blk{background:rgba(12,12,16,.92);color:#fff}
 .hookbox i{position:absolute;width:7px;height:7px;background:#e8b77c}
@@ -761,7 +769,8 @@ function applyEdits(q) {   // newest quick text edit wins until the clip is full
     if (e.hook) r.hook = e.hook; if (e.caption != null) r.caption = e.caption;
     r._preview = null;
     if (e.video && LIVEV.has(e.video)) { r.final = e.video + '?e=' + e.at; r.final_abs = PAGES + e.video; }
-    else if (e.hook || e.hook_style || e.hook_scale || e.hook_y) {
+    else if (e.layout && e.url) { r.final = e.url; r.final_abs = e.url; }   // fast lane: the re-made video, live right away
+    else if (!e.layout && (e.hook || e.hook_style || e.hook_scale || e.hook_y)) {
       // INSTANT: until the new file is on the website, show the clean video with your new words drawn on top
       r._preview = { hook: r.hook, style: e.hook_style || (r.user_layout || {}).hook_style || (r.style || {}).box || 'white', scale: e.hook_scale || (r.user_layout || {}).hook_scale || 1, y: e.hook_y };
       if (e.url) r.final_abs = e.url;   // the poster/download use the finished file (live right away)
@@ -849,6 +858,7 @@ async function stepJobs() {
   for (const [id, j] of Object.entries(JOBS)) {
     if (j.done || j.failed) { if (Date.now() - (j.end || j.at) > 8000) { delete JOBS[id]; saveJobs(); lastSig = ''; render(); } continue; }
     if (Date.now() - j.at > 40 * 60000) { Object.assign(j, { failed: true, label: 'Taking too long — check back soon', end: Date.now() }); continue; }
+    if (j.kind === 'phone') continue;   // made on your phone: it finishes by itself (localMake)
     if (j.kind === 'voice') {   // new-voice run: real steps from GitHub (installing the AI takes the longest)
       const run = runs.find((r) => r.name === 'new voice' && (r.display_title || '').startsWith('voice: ' + id.slice(0, 20)) && r.conclusion !== 'skipped' && after(r, j.at));
       if (!run) { j.pct = Math.max(j.pct, Math.min(8, 2 + (Date.now() - j.at) / 3000)); j.label = 'New voice: starting…'; continue; }
@@ -888,6 +898,19 @@ async function stepJobs() {
       j.pct = Math.max(j.pct, stagePct('text', 5, new Date(run.updated_at).getTime()));
       j.label = Date.now() - new Date(run.updated_at) > 120000 ? 'Putting it on the site (GitHub is slow right now)…' : STAGES.text[5][1];
     } else {
+      // the fast lane (fast edit run) usually finishes in ~3 min: its video counts as done
+      if (!j.eAt || Date.now() - j.eAt > 10000) { j.eAt = Date.now(); await refreshEdits(); }
+      const fe = EDITS[id];
+      if (fe && fe.layout && fe.at * 1000 >= j.at - 30000 && fe.url) {
+        Object.assign(j, { done: true, pct: 100, label: 'Done \u2713 \u2014 your new video is ready', end: Date.now() }); toast('Edit done \u2713'); applyEdits(Q); lastSig = ''; render(); continue; }
+      const fr = runs.find((x) => x.name === 'fast edit' && (x.display_title || '').startsWith('layout: ' + id.slice(0, 20)) && after(x, j.at));
+      if (fr && fr.status !== 'completed') {
+        let steps = []; try { steps = ((await getJSON(`https://api.github.com/repos/${REPO}/actions/runs/${fr.id}/jobs?t=${Date.now()}`, h)).jobs || [])[0]?.steps || []; } catch (e) { /* */ }
+        const FS = [['Getting your clip', 'Getting your clip', 4, 12, 15], ['Getting ready', 'Getting ready', 12, 30, 45], ['Making your edit', 'Making your video', 30, 90, 120], ['Saving', 'Saving', 90, 99, 15]];
+        const cur = steps.find((x) => x.status === 'in_progress'); const fi = Math.max(0, FS.findIndex((x) => cur && x[0] === cur.name));
+        const [, lab, a0, b0, secs] = FS[fi]; const since = cur && cur.started_at ? new Date(cur.started_at).getTime() : Date.now();
+        j.pct = Math.max(j.pct, a0 + (b0 - a0) * Math.min(0.95, (Date.now() - since) / 1000 / secs)); j.label = lab; continue;
+      }
       await refreshQueue(); applyEdits(Q);
       const r = (Q.ready || []).find((x) => x.id === id);
       if (r && (r.rendered || 0) * 1000 > j.at && r.final) {
@@ -1158,7 +1181,15 @@ function inspPane(r) {
     note.textContent = c.m ? 'Crop, subtitles and punch-in change the whole video: ready in a few minutes (progress bar shows it).' : c.t ? 'Words and text box: saved and shown instantly — no waiting.' : 'Change anything above, then Save.'; }
   sv.onclick = async () => { const c = changed(); sv.disabled = true;
     if (c.m) { const out = { ...ul, hook_style: S.box, hook_scale: S.scale, pan: S.pan, punch: S.punch }; if (S.y != null) out.hook_y = S.y; if (S.hook.trim() !== cur.hook.trim()) out.hook = S.hook.trim();
-      if (await ghTap('layout: ' + r.id, JSON.stringify(out))) { startJob(r.id, 'remake'); toast('Saved — re-making the video'); lastSig = ''; render(); } else sv.disabled = false; return; }
+      if (await ghTap('layout: ' + r.id, JSON.stringify(out))) {
+        // instant: your phone makes it from the full footage (GitHub's posting copy follows in the background)
+        const ED = edSrc(r); const lay = r.layout_used || r.layout || 'split'; const mode = lay.startsWith('irl') ? 'irl' : lay;
+        if (ED && ED.full && S.punch !== 'on' && ['split', 'react', 'full', 'irl'].includes(mode) && window.VideoEncoder && !((ul.speed || 1) > 1.01)) {
+          const S2 = { mode, cam: (r.cam_used || r.cam || '0,0,0.3,0.3').split(',').map(Number), pan: S.pan || 0, zoom: ul.zoom || 1,
+            irl_x: mode === 'irl' ? parseFloat(lay.split(':')[1] || '0.5') : 0.5, top_h: +(ul.top_h || CAM_PX[(r.style || {}).cam] || TOP),
+            hook: S.hook, hook_style: S.box, hook_scale: S.scale, hook_y: S.y, span: r.span ? r.span.map(Number) : null, speed: 1 };
+          localMake(r, S2, ED); return; }
+        startJob(r.id, 'remake'); toast('Saved — re-making the video'); lastSig = ''; render(); } else sv.disabled = false; return; }
     const t = {}; if (S.hook.trim() !== cur.hook.trim() && S.hook.trim()) t.hook = S.hook.trim(); if (S.box !== cur.box) t.hook_style = S.box; if (Math.abs(S.scale - cur.scale) > 0.01) t.hook_scale = S.scale; if (S.y !== cur.y && S.y != null) t.hook_y = S.y;
     await quickText(r, t); sv.disabled = false; };
   full.onclick = () => openEditor(r); row.append(sv, full); d.append(row, note); upd();
@@ -1572,8 +1603,8 @@ function renderMine(v, ql) {
     const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; v.append(c);
   });
 }
-const vidOf = (r) => (variant === 'clean' && feed !== 'mine' && r.clean) ? r.clean : r.final;
-const U = (p) => /^https?:/.test(p || '') ? p : PAGES + p;   // site path or a full link
+const vidOf = (r) => (variant === 'clean' && feed !== 'mine' && r.clean) ? r.clean : (localOf(r) || {}).url || r.final;
+const U = (p) => /^(https?:|blob:)/.test(p || '') ? p : PAGES + p;   // site path, full link, or a video your phone made
 // draw your new hook over the clean video (exactly where the clip maker puts it) - an instant preview
 function withPreview(r, vd, holder) {   // your edit, drawn exactly like the final video (no waiting)
   const pv = r._preview; if (!pv || !r.clean) return;
@@ -1586,8 +1617,11 @@ function withPreview(r, vd, holder) {   // your edit, drawn exactly like the fin
 let HOOKFONT = null;
 async function hookFont() {
   if (HOOKFONT) return HOOKFONT;
-  try { const f = new FontFace('HookInter', `url(https://raw.githubusercontent.com/${REPO}/main/fonts/Inter-Bold.otf)`); await f.load(); document.fonts.add(f); HOOKFONT = 'HookInter'; }
-  catch (e) { HOOKFONT = 'Inter, Arial, sans-serif'; }
+  try { await document.fonts.load('700 50px HookInter'); if (document.fonts.check('700 50px HookInter')) { HOOKFONT = 'HookInter'; return HOOKFONT; } } catch (e) { /* load it by hand below */ }
+  for (const u of [PAGES + 'vendor/Inter-Bold.otf', `https://raw.githubusercontent.com/${REPO}/main/fonts/Inter-Bold.otf`]) {   // the site's own copy first
+    try { const f = new FontFace('HookInter', `url(${u})`, { weight: '700' }); await f.load(); document.fonts.add(f); HOOKFONT = 'HookInter'; return HOOKFONT; } catch (e) { /* try the next */ }
+  }
+  HOOKFONT = 'Inter, -apple-system, "Helvetica Neue", Arial, sans-serif';
   return HOOKFONT;
 }
 async function hookCanvas(text, style = 'white', scale = 1) {
@@ -1701,7 +1735,8 @@ function clipCard(r, st) {
   const pl = el('button', 'play'); pl.setAttribute('aria-label', 'Play'); pl.append(el('i', null, '▶'));
   const tr = trimOf(r);
   pl.onclick = () => { const vd = el('video'); vd.controls = true; vd.playsInline = true; vd.setAttribute('playsinline', ''); vd.autoplay = true; vb.append(vd);
-    if (!(tr && trimPlay(r, tr, vd, vb))) { vd.src = U(vidOf(r)); withPreview(r, vd, vb); }
+    if (localOf(r)) vd.src = localOf(r).url;   // the video your phone just made from your edit
+    else if (!(tr && trimPlay(r, tr, vd, vb))) { vd.src = U(vidOf(r)); withPreview(r, vd, vb); }
     pl.remove(); vd.play().catch(() => {}); };
   vb.append(pl); c.append(vb);
   const b = el('div', 'cbody');
@@ -1755,7 +1790,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=3');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1780,7 +1815,8 @@ async function saveVideo(r, btn, which) {
   const t0 = Date.now(); let blob = null, name = `${(r.streamer || 'clip').replace(/\W/g, '') || 'clip'}-${r.id.slice(0, 10)}${clean ? '-nocaption' : ''}`;
   const e = EDITS[r.id]; const edited = !clean && e && e.at > (r.rendered || 0);
   try {
-    if (edited && e.video && ghKey()) {   // your edit is already made on GitHub: download it from there right away
+    if (!clean && localOf(r)) blob = localOf(r).blob;   // the video your phone just made from your edit: instant
+    if (!blob && edited && e.video && ghKey()) {   // your edit is already made on GitHub: download it from there right away
       btn.textContent = 'Getting your edited video…';
       const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${e.video}?ref=edits&t=${Date.now()}`, { headers: { Authorization: `Bearer ${ghKey()}`, Accept: 'application/vnd.github.raw+json' } });
       if (res.ok) blob = await res.blob();
@@ -1902,6 +1938,86 @@ function openHookEdit(r) {
 }
 
 // ---------------------------------------------------------------- EDITOR (drag the webcam, move the caption, frame the gameplay)
+// ---------------------------------------------------------------- LIVE editing on your phone (Nov 25)
+// Like CapCut / TikTok: the clip's full-quality footage plays under your edit while you change it, and Save makes
+// the finished video ON YOUR PHONE in seconds (WebCodecs). GitHub still makes the posting copy in the background.
+const LOCALV = {};   // clip id -> { url, blob, at } : the video your phone made from your last edit (this visit)
+function localOf(r) { const v = LOCALV[r.id]; if (!v || !v.url) return null; if ((r.rendered || 0) * 1000 > v.at + 60000) return null; return v; }
+function edSrc(r) {   // the footage the editor plays: full quality when the clip has it, else the small Trim preview
+  if (r.ed_src && r.ed) return { src: PAGES + r.ed_src, t0: +r.ed.t0, t1: +r.ed.t1, full: true };
+  if (r.wide_src && r.wide) return { src: PAGES + r.wide_src, t0: +r.wide.t0, t1: +r.wide.t1, full: false };
+  return null;
+}
+function baseCutOf(r) {   // the clip's current start / end on its footage
+  const up = r.source === 'upload'; const mom = r.moment || {};
+  return (r.span || (up && mom.end != null ? [mom.start, mom.end] : (r.trim || [0, r.seconds || 20]))).map(Number);
+}
+const SCR = document.createElement('canvas'); SCR.width = 48; SCR.height = 85;
+function softBg(g, src, sx, sy, sw, sh, cw, ch, dim) {   // blurred, darker background: works on every phone (no canvas filter needed)
+  const t = 9 / 16; if (sw / sh > t) { const nw = sh * t; sx += (sw - nw) / 2; sw = nw; } else { const nh = sw / t; sy += (sh - nh) / 2; sh = nh; }
+  const s = SCR.getContext('2d'); s.imageSmoothingEnabled = true; s.drawImage(src, sx, sy, sw, sh, 0, 0, SCR.width, SCR.height);
+  g.save(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(SCR, 0, 0, SCR.width, SCR.height, 0, 0, cw, ch);
+  if (dim) { g.fillStyle = `rgba(0,0,0,${dim})`; g.fillRect(0, 0, cw, ch); } g.restore();
+}
+function reactGeom(W, H, cam, view) {   // same numbers as pipeline.react_geometry (1080x1920 units)
+  const [vx, vy, vw, vh] = (view || '0,0,1,1').split(',').map(Number);
+  const [, , w, h] = cam || [0, 0, 0.3, 0.3]; const pw = Math.max(2, W * w), ph = Math.max(2, H * h);
+  const avail = 1920 - 400 - 24 - 160; const chFull = 1080 * (H * vh) / (W * vw); const fhCap = Math.min(1040 * ph / pw, ph * 2.6);
+  const c_h = Math.min(chFull, Math.max(avail - fhCap, 0.40 * avail)); const f_h = Math.min(fhCap, avail - c_h);
+  const c_w = Math.min(1080, c_h * (W * vw) / (H * vh)), f_w = Math.min(1040, f_h * pw / ph);
+  return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 400 + c_h + 24, fw: f_w, fh: f_h };
+}
+function drawLayout(g, src, W, H, S, cw, ch, view) {   // your layout from one frame of footage, on a cw x ch (9:16) canvas
+  g.fillStyle = '#000'; g.fillRect(0, 0, cw, ch);
+  const top = S.top_h || TOP; const tp = top / 1920 * ch; const k = cw / 1080;
+  if (S.mode === 'split') {
+    if (S.cam) { const [x, y, w, h] = S.cam; const sw = w * W, sh = Math.min(h * H, sw / (1080 / top)); g.drawImage(src, x * W, y * H, sw, sh, 0, 0, cw, tp); }
+    const z = S.zoom || 1, pan = S.pan || 0; const sw = W / z, sh = H / z, sx = (W - sw) / 2 * (1 + pan), sy = (H - sh) / 2;
+    const scale = (ch - tp) / sh; const vis = Math.min(sw, cw / scale); const vx = sx + (sw - vis) / 2 * (1 + pan);
+    g.drawImage(src, Math.max(0, vx), sy, vis, sh, 0, tp, cw, ch - tp);
+  } else if (S.mode === 'react') {
+    const gg = reactGeom(W, H, S.cam, view);
+    softBg(g, src, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, cw, ch, 0.3);
+    g.drawImage(src, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, (cw - gg.cw * k) / 2, 400 * k, gg.cw * k, gg.ch * k);
+    if (S.cam) { const [x, y, w, h] = S.cam; g.drawImage(src, x * W, y * H, w * W, h * H, (cw - gg.fw * k) / 2, gg.cb * k, gg.fw * k, gg.fh * k); }
+  } else if (S.mode === 'irl') {
+    const h = H / (S.zoom || 1), w = h * 9 / 16; const x = Math.min(Math.max(W * (S.irl_x ?? 0.5) - w / 2, 0), W - w);
+    g.drawImage(src, x, (H - h) / 2, w, h, 0, 0, cw, ch);
+  } else {
+    softBg(g, src, 0, 0, W, H, cw, ch, 0.12);
+    const fh = H * cw / W; g.drawImage(src, 0, 0, W, H, 0, (ch - fh) / 2, cw, fh);
+  }
+}
+async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
+  const mod = await import(PAGES + 'vendor/render.mjs?v=3');
+  if (!mod.supported()) throw new Error('this browser can’t make videos');
+  const lay = S.mode === 'irl' ? `irl:${(S.irl_x ?? 0.5).toFixed(3)}` : S.mode;
+  const r2 = { ...r, layout_used: lay, layout: lay, user_layout: { ...(r.user_layout || {}), top_h: S.top_h } };
+  const text = (S.hook || '').trim();
+  const hk = text ? await hookCanvas(text, S.hook_style || 'white', S.hook_scale || 1) : null;
+  const top = hk ? Math.max(150, Math.min(1920 - hk.height - 300, hookTop(r2, hk.height, S.hook_y))) : 0;
+  const cut = (S.span || baseCutOf(r)).map(Number);
+  const view = (r.layout_used || r.layout) === 'react' ? r.react_view : null;
+  return mod.phoneRender({ src: ED.src, a: Math.max(0, cut[0] - ED.t0), b: cut[1] - ED.t0, hook: hk, hookY: top,
+    ctaY: hk ? ctaCenter(r2, top, hk.height) : 900, pbar: (r.style || {}).pbar === 'on', onPct,
+    compose: (g, frame, W, H) => drawLayout(g, frame, W, H, S, 1080, 1920, view) });
+}
+async function localMake(r, S, ED) {
+  const id = r.id; JOBS[id] = { kind: 'phone', at: Date.now(), pct: 1, label: 'Making it on your phone…' }; saveJobs(); lastSig = ''; render(); pollJobs();
+  const t0 = Date.now();
+  try {
+    const blob = await phoneEdit(r, S, ED, (p) => { if (JOBS[id]) { JOBS[id].pct = Math.max(1, p * 100); JOBS[id].label = 'Making it on your phone…'; paintJobs(); } });
+    const old = LOCALV[id]; if (old && old.url) URL.revokeObjectURL(old.url);
+    LOCALV[id] = { url: URL.createObjectURL(blob), blob, at: Date.now() };
+    JOBS[id] = { kind: 'phone', at: t0, pct: 100, done: true, end: Date.now(), label: `Done ✓ — made on your phone in ${Math.max(1, Math.round((Date.now() - t0) / 1000))}s` };
+    saveJobs(); toast('Your edit is ready ✓'); haptic(); lastSig = ''; render();
+    return true;
+  } catch (e) {
+    console.warn('phone edit:', e);
+    JOBS[id] = { kind: 'remake', at: t0, pct: 5, label: 'Being made on GitHub (about 3 min)' }; saveJobs(); pollJobs();
+    return false;
+  }
+}
 function openEditor(r) {
   if (!r.src) { sheet('Edit', [el('div', 'note warn', 'This clip was made before the editor existed. Its still frame appears after its next re-make (a few minutes) — try again soon.')]); return; }
   const ul = r.user_layout || {}; const used = r.layout_used || 'split';
@@ -1921,16 +2037,43 @@ function openEditor(r) {
   const sv = el('button', 'edx-save', 'Save');
   top.append(xb, ub, rb, el('span', 'edx-sp'), sv);
   const stage = el('div', 'edx-stage'); const cv = el('canvas'); stage.append(cv);
+  const stageWrap = el('div', 'edx-sw');
+  const pbar = el('div', 'edx-pbar'); const pbtn = el('button', 'edx-pp', '\u25b6'); const scrub = el('div', 'edx-scrub'); const sfill = el('i'); scrub.append(sfill);
+  const tlab = el('span', 'edx-tl', ''); pbar.append(pbtn, scrub, tlab); pbtn.setAttribute('aria-label', 'Play / pause');
   const panel = el('div', 'edx-panel'); const tools = el('div', 'edx-tools');
-  ov.append(top, stage, panel, tools);
+  stageWrap.append(stage, pbar); ov.append(top, stageWrap, panel, tools);
   const updBar = () => { ub.disabled = hi <= 0; rb.disabled = hi >= hist.length - 1; };
   const restore = () => { S = JSON.parse(hist[hi]); ls.set(draftKey, { S, at: Date.now() }); updBar(); refreshPanel(); draw(); };
   ub.onclick = () => { if (hi > 0) { hi--; restore(); haptic(); } };
   rb.onclick = () => { if (hi < hist.length - 1) { hi++; restore(); haptic(); } };
-  const close = () => { ov.classList.add('out'); document.body.style.overflow = ''; setTimeout(() => ov.remove(), 250); };
+  const close = () => { ov.classList.add('out'); document.body.style.overflow = ''; if (mv) { mv.pause(); mv.removeAttribute('src'); try { mv.load(); } catch (x) { /* */ } } setTimeout(() => ov.remove(), 250); };
   xb.onclick = () => { if (hist.length > 1) toast('Draft kept — open Edit to continue'); close(); };
   // ---- canvas size (sharp on retina)
   const img = new Image(); img.crossOrigin = 'anonymous'; img.src = PAGES + r.src;
+  // ---- LIVE: the footage plays under your edit (full quality when the clip has it) - every change shows as it plays
+  const ED = edSrc(r); const baseCut = baseCutOf(r);
+  const mv = ED ? document.createElement('video') : null;
+  const cutNow = () => (S.span || baseCut).map(Number);
+  const fmtT = (x) => `${Math.floor(Math.max(0, x) / 60)}:${String(Math.floor(Math.max(0, x) % 60)).padStart(2, '0')}`;
+  const updTime = () => { if (!mv) return; const c = cutNow(); const cur = mv.currentTime + ED.t0 - c[0]; const len = Math.max(0.1, c[1] - c[0]);
+    sfill.style.width = Math.min(100, Math.max(0, cur / len * 100)) + '%'; tlab.textContent = `${fmtT(cur)} / ${fmtT(len / (S.speed || 1))}`; };
+  const seekCut = (f) => { if (!mv) return; const c = cutNow(); try { mv.currentTime = Math.max(0, c[0] - ED.t0 + f * (c[1] - c[0])); } catch (x) { /* not loaded yet */ } };
+  if (mv) {
+    mv.muted = true; mv.playsInline = true; mv.setAttribute('playsinline', ''); mv.preload = 'auto'; mv.crossOrigin = 'anonymous'; mv.src = ED.src;
+    let first = true;
+    mv.addEventListener('loadeddata', () => { if (first) { first = false; seekCut(0); } draw(); updTime(); });
+    mv.addEventListener('seeked', () => { draw(); updTime(); });
+    const loop = () => { if (!ov.isConnected || mv.paused) return;
+      const c = cutNow(); if (mv.currentTime >= c[1] - ED.t0 - 0.02 || mv.currentTime < c[0] - ED.t0 - 0.3) seekCut(0);
+      draw(); updTime(); if (mv.requestVideoFrameCallback) mv.requestVideoFrameCallback(loop); else requestAnimationFrame(loop); };
+    mv.addEventListener('play', () => { pbtn.textContent = '\u275a\u275a'; loop(); });
+    mv.addEventListener('pause', () => { pbtn.textContent = '\u25b6'; });
+    mv.addEventListener('error', () => { pbar.hidden = true; });
+    pbtn.onclick = () => { if (mv.paused) { mv.muted = false; mv.playbackRate = S.speed || 1; const c = cutNow();
+      if (mv.currentTime < c[0] - ED.t0 - 0.05 || mv.currentTime >= c[1] - ED.t0 - 0.05) seekCut(0); const p = mv.play(); if (p && p.catch) p.catch(() => {}); } else mv.pause(); };
+    scrub.addEventListener('pointerdown', (e) => { const rc = scrub.getBoundingClientRect(); seekCut(Math.min(1, Math.max(0, (e.clientX - rc.left) / rc.width))); });
+    try { mv.load(); } catch (x) { /* */ }
+  } else pbar.hidden = true;
   const dpr = Math.min(2, window.devicePixelRatio || 1); let CW = 270, CH = 480;
   function sizeCanvas() {
     const h = Math.max(300, Math.min(stage.clientHeight - 12, (stage.clientWidth - 24) * 16 / 9)); CH = h; CW = h * 9 / 16;
@@ -1978,26 +2121,10 @@ function openEditor(r) {
     return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 400 + c_h + 24, fw: f_w, fh: f_h }; }
   let capBox = null;
   function draw() {
-    if (!img.complete || !img.naturalWidth || !CW) return;
-    const W = img.naturalWidth, H = img.naturalHeight; const cw = CW * dpr, ch = CH * dpr, tp = topFrac() * ch;
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cw, ch);
-    if (S.mode === 'split') {
-      if (S.cam) { const [x, y, w, h] = S.cam; const sw = w * W, sh = Math.min(h * H, sw / A()); ctx.drawImage(img, x * W, y * H, sw, sh, 0, 0, cw, tp); }
-      const sw = W / S.zoom, sh = H / S.zoom, sx = (W - sw) / 2 * (1 + S.pan), sy = (H - sh) / 2;
-      const scale = (ch - tp) / sh; const vis = Math.min(sw, cw / scale); const vx = sx + (sw - vis) / 2 * (1 + S.pan);
-      ctx.drawImage(img, Math.max(0, vx), sy, vis, sh, 0, tp, cw, ch - tp);
-    } else if (S.mode === 'react') {
-      const k = cw / 1080; const gg = reactGeo(W, H);
-      ctx.filter = `blur(${12 * dpr}px) brightness(0.78)`; const s0 = ch / H; ctx.drawImage(img, (cw - W * s0) / 2, 0, W * s0, ch); ctx.filter = 'none';
-      ctx.drawImage(img, gg.vx * W, gg.vy * H, gg.vw * W, gg.vh * H, (cw - gg.cw * k) / 2, 400 * k, gg.cw * k, gg.ch * k);
-      if (S.cam) { const [x, y, w, h] = S.cam; ctx.drawImage(img, x * W, y * H, w * W, h * H, (cw - gg.fw * k) / 2, gg.cb * k, gg.fw * k, gg.fh * k); }
-    } else if (S.mode === 'irl') {
-      const h = H / S.zoom, w = h * 9 / 16; const x = Math.min(Math.max(W * S.irl_x - w / 2, 0), W - w);
-      ctx.drawImage(img, x, (H - h) / 2, w, h, 0, 0, cw, ch);
-    } else {
-      ctx.filter = `blur(${12 * dpr}px)`; const s = ch / H; ctx.drawImage(img, (cw - W * s) / 2, 0, W * s, ch); ctx.filter = 'none';
-      const fh = H * cw / W; ctx.drawImage(img, 0, (ch - fh) / 2, cw, fh);
-    }
+    const media = (mv && mv.readyState >= 2 && mv.videoWidth) ? mv : (img.complete && img.naturalWidth ? img : null);
+    if (!media || !CW) return;
+    const W = media.videoWidth || media.naturalWidth, H = media.videoHeight || media.naturalHeight; const cw = CW * dpr, ch = CH * dpr, tp = topFrac() * ch;
+    drawLayout(ctx, media, W, H, S, cw, ch, used === 'react' ? r.react_view : null);
     // caption (same look as the video)
     const fs = 50 / 1080 * cw * S.hook_scale; const lines = hookLines(fs); if (!lines.length) { capBox = null; return; }
     ctx.font = `800 ${fs}px -apple-system,BlinkMacSystemFont,sans-serif`;
@@ -2051,7 +2178,8 @@ function openEditor(r) {
   function refreshPanel() {
     for (const k in tbtn) tbtn[k].classList.toggle('on', k === tool);
     panel.replaceChildren(); if (vid) { vid.pause(); vid = null; }
-    stage.querySelectorAll('video').forEach((v) => v.remove()); cv.hidden = false;
+    stage.querySelectorAll('video').forEach((v) => v.remove()); cv.hidden = false; pbar.hidden = !mv || tool === 'trim';
+    if (mv && tool === 'trim') mv.pause();
     if (tool === 'text') {
       const t = el('textarea'); t.value = S.hook; t.rows = 2; t.maxLength = 140; t.placeholder = 'Text on the video';
       t.oninput = () => { S.hook = t.value; draw(); };
@@ -2131,7 +2259,7 @@ function openEditor(r) {
         row('Start', 0), row('End', 1), lbl, note, play, back); set();
       seekTo(toV(cur()[0]));
     } else if (tool === 'speed') {
-      panel.append(chips([[1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']], S.speed, (v) => { S.speed = v; }), el('div', 'mut', 'Speeds up the video and the voice together. 1.25× keeps viewers watching without sounding off.'));
+      panel.append(chips([[1, '1×'], [1.25, '1.25×'], [1.5, '1.5×'], [2, '2×']], S.speed, (v) => { S.speed = v; if (mv) mv.playbackRate = v; updTime(); }), el('div', 'mut', 'Speeds up the video and the voice together. 1.25× keeps viewers watching without sounding off.'));
     } else if (tool === 'reset') {
       const b = el('button', 'big stop', 'Go back to the automatic edit');
       b.onclick = async () => { if (await ghTap('layout: ' + r.id, '{}')) { ls.set(draftKey, null); toast('Back to automatic — re-making'); close(); } };
@@ -2170,8 +2298,12 @@ function openEditor(r) {
       else { sv.disabled = false; sv.textContent = 'Save'; }
       return;
     }
+    const canPhone = !!(ED && ED.full && window.VideoEncoder && window.VideoDecoder && !(S.speed > 1.01));
+    const Sx = JSON.parse(JSON.stringify(S));
     if (await ghTap('layout: ' + r.id, JSON.stringify(out))) {
-      ls.set(draftKey, null); startJob(r.id, 'remake');
+      ls.set(draftKey, null);
+      if (canPhone) { delete TRIMS[r.id]; ls.set('gc-trims', TRIMS); close(); localMake(r, Sx, ED); return; }
+      startJob(r.id, 'remake');
       if (out.span) {   // show the new cut on the clip right away
         TRIMS[r.id] = { at: Date.now(), span: out.span, base: r.span ? r.span.map(Number) : null, speed: out.speed || 0,
           hook: out.hook || null, hook_style: out.hook_style, hook_scale: out.hook_scale, hook_y: out.hook_y };

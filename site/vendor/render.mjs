@@ -57,8 +57,10 @@ function drawCta(g, t, cy) {
  * src: URL of the no-caption copy.  a, b: the part to keep (seconds in that video).
  * hook: canvas/image of the hook box (1080-wide units) or null; hookY: its top (px).  ctaY: centre of the pop-up.
  * pbar: draw the progress bar.  onPct(0..1).  Returns a Blob (video/mp4).
+ * compose(g, frame, w, h): draw the LAYOUT yourself from a source frame (the live editor's full footage: webcam +
+ * game, reaction, full screen...) onto the 1080x1920 canvas - without it the frame is drawn full size (no-caption copy).
  */
-export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY = 0, ctaY = 800, pbar = false, onPct = () => {} }) {
+export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY = 0, ctaY = 800, pbar = false, onPct = () => {}, compose = null }) {
   if (!supported()) throw new Error('this phone can\'t make videos in the browser');
   await loadScript(new URL('./mp4box.all.js', import.meta.url).href);
   const buf = await (await fetch(src)).arrayBuffer();
@@ -121,7 +123,10 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
       const t = frame.timestamp / 1e6; const frameDur = frame.duration;
       if (t < a - 0.001 || t >= b || failed) { frame.close(); return; }
       const rt = t - a;
-      g.drawImage(frame, 0, 0, W, H);
+      try {
+        if (compose) compose(g, frame, frame.displayWidth || frame.codedWidth, frame.displayHeight || frame.codedHeight);
+        else g.drawImage(frame, 0, 0, W, H);
+      } catch (e) { failed = e; }
       frame.close();
       if (hook) g.drawImage(hook, (W - hook.width) / 2, hookY);
       drawCta(g, rt, ctaY);

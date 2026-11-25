@@ -1769,6 +1769,52 @@ def make_wide(cid: str, c: dict) -> bool:
     return True
 
 
+ED_REL = "site-big"   # the live editor's full-quality footage: a release file, served by the site as v/ed/<name>
+
+
+def make_ed(cid: str, c: dict) -> bool:
+    """Full-quality copy of ALL this clip's footage for the Studio's live editor (Nov 25): the editor plays it under
+    your edit like CapCut / TikTok, and your phone makes the finished video from it in seconds. Source size and frame
+    rate (up to 1920 wide, 60 fps), a keyframe every half second so jumps are instant. It lives on the 'site-big'
+    release and the site serves it at v/ed/<cid>_<key>.mp4 (the Cloudflare function passes it through)."""
+    raw = RAW / f"{cid}.mp4"
+    if not GH_TOKEN or not raw.exists() or c.get("asis"):
+        return False
+    up = c.get("source") == "upload"
+    mom = c.get("moment") or {}
+    win0 = float((c.get("raw_win") or [mom.get("start", 0)])[0]) if up else 0.0
+    rs = duration_of(raw)
+    key = hashlib.sha1(f"e1-{win0:.2f}-{rs:.1f}-{raw.stat().st_size}".encode()).hexdigest()[:8]
+    if (c.get("ed") or {}).get("k") == key:
+        return False
+    fps = 60 if src_fps(raw) >= 50 else 30
+    safe = re.sub(r"[^A-Za-z0-9_-]", "_", cid)
+    out = RAW.parent / "_ed" / f"{safe}_{key}.mp4"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    ff("-i", str(raw), "-vf", "scale='min(1920,iw)':-2:flags=lanczos,format=yuv420p", "-r", str(fps),
+       "-c:v", "libx264", "-preset", "veryfast", "-crf", "19", "-maxrate", "14M", "-bufsize", "28M", "-profile:v", "high",
+       "-g", str(fps // 2), "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2", "-movflags", "+faststart", str(out))
+    import requests
+    code, rel = _gh("GET", f"/repos/{REPO}/releases/tags/{ED_REL}")
+    if code != 200:
+        code, rel = _gh("POST", f"/repos/{REPO}/releases", {"tag_name": ED_REL, "name": "Site files over 25 MB",
+                                                             "body": "Served by the site. Managed automatically.",
+                                                             "prerelease": True, "target_commitish": "main"})
+    name = f"v__ed__{safe}_{key}.mp4"
+    for old in [x for x in (rel.get("assets") or []) if x["name"].startswith(f"v__ed__{safe}_")]:
+        _gh("DELETE", f"/repos/{REPO}/releases/assets/{old['id']}")
+    with open(out, "rb") as fh:
+        r = requests.post(f"https://uploads.github.com/repos/{REPO}/releases/{rel['id']}/assets?name={name}", data=fh,
+                          timeout=600, headers={"Authorization": f"Bearer {GH_TOKEN}", "Content-Type": "video/mp4",
+                                                "Accept": "application/vnd.github+json"})
+    out.unlink(missing_ok=True)
+    if r.status_code not in (200, 201):
+        log(f"editor footage for {cid} not saved: HTTP {r.status_code}")
+        return False
+    c["ed"] = {"k": key, "t0": round(win0, 2), "t1": round(win0 + rs, 2), "path": f"v/ed/{safe}_{key}.mp4"}
+    return True
+
+
 def view_check(video: Path, lay: str, info: dict | None) -> tuple[bool, str]:
     """Would this look right to someone scrolling TikTok / Shorts? Checked on the finished video before it can go out:
     - the hook is fully visible (not under the app's top bar / caption, not a wall of text)
@@ -2720,6 +2766,7 @@ def main() -> None:
             r["wide_src"] = (f"v/{r['id']}_wide.mp4?k={(r.get('wide') or {}).get('k', '')}"
                              if (VID / f"{r['id']}_wide.mp4").exists() and r.get("wide") else "")
             r["vposter"] = (f"v/{r['id']}_p.jpg?r={r.get('rendered', '')}" if (VID / f"{r['id']}_p.jpg").exists() else "")
+            r["ed_src"] = (r.get("ed") or {}).get("path", "")
             r["clipped"] = r.get("created")
             e = _EDITS.get(r["id"])   # newest quick text edit (still newer than the last full re-make)
             if e and e.get("video") and e.get("at", 0) > (r.get("rendered") or 0) and (VID / "e" / Path(e["video"]).name).exists():
@@ -3887,6 +3934,16 @@ def main() -> None:
                 log(f"trim preview skipped {cid}: {e}")
     if made_w:
         log(f"trim previews: made {made_w}")
+    made_e, t_e = 0, time.time()   # the live editor's full-quality footage: a few per run (your clips first)
+    for cid, c in sorted(clips.items(), key=lambda kv: (kv[1].get("source") != "upload", -(kv[1].get("viral") or 0))):
+        if c["status"] != "new" or made_e >= int(os.environ.get("ED_PER_RUN", "8")) or time.time() - t_e > 300:
+            continue
+        try:
+            made_e += make_ed(cid, c)
+        except Exception as e:  # noqa: BLE001
+            log(f"editor footage skipped {cid}: {str(e)[:120]}")
+    if made_e:
+        log(f"live editor footage: made {made_e}")
     mb = site_mb()
     if mb > SITE_MAX_MB:   # very first: Trim previews of the weaker half (Trim then uses the clip itself) - never cost a clip
         ranked = sorted([(clip_quality(c), cid) for cid, c in clips.items() if c["status"] == "new" and c.get("wide")])

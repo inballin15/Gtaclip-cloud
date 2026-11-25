@@ -40,7 +40,7 @@ def main() -> None:
     for d in ("raw", "site/v", "st", "posted"):
         (W / d).mkdir(parents=True, exist_ok=True)
     os.environ.update(RAW_DIR=str(W / "raw"), SITE_OUT=str(W / "site"), STATE_DIR=str(W / "st"),
-                      POSTED_DIR=str(W / "posted"), FETCH="0", X264_PRESET="veryfast",
+                      POSTED_DIR=str(W / "posted"), FETCH="0", X264_PRESET="veryfast", ED_PER_RUN="0",
                       MINE_MODE="1" if cid.startswith("up") else "0")
     os.environ.pop("GEMINI_API_KEY", None)   # no AI calls here: the clip was checked already
     if Path("/tmp/control.json").exists():   # your settings (follow line voice)
