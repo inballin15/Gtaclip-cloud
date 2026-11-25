@@ -3215,7 +3215,10 @@ def main() -> None:
     # your clip's new start / end goes past what was cut from your video: cut it again from the video, wider
     for cid, c in clips.items():
         sp = (c.get("user_layout") or {}).get("span")
-        win = c.get("raw_win") or ([c["moment"]["start"], c["moment"]["end"]] if c.get("moment") else None)
+        if c.get("source") != "upload" or not sp:
+            continue
+        mo = c.get("moment") or {}
+        win = c.get("raw_win") or ([mo["start"], mo["end"]] if "start" in mo and "end" in mo else None)
         if c.get("source") == "upload" and c["status"] == "new" and sp and win \
                 and (sp[0] < float(win[0]) - 0.05 or sp[1] > float(win[1]) + 0.05):
             if c.get("src_s"):
