@@ -1,0 +1,656 @@
+{
+ "clips": {
+  "upmwtgx8fl_1": {
+   "status": "skip",
+   "source": "upload",
+   "streamer": "",
+   "login": "",
+   "tag": "",
+   "campaign": "",
+   "title": "Don’t shoot—call out to the UFO abductee instead. This wild  @ 0:22",
+   "created": "2026-11-23T16:19:32Z",
+   "found": "2026-11-23T16:19:32Z",
+   "twitch": "",
+   "transcript": "Shout at him, and the ship just leaves. Then, he asks you to grab his car, which unlocks the truth is out there achievement. But, here's the twist. You're the one who gets taken next, and the dream you wake up from shows you a door code. Now, head to the airstrip east of the grass rivers, the building with the radio tower, and bring your partner so you both get the stats. Climb a ladder to the roof, drop in through the opening, and punch that code into the locked door. Skip the abduction?",
+   "seconds": 28,
+   "moment": {
+    "start": 22.82,
+    "end": 50.5,
+    "score": 2.83,
+    "reasons": [
+     "action on screen"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "You're the one who gets taken next, and the dream you wake up from",
+   "hook_auto": true,
+   "hook_kind": "transcript",
+   "cam": "0,0,1,1",
+   "cam_q": "none",
+   "layout": "fill",
+   "trim": [
+    11.0,
+    27.0
+   ],
+   "cam_used": "0,0,1,1",
+   "layout_used": "full",
+   "final_v": "ffc7a87b07",
+   "clean_v": "dc81e3dae3",
+   "rendered": 1795451212,
+   "skip_reason": "removed by Nicholas"
+  },
+  "upmwtgx8fl_2": {
+   "status": "skip",
+   "source": "upload",
+   "streamer": "",
+   "login": "",
+   "tag": "",
+   "campaign": "",
+   "title": "Don’t shoot—call out to the UFO abductee instead. This wild  @ 1:03",
+   "created": "2026-11-23T16:19:32Z",
+   "found": "2026-11-23T16:19:32Z",
+   "twitch": "",
+   "transcript": "Then take the right door, use the bottle on the little chamber, and yes, that's an actual alien. Except now, the gas kicks in, so follow your partner's light and run for the elevator before time runs out. Make it out, and you get a permanent boost to your stamina, focus, and health.",
+   "seconds": 17,
+   "moment": {
+    "start": 63.84,
+    "end": 81.0,
+    "score": 1.51,
+    "reasons": [
+     "hype words"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "Except now, the gas kicks in, so follow your partner's light and run",
+   "hook_auto": true,
+   "hook_kind": "transcript",
+   "cam": "0,0,1,1",
+   "cam_q": "none",
+   "layout": "fill",
+   "trim": [
+    2.0,
+    17.0
+   ],
+   "pic_ok": false,
+   "final_v": "b1d33f5a46",
+   "clean_v": "dc81e3dae3",
+   "rendered": 1795451083,
+   "skip_reason": "removed by Nicholas"
+  },
+  "upmwtgx8fl2_1": {
+   "status": "skip",
+   "source": "upload",
+   "streamer": "",
+   "login": "",
+   "tag": "",
+   "campaign": "",
+   "title": "Don’t shoot—call out to the UFO abductee instead. This wild  · Part 1",
+   "created": "2026-11-23T17:01:55Z",
+   "found": "2026-11-23T17:01:55Z",
+   "twitch": "",
+   "transcript": "Never shoot the guy getting abducted by a UFO in GTA 6. Call out to him instead, because this little side quest ends with every stat you have buffed for good. Okay, so after Chapter 1, go east of Port Gellhorn at 2 or 3 in the morning, and you'll find an abandoned car with its lights flickering. Walk into the forest behind it, and there he is, floating up into an alien mothership. Shout at him, and the ship just leaves. Then he asks you to grab his...",
+   "seconds": 26,
+   "moment": {
+    "start": 0.0,
+    "end": 26.5,
+    "score": 1.0,
+    "reasons": [
+     "part 1 of 3"
+    ]
+   },
+   "cam_v": 6,
+   "part": 1,
+   "parts": 3,
+   "hook": "",
+   "hook_kind": "user",
+   "cam": "0,0,1,1",
+   "cam_q": "none",
+   "layout": "fill",
+   "pic_ok": true,
+   "hook_variant": "lowcaps",
+   "cam_used": "0,0,1,1",
+   "layout_used": "fill",
+   "final_v": "5355866bac",
+   "clean_v": "b2c84db42c",
+   "rendered": 1795453763,
+   "hook_by_user": true,
+   "user_layout": {
+    "hook_y": 0.814,
+    "hook_scale": 1.49
+   },
+   "quick_at": 1795454449,
+   "skip_reason": "removed by Nicholas",
+   "no_hook": true
+  },
+  "upmwtgx8fl2_2": {
+   "status": "skip",
+   "source": "upload",
+   "streamer": "",
+   "login": "",
+   "tag": "",
+   "campaign": "",
+   "title": "Don’t shoot—call out to the UFO abductee instead. This wild  · Part 2",
+   "created": "2026-11-23T17:01:55Z",
+   "found": "2026-11-23T17:01:55Z",
+   "twitch": "",
+   "transcript": "car, which unlocks the truth is out there achievement. But here's the twist. You're the one who gets taken next, and the dream you wake up from shows you a door code. Now, head to the airstrip east of the grass rivers, the building with the radio tower, and bring your partner so you both get the stats. Climb a ladder to the roof, drop in through the opening, and punch that code into the locked door. Skip the abduction? The code always uses 1, 2, 3, and 4, so just try every combination.",
+   "seconds": 27,
+   "moment": {
+    "start": 26.5,
+    "end": 53.8,
+    "score": 1.0,
+    "reasons": [
+     "part 2 of 3"
+    ]
+   },
+   "cam_v": 6,
+   "part": 2,
+   "parts": 3,
+   "hook": "",
+   "hook_kind": "user",
+   "cam": "0,0,1,1",
+   "cam_q": "none",
+   "layout": "fill",
+   "cam_used": "0,0,1,1",
+   "layout_used": "fill",
+   "final_v": "326770ded4",
+   "clean_v": "b2c84db42c",
+   "rendered": 1795454174,
+   "skip_reason": "removed by Nicholas",
+   "hook_by_user": true,
+   "no_hook": true
+  },
+  "upmwtgx8fl2_3": {
+   "status": "skip",
+   "source": "upload",
+   "streamer": "",
+   "login": "",
+   "tag": "",
+   "campaign": "",
+   "title": "Don’t shoot—call out to the UFO abductee instead. This wild  · Part 3",
+   "created": "2026-11-23T17:01:55Z",
+   "found": "2026-11-23T17:01:55Z",
+   "twitch": "",
+   "transcript": "In the control room, match the knobs until the console glows blue and three doors open up. Go left first, all the way to the back and grab the milk bottle. Don't ask. Then, take the right door, use the bottle on the little chamber, and yes, that's an actual alien. Except now, the gas kicks in, so follow your partner's light and run for the elevator before time runs out. Make it out and you get a permanent boost to your stamina, focus, and health.",
+   "seconds": 27,
+   "moment": {
+    "start": 53.8,
+    "end": 81.02,
+    "score": 1.0,
+    "reasons": [
+     "part 3 of 3"
+    ]
+   },
+   "cam_v": 6,
+   "part": 3,
+   "parts": 3,
+   "hook": "",
+   "hook_kind": "user",
+   "cam": "0,0,1,1",
+   "cam_q": "none",
+   "layout": "fill",
+   "cam_used": "0,0,1,1",
+   "layout_used": "fill",
+   "final_v": "08fd224b0d",
+   "clean_v": "b2c84db42c",
+   "rendered": 1795454239,
+   "skip_reason": "removed by Nicholas",
+   "hook_by_user": true,
+   "no_hook": true
+  },
+  "upmwtgx8fl3_1": {
+   "status": "expired",
+   "source": "upload",
+   "streamer": "",
+   "login": "",
+   "tag": "",
+   "campaign": "",
+   "title": "Don’t shoot—call out to the UFO abductee instead. This wild ",
+   "created": "2026-11-23T17:46:45Z",
+   "found": "2026-11-23T17:46:45Z",
+   "twitch": "",
+   "transcript": "",
+   "seconds": 81,
+   "moment": {
+    "start": 0.0,
+    "end": 81.02,
+    "score": 1.0,
+    "reasons": [
+     "full video"
+    ]
+   },
+   "cam_v": 6,
+   "full": true,
+   "hook": "",
+   "no_hook": true,
+   "hook_kind": "user",
+   "hook_by_user": true,
+   "cam": "0,0,1,1",
+   "cam_q": "none",
+   "layout": "fill",
+   "cam_used": "0,0,1,1",
+   "layout_used": "fill",
+   "final_v": "f7bfa7cde2",
+   "rendered": 1795456838,
+   "quick_at": 1795458410,
+   "viral": 89,
+   "viral_why": "UFO content is high-interest clear story detail with the abductee",
+   "viral_verdict": "post",
+   "final_s": 81,
+   "hd_sfx": "_w_n",
+   "pic_ok": false,
+   "view_ok": true,
+   "view_why": ""
+  },
+  "upmwuw3jf8_1": {
+   "status": "new",
+   "source": "upload",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "src_link": "",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "ScreenRecording_11-24-2026 08-57-34_1 @ 6:21",
+   "created": "2026-11-24T16:20:20Z",
+   "found": "2026-11-24T16:20:20Z",
+   "twitch": "",
+   "transcript": "Is that not insane? Nika 30 would be the most entertaining GTA 6 streamer and trust me what I say this But this is just the tip of the iceberg. I haven't even showed you the crazy stuff And like I think the best part about all this is that there's literally not a single clip from a cutscene Like if you scroll Twitter or tech talk within five swipes you're gonna see a Nika 30 clip and not a single one is of a single cutscene",
+   "seconds": 27,
+   "moment": {
+    "start": 380.74,
+    "end": 411.9,
+    "score": 3.97,
+    "reasons": [
+     "hype words",
+     "action on screen",
+     "fast talking",
+     "strong opening line"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "Jynxzi says Nick Eh 30 is the FUNNIEST GTA 6 streamer",
+   "hook_kind": "user",
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "len": "s22",
+    "hooklen": "story",
+    "start": "build",
+    "punch": "on"
+   },
+   "cam": "0.0000,0.5328,0.2952,0.4672",
+   "cam_q": "owner",
+   "layout": "react",
+   "cam_used": "0.0000,0.5328,0.2952,0.4672",
+   "layout_used": "react",
+   "final_s": 31,
+   "rendered": 1795637147,
+   "src_commit": "345a6dffb2d7184526d43675603438b56e426e95",
+   "bars": [
+    258,
+    0,
+    2348,
+    1320
+   ],
+   "viral": 45,
+   "viral_why": "Commentary on Nick Eh 30 clips rather than direct gameplay action",
+   "viral_verdict": "maybe",
+   "hook_by_user": true,
+   "react": true,
+   "pic_ok": true,
+   "watching": "NickEh30",
+   "react_view": "",
+   "span": [
+    380.74,
+    411.9
+   ],
+   "avail": [
+    360.74,
+    431.89
+   ],
+   "view_ok": true,
+   "view_why": "",
+   "raw_win": [
+    360.74,
+    431.9
+   ],
+   "src_s": 534.0,
+   "wide": {
+    "k": "q2-360.74-71.2-85648892",
+    "t0": 360.74,
+    "t1": 431.89
+   },
+   "raw_asset": {
+    "name": "upmwuw3jf8_1_0d60e0434c.mp4",
+    "key": "0d60e0434c",
+    "size": 85648892
+   },
+   "avail_max": [
+    0.0,
+    534.0
+   ],
+   "ed": {
+    "k": "e1374231",
+    "t0": 360.74,
+    "t1": 431.89,
+    "path": "v/ed/upmwuw3jf8_1_e1374231.mp4"
+   },
+   "final_hash": "0315323517",
+   "final_v": "0315323517",
+   "clean_v": "f698574726"
+  },
+  "upmwuw3jf8_2": {
+   "status": "new",
+   "source": "upload",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "src_link": "",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "ScreenRecording_11-24-2026 08-57-34_1 @ 8:18",
+   "created": "2026-11-24T16:20:20Z",
+   "found": "2026-11-24T16:20:20Z",
+   "twitch": "",
+   "transcript": "It's just his methods are so creative. It's so insane 30 clips make me want to play GTA 6 Like I've been too busy playing world of craft walking simulator getting stupid ass sleeping bags If you know, you know, and I'm on the PVP server cuz I ain't the pussy good morning You're from brothers, but he did ask the funniest ever see bro Nikkei 30 is that it's just a family friendly",
+   "seconds": 22,
+   "moment": {
+    "start": 497.69,
+    "end": 523.41,
+    "score": 3.91,
+    "reasons": [
+     "hype words",
+     "action on screen",
+     "fast talking"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "Jynxzi ROASTED Nick Eh 30 for being too family friendly",
+   "hook_kind": "user",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "len": "s22",
+    "hooklen": "tiny",
+    "start": "build",
+    "punch": "on"
+   },
+   "cam": "0.0000,0.5328,0.2952,0.4672",
+   "cam_q": "owner",
+   "layout": "react",
+   "hook_variant": "formula",
+   "cam_used": "0.0000,0.5328,0.2952,0.4672",
+   "layout_used": "react",
+   "final_s": 26,
+   "rendered": 1795637013,
+   "src_commit": "345a6dffb2d7184526d43675603438b56e426e95",
+   "bars": [
+    258,
+    0,
+    2348,
+    1320
+   ],
+   "viral": 52,
+   "viral_why": "Relatable comparison between World of Warcraft and GTA 6 methods",
+   "viral_verdict": "maybe",
+   "hook_short_tried": true,
+   "hook_by_user": true,
+   "react": true,
+   "pic_ok": true,
+   "watching": "NickEh30",
+   "react_view": "",
+   "span": [
+    497.69,
+    523.41
+   ],
+   "avail": [
+    477.69,
+    534.01
+   ],
+   "view_ok": true,
+   "view_why": "",
+   "raw_win": [
+    477.69,
+    534.0
+   ],
+   "src_s": 534.0,
+   "wide": {
+    "k": "q2-477.69-56.3-83087615",
+    "t0": 477.69,
+    "t1": 534.01
+   },
+   "raw_asset": {
+    "name": "upmwuw3jf8_2_8a160052d1.mp4",
+    "key": "8a160052d1",
+    "size": 83087615
+   },
+   "avail_max": [
+    0.0,
+    534.0
+   ],
+   "ed": {
+    "k": "bb075ffc",
+    "t0": 477.69,
+    "t1": 534.01,
+    "path": "v/ed/upmwuw3jf8_2_bb075ffc.mp4"
+   },
+   "final_hash": "1cd7e630da",
+   "final_v": "1cd7e630da",
+   "clean_v": "f698574726"
+  },
+  "upmwuw3jf8_3": {
+   "status": "new",
+   "source": "upload",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "src_link": "",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "ScreenRecording_11-24-2026 08-57-34_1 @ 0:15",
+   "created": "2026-11-24T16:20:20Z",
+   "found": "2026-11-24T16:20:20Z",
+   "twitch": "",
+   "transcript": "terrifying and potentially in some instances scarring Oh my god What did you just say on my family friendly stream it? What did you just say buddy?",
+   "seconds": 23,
+   "moment": {
+    "start": 14.26,
+    "end": 41.5,
+    "score": 3.74,
+    "reasons": [
+     "big reaction",
+     "hype words",
+     "action on screen"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "Jynxzi FREAKED OUT over Nick Eh 30 audio",
+   "hook_kind": "user",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "len": "s22",
+    "hooklen": "tiny",
+    "start": "build",
+    "punch": "off"
+   },
+   "cam": "0.0000,0.5328,0.2952,0.4672",
+   "cam_q": "owner",
+   "layout": "react",
+   "cam_used": "0.0000,0.5473,0.3078,0.4527",
+   "layout_used": "react",
+   "final_s": 37,
+   "rendered": 1795637063,
+   "src_commit": "345a6dffb2d7184526d43675603438b56e426e95",
+   "bars": [
+    258,
+    0,
+    2348,
+    1320
+   ],
+   "viral": 88,
+   "viral_why": "High energy reaction to a streamer breaking their family friendly brand",
+   "viral_verdict": "post",
+   "hook_short_tried": true,
+   "hook_by_user": true,
+   "react": true,
+   "react_by": "faces",
+   "user_layout": {
+    "mode": "react",
+    "v": 2,
+    "cam": "0.0000,0.5473,0.3078,0.4527",
+    "hook_style": "white",
+    "span": [
+     4.3,
+     41.49
+    ]
+   },
+   "pic_ok": true,
+   "span": [
+    4.3,
+    41.49
+   ],
+   "avail": [
+    0.0,
+    61.5
+   ],
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "9d367dfedd",
+   "raw_win": [
+    0.0,
+    61.5
+   ],
+   "src_s": 534.0,
+   "wide": {
+    "k": "q2-0.00-61.5-72207109",
+    "t0": 0.0,
+    "t1": 61.5
+   },
+   "avail_max": [
+    0.0,
+    534.0
+   ],
+   "raw_asset": {
+    "name": "upmwuw3jf8_3_1a7ef17664.mp4",
+    "key": "1a7ef17664",
+    "size": 72207109
+   },
+   "final_hash": "9d367dfedd",
+   "clean_v": "f698574726",
+   "ed": {
+    "k": "97d54d1f",
+    "t0": 0.0,
+    "t1": 61.5,
+    "path": "v/ed/upmwuw3jf8_3_97d54d1f.mp4"
+   }
+  },
+  "upmwuw3jf8_4": {
+   "status": "used",
+   "source": "upload",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "src_link": "",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "ScreenRecording_11-24-2026 08-57-34_1 @ 1:55",
+   "created": "2026-11-24T16:20:20Z",
+   "found": "2026-11-24T16:20:20Z",
+   "twitch": "",
+   "transcript": "Should I say he was the face of family friendly Twitch streaming? Not anymore from me to help strangers guys You know, you know, I say GTA like make it family friendly if they had an option to disable Gore violence Wearing all that stuff",
+   "seconds": 25,
+   "moment": {
+    "start": 114.92,
+    "end": 144.31,
+    "score": 3.52,
+    "reasons": [
+     "big reaction",
+     "action on screen",
+     "fast talking",
+     "strong opening line"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "Jynxzi reacts to Nick Eh 30's family friendly GTA 6",
+   "hook_kind": "user",
+   "style": {
+    "box": "black",
+    "cam": "small",
+    "len": "s16",
+    "hooklen": "story",
+    "start": "build",
+    "punch": "on"
+   },
+   "cam": "0.0000,0.5328,0.2952,0.4672",
+   "cam_q": "owner",
+   "layout": "react",
+   "cam_used": "0.0000,0.5328,0.2952,0.4672",
+   "layout_used": "react",
+   "final_s": 29,
+   "rendered": 1795549713,
+   "src_commit": "345a6dffb2d7184526d43675603438b56e426e95",
+   "bars": [
+    258,
+    0,
+    2348,
+    1320
+   ],
+   "viral": 61,
+   "viral_why": "Controversial take on disabling gore in GTA 6 for family friendly content",
+   "viral_verdict": "maybe",
+   "hook_by_user": true,
+   "react": true,
+   "pic_ok": true,
+   "watching": "frankfuckinghofflay",
+   "react_view": "",
+   "final_hash": "4e43bbfb59",
+   "final_v": "4e43bbfb59",
+   "clean_v": "56606caad5",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711836583418268958",
+   "youtube": "",
+   "posted_at": "2026-11-24T20:29:45Z"
+  }
+ },
+ "redo_wholebox_v": 1,
+ "redo_natural_cam_v": 1,
+ "upload_fill_v": 1,
+ "upload_name_v": 1,
+ "parts_plain_v": 1,
+ "ufo_nohook_v": 1,
+ "short_redo_v": 2,
+ "kai_chat_v": 1,
+ "nick_cam_v": 1,
+ "nocam_revive_v": 1,
+ "quality_revive_v": 2,
+ "redo_camonly_v": 1,
+ "redo_captions_v": 1,
+ "redo_kaichat_v": 6,
+ "redo_vodhq_v": 1,
+ "redo_wholecam_v": 1,
+ "redo_hd_v": 1,
+ "redo_face_v2": 1,
+ "redo_face_v": 1,
+ "redo_vision_v": 1,
+ "redo_hookfit_v": 1,
+ "redo_kai_v2": 1,
+ "redo_all_v": 1,
+ "redo_kai_lacy_v": 1,
+ "restored_v": 1,
+ "rehook_v": 1,
+ "shrink_v": 1,
+ "ai_backoff2": "2026-11-24T17:20:20Z",
+ "ai_status": "ok",
+ "ai_checked": "2026-11-24T18:06:09Z",
+ "mine_cam_redo_v": 3,
+ "cutout_redo_v": 1,
+ "big_only_v": 1,
+ "mine_hook_fix_v": 4,
+ "mine_timing_v": 1,
+ "mine_view_fix_v": 1,
+ "subs_off_v": 2,
+ "caps_v": 1,
+ "safe_view_v": 2,
+ "wide_v": 1,
+ "not_game_v": 1,
+ "react_fill_v": 4,
+ "ronaldo_cam_v": 1,
+ "band_recheck_v": 1
+}
