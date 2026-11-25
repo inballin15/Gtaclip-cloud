@@ -3944,6 +3944,23 @@ def main() -> None:
             log(f"editor footage skipped {cid}: {str(e)[:120]}")
     if made_e:
         log(f"live editor footage: made {made_e}")
+    try:   # footage of clips that left the queue (posted / removed / expired) comes off the release
+        if GH_TOKEN and not os.environ.get("ED_PER_RUN") == "0":
+            code, rel = _gh("GET", f"/repos/{REPO}/releases/tags/{ED_REL}")
+            keep = {(c.get("ed") or {}).get("path", "").replace("/", "__") for c in clips.values() if c["status"] == "new"}
+            mine_ids = {re.sub(r"[^A-Za-z0-9_-]", "_", k) for k in clips}
+            gone = 0
+            for a_ in (rel.get("assets") or []) if code == 200 else []:
+                n_ = a_["name"]
+                if n_.startswith("v__ed__") and n_ not in keep:
+                    owner = n_[len("v__ed__"):].rsplit("_", 1)[0]
+                    if owner in mine_ids:   # only this maker's clips (stream clips vs your clips are made separately)
+                        _gh("DELETE", f"/repos/{REPO}/releases/assets/{a_['id']}")
+                        gone += 1
+            if gone:
+                log(f"live editor footage: removed {gone} old")
+    except Exception as e:  # noqa: BLE001
+        log(f"editor footage tidy skipped: {e}")
     mb = site_mb()
     if mb > SITE_MAX_MB:   # very first: Trim previews of the weaker half (Trim then uses the clip itself) - never cost a clip
         ranked = sorted([(clip_quality(c), cid) for cid, c in clips.items() if c["status"] == "new" and c.get("wide")])

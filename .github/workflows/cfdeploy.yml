@@ -67,7 +67,8 @@ jobs:
           done < <(find dist -type f -size +24M)
           printf '{"version":1,"include":[%s],"exclude":[]}\n' "$routes" > dist/_routes.json
           cat dist/_routes.json
-          while read -r n sz; do grep -qx "$n" /tmp/want.txt || { gh release delete-asset site-big "$n" -y >/dev/null && echo "removed old big file $n"; }; done < /tmp/have.txt
+          # (v__ed__*: the live editor's footage - the clip maker manages those itself)
+          while read -r n sz; do case "$n" in v__ed__*) continue;; esac; grep -qx "$n" /tmp/want.txt || { gh release delete-asset site-big "$n" -y >/dev/null && echo "removed old big file $n"; }; done < /tmp/have.txt
       - name: deploy to Cloudflare Pages
         working-directory: cf
         run: |
