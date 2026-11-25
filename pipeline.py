@@ -1639,8 +1639,11 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             punch = (f",fps=30,zoompan=z='1+0.10*max(0,min(1,min((it-{a:.2f})/0.2,({b:.2f}-it)/0.4)))'"
                      f":x='iw/2-(iw/zoom/2)':y='ih/2.4-(ih/zoom/2.4)':d=1:s={fw}x{fh}:fps=30")
         band_h = (1920 - (cb - 20) + 1) // 2 * 2
+        # background = a blur of WHAT THEY'RE WATCHING (not the whole recording: a phone recording's black bars /
+        # dark edges made a black band at the top or bottom - Nov 25)
         base = ("[0:v]split=3[a][b][c];"
-                "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.22,setsar=1[bg];"
+                f"[a]crop=w=iw*{g['vw']}:h=ih*{g['vh']}:x=iw*{g['vx']}:y=ih*{g['vy']},"
+                "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:2,eq=brightness=-0.16,setsar=1[bg];"
                 f"[b]crop=w=iw*{g['vw']}:h=ih*{g['vh']}:x=iw*{g['vx']}:y=ih*{g['vy']},scale={g['cw']}:{g['ch']}:flags=lanczos,setsar=1[ct];"
                 f"[c]crop=w=iw*{w}:h=ih*{h}:x=iw*{x}:y=ih*{y},hqdn3d=1.2:1.2:3:3,setsar=1,split=2[c1][c2];"
                 # the blurred webcam fills everything under what they're watching, to the bottom edge (Nov 25: no black gap)
@@ -2989,8 +2992,8 @@ def main() -> None:
                     log(f"view check {cid}: {vwhy} - held back from posting")
             except Exception as e:  # noqa: BLE001
                 log(f"view check skipped {cid}: {e}")
-    if st.get("react_fill_v", 0) < 1:   # one time (Nov 25): reaction clips re-made with no black gap under the webcam
-        st["react_fill_v"] = 1
+    if st.get("react_fill_v", 0) < 2:   # one time (Nov 25): reaction clips re-made with no black gaps (bottom + top)
+        st["react_fill_v"] = 2
         n = 0
         for c0 in clips.values():
             if c0["status"] == "new" and (c0.get("layout_used") or c0.get("layout")) == "react":
