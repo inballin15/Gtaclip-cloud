@@ -1,6 +1,12 @@
 {
  "paused": false,
- "postnow": [],
+ "postnow": [
+  {
+   "id": "upmwuw3jf8_3",
+   "at": "2026-11-25T15:43:53Z",
+   "to": "youtube"
+  }
+ ],
  "last_slot": "2026-11-25T13:37:00Z",
  "switched_at": "2026-11-21T19:06:01Z",
  "cooldown": {
@@ -8,6 +14,11 @@
   "youtube": "2026-11-23T20:05:18Z"
  },
  "errors": [
+  {
+   "at": "2026-11-25T15:43:53Z",
+   "id": "upmwuw3jf8_3",
+   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
+  },
   {
    "at": "2026-11-23T21:07:19Z",
    "id": "ExcitedCulturedArtichokePogChamp-9y0vLg6yGbt4wB5B",
@@ -66,17 +77,17 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-25T15:40:34Z",
- "stats_at": "2026-11-25T14:04:04Z",
+ "stats_at": "2026-11-25T15:43:53Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-25",
-  "used": 4,
+  "used": 6,
   "cap": 29,
   "slots": 6,
-  "remain30": 710,
+  "remain30": 708,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 580
+  "remain24": 598
  },
  "yt_verified_v": 1,
  "you_post": [

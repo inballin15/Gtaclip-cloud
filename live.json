@@ -379,10 +379,16 @@
    }
   ]
  },
- "updated": "2026-11-25T15:40:34Z",
+ "updated": "2026-11-25T15:43:53Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
- "postnow": [],
+ "postnow": [
+  {
+   "id": "upmwuw3jf8_3",
+   "at": "2026-11-25T15:43:53Z",
+   "to": "youtube"
+  }
+ ],
  "next_slot": "2026-11-25T16:37:00Z",
  "up_next": "ObliviousRoughDelicataFutureMan-CS3ZEl3poE2C9fMP",
  "videos": [
@@ -1139,12 +1145,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-25",
-  "used": 4,
+  "used": 6,
   "cap": 29,
   "slots": 6,
-  "remain30": 710,
+  "remain30": 708,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 580,
+  "remain24": 598,
   "active": [
    [
     8,
@@ -1183,6 +1189,11 @@
   "tiktok": "ok"
  },
  "errors": [
+  {
+   "at": "2026-11-25T15:43:53Z",
+   "id": "upmwuw3jf8_3",
+   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
+  },
   {
    "at": "2026-11-23T21:07:19Z",
    "id": "ExcitedCulturedArtichokePogChamp-9y0vLg6yGbt4wB5B",
@@ -2626,6 +2637,20 @@
  },
  "stats": [
   {
+   "service": "youtube",
+   "link": "https://www.youtube.com/shorts/ARM8P7S899Y",
+   "sent": "2026-11-23T14:08:51.000Z",
+   "hook": "",
+   "clip": "",
+   "streamer": "",
+   "views": 1466,
+   "likes": 11,
+   "comments": 1,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
    "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7712103088034745614",
    "sent": "2026-11-25T13:39:34.479Z",
@@ -2800,9 +2825,9 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1444,
-   "likes": 23,
-   "comments": 1,
+   "views": 2069,
+   "likes": 25,
+   "comments": 2,
    "shares": 0,
    "reposts": 0,
    "saves": 0
@@ -3704,6 +3729,11 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T15:40:34Z",
- "log": []
+ "stats_updated": "2026-11-25T15:43:53Z",
+ "log": [
+  "[15:44:11Z] post-now requested: upmwuw3jf8_3",
+  "[15:44:15Z] couldn't read dashboard requests (503)",
+  "[15:44:15Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
+  "[15:44:16Z]   youtube: error InvalidInputError: Invalid post: Video could not be read from its URL."
+ ]
 }
