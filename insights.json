@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-25T00:06:10Z",
+ "updated": "2026-11-25T02:07:09Z",
  "videos": 49,
  "v": 4,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 13.22,
+   "x": 13.23,
    "n": 3
   },
   {
@@ -18,7 +18,7 @@
   {
    "feature": "hook style",
    "value": "quote",
-   "x": 0.17,
+   "x": 0.16,
    "n": 3
   },
   {
@@ -169,8 +169,8 @@
    "medium": 0.642
   },
   "hooklen": {
-   "tiny": 0.184,
-   "story": 0.816
+   "tiny": 0.183,
+   "story": 0.817
   },
   "punch": {
    "off": 0.484,
@@ -180,7 +180,7 @@
  "top": [
   {
    "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
-   "views": 1457
+   "views": 1463
   },
   {
    "hook": "Speed found him",
@@ -188,7 +188,7 @@
   },
   {
    "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
-   "views": 1242
+   "views": 1245
   },
   {
    "hook": "Marlon can't handle a night in GTA 6",
