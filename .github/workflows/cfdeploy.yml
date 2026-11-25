@@ -1,0 +1,81 @@
+name: site to Cloudflare (no 1 GB limit)
+
+# After anything publishes the site (the www branch), put that copy on Cloudflare Pages.
+on:
+  workflow_dispatch: {}
+  workflow_run:
+    workflows:
+      - "gtaclip pipeline (find clips, render videos, publish site)"
+      - "gtaclip your clips (pasted links / uploads)"
+      - "gtaclip site (publish dashboard changes right away)"
+      - "quick edit"
+      - "new voice"
+      - "long video (tips from your gameplay)"
+    types: [completed]
+
+concurrency:
+  group: cfdeploy
+  cancel-in-progress: false      # one running + the newest waiting; older waiting ones are dropped
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GH_TOKEN: ${{ github.token }}
+      PROJECT: gtaclip-studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: check the Cloudflare secrets are there
+        run: |
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || { echo "::error::CLOUDFLARE_API_TOKEN secret is missing"; exit 1; }
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::CLOUDFLARE_ACCOUNT_ID secret is missing"; exit 1; }
+          echo "secrets present (token ${#CLOUDFLARE_API_TOKEN} chars, account id ${#CLOUDFLARE_ACCOUNT_ID} chars)"
+      - name: get the site
+        run: |
+          git fetch -q --depth=1 origin +www:refs/remotes/origin/www 2>/dev/null || git fetch -q --depth=1 origin +gh-pages:refs/remotes/origin/www
+          mkdir -p dist && git archive origin/www | tar -x -C dist
+          rm -rf dist/.git dist/.nojekyll
+          echo "site: $(find dist -type f | wc -l) files, $(du -sm dist | cut -f1) MB"
+      - name: files over 25 MB go to GitHub releases (Cloudflare's per-file limit)
+        run: |
+          gh release view site-big >/dev/null 2>&1 || gh release create site-big --title "site files over 25 MB" --notes "Served through Cloudflare (cf/functions). Managed automatically." >/dev/null
+          gh release view site-big --json assets --jq '.assets[] | "\(.name) \(.size)"' > /tmp/have.txt || true
+          : > /tmp/want.txt
+          routes='"/__big/*"'
+          while IFS= read -r f; do
+            p=${f#dist/}; n=${p//\//__}; sz=$(stat -c %s "$f")
+            echo "$n" >> /tmp/want.txt
+            if ! grep -qx "$n $sz" /tmp/have.txt; then
+              cp "$f" "/tmp/$n"; gh release upload site-big "/tmp/$n" --clobber || { echo "::error::couldn't upload $p"; exit 1; }
+              rm -f "/tmp/$n"; echo "uploaded $p ($((sz/1048576)) MB)"
+            fi
+            rm -f "$f"; routes="$routes,\"/$p\""
+          done < <(find dist -type f -size +24M)
+          printf '{"version":1,"include":[%s],"exclude":[]}\n' "$routes" > dist/_routes.json
+          cat dist/_routes.json
+          while read -r n sz; do grep -qx "$n" /tmp/want.txt || { gh release delete-asset site-big "$n" -y >/dev/null && echo "removed old big file $n"; }; done < /tmp/have.txt
+      - name: deploy to Cloudflare Pages
+        working-directory: cf
+        run: |
+          npx -y wrangler@3 pages project create "$PROJECT" --production-branch=main 2>&1 | tail -3 || true
+          for i in 1 2 3; do
+            npx -y wrangler@3 pages deploy ../dist --project-name="$PROJECT" --branch=main --commit-dirty=true 2>&1 | tee /tmp/deploy.txt && break
+            sleep 20
+          done
+          grep -qiE "Deployment complete|Success" /tmp/deploy.txt || { echo "::error::Cloudflare deploy failed"; exit 1; }
+          grep -Eo "https://[a-z0-9.-]+\.pages\.dev" /tmp/deploy.txt | tail -1 > /tmp/url.txt || true
+          echo "live at: $(cat /tmp/url.txt)"
+          npx -y wrangler@3 pages project list 2>&1 | grep -i "$PROJECT" | head -3 || true
