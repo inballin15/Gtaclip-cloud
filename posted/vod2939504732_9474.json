@@ -1,0 +1,37 @@
+{
+ "id": "vod2939504732_9474",
+ "hook": "Kai Cenat panicked when he realized how hard four stars are in GTA 6",
+ "streamer": "Kai Cenat",
+ "login": "kaicenat",
+ "campaign": "Kai",
+ "tag": "#KaiCenat",
+ "caption": "",
+ "why": "8:37 PM slot",
+ "posted_at": "2026-11-25T01:37:25Z",
+ "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2939504732_9474_final.mp4?v=65ccb87819&r=1795562269",
+ "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2939504732_9474.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "uploading",
+   "buffer_id": "6b063bd7a2fd17422e784ab7",
+   "error": ""
+  }
+ },
+ "platforms": [
+  "tiktok"
+ ],
+ "hook_kind": "ai",
+ "hook_variant": "lowcaps",
+ "style": {
+  "box": "white",
+  "cam": "small",
+  "len": "s22",
+  "hooklen": "story",
+  "start": "build",
+  "punch": "off"
+ },
+ "viral": 80,
+ "seconds": 27
+}

@@ -378,12 +378,12 @@
    }
   ]
  },
- "updated": "2026-11-25T01:32:38Z",
+ "updated": "2026-11-25T01:37:25Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-25T01:37:00Z",
- "up_next": "vod2939504732_9474",
+ "next_slot": "2026-11-25T13:37:00Z",
+ "up_next": "HyperGorgeousRadishFrankerZ-s6fXOUccMxIFtRwC",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7711894969274895630",
@@ -1114,12 +1114,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-24",
-  "used": 16,
+  "used": 18,
   "cap": 28,
   "slots": 6,
-  "remain30": 717,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 587,
+  "remain30": 715,
+  "reset30": "2026-12-18T22:03:25Z",
+  "remain24": 585,
   "active": [
    [
     8,
@@ -1226,6 +1226,43 @@
   "vod2937998841_7955"
  ],
  "posts": {
+  "vod2939504732_9474": {
+   "id": "vod2939504732_9474",
+   "hook": "Kai Cenat panicked when he realized how hard four stars are in GTA 6",
+   "streamer": "Kai Cenat",
+   "login": "kaicenat",
+   "campaign": "Kai",
+   "tag": "#KaiCenat",
+   "caption": "",
+   "why": "8:37 PM slot",
+   "posted_at": "2026-11-25T01:37:25Z",
+   "video": "https://inballin15.github.io/Gtaclip-cloud/v/vod2939504732_9474_final.mp4?v=65ccb87819&r=1795562269",
+   "poster": "https://inballin15.github.io/Gtaclip-cloud/v/vod2939504732_9474.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b063bd7a2fd17422e784ab7",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "lowcaps",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "len": "s22",
+    "hooklen": "story",
+    "start": "build",
+    "punch": "off"
+   },
+   "viral": 80,
+   "seconds": 27
+  },
   "RelatedExpensiveEelBleedPurple-EER18eheN5qmhA_W": {
    "id": "RelatedExpensiveEelBleedPurple-EER18eheN5qmhA_W",
    "hook": "Caseoh raged after getting stuck in impossible GTA 6 traffic during a mission",
@@ -3501,6 +3538,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T01:32:38Z",
- "log": []
+ "stats_updated": "2026-11-25T01:37:25Z",
+ "log": [
+  "[01:37:27Z] posting vod2939504732_9474 (8:37 PM slot) to tiktok: Kai Cenat panicked when he realized how hard four stars are in GTA 6",
+  "[01:37:37Z]   tiktok: uploading "
+ ]
 }
