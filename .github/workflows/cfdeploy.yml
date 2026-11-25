@@ -88,6 +88,7 @@ jobs:
           chk "" app.html
           chk "" queue.json
           v=$(python3 -c "import json; r=json.load(open('dist/queue.json'))['ready']; print(next(x['final'] for x in r if x.get('final')).split('?')[0])" 2>/dev/null || true)
-          [ -n "$v" ] && chk "-r 0-1023" "$v"
+          [ -n "$v" ] && for i in 1 2 3; do chk "-r 0-1" "$v"; done
+          [ -n "$v" ] && curl -s -D - -o /dev/null -r 1000-1999 --max-time 30 "$B/$v" | grep -iE "^HTTP|content-range|accept-ranges|etag|cf-cache|content-length"
           big=$(python3 -c "import json; print(json.load(open('dist/_routes.json'))['include'][1].lstrip('/'))" 2>/dev/null || true)
           [ -n "$big" ] && chk "-r 0-1023" "$big" && chk "-r 5000000-5001023" "$big"
