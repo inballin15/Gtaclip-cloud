@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-25T21:10:05Z",
+ "updated": "2026-11-25T21:15:09Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1160,7 +1160,7 @@
  ],
  "videos_checked": "2026-11-25T21:06:19Z",
  "buffer_ok": true,
- "buffer_error": "couldn't read posts from Buffer",
+ "buffer_error": "",
  "buffer_off": false,
  "buffer_wait": "",
  "split": true,
@@ -3756,10 +3756,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T21:10:05Z",
- "log": [
-  "[21:10:08Z] slot skipped — today's Buffer budget is used (31/29)",
-  "[21:10:08Z] post list query failed (full): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)",
-  "[21:10:08Z] post list query failed (lite): Buffer: today's request budget is used (31/29) — saving the rest so Buffer's 30-day limit isn't hit (no request sent)"
- ]
+ "stats_updated": "2026-11-25T21:15:09Z",
+ "log": []
 }
