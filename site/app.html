@@ -84,6 +84,7 @@ h2{font-size:15px;margin:0 0 10px;letter-spacing:-.1px}
 .clip.now{border-color:var(--pink);box-shadow:0 0 0 1px var(--pink)}
 .vbox{position:relative;aspect-ratio:9/16;max-height:70vh;margin:0 auto;background:#000 center/contain no-repeat;cursor:pointer}
 .vbox video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.trimtag{position:absolute;left:8px;bottom:56px;z-index:3;pointer-events:none;font:700 11px Inter,sans-serif;background:#000b;color:#fff;padding:4px 8px;border-radius:8px}
 .play{position:absolute;inset:0;display:grid;place-items:center;border:0;background:linear-gradient(#0000 60%,#000a)}
 .play i{width:62px;height:62px;border-radius:50%;background:#fffffff0;display:grid;place-items:center;font-style:normal;color:#000;font-size:22px;padding-left:4px;box-shadow:0 8px 30px #0008;transition:transform .15s var(--ease)}
 .play:active i{transform:scale(.9)}
@@ -609,6 +610,37 @@ async function ghTap(title, body = '') {
 let EDITS = ls.get('gc-edits', {});
 let JOBS = ls.get('gc-jobs', {});   // clip id -> { kind: 'text' | 'remake', at, pct, label, done, failed }
 const saveJobs = () => ls.set('gc-jobs', JOBS);
+// INSTANT trims: right after you save a new start / end, the clip plays your new cut here while the real video is
+// re-made in the background (posting waits for the real one). Gone once the re-made video is on the site.
+let TRIMS = ls.get('gc-trims', {});
+function trimOf(r) {
+  const t = TRIMS[r.id]; if (!t) return null;
+  if ((r.rendered || 0) * 1000 > t.at || Date.now() - t.at > 3 * 3600e3) { delete TRIMS[r.id]; ls.set('gc-trims', TRIMS); return null; }
+  return t;
+}
+function trimPlay(r, t, vd, holder) {   // play just the new start..end of what's already on the site - no waiting
+  if (!t.span) return false;
+  const sp = t.span.map(Number), base = t.base;
+  const exact = base && !t.speed && sp[0] >= base[0] - 0.05 && sp[1] <= base[1] + 0.05 && Math.abs((+r.final_s || 0) - (base[1] - base[0])) <= 1.2;
+  let src, off, overlay = !!t.hook;
+  if (exact && (!t.hook || r.clean)) { src = U(t.hook ? r.clean : r.final); off = base[0]; }   // shorter cut: the real video itself
+  else if (r.wide_src && r.wide) { src = PAGES + r.wide_src; off = +r.wide.t0; overlay = true; }   // longer cut: the full footage
+  else return false;
+  const a = Math.max(0, sp[0] - off), b = sp[1] - off;
+  vd.src = src; vd.preload = 'auto';
+  const go = () => { try { vd.currentTime = a; } catch (e) { /* */ } };
+  if (vd.readyState >= 1) go(); else vd.addEventListener('loadedmetadata', go, { once: true });
+  vd.addEventListener('timeupdate', () => { if (vd.currentTime >= b - 0.05) { vd.pause(); go(); } });
+  vd.addEventListener('seeking', () => { if (vd.currentTime < a - 0.3 || vd.currentTime > b + 0.3) go(); });
+  holder.style.position = holder.style.position || 'relative';
+  if (overlay) { const o = el('img', 'hkimg'); holder.append(o);
+    const st = t.hook_style || (r.user_layout || {}).hook_style || (r.style || {}).box || 'white';
+    hookCanvas(t.hook || r.hook || '', st, t.hook_scale || (r.user_layout || {}).hook_scale || 1).then((hk) => { if (!hk) return;
+      const y = src.includes('_wide') ? 1920 * 0.2 - hk.height / 2 : hookTop(r, hk.height, t.hook_y);
+      o.src = hk.toDataURL(); o.style.width = (hk.width / 1080 * 100) + '%'; o.style.top = (y / 1920 * 100) + '%'; }).catch(() => {}); }
+  const tag = el('div', 'trimtag', src.includes('_wide') ? 'Your new cut \u00b7 preview' : 'Your new cut'); holder.append(tag);
+  return true;
+}
 // an edited video only counts once the site really serves it (GitHub Pages can take a few minutes to publish);
 // until then the clip keeps playing its previous version instead of a broken video
 const LIVEV = new Set(ls.get('gc-livev', []));
@@ -1536,13 +1568,17 @@ function clipCard(r, st) {
   vb.append(top);
   if (r.viral != null) { const s = el('div', 'score ' + (r.viral_verdict || '')); s.append(document.createTextNode(r.viral), el('small', null, { post: 'Post it', maybe: 'Maybe', skip: 'Skip' }[r.viral_verdict] || 'score')); vb.append(s); }
   const pl = el('button', 'play'); pl.setAttribute('aria-label', 'Play'); pl.append(el('i', null, '▶'));
-  pl.onclick = () => { const vd = el('video'); vd.src = U(vidOf(r)); vd.controls = true; vd.playsInline = true; vd.autoplay = true; vb.append(vd); withPreview(r, vd, vb); pl.remove(); vd.play().catch(() => {}); };
+  const tr = trimOf(r);
+  pl.onclick = () => { const vd = el('video'); vd.controls = true; vd.playsInline = true; vd.setAttribute('playsinline', ''); vd.autoplay = true; vb.append(vd);
+    if (!(tr && trimPlay(r, tr, vd, vb))) { vd.src = U(vidOf(r)); withPreview(r, vd, vb); }
+    pl.remove(); vd.play().catch(() => {}); };
   vb.append(pl); c.append(vb);
   const b = el('div', 'cbody');
   const meta = el('div', 'row'); meta.append(badge(st), el('span', 'mut', `${r.final_s || r.seconds || '?'}s · ${r.created ? ago(r.created) : ''}`)); b.append(meta);
   if (r.view_ok === false) b.append(el('div', 'note warn', `Held back — needs a look: ${r.view_why || 'doesn\u2019t fit the TikTok screen'}. Fix it in Edit (it re-checks).`));
-  b.append(el('div', 'hook', r.hook || ''));
+  b.append(el('div', 'hook', (tr && tr.hook) || r.hook || ''));
   if (r.viral_why) b.append(el('div', 'why', r.viral_why));
+  if (tr) b.append(el('div', 'note', 'Saved \u2713 \u2014 tap play to watch your new cut now. The finished video is being made in the background, and it won\u2019t post until it\u2019s done.'));
   if (JOBS[r.id]) b.append(jobBar(r.id));
   else if (isPending('edit: ' + r.id) || isPending('layout: ' + r.id)) b.append(el('div', 'note warn', 'Re-making this video with your changes…'));
   else if (r._voice) b.append(el('div', 'note', 'New voice is done ✓ — posting uses it now; it plays here once the site copies it (up to ~20 min).'));
@@ -1925,7 +1961,15 @@ function openEditor(r) {
       else { sv.disabled = false; sv.textContent = 'Save'; }
       return;
     }
-    if (await ghTap('layout: ' + r.id, JSON.stringify(out))) { ls.set(draftKey, null); startJob(r.id, 'remake'); toast('Saved — re-making the video. Watch the progress bar on the clip.'); close(); lastSig = ''; render(); }
+    if (await ghTap('layout: ' + r.id, JSON.stringify(out))) {
+      ls.set(draftKey, null); startJob(r.id, 'remake');
+      if (out.span) {   // show the new cut on the clip right away
+        TRIMS[r.id] = { at: Date.now(), span: out.span, base: r.span ? r.span.map(Number) : null, speed: out.speed || 0,
+          hook: out.hook || null, hook_style: out.hook_style, hook_scale: out.hook_scale, hook_y: out.hook_y };
+        ls.set('gc-trims', TRIMS);
+        toast('Saved \u2713 \u2014 play the clip to watch your new cut now');
+      } else toast('Saved — re-making the video. Watch the progress bar on the clip.');
+      close(); lastSig = ''; render(); }
     else { sv.disabled = false; sv.textContent = 'Save'; }
   };
   img.onload = () => { startCam(); drawBox(); sizeCanvas(); };
