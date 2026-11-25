@@ -3577,6 +3577,8 @@ def main() -> None:
                 vis = dict(getattr(viral, "LAST_VISUAL", {}) or {})
                 if ok is not None and vis.get("in_game") is True:
                     c["in_game"] = True
+                if ok is not None and vis.get("question") and not c.get("hook_by_user"):
+                    c["cap_q"] = vis["question"]   # the caption's opening question (Nov 25)
                 if ok is not None and vis.get("in_game") is False and not c.get("hook_by_user"):
                     # not the game on screen (real life, a browser, another game): the hook mustn't say "in GTA 6"
                     c["in_game"] = False

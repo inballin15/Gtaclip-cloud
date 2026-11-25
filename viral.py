@@ -633,9 +633,14 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                       "For a react: the hook is about the streamer's REACTION to what they are watching (name who they "
                       "are watching if you know it). "
                       + (f"Use the name {streamer} (never the word 'streamer'). " if streamer else "") + hook_style(variant) +
+                      "3) question = the FIRST line of the TikTok caption: one short question (max 14 words) about this exact "
+                      "moment that viewers will want to answer in the comments - like 'Did you know about these fighting "
+                      "combos or were you just pressing square?' or 'Would you have survived that or nah?'. Plain words, no "
+                      "hashtags, no emoji, no 'comment below'. "
+                      + (f"Only mention {TOPIC.get('name', 'GTA 6')} if in_game is true. ") +
                       "Answer JSON {\"ok\": true|false, \"why\": \"...\", \"hook\": \"...\", \"react\": true|false, "
                       "\"watching\": \"...\", \"owner_cam\": [ymin, xmin, ymax, xmax] or null, "
-                      "\"watched_box\": [ymin, xmin, ymax, xmax] or null, \"in_game\": true|false}."}]
+                      "\"watched_box\": [ymin, xmin, ymax, xmax] or null, \"in_game\": true|false, \"question\": \"...\"}."}]
     for j in jpegs[:4]:
         parts.append({"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(j).decode()}})
     body = {"contents": [{"parts": parts}],
@@ -657,7 +662,7 @@ def ai_visual_ok(jpegs: list[bytes], log=print, streamer: str = "", context: str
                 LAST_VISUAL.clear()   # react details for the caller (react layout - Nov 24)
                 LAST_VISUAL.update(react=bool(row.get("react")), watching=clean_line(str(row.get("watching") or ""))[:40],
                                    owner_cam=row.get("owner_cam"), watched_box=row.get("watched_box"),
-                                   in_game=row.get("in_game"))
+                                   in_game=row.get("in_game"), question=clean_line(str(row.get("question") or ""))[:110])
                 return (bool(row.get("ok", True)), clean_line(str(row.get("why", "")))[:90],
                         short_hook(str(row.get("hook", ""))))
             except Exception as e:  # noqa: BLE001
