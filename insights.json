@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25T20:29:28Z",
+ "updated": "2026-11-25T22:32:32Z",
  "videos": 59,
  "v": 4,
  "findings": [
@@ -66,20 +66,20 @@
   {
    "feature": "streamer",
    "value": "IShowSpeed",
-   "x": 2.19,
+   "x": 2.2,
    "n": 8
+  },
+  {
+   "feature": "streamer",
+   "value": "caseoh_",
+   "x": 2.2,
+   "n": 3
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
    "x": 2.18,
    "n": 23
-  },
-  {
-   "feature": "streamer",
-   "value": "caseoh_",
-   "x": 2.18,
-   "n": 3
   },
   {
    "feature": "style:hooklen",
@@ -100,21 +100,21 @@
    "n": 6
   },
   {
-   "feature": "style:punch",
-   "value": "off",
-   "x": 0.56,
-   "n": 5
-  },
-  {
    "feature": "style:cam",
    "value": "medium",
    "x": 0.57,
    "n": 20
   },
   {
+   "feature": "style:punch",
+   "value": "off",
+   "x": 0.57,
+   "n": 5
+  },
+  {
    "feature": "has a number",
    "value": "no",
-   "x": 0.59,
+   "x": 0.58,
    "n": 14
   },
   {
@@ -124,16 +124,16 @@
    "n": 33
   },
   {
+   "feature": "hook style",
+   "value": "lowcaps",
+   "x": 1.66,
+   "n": 6
+  },
+  {
    "feature": "posted",
    "value": "morning (7-11)",
    "x": 1.65,
    "n": 12
-  },
-  {
-   "feature": "hook style",
-   "value": "lowcaps",
-   "x": 1.65,
-   "n": 6
   },
   {
    "feature": "posted",
@@ -150,7 +150,7 @@
  ],
  "guidance": [
   "AVOID: emotion word = STUNNED (0.4x views, 6 videos)",
-  "AVOID: has a number = no (0.59x views, 14 videos)"
+  "AVOID: has a number = no (0.58x views, 14 videos)"
  ],
  "weights": {
   "formula": 0.352,
@@ -161,8 +161,8 @@
  },
  "style_weights": {
   "box": {
-   "white": 0.784,
-   "black": 0.216
+   "white": 0.785,
+   "black": 0.215
   },
   "cam": {
    "small": 0.289,
@@ -184,11 +184,11 @@
  "top": [
   {
    "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-   "views": 2328
+   "views": 2379
   },
   {
    "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
-   "views": 1466
+   "views": 1468
   },
   {
    "hook": "Speed found him",
