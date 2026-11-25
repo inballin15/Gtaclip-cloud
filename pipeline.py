@@ -1770,6 +1770,25 @@ def make_wide(cid: str, c: dict) -> bool:
 
 
 ED_REL = "site-big"   # the live editor's full-quality footage: a release file, served by the site as v/ed/<name>
+_ED_REL_CACHE: dict = {}
+
+
+def _ed_assets() -> list:
+    """Every file on the editor-footage release (all pages), read once per run."""
+    if "assets" not in _ED_REL_CACHE:
+        code, rel = _gh("GET", f"/repos/{REPO}/releases/tags/{ED_REL}")
+        _ED_REL_CACHE["rel"] = rel if code == 200 else {}
+        out = []
+        if code == 200:
+            for page in range(1, 30):
+                c2, items = _gh("GET", f"/repos/{REPO}/releases/{rel['id']}/assets?per_page=100&page={page}")
+                if c2 != 200 or not isinstance(items, list):
+                    break
+                out += items
+                if len(items) < 100:
+                    break
+        _ED_REL_CACHE["assets"] = out
+    return _ED_REL_CACHE["assets"]
 
 
 def make_ed(cid: str, c: dict) -> bool:
@@ -1785,23 +1804,24 @@ def make_ed(cid: str, c: dict) -> bool:
     win0 = float((c.get("raw_win") or [mom.get("start", 0)])[0]) if up else 0.0
     rs = duration_of(raw)
     key = hashlib.sha1(f"e1-{win0:.2f}-{rs:.1f}-{raw.stat().st_size}".encode()).hexdigest()[:8]
-    if (c.get("ed") or {}).get("k") == key:
+    safe = re.sub(r"[^A-Za-z0-9_-]", "_", cid)
+    have = {x["name"] for x in _ed_assets()}
+    if (c.get("ed") or {}).get("k") == key and f"v__ed__{safe}_{key}.mp4" in have:
         return False
     fps = 60 if src_fps(raw) >= 50 else 30
-    safe = re.sub(r"[^A-Za-z0-9_-]", "_", cid)
     out = RAW.parent / "_ed" / f"{safe}_{key}.mp4"
     out.parent.mkdir(parents=True, exist_ok=True)
     ff("-i", str(raw), "-vf", "scale='min(1920,iw)':-2:flags=lanczos,format=yuv420p", "-r", str(fps),
        "-c:v", "libx264", "-preset", "veryfast", "-crf", "19", "-maxrate", "14M", "-bufsize", "28M", "-profile:v", "high",
        "-g", str(fps // 2), "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2", "-movflags", "+faststart", str(out))
     import requests
-    code, rel = _gh("GET", f"/repos/{REPO}/releases/tags/{ED_REL}")
-    if code != 200:
+    rel = _ED_REL_CACHE.get("rel") or {}
+    if not rel.get("id"):
         code, rel = _gh("POST", f"/repos/{REPO}/releases", {"tag_name": ED_REL, "name": "Site files over 25 MB",
                                                              "body": "Served by the site. Managed automatically.",
                                                              "prerelease": True, "target_commitish": "main"})
     name = f"v__ed__{safe}_{key}.mp4"
-    for old in [x for x in (rel.get("assets") or []) if x["name"].startswith(f"v__ed__{safe}_")]:
+    for old in [x for x in _ed_assets() if x["name"].startswith(f"v__ed__{safe}_")]:
         _gh("DELETE", f"/repos/{REPO}/releases/assets/{old['id']}")
     with open(out, "rb") as fh:
         r = requests.post(f"https://uploads.github.com/repos/{REPO}/releases/{rel['id']}/assets?name={name}", data=fh,
@@ -3946,11 +3966,11 @@ def main() -> None:
         log(f"live editor footage: made {made_e}")
     try:   # footage of clips that left the queue (posted / removed / expired) comes off the release
         if GH_TOKEN and not os.environ.get("ED_PER_RUN") == "0":
-            code, rel = _gh("GET", f"/repos/{REPO}/releases/tags/{ED_REL}")
+            _ED_REL_CACHE.pop("assets", None)
             keep = {(c.get("ed") or {}).get("path", "").replace("/", "__") for c in clips.values() if c["status"] == "new"}
             mine_ids = {re.sub(r"[^A-Za-z0-9_-]", "_", k) for k in clips}
             gone = 0
-            for a_ in (rel.get("assets") or []) if code == 200 else []:
+            for a_ in _ed_assets():
                 n_ = a_["name"]
                 if n_.startswith("v__ed__") and n_ not in keep:
                     owner = n_[len("v__ed__"):].rsplit("_", 1)[0]
