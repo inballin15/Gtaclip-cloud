@@ -79,3 +79,15 @@ jobs:
           grep -Eo "https://[a-z0-9.-]+\.pages\.dev" /tmp/deploy.txt | tail -1 > /tmp/url.txt || true
           echo "live at: $(cat /tmp/url.txt)"
           npx -y wrangler@3 pages project list 2>&1 | grep -i "$PROJECT" | head -3 || true
+      - name: check the live site (app, list, a clip, a big file)
+        continue-on-error: true
+        run: |
+          B=https://gtaclip-studio.pages.dev
+          sleep 5
+          chk() { curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}B  $2\n" --max-time 40 $1 "$B/$2"; }
+          chk "" app.html
+          chk "" queue.json
+          v=$(python3 -c "import json; r=json.load(open('dist/queue.json'))['ready']; print(next(x['final'] for x in r if x.get('final')).split('?')[0])" 2>/dev/null || true)
+          [ -n "$v" ] && chk "-r 0-1023" "$v"
+          big=$(python3 -c "import json; print(json.load(open('dist/_routes.json'))['include'][1].lstrip('/'))" 2>/dev/null || true)
+          [ -n "$big" ] && chk "-r 0-1023" "$big" && chk "-r 5000000-5001023" "$big"
