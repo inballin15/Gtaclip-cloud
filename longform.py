@@ -538,14 +538,16 @@ def place_sections(plan: dict, scenes: list[dict], dur: float) -> None:
         def avg(a: float, b: float) -> float:
             v = [(0 if r["boring"] else r["score"]) for r in scenes if a - 0.5 <= r["t"] <= b + 0.5]
             return sum(v) / len(v) if v else 0.0
-        cur = avg(s["start"], s["end"])
+        tips = [(x["start"], x["end"]) for x in plan["sections"] if x["kind"] == "tip"]
+        clash = lambda a, b: any(x < b and a < y for x, y in tips)   # the intro shouldn't show a tip's footage twice
+        cur = avg(s["start"], s["end"]) if not clash(s["start"], s["end"]) else -1.0
         best, bt, t = cur, s["start"], 0.0
         while t + ln <= dur + 0.01:
             a = avg(t, t + ln)
-            if a > best + 0.01:
+            if a > best + 0.01 and not clash(t, t + ln):
                 best, bt = a, t
             t += step
-        if best >= cur + 2 and bt != s["start"]:
+        if (best >= cur + 2 or cur < 0) and bt != s["start"]:
             sh = bt - s["start"]
             log(f"intro moved to the most eye-catching footage at {mmss(bt)} (score {best:.1f} vs {cur:.1f})")
             s["start"], s["end"] = bt, bt + ln
