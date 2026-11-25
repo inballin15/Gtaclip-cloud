@@ -126,6 +126,50 @@ def add(inputs: list, flt: str, last: str, dur: float, work: Path, hook_top: flo
     return inputs, flt, last
 
 
+POP_AT = START + 0.06   # the sound lands as the button pops in
+
+
+def pop_wav(path: Path) -> Path:
+    """A short, clean "pop" (made here - no stock sound): a quick downward pitch blip + a tiny click on top."""
+    if path.exists():
+        return path
+    import random
+    import struct
+    import wave
+    sr, n = 48000, int(48000 * 0.22)
+    rnd = random.Random(7)
+    out = []
+    ph = 0.0
+    for i in range(n):
+        t = i / sr
+        f = 300 + 1100 * math.exp(-t / 0.018)             # 1400 Hz falling fast to ~300 Hz: the "pop"
+        ph += 2 * math.pi * f / sr
+        env = min(1.0, t / 0.002) * math.exp(-t / 0.045)  # 2 ms attack, short tail
+        body = math.sin(ph) * env
+        click = (rnd.random() * 2 - 1) * math.exp(-t / 0.0015) * 0.35   # bright tick right at the start
+        out.append(max(-1.0, min(1.0, 0.85 * body + click)))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(2)
+        w.setsampwidth(2)
+        w.setframerate(sr)
+        w.writeframes(b"".join(struct.pack("<hh", int(v * 26000), int(v * 26000)) for v in out))
+    return path
+
+
+def add_audio(inputs: list, flt: str, work: Path, src_a: str = "0:a") -> tuple[list, str, str]:
+    """The pop sound at the moment the button appears, and the clip's own sound dipped a little (about -3 dB)
+    for half a second so the pop is heard - then straight back up. Returns (inputs, filter, audio label)."""
+    k = inputs.count("-i")
+    inputs = inputs + ["-i", str(pop_wav(work / "pop.wav"))]
+    a0, a1 = POP_AT - 0.06, POP_AT + 0.45
+    ms = int(POP_AT * 1000)
+    flt += (f";[{src_a}]aresample=48000,volume='1-0.3*clip((t-{a0:.3f})/0.06,0,1)*clip(({a1:.3f}-t)/0.18,0,1)':eval=frame[adk]"
+            f";[{k}:a]aresample=48000,adelay={ms}|{ms},volume=0.85[apop]"
+            f";[adk][apop]amix=inputs=2:duration=first:normalize=0[amix]")
+    return inputs, flt, "amix"
+
+
 def hook_top(lay: str, hy: float | None, top_h: int, hh: int) -> int:
     """Where the hook box goes (top edge, px) - same rules as pipeline.render_final, for quick edits / new voice."""
     y = (1920 * hy - hh / 2 if hy is not None else (1920 - hh) / 2 if lay == "full"
@@ -148,6 +192,12 @@ def hooked(ff_exe: str, clean: Path, png: str, out: Path, lay: str, hy: float | 
     flt = f"[0:v][1:v]overlay=(W-w)/2:{y}[vh]"
     inputs, flt, last = add(inputs, flt, "vh", dur, work, y, hh, lay, cta=True, pbar=pbar)
     flt += f";[{last}]format=yuv420p[out]"
-    subprocess.run([ff_exe, "-y", "-loglevel", "error", *inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
+    has_a = "Audio:" in subprocess.run([ff_exe, "-hide_banner", "-i", str(clean)], capture_output=True, text=True).stderr
+    if has_a and dur > 4:   # the pop + a small dip of the clip's sound
+        inputs, flt, al = add_audio(inputs, flt, work)
+        amap = ["-map", f"[{al}]", "-c:a", "aac", "-b:a", "192k"]
+    else:
+        amap = ["-map", "0:a?", "-c:a", "copy"]
+    subprocess.run([ff_exe, "-y", "-loglevel", "error", *inputs, "-filter_complex", flt, "-map", "[out]", *amap,
                     "-c:v", "libx264", "-preset", "fast", "-crf", "17", "-maxrate", "12000k", "-bufsize", "24M",
-                    "-c:a", "copy", "-movflags", "+faststart", str(out)], check=True)
+                    "-movflags", "+faststart", str(out)], check=True)

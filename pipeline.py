@@ -81,7 +81,7 @@ SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "1600"))       # stream clips on
 QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v3-textonly-capcut"
-FINAL_V = LAYOUT_V + "-follow2"   # posted videos only (not the clean copies): + follow pop-up / progress bar (Nov 25)
+FINAL_V = LAYOUT_V + "-follow3"   # posted videos only (not the clean copies): + follow pop-up / progress bar (Nov 25)
 TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
@@ -1715,13 +1715,18 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                 inputs, flt, last = engage.add(inputs, flt, last, duration_of(raw), tmp, float(oy), float(hh),
                                                layout, cta=cta, pbar=pbar)
                 info["cta"], info["pbar"] = cta, pbar
+                if cta and has_audio(raw) and duration_of(raw) > 4:   # the pop sound + a small dip of the clip's sound
+                    inputs, flt, alab = engage.add_audio(inputs, flt, tmp)
+                    flt += f";[{alab}]loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[aout]"
+                    info["pop"] = True
             except Exception as e:  # noqa: BLE001
                 log(f"follow pop-up skipped for {cid}: {e}")
     flt += f";[{last}]format=yuv420p[out]"
     # clean, even sound (FFmpeg loudnorm to TikTok/YouTube's -14 LUFS): no more too-quiet or blaring clips
-    ff(*inputs, "-filter_complex", flt, "-map", "[out]", "-map", "0:a?",
+    amap = (["-map", "[aout]"] if info.get("pop") else
+            ["-map", "0:a?", *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000"] if has_audio(raw) else [])])
+    ff(*inputs, "-filter_complex", flt, "-map", "[out]", *amap,
        "-c:v", "libx264", "-preset", "fast", *enc_args(out), "-r", "30",   # fast: same look at this quality, ~2x quicker
-       *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "48000"] if has_audio(raw) else []),
        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(VID / f"{cid}{out}.mp4"))
     return info
 
