@@ -386,12 +386,12 @@
    }
   ]
  },
- "updated": "2026-11-25T22:32:32Z",
+ "updated": "2026-11-25T22:34:24Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-26T00:07:00Z",
- "up_next": "TameRelievedBubbleteaPJSugar-k7mXz1ZXsW1ONbRI",
+ "up_next": null,
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7712212352875154701",
@@ -3757,8 +3757,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T22:32:32Z",
- "log": [
-  "[22:32:36Z] hook learner: 59 videos, 2 lessons"
- ]
+ "stats_updated": "2026-11-25T22:34:24Z",
+ "log": []
 }
