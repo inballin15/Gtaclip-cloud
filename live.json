@@ -387,7 +387,7 @@
    }
   ]
  },
- "updated": "2026-11-25T16:26:31Z",
+ "updated": "2026-11-25T16:31:29Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [
@@ -1153,12 +1153,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-25",
-  "used": 10,
+  "used": 12,
   "cap": 29,
   "slots": 6,
-  "remain30": 704,
+  "remain30": 702,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 594,
+  "remain24": 592,
   "active": [
    [
     8,
@@ -1197,6 +1197,11 @@
   "tiktok": "ok"
  },
  "errors": [
+  {
+   "at": "2026-11-25T16:31:29Z",
+   "id": "upmwuw3jf8_3",
+   "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
+  },
   {
    "at": "2026-11-25T16:26:31Z",
    "id": "upmwuw3jf8_3",
@@ -1241,11 +1246,6 @@
    "at": "2026-11-21T23:08:23Z",
    "id": "SolidCarefulKoupreyOSfrog-QNsSAS5-8koUh_1n",
    "error": "LimitReachedError: You have already scheduled the maximum number of posts YouTube allows in a day (2). Please consider scheduling this post for another day."
-  },
-  {
-   "at": "2026-11-19T15:10:59Z",
-   "id": "PlacidCredulousPorcupineSquadGoals-yQGQaitRsPB4U7FL",
-   "error": "The daily posting limit for this channel has been reached! Please try reducing the amount of times per day in your schedule and try again later.; skipped — waiting out the platform limit"
   }
  ],
  "blocked": [
@@ -3737,10 +3737,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T16:26:31Z",
+ "stats_updated": "2026-11-25T16:31:29Z",
  "log": [
-  "[16:26:35Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
-  "[16:26:35Z]   youtube: error InvalidInputError: Invalid post: Video could not be read from its URL.",
-  "[16:26:35Z] hook learner: 57 videos, 3 lessons"
+  "[16:31:32Z] posting upmwuw3jf8_3 (post now) to youtube: Jynxzi FREAKED OUT over Nick Eh 30 audio",
+  "[16:31:32Z]   youtube: error InvalidInputError: Invalid post: Video could not be read from its URL."
  ]
 }
