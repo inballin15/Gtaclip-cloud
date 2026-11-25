@@ -1,13 +1,13 @@
 {
  "insights": {
-  "updated": "2026-11-24T22:05:45Z",
+  "updated": "2026-11-25T00:06:10Z",
   "videos": 49,
   "v": 4,
   "findings": [
    {
     "feature": "streamer",
     "value": "xQc",
-    "x": 13.23,
+    "x": 13.22,
     "n": 3
    },
    {
@@ -119,22 +119,22 @@
     "n": 14
    },
    {
-    "feature": "has a number",
-    "value": "no",
-    "x": 0.69,
-    "n": 13
-   },
-   {
     "feature": "style:hooklen",
     "value": "story",
-    "x": 1.44,
+    "x": 1.45,
     "n": 4
    },
    {
     "feature": "style:punch",
     "value": "on",
-    "x": 1.44,
+    "x": 1.45,
     "n": 4
+   },
+   {
+    "feature": "has a number",
+    "value": "no",
+    "x": 0.69,
+    "n": 13
    },
    {
     "feature": "clip length",
@@ -162,8 +162,8 @@
   },
   "style_weights": {
    "box": {
-    "white": 0.734,
-    "black": 0.266
+    "white": 0.735,
+    "black": 0.265
    },
    "cam": {
     "small": 0.358,
@@ -378,7 +378,7 @@
    }
   ]
  },
- "updated": "2026-11-25T00:01:42Z",
+ "updated": "2026-11-25T00:06:10Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -3440,6 +3440,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-25T00:01:42Z",
- "log": []
+ "stats_updated": "2026-11-25T00:06:10Z",
+ "log": [
+  "[00:06:11Z] hook learner: 49 videos, 2 lessons"
+ ]
 }
