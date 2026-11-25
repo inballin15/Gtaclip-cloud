@@ -286,7 +286,8 @@ def write_script(scenes: list[dict], dur: float, game: str, topic: str = "") -> 
         + (f"The creator wants this topic: {topic}\n" if topic else
            "Pick the topic yourself from what the footage actually shows (e.g. '7 GTA 6 tips you missed', "
            "'GTA 6 money tips', 'GTA 6 driving tricks').\n") +
-        f"Make a video about {int(L // 60)}-{int(L // 60) + 2} minutes long.\n"
+        f"Make a video about {int(L // 60)}-{int(L // 60) + 2} minutes long: the sections' footage (after speed-ups) "
+        f"should add up to about {int(L)} seconds, so give each tip 10-30 s of footage and 2-4 lines.\n"
         "STRUCTURE: an intro section (8-15 s) on the most eye-catching moment with a hook that promises what they'll "
         "learn, then 4-10 tip sections, then a short outro (ask them to subscribe for more " + game + " tips).\n"
         "EACH SECTION uses ONE continuous stretch of the footage that SHOWS that tip (start/end in seconds from the "
@@ -295,7 +296,11 @@ def write_script(scenes: list[dict], dur: float, game: str, topic: str = "") -> 
         "NARRATION RULES: talk to the viewer ('you'), clear and energetic, like a top GTA guide channel; each line "
         "8-22 words; say only things the log shows - never invent prices, numbers, place names or mechanics that "
         "aren't in it (on-screen text in [screen: ...] can be quoted); no emojis; numbers as words a voice can read. "
-        "Keep enough footage per line: a section needs about (words / 2.6) seconds of footage after its speed-up.\n"
+        "Each line must be about what is on screen at its 'at' second (within 2 s) - not about a moment before or after. "
+        "If the title or the intro says a number of tips, it must equal the number of tip sections. "
+        "Ignore streamer webcams / overlays / chat in the footage - talk only about the game. "
+        "Keep enough footage per line: the voice reads about 2.2 words a second, so a section needs about "
+        "(words / 2.2 + 1) seconds of footage after its speed-up.\n"
         "Title: max 70 characters, makes people curious, true to the video. Thumbnail: the most striking moment's "
         "second + 2-4 BIG words. Description: 2-3 sentences + 5 tags.\n"
         "Return JSON: {\"title\": \"\", \"description\": \"\", \"tags\": [\"\"], \"thumbnail\": {\"t\": 0, \"text\": \"\"}, "
@@ -342,7 +347,117 @@ def clean_plan(plan: dict, dur: float) -> dict:
         tt = 0.0
     plan["thumbnail"] = {"t": max(0.0, min(tt, dur - 0.5)), "text": str(th.get("text", ""))[:40]}
     plan["title"] = str(plan.get("title") or "GTA 6 tips you need to know")[:100]
+    fix_tip_count(plan)
     return plan
+
+
+NUMW = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
+        "seventeen eighteen nineteen twenty").split()
+
+
+def fix_tip_count(plan: dict) -> None:
+    """'5 Hidden Mechanics' with only 4 tips -> '4 Hidden Mechanics' (title, intro, outro, description).
+    Never touches the game's own number (GTA 6 / Grand Theft Auto six)."""
+    secs = plan.get("sections") or []
+    n = len(secs) - 2 if len(secs) > 2 else len(secs)
+    if n < 2:
+        return
+    num = r"(\d{1,2}|" + "|".join(NUMW[2:]) + r")"
+    pat = (r"(?<!gta )(?<!gta)(?<!auto )(?<!\bvi )\b" + num +
+           r"\b(?=\s+(?:[\w'-]+\s+){0,3}(?:tips?|tricks?|mechanics?|things?|secrets?|features?|ways?|hacks?|methods?|"
+           r"mistakes?|details?|spots?|locations?|facts?|reasons?|items?|weapons?|cars?|skills?)\b)")
+
+    def rp(m: re.Match) -> str:
+        v = m.group(1)
+        cur = int(v) if v.isdigit() else NUMW.index(v.lower())
+        if cur == n:
+            return v
+        if v.isdigit():
+            return str(n)
+        w = NUMW[n] if n < len(NUMW) else str(n)
+        return w.capitalize() if v[0].isupper() else w
+
+    def fix(t: str) -> str:
+        return re.sub(pat, rp, t or "", flags=re.I)
+
+    old = plan.get("title", "")
+    plan["title"] = fix(old)
+    plan["description"] = fix(plan.get("description", ""))
+    for s in (secs[0], secs[-1]) if len(secs) > 2 else ():
+        for ln in s["lines"]:
+            ln["text"] = fix(ln["text"])
+    if plan["title"] != old:
+        log(f"title said a different number of tips than the video has ({n}) - now: {plan['title']}")
+
+
+def check_script(plan: dict, scenes: list[dict], game: str) -> None:
+    """A second AI pass: every line is checked against what the footage log says is on screen right then, and
+    anything the footage doesn't show (an invented item, mission, number, place, mechanic) is rewritten."""
+    secs = plan["sections"]
+    items = []
+    for si, s in enumerate(secs):
+        is_intro = si == 0 and len(secs) > 2
+        is_outro = si == len(secs) - 1 and len(secs) > 2
+        if is_outro:
+            continue
+        for li, ln in enumerate(s["lines"]):
+            if is_intro:
+                ctx = "this is the intro hook; the video's tips are: " + "; ".join(x["title"] for x in secs[1:-1])
+            else:
+                near = [r for r in scenes if ln["at"] - 3 <= r["t"] <= ln["at"] + 8 and s["start"] - 1 <= r["t"] <= s["end"] + 1]
+                ctx = " / ".join(f"{int(r['t'])}s: {r['what']}" + (f" [screen: {r['ui']}]" if r["ui"] else "") +
+                                 (f" (tip: {r['tip']})" if r["tip"] else "") for r in near) or "(no log)"
+            items.append((si, li, ln["text"], ctx))
+    if not items:
+        return
+    prompt = (f"You fact-check the narration of a {game} tips video against a log of what is on screen. For each "
+              "numbered line you get the line and what the log says is on screen at that moment. Rewrite a line ONLY "
+              "if it says something the log doesn't show (an invented item, mission, story detail, number, place, "
+              "control, or mechanic), or it talks about something that isn't on screen then. A rewrite keeps the "
+              "same idea where the log supports it, talks to 'you', is energetic, 8-22 words, no emojis, numbers as "
+              "words. Lines that are fine stay exactly as they are.\n"
+              "Return JSON: [{\"i\": 0, \"ok\": true, \"text\": \"the line (rewritten if not ok)\"}]\n\n" +
+              "\n".join(f"{k}. LINE: {t}\n   ON SCREEN: {c}" for k, (_, _, t, c) in enumerate(items)))
+    res = ai([{"text": prompt}], "checking the script against the footage", temperature=0.2)
+    rows = res if isinstance(res, list) else (res or {}).get("lines", []) if isinstance(res, dict) else []
+    fixed = 0
+    for r in rows:
+        try:
+            k = int(r.get("i"))
+        except Exception:  # noqa: BLE001
+            continue
+        if not (0 <= k < len(items)) or r.get("ok") is not False:
+            continue
+        txt = re.sub(r"\s+", " ", str(r.get("text", ""))).strip()
+        txt = re.sub(r"[\U0001F000-\U0001FFFF☀-➿]", "", txt)
+        if 5 <= len(txt.split()) <= 26:
+            si, li, old, _ = items[k]
+            secs[si]["lines"][li]["text"] = txt
+            fixed += 1
+            log(f"fixed a line the footage didn't back up: '{old[:50]}' -> '{txt[:60]}'")
+    log(f"script checked against the footage: {fixed} of {len(items)} lines fixed")
+
+
+def tidy_outro(plan: dict, dur: float) -> None:
+    """The outro shouldn't replay footage a tip just showed: move it to the next unused stretch."""
+    secs = plan["sections"]
+    if len(secs) < 3:
+        return
+    o = secs[-1]
+    used = [(s["start"], s["end"]) for s in secs[1:-1]]
+    hit = lambda a, b: any(x < b and a < y for x, y in used)
+    if not hit(o["start"], o["end"]):
+        return
+    ln = o["end"] - o["start"]
+    for c in [secs[-2]["end"]] + sorted(y for _, y in used):
+        if c + ln <= dur and not hit(c, c + ln):
+            sh = c - o["start"]
+            o["start"] += sh
+            o["end"] += sh
+            for x in o["lines"]:
+                x["at"] = min(o["end"] - 0.5, x["at"] + sh)
+            log(f"outro moved to unused footage at {mmss(c)}")
+            return
 
 
 # ------------------------------------------------------------------ 4. the voice
@@ -657,12 +772,16 @@ def make(job: dict, num: int = 0) -> dict:
         time.sleep(30)
     if not plan:
         raise RuntimeError("the AI couldn't write a script right now (Google's free AI is busy)")
-    (WORK / "plan.json").write_text(json.dumps(plan, indent=1))
     log(f"script: '{plan['title']}' - {len(plan['sections'])} sections, "
         f"{sum(len(s['lines']) for s in plan['sections'])} lines")
+    if not job.get("fake_ai"):
+        check_script(plan, scenes, game)
+    (WORK / "plan.json").write_text(json.dumps(plan, indent=1))
     status(job, "making", "Recording the voice")
     voice_lines(plan, voice)
     fit(plan, dur)
+    tidy_outro(plan, dur)
+    (WORK / "plan_fit.json").write_text(json.dumps(plan, indent=1, default=str))
     status(job, "making", "Editing the video")
     full = WORK / f"{job['id']}.mp4"
     secs = render(master, plan, full)
@@ -687,7 +806,7 @@ def make(job: dict, num: int = 0) -> dict:
     if job.get("test"):   # a test run: results go to the "longtest" branch for checking, not on your site
         tdir = WORK / "testout"
         tdir.mkdir(exist_ok=True)
-        for f in (prev, thumb, WORK / "plan.json", WORK / "scene_log.json"):
+        for f in (prev, thumb, WORK / "plan.json", WORK / "plan_fit.json", WORK / "scene_log.json"):
             if f.exists():
                 shutil.copy(f, tdir / f.name)
         (tdir / "entry.json").write_text(json.dumps(entry, indent=1))
