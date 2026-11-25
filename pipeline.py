@@ -82,7 +82,7 @@ QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v4-hq"   # Nov 25: highest quality re-make of every unposted clip (final + no-caption copy)
 LAYOUT_V_OLD = "v3-textonly-capcut"
-FINAL_V = LAYOUT_V + "-follow3"   # posted videos only (not the clean copies): + follow pop-up / progress bar (Nov 25)
+FINAL_V = LAYOUT_V + "-follow4"   # posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
 TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
@@ -1210,7 +1210,7 @@ def _cam_fg_top(raw: Path, w: float, h: float) -> int:
 REACT_TOP = 400   # react layout: where the watched screen starts (the hook sits above it, below TikTok's top bar)
 SAFE_TOP = 150    # TikTok / Shorts put their top bar (Following | For You, search) over the top ~150 px of 1920
 SAFE_BOTTOM = 300 # ...and the caption / username / music over the bottom ~300 px: keep faces and text out of both
-REACT_GAP, REACT_BOTTOM, REACT_CAM_W = 24, 110, 1040   # react layout (Nov 25): webcam nearly full width, down near the bottom
+REACT_GAP, REACT_BOTTOM, REACT_CAM_W = 24, 160, 1040   # react layout (Nov 25): webcam nearly full width, ending above most of TikTok's caption
 
 
 def react_view(box, cam: str) -> str | None:
@@ -2513,6 +2513,7 @@ git push -qf origin "$c:refs/heads/gh-pages"
 
 # ---------------------------------------------------------------- main
 def main() -> None:
+    global FINAL_V   # + the follow voice you picked (so changing it re-makes the queued clips)
     st = load_state()
     held = {}
     if not MINE:   # your pasted / uploaded clips are made by the separate your-clips maker now: leave them alone
@@ -2545,6 +2546,15 @@ def main() -> None:
         control = json.loads((POSTED_DIR / "control.json").read_text())
     except Exception:  # noqa: BLE001
         pass
+    try:   # the voice that says "Don't forget to follow and subscribe..." (Settings on the site)
+        import engage
+        engage.VOICE = str(control.get("follow_voice") or "am_puck")
+        if engage.VOICE != "am_puck":
+            FINAL_V = LAYOUT_V + "-follow4-" + engage.VOICE
+        if engage.VOICE != "off" and not engage.follow_voice(Path(tempfile.gettempdir()) / "engage"):
+            log(f"follow line in voice {engage.VOICE} not made yet - clips get the pop only for now")
+    except Exception as e:  # noqa: BLE001
+        log(f"follow voice: {e}")
     for c in clips.values():
         c.pop("post_now", None)
     for p in control.get("postnow", []):
@@ -2686,7 +2696,8 @@ def main() -> None:
             r["poster"] = f"v/{r['id']}.jpg"
             _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + FINAL_V + r.get("layout", "")).encode()).hexdigest()[:10]
             _olds = {hashlib.sha1((r.get("hook", "") + r.get("cam", "") + v_ + r.get("layout", "")).encode()).hexdigest()[:10]
-                     for v_ in (LAYOUT_V_OLD, LAYOUT_V_OLD + "-follow1", LAYOUT_V_OLD + "-follow2", LAYOUT_V_OLD + "-follow3")}
+                     for v_ in (LAYOUT_V_OLD, LAYOUT_V_OLD + "-follow1", LAYOUT_V_OLD + "-follow2", LAYOUT_V_OLD + "-follow3",
+                                LAYOUT_V + "-follow2", LAYOUT_V + "-follow3")}
             r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"   # (an older video still counts until it's re-made)
                           if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and (r.get("final_v") == _hh or r.get("final_v") in _olds)
                           and (VID / f"{r['id']}_final.mp4").exists() else "")

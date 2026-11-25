@@ -18,11 +18,17 @@ from pathlib import Path
 
 import numpy as np
 
-VOICES = {   # id: (name on the site, language code)
-    "am_michael": ("Michael · US male", "a"), "am_fenrir": ("Fenrir · deep US male", "a"),
-    "am_puck": ("Puck · hype US male", "a"), "am_echo": ("Echo · calm US male", "a"),
+VOICES = {   # id: (name on the site, language code) - the site's list matches (Nov 25: more to pick from)
+    "am_michael": ("Michael · US male", "a"), "am_puck": ("Puck · hype US male", "a"),
+    "am_fenrir": ("Fenrir · deep US male", "a"), "am_echo": ("Echo · calm US male", "a"),
+    "am_eric": ("Eric · US male", "a"), "am_liam": ("Liam · young US male", "a"),
+    "am_onyx": ("Onyx · low US male", "a"), "am_adam": ("Adam · US male", "a"),
+    "bm_george": ("George · British male", "b"), "bm_lewis": ("Lewis · British male", "b"),
+    "bm_daniel": ("Daniel · British male", "b"), "bm_fable": ("Fable · British male", "b"),
     "af_heart": ("Heart · US female", "a"), "af_bella": ("Bella · US female", "a"),
-    "bm_george": ("George · British male", "b"), "bf_emma": ("Emma · British female", "b"),
+    "af_nicole": ("Nicole · soft US female", "a"), "af_sarah": ("Sarah · US female", "a"),
+    "af_nova": ("Nova · US female", "a"), "af_sky": ("Sky · US female", "a"),
+    "bf_emma": ("Emma · British female", "b"), "bf_isabella": ("Isabella · British female", "b"),
 }
 SR = 24000
 WORK = Path("/tmp/vo")
@@ -80,21 +86,36 @@ def samples() -> None:
         rel = qe.gh("POST", "/releases", {"tag_name": "voices", "name": "Voice samples", "target_commitish": "main",
                                           "body": "Short samples of the AI voices you can pick on the site.", "prerelease": True})
     have = {a["name"]: a["id"] for a in qe.gh("GET", f"/releases/{rel['id']}/assets?per_page=100")}
+    import urllib.request
+
+    def up(path: Path, ctype: str) -> None:
+        if path.name in have:
+            qe.gh("DELETE", f"/releases/assets/{have[path.name]}")
+        req = urllib.request.Request(f"https://uploads.github.com/repos/{qe.REPO}/releases/{rel['id']}/assets?name={path.name}",
+                                     data=path.read_bytes(), method="POST",
+                                     headers={"Authorization": f"Bearer {qe.TOKEN}", "Content-Type": ctype,
+                                              "Accept": "application/vnd.github+json"})
+        urllib.request.urlopen(req, timeout=60).read()
+
     for v in VOICES:
-        x = tts("GTA six is actually crazy. Watch what happens when he tries this.", v)
+        # the sample reads like a long tips video (that's where you pick a narrator) - "GTA six" so it's said right
+        x = tts("Here are nine GTA six tips you need to know. Always put your cash in the bank, "
+                "so you don't lose it when you get busted.", v)
         wav = WORK / f"{v}.wav"
         mp3 = WORK / f"{v}.mp3"
         wav_write(wav, x)
         subprocess.run([qe.FF, "-y", "-loglevel", "error", "-i", str(wav), "-b:a", "96k", str(mp3)], check=True)
-        if mp3.name in have:
-            qe.gh("DELETE", f"/releases/assets/{have[mp3.name]}")
-        import urllib.request
-        req = urllib.request.Request(f"https://uploads.github.com/repos/{qe.REPO}/releases/{rel['id']}/assets?name={mp3.name}",
-                                     data=mp3.read_bytes(), method="POST",
-                                     headers={"Authorization": f"Bearer {qe.TOKEN}", "Content-Type": "audio/mpeg",
-                                              "Accept": "application/vnd.github+json"})
-        urllib.request.urlopen(req, timeout=60).read()
-        print("sample:", v)
+        up(mp3, "audio/mpeg")
+        # the spoken follow line for clips (engage.py mixes it in right after the pop): trimmed, loudness-matched
+        raw = WORK / f"follow_{v}_raw.wav"
+        wav_write(raw, tts("Don't forget to follow and subscribe for daily clips!", v, 1.05))
+        fol = WORK / f"follow_{v}.wav"
+        subprocess.run([qe.FF, "-y", "-loglevel", "error", "-i", str(raw), "-af",
+                        "silenceremove=start_periods=1:start_threshold=-45dB,areverse,"
+                        "silenceremove=start_periods=1:start_threshold=-45dB,areverse,"
+                        "loudnorm=I=-15:TP=-1.5:LRA=7,aresample=48000", "-ac", "1", "-c:a", "pcm_s16le", str(fol)], check=True)
+        up(fol, "audio/wav")
+        print("sample + follow line:", v)
 
 
 def main() -> None:

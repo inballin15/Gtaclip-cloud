@@ -188,6 +188,8 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
             kind = "youpost"
         elif tl.startswith("paid:"):
             kind = "paid"
+        elif tl.startswith("followvoice:"):
+            kind = "followvoice"
         if not kind:
             continue  # skip:/edit: belong to the render pipeline
         if age_min > REQUEST_MAX_AGE_MIN:
@@ -240,6 +242,13 @@ def handle_requests(ctl: dict, ready_ids: set[str], posted_ids: set[str]) -> Non
                    else "Buffer is back ON — scheduled posts go out again.")
             close_issue(it["number"], msg)
             log(msg)
+            continue
+        if kind == "followvoice":   # the voice that says "Don't forget to follow..." in new clips (or off)
+            v = re.sub(r"[^a-z_]", "", tl.split(":", 1)[1])
+            ctl["follow_voice"] = v or "am_puck"
+            close_issue(it["number"], "Follow line: no voice (just the pop)." if v == "off"
+                        else f"Follow line voice: {v}. New clips use it; queued clips are re-made with it.")
+            log(f"follow voice -> {ctl['follow_voice']}")
             continue
         if kind == "ai":
             ctl["ai_off"] = "off" in tl
@@ -1093,7 +1102,7 @@ def main() -> None:
         "videos_checked": ctl.get("manual_check", ""),
         "buffer_ok": buffer_ok, "buffer_error": buffer_err, "buffer_off": bool(ctl.get("buffer_off")),
         "buffer_wait": ctl.get("buffer_wait", ""), "split": ctl.get("split", True), "you_post": ctl.get("you_post", []), "yt_per_day": YT_PER_DAY, "submitted": ctl.get("submitted", {}), "budget": {**BUDGET, "active": [list(x) for x in ACTIVE_SLOTS]}, "cooldown": ctl.get("cooldown", {}),
-        "ai_off": bool(ctl.get("ai_off")),
+        "ai_off": bool(ctl.get("ai_off")), "follow_voice": ctl.get("follow_voice") or "am_puck",
         "channel_check": {"at": ctl.get("manual_check", ""), "youtube": ctl.get("yt_check", ""), "tiktok": ctl.get("tt_check", "")}, "errors": ctl.get("errors", []),
         "blocked": sorted(blocked),
         "posts": dict(sorted(recs.items(), key=lambda kv: kv[1].get("posted_at", ""), reverse=True)[:120]),

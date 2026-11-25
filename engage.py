@@ -157,16 +157,69 @@ def pop_wav(path: Path) -> Path:
     return path
 
 
-def add_audio(inputs: list, flt: str, work: Path, src_a: str = "0:a") -> tuple[list, str, str]:
-    """The pop sound at the moment the button appears, and the clip's own sound dipped a little (about -3 dB)
-    for half a second so the pop is heard - then straight back up. Returns (inputs, filter, audio label)."""
+# the spoken follow line (Nov 25 - like vicecityfiles' "make sure to follow"): an AI voice made once per voice
+# (voice.py --samples, on the "voices" release); which voice = Settings on the site (control.json "follow_voice")
+FOLLOW_LINE = "Don't forget to follow and subscribe for daily clips!"
+SAY_AT = POP_AT + 0.22            # right after the pop
+VOICE = None                      # set by the clip maker from your settings; None = read them here
+REPO = "inballin15/Gtaclip-cloud"
+
+
+def follow_voice_id() -> str:
+    """Your pick in Settings (am_puck if never set; "off" = no voice, just the pop)."""
+    global VOICE
+    if VOICE is None:
+        try:
+            import json
+            import urllib.request
+            with urllib.request.urlopen(f"https://raw.githubusercontent.com/{REPO}/posted/control.json", timeout=15) as r:
+                VOICE = str(json.loads(r.read()).get("follow_voice") or "am_puck")
+        except Exception:  # noqa: BLE001
+            VOICE = "am_puck"
+    return VOICE
+
+
+def follow_voice(work: Path) -> tuple[Path, float] | None:
+    """(wav, seconds) of the follow line in your voice - None when off or not made yet."""
+    v = follow_voice_id()
+    if not v or v == "off":
+        return None
+    p = work / f"follow_{v}.wav"
+    try:
+        if not (p.exists() and p.stat().st_size > 2000):
+            import urllib.request
+            p.parent.mkdir(parents=True, exist_ok=True)
+            with urllib.request.urlopen(f"https://github.com/{REPO}/releases/download/voices/follow_{v}.wav", timeout=30) as r:
+                p.write_bytes(r.read())
+        import wave
+        with wave.open(str(p)) as w:
+            return p, w.getnframes() / float(w.getframerate())
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def add_audio(inputs: list, flt: str, work: Path, src_a: str = "0:a", say: bool = True) -> tuple[list, str, str]:
+    """The pop sound at the moment the button appears + the spoken "Don't forget to follow and subscribe for daily
+    clips!" right after it. The clip's own sound dips a little for the pop (about -3 dB) and a bit more under the
+    voice (about -6 dB) so the line is clear, then goes straight back up. Returns (inputs, filter, audio label)."""
     k = inputs.count("-i")
     inputs = inputs + ["-i", str(pop_wav(work / "pop.wav"))]
     a0, a1 = POP_AT - 0.06, POP_AT + 0.45
     ms = int(POP_AT * 1000)
-    flt += (f";[{src_a}]aresample=48000,volume='1-0.3*clip((t-{a0:.3f})/0.06,0,1)*clip(({a1:.3f}-t)/0.18,0,1)':eval=frame[adk]"
-            f";[{k}:a]aresample=48000,adelay={ms}|{ms},volume=0.85[apop]"
-            f";[adk][apop]amix=inputs=2:duration=first:normalize=0[amix]")
+    fv = follow_voice(work) if say else None
+    duck = f"0.3*clip((t-{a0:.3f})/0.06,0,1)*clip(({a1:.3f}-t)/0.18,0,1)"
+    if fv:
+        b0, b1 = SAY_AT - 0.08, SAY_AT + fv[1] + 0.05
+        duck = f"max({duck},0.5*clip((t-{b0:.3f})/0.12,0,1)*clip(({b1:.3f}-t)/0.3,0,1))"
+    flt += (f";[{src_a}]aresample=48000,volume='1-{duck}':eval=frame[adk]"
+            f";[{k}:a]aresample=48000,adelay={ms}|{ms},volume=0.85[apop]")
+    if fv:
+        inputs = inputs + ["-i", str(fv[0])]
+        sm = int(SAY_AT * 1000)
+        flt += (f";[{k + 1}:a]aresample=48000,aformat=channel_layouts=stereo,adelay={sm}|{sm},volume=1.0[asay]"
+                f";[adk][apop][asay]amix=inputs=3:duration=first:normalize=0[amix]")
+    else:
+        flt += ";[adk][apop]amix=inputs=2:duration=first:normalize=0[amix]"
     return inputs, flt, "amix"
 
 

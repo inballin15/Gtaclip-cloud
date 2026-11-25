@@ -1475,7 +1475,9 @@ function longCard(x) {
     const cd = el('button', 'btn', 'Copy description'); cd.onclick = () => { navigator.clipboard.writeText(x.description || '').then(() => toast('Description + chapters copied')); };
     row.append(ct, cd);
     if (x.thumb_full || x.thumb) { const th = el('a', 'btn', 'Thumbnail'); th.href = x.thumb_full || (PAGES + x.thumb); th.target = '_blank'; th.rel = 'noopener'; row.append(th); }
+    if (x.plan && x.commit) { const cv = el('button', 'btn', '\ud83c\udf99 Change voice'); cv.onclick = () => openLongVoice(x); row.append(cv); }
     b.append(row);
+    if (x.msg) b.append(el('div', 'note warn', x.msg));
     if ((x.script || []).length) {
       const det = el('details'); det.append(el('summary', null, 'Script'));
       for (const ln of x.script) { const d = el('div', 'mut'); d.textContent = `${Math.floor(ln.t / 60)}:${String(Math.floor(ln.t % 60)).padStart(2, '0')}  ${ln.text}`; det.append(d); }
@@ -1766,17 +1768,45 @@ async function saveVideo(r, btn, which) {
   setTimeout(() => { if (btn.textContent === 'Tap to save ✓') { btn.classList.remove('ready'); done(); } }, 120000);
 }
 // ---------------------------------------------------------------- new voice (AI voice you pick)
-const VOICES = [['am_michael', 'Michael', 'US male'], ['am_fenrir', 'Fenrir', 'deep US male'], ['am_puck', 'Puck', 'hype US male'], ['am_echo', 'Echo', 'calm US male'],
-  ['af_heart', 'Heart', 'US female'], ['af_bella', 'Bella', 'US female'], ['bm_george', 'George', 'British male'], ['bf_emma', 'Emma', 'British female']];
+const VOICES = [['am_michael', 'Michael', 'US male'], ['am_puck', 'Puck', 'hype US male'], ['am_fenrir', 'Fenrir', 'deep US male'], ['am_echo', 'Echo', 'calm US male'],
+  ['am_eric', 'Eric', 'US male'], ['am_liam', 'Liam', 'young US male'], ['am_onyx', 'Onyx', 'low US male'], ['am_adam', 'Adam', 'US male'],
+  ['bm_george', 'George', 'British male'], ['bm_lewis', 'Lewis', 'British male'], ['bm_daniel', 'Daniel', 'British male'], ['bm_fable', 'Fable', 'British male'],
+  ['af_heart', 'Heart', 'US female'], ['af_bella', 'Bella', 'US female'], ['af_nicole', 'Nicole', 'soft US female'], ['af_sarah', 'Sarah', 'US female'],
+  ['af_nova', 'Nova', 'US female'], ['af_sky', 'Sky', 'US female'], ['bf_emma', 'Emma', 'British female'], ['bf_isabella', 'Isabella', 'British female']];
 const VOICE_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/${v}.mp3`;
+const FOLLOW_SAMPLE = (v) => `https://github.com/${REPO}/releases/download/voices/follow_${v}.wav`;
+const VAU = new Audio();
+function voicePicker(pick, onPick, sample = VOICE_SAMPLE, extra = []) {   // tap a row to pick it, ▶ to hear it
+  const list = el('div', 'vlist');
+  const draw = () => { list.textContent = ''; for (const [id, name, kind] of [...extra, ...VOICES]) {
+    const row = el('div', 'vrow' + (id === pick ? ' on' : '')); const pb = el('button', 'btn ghost', id === 'off' ? '\u2014' : '\u25b6');
+    pb.onclick = (e) => { e.stopPropagation(); if (id === 'off') return; VAU.src = sample(id); VAU.play().catch(() => toast('That sample is still being made \u2014 try again in a few minutes')); };
+    const t = el('div'); t.append(el('b', null, name), el('span', 'mut', kind ? ' \u00b7 ' + kind : '')); row.append(pb, t);
+    row.onclick = () => { pick = id; onPick(id); draw(); }; list.append(row); } };
+  draw(); return list;
+}
+function openLongVoice(x) {   // same script, same edit, a new narrator (about 10 minutes, no AI needed)
+  let pick = x.voice || ls.get('gc-voice', 'am_michael');
+  const list = voicePicker(pick, (id) => { pick = id; });
+  const go = el('button', 'big go', 'Make it with this voice');
+  go.onclick = async () => { go.disabled = true; VAU.pause(); ls.set('gc-voice', pick);
+    if (await ghTap('longform: ' + x.id, JSON.stringify({ id: x.id, revoice: true, commit: x.commit, voice: pick, name: x.source || '', created: x.created }))) {
+      toast('Changing the voice \u2014 about 10 minutes. The video you have stays until the new one is ready'); closeSheet(); longsAt = 0; }
+    go.disabled = false; };
+  sheet('Change the narrator', [el('div', 'mut', 'Same script, same edit and subtitles \u2014 just a different voice. Tap \u25b6 to hear each one, then pick.'), list, go]);
+}
+function openFollowVoice() {   // who says "Don't forget to follow and subscribe for daily clips!" in your clips
+  let pick = (L && L.follow_voice) || 'am_puck';
+  const list = voicePicker(pick, (id) => { pick = id; }, FOLLOW_SAMPLE, [['off', 'No voice', 'just the pop sound']]);
+  const go = el('button', 'big go', 'Use this voice');
+  go.onclick = async () => { go.disabled = true; VAU.pause();
+    if (await ghTap('followvoice: ' + pick)) { toast(pick === 'off' ? 'Follow line: no voice' : 'Follow line voice saved \u2014 queued clips get re-made with it'); closeSheet(); }
+    go.disabled = false; };
+  sheet('Follow line voice', [el('div', 'mut', 'Right after the Follow & Subscribe pop-up, a voice says \u201cDon\u2019t forget to follow and subscribe for daily clips!\u201d (the clip\u2019s sound dips a little under it). Tap \u25b6 to hear each one.'), list, go]);
+}
 function openVoice(r) {
-  let pick = ls.get('gc-voice', 'am_michael'); const au = new Audio(); const list = el('div', 'vlist');
-  const draw = () => { list.textContent = ''; for (const [id, name, kind] of VOICES) {
-    const row = el('div', 'vrow' + (id === pick ? ' on' : '')); const pb = el('button', 'btn ghost', '▶');
-    pb.onclick = (e) => { e.stopPropagation(); au.src = VOICE_SAMPLE(id); au.play().catch(() => toast('Samples are still being made — try again in a few minutes')); };
-    const t = el('div'); t.append(el('b', null, name), el('span', 'mut', ' · ' + kind)); row.append(pb, t);
-    row.onclick = () => { pick = id; ls.set('gc-voice', id); draw(); }; list.append(row); } };
-  draw();
+  let pick = ls.get('gc-voice', 'am_michael'); const au = VAU;
+  const list = voicePicker(pick, (id) => { pick = id; ls.set('gc-voice', id); });
   const sc = el('textarea'); sc.placeholder = 'Leave empty: the new voice says the same lines, at the same moments. Or type your own script.'; sc.maxLength = 3000;
   const go = el('button', 'big go', 'Replace the voice');
   go.onclick = async () => { go.disabled = true; au.pause();
@@ -1875,7 +1905,7 @@ function openEditor(r) {
     const [vx, vy, vw, vh] = (r.react_view && used === 'react' ? r.react_view : '0,0,1,1').split(',').map(Number);
     const [, , w, h] = S.cam || [0, 0, 0.3, 0.3]; const pw = Math.max(2, W * w), ph = Math.max(2, H * h);
     // same as the clip maker (Nov 25): the webcam big - nearly full width, down near the bottom - what they watch gets the rest
-    const avail = 1920 - 400 - 24 - 110; const chFull = 1080 * (H * vh) / (W * vw); const fhCap = Math.min(1040 * ph / pw, ph * 2.6);
+    const avail = 1920 - 400 - 24 - 160; const chFull = 1080 * (H * vh) / (W * vw); const fhCap = Math.min(1040 * ph / pw, ph * 2.6);
     const c_h = Math.min(chFull, Math.max(avail - fhCap, 0.40 * avail)); const f_h = Math.min(fhCap, avail - c_h);
     const c_w = Math.min(1080, c_h * (W * vw) / (H * vh)), f_w = Math.min(1040, f_h * pw / ph);
     return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 400 + c_h + 24, fw: f_w, fh: f_h }; }
@@ -2112,15 +2142,15 @@ function openUpload(which) {
   const credit = () => { const n0 = STREAMERS.find((x) => x[0] === who.value); return who.value ? n0[1] : (other.value.trim() || ''); };
   const f = el('input'); f.type = 'file'; f.accept = 'video/*';
   if (mode === 'long') {   // a long tips video from your own gameplay: just the footage (+ which AI voice)
-    const vsel = el('select'); for (const [id, name, kind] of VOICES) { const o = el('option', null, `${name} \u00b7 ${kind}`); o.value = id; vsel.append(o); }
-    vsel.value = ls.get('gc-voice', 'am_michael');
+    const vsel = { value: ls.get('gc-voice', 'am_michael') };
+    const vlist = voicePicker(vsel.value, (id) => { vsel.value = id; ls.set('gc-voice', id); });
     const topic = el('input'); topic.placeholder = 'Optional: what it\u2019s about (leave empty and the AI picks)';
     const go = el('button', 'big go', 'Make the long video');
     go.onclick = () => { const file = f.files && f.files[0]; if (!file) { toast('Pick your gameplay video first'); return; } if (file.size > 1.9e9) { toast('That video is too big (max ~1.9 GB) \u2014 split it'); return; }
       ls.set('gc-voice', vsel.value); closeSheet(); feed = 'long'; ls.set('gc-feed', 'long');
       uploadVideo(file, '', '', { kind: 'long', voice: vsel.value, topic: topic.value.trim(), game: 'GTA 6' }); };
     sheet('Make clips', [seg, el('div', 'mut', 'Upload your own gameplay (any length). The AI watches it, picks the tips worth showing, writes the script so every line matches what\u2019s on screen, reads it in the voice you pick, and edits it into a 3\u201312 min tips video with a thumbnail, title and chapters. It shows up in Long videos \u2014 nothing posts by itself.'),
-      el('label', null, 'Your gameplay'), f, el('label', null, 'Voice'), vsel, el('label', null, 'Topic'), topic, go]);
+      el('label', null, 'Your gameplay'), f, el('label', null, 'Narrator \u2014 tap \u25b6 to hear each one'), vlist, el('label', null, 'Topic'), topic, go]);
     return;
   }
   if (mode === 'yt') {
@@ -2376,7 +2406,8 @@ function openSettings(why) {
   ab.onclick = async () => { ab.disabled = true; if (await ghTap(aiOn ? 'ai: off' : 'ai: on')) toast(aiOn ? 'Turning AI off…' : 'Turning AI on…'); closeSheet(); };
   const bs = el('button', 'btn', L && L.buffer_off ? 'Buffer: OFF — tap to manage' : 'Buffer: ON — tap to manage'); bs.onclick = openBufferSwitch;
   const bh = el('button', 'btn ghost', 'Buffer connection help'); bh.onclick = openBufferHelp;
-  nodes.push(el('div', 'btns'), ab, bs, bh);
+  const fv = el('button', 'btn', `\ud83c\udf99 Follow line voice: ${((VOICES.find((v) => v[0] === ((L && L.follow_voice) || 'am_puck')) || ['', 'No voice'])[1])}`); fv.onclick = openFollowVoice;
+  nodes.push(el('div', 'btns'), fv, ab, bs, bh);
   nodes.push(appSection());
   sheet('Settings', nodes);
 }
