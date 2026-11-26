@@ -386,12 +386,12 @@
    }
   ]
  },
- "updated": "2026-11-26T21:03:15Z",
+ "updated": "2026-11-26T21:07:32Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-26T21:07:00Z",
- "up_next": "vod2941037224_2990",
+ "next_slot": "2026-11-27T00:07:00Z",
+ "up_next": "DifferentImpossibleSushiHumbleLife-2oIIYfJqHjMo4iDy",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7712545868217470222",
@@ -1256,12 +1256,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-26",
-  "used": 12,
+  "used": 14,
   "cap": 28,
   "slots": 6,
-  "remain30": 671,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 592,
+  "remain30": 669,
+  "reset30": "2026-12-18T22:03:26Z",
+  "remain24": 590,
   "active": [
    [
     8,
@@ -1365,6 +1365,42 @@
   "vod2939983603_26445"
  ],
  "posts": {
+  "vod2941037224_2990": {
+   "id": "vod2941037224_2990",
+   "hook": "YourRAGE was SHOCKED watching this creepy space horror signal",
+   "streamer": "YourRAGE",
+   "login": "yourragegaming",
+   "campaign": "YourRAGE",
+   "tag": "#YourRAGE",
+   "caption": "",
+   "why": "4:07 PM slot",
+   "posted_at": "2026-11-26T21:07:32Z",
+   "video": "https://gtaclip-studio.pages.dev/v/vod2941037224_2990_final.mp4?v=33d84a0c0e&r=1795680941",
+   "poster": "https://gtaclip-studio.pages.dev/v/vod2941037224_2990.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b089f97ce64081689f30b8f",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "formula",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "tiny",
+    "punch": "off",
+    "pbar": "on"
+   },
+   "viral": 90,
+   "seconds": 27
+  },
   "vod2941037224_1741": {
    "id": "vod2941037224_1741",
    "hook": "YourRAGE lost it watching NickEh30 hook an unsuspecting driver in GTA 6",
@@ -2922,8 +2958,8 @@
    "hook": "Would you have let that slide or would you have provoked him too? 😳",
    "clip": "",
    "streamer": "ishowspeed",
-   "views": 0,
-   "likes": 0,
+   "views": 93,
+   "likes": 10,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -2950,8 +2986,8 @@
    "hook": "Do you think you could land a backflip on your first try in GTA 6? 💀",
    "clip": "",
    "streamer": "ishowspeed",
-   "views": 0,
-   "likes": 0,
+   "views": 112,
+   "likes": 15,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -3034,7 +3070,7 @@
    "hook": "Kai Cenat lost it after making his first shot in GTA 6 Kai Cenat GTA 6 stream highlight @Kai Cenat  #KaiCenat #GTA6 #GTAVI #gaming #fyp",
    "clip": "JazzyExcitedPresidentPeteZarollTie-LDHruoNMoz_J9POK",
    "streamer": "Kai Cenat",
-   "views": 84,
+   "views": 85,
    "likes": 8,
    "comments": 0,
    "shares": 0,
@@ -3048,7 +3084,7 @@
    "hook": "Speed goes crazy for the GTA trailer music IShowSpeed GTA 6 stream highlight 🎥 @ishowspeed #IShowSpeed #GTA6 #GTAVI #gaming #fyp",
    "clip": "PeppySpoopyCoyoteUncleNox-bwFBqWOHypOnUTnQ",
    "streamer": "IShowSpeed",
-   "views": 90,
+   "views": 91,
    "likes": 5,
    "comments": 0,
    "shares": 0,
@@ -3062,7 +3098,7 @@
    "hook": "Jynxzi reacts to Nick Eh 30's family friendly GTA 6 @Jynxzi  #Jynxzi #GTA6 #GTAVI #gaming #fyp",
    "clip": "upmwuw3jf8_4",
    "streamer": "Jynxzi",
-   "views": 134,
+   "views": 142,
    "likes": 4,
    "comments": 0,
    "shares": 0,
@@ -3104,7 +3140,7 @@
    "hook": "Caseoh raged after getting stuck in impossible GTA 6 traffic during a mission caseoh_ GTA 6 stream highlight 🎥 @caseoh_ #caseoh #GTA6 #GTAVI #gaming #fyp",
    "clip": "RelatedExpensiveEelBleedPurple-EER18eheN5qmhA_W",
    "streamer": "caseoh_",
-   "views": 104,
+   "views": 109,
    "likes": 6,
    "comments": 0,
    "shares": 0,
@@ -3202,7 +3238,7 @@
    "hook": "IShowSpeed freaked out after finding a Hulk character in GTA 6 IShowSpeed GTA 6 stream highlight 🎥 @ishowspeed #IShowSpeed #GTA6 #GTAVI #gaming #fyp",
    "clip": "AdorableFlaccidKaleRalpherZ-ER-Yna5U3_zjbvB4",
    "streamer": "IShowSpeed",
-   "views": 105,
+   "views": 106,
    "likes": 7,
    "comments": 0,
    "shares": 0,
@@ -3216,7 +3252,7 @@
    "hook": "DarkViperAU lost it when his wing fell off during a flight mission DarkViperAU GTA 6 stream highlight 🎥 @darkviperau #DarkViperAU #GTA6 #GTAVI #gaming #fyp",
    "clip": "WimpyPuzzledChimpanzeeMikeHogu-Fw9ZRjhgHysCfB-_",
    "streamer": "DarkViperAU",
-   "views": 101,
+   "views": 102,
    "likes": 2,
    "comments": 0,
    "shares": 0,
@@ -3230,7 +3266,7 @@
    "hook": "caseoh_ roasted an NPC after hitting their scooter caseoh_ GTA 6 stream highlight 🎥 @caseoh_ #caseoh #GTA6 #GTAVI #gaming #fyp",
    "clip": "BlueBlitheMarjoramWoofer-ZSasg_aIiI5hO6pA",
    "streamer": "caseoh_",
-   "views": 130,
+   "views": 131,
    "likes": 3,
    "comments": 0,
    "shares": 0,
@@ -3608,7 +3644,7 @@
    "hook": "IShowSpeed LOSES IT after ACCIDENTALLY deleting his ENTIRE GTA 6 save file 🎥 @ishowspeed #IShowSpeed #GTA6 #GTAVI #gaming #fyp",
    "clip": "IgnorantBraveBananaNononoCat-znG5sU9yfduBEaMi",
    "streamer": "IShowSpeed",
-   "views": 138,
+   "views": 140,
    "likes": 4,
    "comments": 0,
    "shares": 0,
@@ -3678,7 +3714,7 @@
    "hook": "Lacy stalking in gta 6  🎥 @lacy #Lacy #GTA6 #GTAVI #gaming #fyp",
    "clip": "",
    "streamer": "lacy",
-   "views": 374,
+   "views": 381,
    "likes": 15,
    "comments": 0,
    "shares": 0,
@@ -3692,7 +3728,7 @@
    "hook": "xQc is SHOCKED after seeing a boat LAUNCH into the air in GTA 6 🎥 @xqc #xQc #GTA6 #GTAVI #gaming #fyp",
    "clip": "EncouragingFlaccidBobaWutFace-wXF5gAfA2PxaTMVU",
    "streamer": "xQc",
-   "views": 215,
+   "views": 217,
    "likes": 6,
    "comments": 0,
    "shares": 0,
@@ -4078,6 +4114,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T21:03:15Z",
- "log": []
+ "stats_updated": "2026-11-26T21:07:32Z",
+ "log": [
+  "[21:07:34Z] posting vod2941037224_2990 (4:07 PM slot) to tiktok: YourRAGE was SHOCKED watching this creepy space horror signal",
+  "[21:07:45Z]   tiktok: uploading "
+ ]
 }
