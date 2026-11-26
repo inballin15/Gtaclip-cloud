@@ -1,13 +1,13 @@
 {
  "insights": {
-  "updated": "2026-11-26T12:47:58Z",
+  "updated": "2026-11-26T14:49:33Z",
   "videos": 61,
   "v": 4,
   "findings": [
    {
     "feature": "streamer",
     "value": "xQc",
-    "x": 13.49,
+    "x": 13.48,
     "n": 3
    },
    {
@@ -97,7 +97,7 @@
    {
     "feature": "question",
     "value": "yes",
-    "x": 2.07,
+    "x": 2.09,
     "n": 4
    },
    {
@@ -201,7 +201,7 @@
    },
    {
     "hook": "What do you think about Nick not being family freindly?",
-    "views": 659
+    "views": 684
    }
   ],
   "style_counts": {
@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-26T14:44:10Z",
+ "updated": "2026-11-26T14:49:33Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -3844,6 +3844,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T14:44:10Z",
- "log": []
+ "stats_updated": "2026-11-26T14:49:33Z",
+ "log": [
+  "[14:49:34Z] hook learner: 61 videos, 2 lessons"
+ ]
 }
