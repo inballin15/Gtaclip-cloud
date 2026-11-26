@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-26T17:01:03Z",
+ "updated": "2026-11-26T17:05:51Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1219,12 +1219,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-26",
-  "used": 6,
+  "used": 7,
   "cap": 28,
   "slots": 6,
-  "remain30": 677,
-  "reset30": "2026-12-18T22:03:30Z",
-  "remain24": 598,
+  "remain30": 676,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 597,
   "active": [
    [
     8,
@@ -1321,8 +1321,6 @@
   "upmwtgx8fl2_1",
   "upmwtgx8fl2_2",
   "upmwtgx8fl2_3",
-  "upmwtgx8fl_1",
-  "upmwtgx8fl_2",
   "vod2939504732_11720",
   "vod2939504732_16722",
   "vod2939504732_7942",
@@ -1345,11 +1343,11 @@
    "posted_at": "2026-11-26T16:40:34Z",
    "video": "https://gtaclip-studio.pages.dev/v/HyperDarlingSpindleNotATK-JDIE3of-iXeKttnI_final.mp4?v=4a53fbf751&r=1795691167",
    "poster": "https://gtaclip-studio.pages.dev/v/HyperDarlingSpindleNotATK-JDIE3of-iXeKttnI.jpg",
-   "tiktok": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712520992710462733",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b0861099fe2552d5cf06b14",
      "error": ""
     }
@@ -2773,6 +2771,20 @@
  "stats": [
   {
    "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7712520992710462733",
+   "sent": "2026-11-26T16:41:24.260Z",
+   "hook": "Do you think you could land a backflip on your first try in GTA 6? 💀",
+   "clip": "",
+   "streamer": "ishowspeed",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7712474020058270989",
    "sent": "2026-11-26T13:38:57.093Z",
    "hook": "Do you think he is ready for a large bank heist? 😳",
@@ -3892,6 +3904,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T17:01:03Z",
+ "stats_updated": "2026-11-26T17:05:51Z",
  "log": []
 }
