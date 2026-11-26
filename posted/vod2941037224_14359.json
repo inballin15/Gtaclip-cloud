@@ -1,0 +1,36 @@
+{
+ "id": "vod2941037224_14359",
+ "hook": "YourRAGE lost it after finding out Randy wanted his stolen car in GTA 6",
+ "streamer": "YourRAGE",
+ "login": "yourragegaming",
+ "campaign": "YourRAGE",
+ "tag": "#YourRAGE",
+ "caption": "",
+ "why": "1:07 PM slot",
+ "posted_at": "2026-11-26T18:12:20Z",
+ "video": "https://gtaclip-studio.pages.dev/v/vod2941037224_14359_final.mp4?v=1f8713f04a&r=1795686420",
+ "poster": "https://gtaclip-studio.pages.dev/v/vod2941037224_14359.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "uploading",
+   "buffer_id": "6b0876873accdac92cebbeda",
+   "error": ""
+  }
+ },
+ "platforms": [
+  "tiktok"
+ ],
+ "hook_kind": "ai",
+ "hook_variant": "formula",
+ "style": {
+  "box": "white",
+  "cam": "medium",
+  "hooklen": "story",
+  "punch": "off",
+  "pbar": "off"
+ },
+ "viral": 90,
+ "seconds": 27
+}

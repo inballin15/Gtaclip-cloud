@@ -386,12 +386,12 @@
    }
   ]
  },
- "updated": "2026-11-26T18:06:53Z",
+ "updated": "2026-11-26T18:12:20Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-26T18:07:00Z",
- "up_next": "vod2941037224_14359",
+ "next_slot": "2026-11-26T21:07:00Z",
+ "up_next": "RichEntertainingPorpoiseOSkomodo-ZTvgMVzfA_zhKzeP",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7712520992710462733",
@@ -1219,12 +1219,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-26",
-  "used": 7,
+  "used": 9,
   "cap": 28,
   "slots": 6,
-  "remain30": 676,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 597,
+  "remain30": 674,
+  "reset30": "2026-12-18T22:03:26Z",
+  "remain24": 595,
   "active": [
    [
     8,
@@ -1328,6 +1328,42 @@
   "vod2939983603_26445"
  ],
  "posts": {
+  "vod2941037224_14359": {
+   "id": "vod2941037224_14359",
+   "hook": "YourRAGE lost it after finding out Randy wanted his stolen car in GTA 6",
+   "streamer": "YourRAGE",
+   "login": "yourragegaming",
+   "campaign": "YourRAGE",
+   "tag": "#YourRAGE",
+   "caption": "",
+   "why": "1:07 PM slot",
+   "posted_at": "2026-11-26T18:12:20Z",
+   "video": "https://gtaclip-studio.pages.dev/v/vod2941037224_14359_final.mp4?v=1f8713f04a&r=1795686420",
+   "poster": "https://gtaclip-studio.pages.dev/v/vod2941037224_14359.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b0876873accdac92cebbeda",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "formula",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "off"
+   },
+   "viral": 90,
+   "seconds": 27
+  },
   "HyperDarlingSpindleNotATK-JDIE3of-iXeKttnI": {
    "id": "HyperDarlingSpindleNotATK-JDIE3of-iXeKttnI",
    "hook": "IShowSpeed FREAKED OUT after landing the first ever backflip in GTA 6",
@@ -3901,6 +3937,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T18:06:53Z",
- "log": []
+ "stats_updated": "2026-11-26T18:12:20Z",
+ "log": [
+  "[18:12:22Z] posting vod2941037224_14359 (1:07 PM slot) to tiktok: YourRAGE lost it after finding out Randy wanted his stolen car in GTA 6",
+  "[18:12:33Z]   tiktok: uploading "
+ ]
 }
