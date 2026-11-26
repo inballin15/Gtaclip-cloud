@@ -467,6 +467,37 @@ FRESH_HOURS = 8    # gets a small newer-is-better bonus
 MAX_AGE_HOURS = 36  # never post a clip clipped more than 36 hours ago (Nov 23: quality over newest)
 
 
+_COMMON = set("""after before during while because realized realizes trying tried seeing watching finding found
+getting getting started almost losing really insane crazy moment moments panicked panics freaked shocked shook
+screamed screaming raged raging laughed laughing devastated confused stunned couldn always nothing something
+everything mission missions without nobody better first whole little massive biggest perfect people player
+players another driving stolen escape police""".split())
+
+
+def _keywords(t: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z]{6,}", (t or "").lower()) if w not in _COMMON}
+
+
+def same_moment(r: dict, recs: dict) -> bool:
+    """Viewers clip the same big moment several times (Nov 25 + 26: two IShowSpeed backflip clips). A clip whose
+    hook/title shares a distinctive word with a clip of the same streamer posted in the last 4 days waits."""
+    st_ = (r.get("streamer") or "").lower()
+    kw = _keywords((r.get("hook") or "") + " " + (r.get("title") or "")) - _keywords(st_)
+    if not st_ or not kw:
+        return False
+    for p_ in recs.values():
+        if (p_.get("streamer") or "").lower() != st_ or not p_.get("posted_at") or p_.get("id") == r.get("id"):
+            continue
+        try:
+            if NOW - parse(p_["posted_at"]) > timedelta(days=4):
+                continue
+        except Exception:  # noqa: BLE001
+            continue
+        if kw & _keywords((p_.get("hook") or "") + " " + (p_.get("title") or "")):
+            return True
+    return False
+
+
 def too_old(r: dict) -> bool:
     if r.get("source") == "upload":   # clips from your own videos aren't time-sensitive
         return False
@@ -875,6 +906,7 @@ def main() -> None:
         ok = [r for r in ready if r["id"] not in posted_ids and r["id"] not in blocked and r["id"] not in pending_now
               and r.get("source") != "upload"   # clips from links you pasted / uploads: never auto-posted, you post them
               and not too_old(r) and not already_on_buffer(r)
+              and not same_moment(r, recs)                         # not a 2nd clip of a moment already posted
               and (r.get("pic_ok") is True or ctl.get("ai_off"))   # only clips that passed the AI picture check
               and r.get("view_ok") is not False                       # and the view check (fits TikTok's screen)
               and hd_ready(r)]                                       # and whose sharp AI webcam is in
