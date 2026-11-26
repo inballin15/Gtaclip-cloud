@@ -512,7 +512,12 @@ def place_sections(plan: dict, scenes: list[dict], dur: float) -> None:
         return
     rows = [(r["t"], _toks(" ".join((r["what"], r["ui"], r["tip"], r["where"])))) for r in scenes]
 
+    dull = [(r["t"], bool(r["boring"])) for r in scenes]
+
     def win_score(toks: set, a: float, b: float) -> int:
+        d = [x for t, x in dull if a - 0.5 <= t <= b + 0.5]
+        if d and sum(d) > len(d) / 2:   # mostly boring / off-topic footage: never a tip's place
+            return -1
         return sum(len(toks & tk) for t, tk in rows if a - 0.5 <= t <= b + 0.5)
     step = max(1.0, (rows[1][0] - rows[0][0]) if len(rows) > 1 else 2.0)
     for s in plan["sections"]:
@@ -551,10 +556,13 @@ def place_sections(plan: dict, scenes: list[dict], dur: float) -> None:
             if s["end"] > tail + 2 and tail - s["start"] >= 6:
                 log(f"'{s['title']}': cut {s['end'] - tail:.0f}s of silent footage after its last line")
                 s["end"] = tail
+    plan["_sc"] = [[r["t"], 0 if r["boring"] else r["score"]] for r in scenes]   # for fit(), if the intro must move
     for s in plan["sections"]:   # the intro: the most eye-catching stretch, not a boring / off-topic one
         if s["kind"] != "intro":
             continue
-        ln = s["end"] - s["start"]
+        say = sum(len(x["text"].split()) / 2.5 + 0.3 for x in s["lines"]) + 1.0   # room for its narration
+        ln = max(s["end"] - s["start"], min(say, 30.0))
+        s["end"] = min(dur, s["start"] + ln)
 
         def avg(a: float, b: float) -> float:
             v = [(0 if r["boring"] else r["score"]) for r in scenes if a - 0.5 <= r["t"] <= b + 0.5]
@@ -689,8 +697,21 @@ def fit(plan: dict, dur: float) -> None:
                     if a - t0 >= ln_:
                         gaps.append(t0)
                     t0 = max(t0, b)
-                if gaps:
-                    st = min(gaps, key=lambda g: abs(g - s["start"]))
+                sc = plan.get("_sc") or []
+
+                def look(a: float) -> float:   # how eye-catching that stretch is (0 = boring / off-topic)
+                    v = [x for t, x in sc if a - 0.5 <= t <= a + ln_ + 0.5]
+                    return sum(v) / len(v) if v else 0.0
+                cands, t0 = [], 0.0
+                for a, b in tips + [(dur, dur)]:
+                    t = t0
+                    while t + ln_ <= a + 0.01:
+                        cands.append(t)
+                        t += 2.0
+                    t0 = max(t0, b)
+                if cands:
+                    gaps = cands
+                    st = max(cands, key=lambda g: (look(g), -abs(g - s["start"])))
                     sh = st - s["start"]
                     s["start"], s["end"] = st, st + (s["end"] - s["start"])
                     for x in s["lines"]:
