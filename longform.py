@@ -1350,6 +1350,7 @@ def make(job: dict, num: int = 0) -> dict:
     entry["thumb_full"] = release_upload(thumb, f"{job['id']}.jpg", "image/jpeg")
     entry["thumbs"] = [entry["thumb_full"]] + [release_upload(t_, f"{job['id']}_t{k + 2}.jpg", "image/jpeg") for k, t_ in enumerate(thumbs[1:])]
     try:   # AI thumbnails added before (Higgsfield) stay first when a video is re-made
+        git("fetch", "-q", "--depth=1", "origin", "+gh-pages:refs/remotes/origin/gh-pages")
         cur_l = json.loads(git("show", "origin/gh-pages:longs.json"))
         prev_e = next((v for v in cur_l.get("videos", []) if v.get("id") == job["id"]), {})
         ai_t = [t for t in prev_e.get("thumbs", []) if "_ai" in t]
@@ -1368,7 +1369,15 @@ def make(job: dict, num: int = 0) -> dict:
         log(f"Shorts not made: {e}")
     if (WORK / "subs.srt").exists():   # the same subtitles as a file, for YouTube's own captions (upload it in Studio)
         entry["srt"] = release_upload(WORK / "subs.srt", f"{job['id']}.srt", "application/x-subrip")
-    publish_site(entry, {f"v/l/{job['id']}.jpg": thumb, f"v/l/{job['id']}_preview.mp4": prev})
+    card = thumb
+    if "_ai" in entry.get("thumb_full", ""):
+        try:
+            import requests
+            card = WORK / "card_ai.jpg"
+            card.write_bytes(requests.get(entry["thumb_full"], timeout=60).content)
+        except Exception:  # noqa: BLE001
+            card = thumb
+    publish_site(entry, {f"v/l/{job['id']}.jpg": card, f"v/l/{job['id']}_preview.mp4": prev})
     return entry
 
 
