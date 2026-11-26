@@ -386,12 +386,12 @@
    }
   ]
  },
- "updated": "2026-11-26T13:33:10Z",
+ "updated": "2026-11-26T13:38:12Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-26T13:37:00Z",
- "up_next": "vod2941037224_15818",
+ "next_slot": "2026-11-26T16:37:00Z",
+ "up_next": "HyperDarlingSpindleNotATK-JDIE3of-iXeKttnI",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7712326574929890574",
@@ -1195,12 +1195,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-26",
-  "used": 1,
+  "used": 3,
   "cap": 28,
   "slots": 6,
-  "remain30": 682,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 572,
+  "remain30": 680,
+  "reset30": "2026-12-18T22:03:26Z",
+  "remain24": 570,
   "active": [
    [
     8,
@@ -1313,6 +1313,42 @@
   "vod2939983603_26445"
  ],
  "posts": {
+  "vod2941037224_15818": {
+   "id": "vod2941037224_15818",
+   "hook": "YourRAGE PANICKED after seeing a large bank in GTA 6",
+   "streamer": "YourRAGE",
+   "login": "yourragegaming",
+   "campaign": "YourRAGE",
+   "tag": "#YourRAGE",
+   "caption": "",
+   "why": "8:37 AM slot",
+   "posted_at": "2026-11-26T13:38:12Z",
+   "video": "https://gtaclip-studio.pages.dev/v/vod2941037224_15818_final.mp4?v=a138bf835f&r=1795687699",
+   "poster": "https://gtaclip-studio.pages.dev/v/vod2941037224_15818.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b0836475024f595cda2040f",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "quote",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "off",
+    "pbar": "off"
+   },
+   "viral": 90,
+   "seconds": 27
+  },
   "ProtectivePopularDolphinTriHard-HRhwsu8sBkw2jmY1": {
    "id": "ProtectivePopularDolphinTriHard-HRhwsu8sBkw2jmY1",
    "hook": "IShowSpeed lost it when he pulled off a massive backflip in GTA 6",
@@ -2686,8 +2722,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1,
-   "likes": 0,
+   "views": 640,
+   "likes": 11,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -2700,7 +2736,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1466,
+   "views": 1471,
    "likes": 11,
    "comments": 1,
    "shares": 0,
@@ -2882,8 +2918,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 2069,
-   "likes": 25,
+   "views": 2410,
+   "likes": 26,
    "comments": 2,
    "shares": 0,
    "reposts": 0,
@@ -3148,7 +3184,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1245,
+   "views": 1249,
    "likes": 19,
    "comments": 0,
    "shares": 0,
@@ -3786,6 +3822,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T13:33:10Z",
- "log": []
+ "stats_updated": "2026-11-26T13:38:12Z",
+ "log": [
+  "[13:38:14Z] posting vod2941037224_15818 (8:37 AM slot) to tiktok: YourRAGE PANICKED after seeing a large bank in GTA 6",
+  "[13:38:25Z]   tiktok: uploading "
+ ]
 }
