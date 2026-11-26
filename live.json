@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-26T18:17:04Z",
+ "updated": "2026-11-26T18:20:01Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1340,6 +1340,32 @@
   "vod2939983603_26445"
  ],
  "posts": {
+  "vod2941037224_1741": {
+   "id": "vod2941037224_1741",
+   "hook": "YourRAGE lost it watching NickEh30 hook an unsuspecting driver in GTA 6",
+   "streamer": "YourRAGE",
+   "campaign": "YourRAGE",
+   "why": "posted by Nicholas",
+   "manual": true,
+   "posted_at": "2026-11-26T18:20:01Z",
+   "platforms": [
+    "youtube"
+   ],
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on"
+   },
+   "hook_variant": "formula",
+   "seconds": 29,
+   "tiktok": "",
+   "youtube": "",
+   "manual_on": {
+    "youtube": "2026-11-26T18:20:01Z"
+   }
+  },
   "RichEntertainingPorpoiseOSkomodo-ZTvgMVzfA_zhKzeP": {
    "id": "RichEntertainingPorpoiseOSkomodo-ZTvgMVzfA_zhKzeP",
    "hook": "IShowSpeed lost it after an NPC ignored his polite greeting in GTA 6",
@@ -3999,11 +4025,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T18:17:04Z",
+ "stats_updated": "2026-11-26T18:20:01Z",
  "log": [
-  "[18:17:07Z] post-now requested: RichEntertainingPorpoiseOSkomodo-ZTvgMVzfA_zhKzeP",
-  "[18:17:09Z] spotted your tiktok post of vod2941037224_14359: https://www.tiktok.com/@gtaclip96/video/7712544606923132174",
-  "[18:17:10Z] posting RichEntertainingPorpoiseOSkomodo-ZTvgMVzfA_zhKzeP (post now) to tiktok: IShowSpeed lost it after an NPC ignored his polite greeting in GTA 6",
-  "[18:17:23Z]   tiktok: uploading "
+  "[18:20:04Z] marked as posted manually: vod2941037224_1741"
  ]
 }

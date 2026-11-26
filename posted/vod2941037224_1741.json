@@ -1,0 +1,26 @@
+{
+ "id": "vod2941037224_1741",
+ "hook": "YourRAGE lost it watching NickEh30 hook an unsuspecting driver in GTA 6",
+ "streamer": "YourRAGE",
+ "campaign": "YourRAGE",
+ "why": "posted by Nicholas",
+ "manual": true,
+ "posted_at": "2026-11-26T18:20:01Z",
+ "platforms": [
+  "youtube"
+ ],
+ "style": {
+  "box": "white",
+  "cam": "medium",
+  "hooklen": "story",
+  "punch": "off",
+  "pbar": "on"
+ },
+ "hook_variant": "formula",
+ "seconds": 29,
+ "tiktok": "",
+ "youtube": "",
+ "manual_on": {
+  "youtube": "2026-11-26T18:20:01Z"
+ }
+}
