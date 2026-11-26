@@ -1,13 +1,13 @@
 {
  "insights": {
-  "updated": "2026-11-26T06:41:01Z",
-  "videos": 59,
+  "updated": "2026-11-26T08:45:15Z",
+  "videos": 60,
   "v": 4,
   "findings": [
    {
     "feature": "streamer",
     "value": "xQc",
-    "x": 14.83,
+    "x": 14.44,
     "n": 3
    },
    {
@@ -19,7 +19,7 @@
    {
     "feature": "clip length",
     "value": "16-22 s",
-    "x": 0.16,
+    "x": 0.15,
     "n": 5
    },
    {
@@ -37,56 +37,50 @@
    {
     "feature": "hook style",
     "value": "question",
-    "x": 0.37,
+    "x": 0.36,
     "n": 3
-   },
-   {
-    "feature": "style:cam",
-    "value": "small",
-    "x": 0.4,
-    "n": 8
    },
    {
     "feature": "emotion word",
     "value": "STUNNED",
-    "x": 0.4,
+    "x": 0.38,
     "n": 6
+   },
+   {
+    "feature": "style:cam",
+    "value": "small",
+    "x": 0.39,
+    "n": 8
    },
    {
     "feature": "style:box",
     "value": "black",
-    "x": 0.41,
+    "x": 0.4,
     "n": 7
-   },
-   {
-    "feature": "hook style",
-    "value": "formula",
-    "x": 0.42,
-    "n": 11
-   },
-   {
-    "feature": "streamer",
-    "value": "caseoh_",
-    "x": 2.2,
-    "n": 3
    },
    {
     "feature": "streamer",
     "value": "IShowSpeed",
-    "x": 2.19,
-    "n": 8
-   },
-   {
-    "feature": "CAPS words",
-    "value": "0-1",
-    "x": 2.18,
-    "n": 23
+    "x": 2.33,
+    "n": 9
    },
    {
     "feature": "style:hooklen",
     "value": "tiny",
-    "x": 0.47,
+    "x": 0.45,
     "n": 10
+   },
+   {
+    "feature": "CAPS words",
+    "value": "0-1",
+    "x": 2.19,
+    "n": 24
+   },
+   {
+    "feature": "streamer",
+    "value": "caseoh_",
+    "x": 2.12,
+    "n": 3
    },
    {
     "feature": "streamer",
@@ -97,85 +91,91 @@
    {
     "feature": "CAPS words",
     "value": "4-6",
-    "x": 0.49,
+    "x": 0.48,
     "n": 6
    },
    {
-    "feature": "style:cam",
-    "value": "medium",
-    "x": 0.57,
-    "n": 20
+    "feature": "hook style",
+    "value": "formula",
+    "x": 0.5,
+    "n": 12
    },
    {
     "feature": "style:punch",
     "value": "off",
-    "x": 0.57,
+    "x": 0.55,
     "n": 5
+   },
+   {
+    "feature": "posted",
+    "value": "morning (7-11)",
+    "x": 1.76,
+    "n": 13
    },
    {
     "feature": "has a number",
     "value": "no",
-    "x": 0.58,
+    "x": 0.57,
     "n": 14
    },
    {
     "feature": "hook style",
     "value": "unknown",
-    "x": 1.68,
-    "n": 33
-   },
-   {
-    "feature": "hook style",
-    "value": "lowcaps",
-    "x": 1.66,
-    "n": 6
-   },
-   {
-    "feature": "posted",
-    "value": "morning (7-11)",
     "x": 1.65,
-    "n": 12
+    "n": 33
    },
    {
     "feature": "posted",
     "value": "midday (11-15)",
-    "x": 0.62,
+    "x": 0.61,
     "n": 13
+   },
+   {
+    "feature": "style:cam",
+    "value": "medium",
+    "x": 0.61,
+    "n": 21
    },
    {
     "feature": "CAPS words",
     "value": "2-3",
-    "x": 0.63,
+    "x": 0.62,
     "n": 30
+   },
+   {
+    "feature": "hook style",
+    "value": "lowcaps",
+    "x": 1.61,
+    "n": 6
    }
   ],
   "guidance": [
-   "AVOID: emotion word = STUNNED (0.4x views, 6 videos)",
-   "AVOID: has a number = no (0.58x views, 14 videos)"
+   "AVOID: emotion word = STUNNED (0.38x views, 6 videos)",
+   "AVOID: has a number = no (0.57x views, 14 videos)"
   ],
   "weights": {
-   "formula": 0.352,
-   "news": 0.197,
+   "formula": 0.373,
+   "news": 0.19,
    "quote": 0.076,
-   "question": 0.088,
-   "lowcaps": 0.287
+   "question": 0.085,
+   "lowcaps": 0.276
   },
   "style_weights": {
    "box": {
-    "white": 0.785,
-    "black": 0.215
+    "white": 0.795,
+    "black": 0.205
    },
    "cam": {
-    "small": 0.289,
-    "medium": 0.711
+    "small": 0.277,
+    "medium": 0.723
    },
    "hooklen": {
-    "tiny": 0.177,
-    "story": 0.823
+    "tiny": 0.166,
+    "story": 0.834
    },
    "punch": {
-    "off": 0.446,
-    "on": 0.554
+    "off": 0.423,
+    "on": 0.577
    },
    "pbar": {
     "off": 0.5,
@@ -185,7 +185,7 @@
   "top": [
    {
     "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-    "views": 2396
+    "views": 2410
    },
    {
     "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
@@ -205,7 +205,7 @@
    }
   ],
   "style_counts": {
-   "formula": 11,
+   "formula": 12,
    "news": 2,
    "quote": 4,
    "question": 3,
@@ -213,20 +213,20 @@
   },
   "style_tested": {
    "box": {
-    "white": 19,
+    "white": 20,
     "black": 7
    },
    "cam": {
     "small": 8,
-    "medium": 20
+    "medium": 21
    },
    "hooklen": {
     "tiny": 10,
-    "story": 10
+    "story": 11
    },
    "punch": {
     "off": 5,
-    "on": 7
+    "on": 8
    },
    "pbar": {
     "off": 0,
@@ -234,6 +234,11 @@
    }
   },
   "feed": [
+   {
+    "at": "2026-11-26T08:45:15Z",
+    "kind": "data",
+    "text": "judged 60 videos (was 59)"
+   },
    {
     "at": "2026-11-25T20:29:28Z",
     "kind": "data",
@@ -378,15 +383,10 @@
     "at": "2026-11-24T09:53:50Z",
     "kind": "new",
     "text": "DO: has a number = yes (1.25x views, 30 videos)"
-   },
-   {
-    "at": "2026-11-24T07:52:29Z",
-    "kind": "data",
-    "text": "judged 39 videos (was 38)"
    }
   ]
  },
- "updated": "2026-11-26T08:39:37Z",
+ "updated": "2026-11-26T08:45:15Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -3786,6 +3786,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T08:39:37Z",
- "log": []
+ "stats_updated": "2026-11-26T08:45:15Z",
+ "log": [
+  "[08:45:16Z] hook learner: 60 videos, 2 lessons"
+ ]
 }
