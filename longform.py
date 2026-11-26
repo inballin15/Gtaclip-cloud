@@ -444,6 +444,8 @@ def check_script(plan: dict, scenes: list[dict], game: str, dur: float) -> None:
               "3) a line may only say what the log shows - rewrite anything invented (items, missions, story, numbers, "
               "places, controls, mechanics); keep it energetic, talking to 'you', 8-22 words, no emojis;\n"
               "4) don't talk about streamer webcams, chat or overlays - only the game.\n"
+              "Leave alone, on purpose: the one playful subscribe joke at the start of a middle tip and the outro's "
+              "subscribe line - they are part of the channel's style, not mistakes.\n"
               "Keep everything that is already right exactly as it is. Keep the same sections in the same order "
               "(same 'i'). The intro is a hook over the most eye-catching moment - only check its words.\n"
               "Return JSON: {\"sections\": [{\"i\": 0, \"start\": 0, \"end\": 0, \"lines\": [{\"at\": 0, \"text\": \"\"}]}], "
@@ -627,17 +629,42 @@ def fit(plan: dict, dur: float) -> None:
     """Place every line on the finished video's timeline so nothing overlaps and the footage under each line is the
     moment it talks about. If a section is too short for its lines: slow its speed-up, then use more of the footage
     after it, and only then drop the last lines."""
-    for s in plan["sections"]:
+    order = [x for x in plan["sections"] if x["kind"] != "intro"] + [x for x in plan["sections"] if x["kind"] == "intro"]
+    for s in order:   # tips first: the intro is only a hook, so it moves out of a tip's way
         need = 0.3
         for ln in s["lines"]:
             need += ln["secs"] + 0.25
         need += 0.6
+        if s["kind"] == "intro":
+            tips = sorted((x["start"], x["end"]) for x in plan["sections"] if x is not s)
+            ln_ = max(s["end"] - s["start"], need * s["speed"])
+            if any(a < s["start"] + ln_ and s["start"] < b for a, b in tips):   # clashes with a tip's footage now
+                gaps, t0 = [], 0.0
+                for a, b in tips + [(dur, dur)]:
+                    if a - t0 >= ln_:
+                        gaps.append(t0)
+                    t0 = max(t0, b)
+                if gaps:
+                    st = min(gaps, key=lambda g: abs(g - s["start"]))
+                    sh = st - s["start"]
+                    s["start"], s["end"] = st, st + (s["end"] - s["start"])
+                    for x in s["lines"]:
+                        x["at"] += sh
+                    log(f"intro moved to {mmss(st)} so it doesn't repeat a tip's footage")
         out = (s["end"] - s["start"]) / s["speed"]
         if need > out and s["speed"] > 1:
             s["speed"] = max(1.0, (s["end"] - s["start"]) / need)
             out = (s["end"] - s["start"]) / s["speed"]
-        if need > out:
-            s["end"] = min(dur, s["start"] + need * s["speed"])
+        if need > out:   # more footage: after it first, then before it - never into another section's footage
+            others = [(x["start"], x["end"]) for x in plan["sections"] if x is not s and x["kind"] != "intro"]
+            if s["kind"] == "intro":
+                others = [(x["start"], x["end"]) for x in plan["sections"] if x is not s]
+            hi = min([a for a, _ in others if a >= s["end"] - 0.01] + [dur])
+            lo = max([b for _, b in others if b <= s["start"] + 0.01] + [0.0])
+            want_len = need * s["speed"]
+            s["end"] = min(hi, s["start"] + want_len)
+            if s["end"] - s["start"] < want_len:
+                s["start"] = max(lo, s["end"] - want_len)
             out = (s["end"] - s["start"]) / s["speed"]
         while s["lines"] and need > out + 0.01:
             dropped = s["lines"].pop()
