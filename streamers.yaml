@@ -33,10 +33,10 @@ streamers:
   xqc:         {name: "xQc",           tag: "#xQc",      facecam: null, boost: 2.2}   # Nov 24: our best TikTok/YouTube numbers
   vanossgaming: {name: "Vanoss",       tag: "#Vanoss",   facecam: null}
   h2odelirious: {name: "H2O Delirious", tag: "#Vanoss",  facecam: null}
-  ishowspeed:  {name: "IShowSpeed",    tag: "#IShowSpeed", facecam: null, boost: 2.0}
+  ishowspeed:  {name: "IShowSpeed",    tag: "#IShowSpeed", facecam: [0.004, 0.432, 0.194, 0.214], boost: 2.0}   # left cam, stops ABOVE his view counter (the learned box took the counter too)
   stableronaldo: {name: "Stable Ronaldo", tag: "#StableRonaldo", facecam: [0.02, 0.53, 0.23, 0.29]}   # cut-out cam, bottom left above the map (Nov 25)
   jasontheween: {name: "JasonTheWeen", tag: "#JasonTheWeen", facecam: null}
-  nickmercs:   {name: "NICKMERCS",     tag: "#Nickmercs", facecam: null}
+  nickmercs:   {name: "NICKMERCS",     tag: "#Nickmercs", facecam: [0.786, 0.437, 0.208, 0.203]}   # bottom-right cam, ABOVE his overlay bar (the detector took the bar too)
   nickeh30:    {name: "Nick Eh 30",    tag: "#NickEh30",  facecam: [0, 0.15, 0.23, 0.46], boost: 1.5}   # cut-out cam, left side (no border - detector missed it)   # added Nov 23: popping off in GTA 6
   ohnepixel:   {name: "ohnePixel",     tag: "#ohnePixel", facecam: [0.05, 0.64, 0.24, 0.36]}   # cut-out cam, bottom left (no border - detector missed it)
   marlon:      {name: "Marlon",        tag: "#Marlon",   facecam: null}

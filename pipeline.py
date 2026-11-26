@@ -3105,6 +3105,15 @@ def main() -> None:
             gone.append(c0.get("streamer") or who)
     if gone:
         log(f"took {len(gone)} clips of other streamers out of the queue: {', '.join(sorted(set(gone)))}")
+    if st.get("kai_duo_v", 0) < 1:   # one time (Nov 26): Kai Cenat PLAYING with a duo's webcam on screen was
+        st["kai_duo_v"] = 1           # taken for a reaction clip -> normal game-big layout
+        for cid0, c0 in clips.items():
+            if (cid0.startswith("CooperativeHonestStorkGivePLZ") and c0["status"] == "new"
+                    and not c0.get("user_layout")):
+                c0.update(layout="split", react=False, react_skip=True)
+                for k in ("final_hash", "clean_v", "final_v", "react_view", "react_by", "cam_used", "layout_used"):
+                    c0.pop(k, None)
+                log(f"{cid0}: Kai is playing (a duo's webcam isn't a reaction) - re-made game-big")
     if st.get("band_recheck_v", 0) < 1:   # one time (Nov 25): black-band check only looks where people can see
         st["band_recheck_v"] = 1
         n = 0
@@ -3136,8 +3145,8 @@ def main() -> None:
                 c0.pop(k, None)
             n += 1
         log(f"reaction clips: {n} re-made with the big webcam layout")
-    if st.get("usual_cam_v", 0) < 1:   # one time (Nov 25 eve): a streamer's set webcam spot (streamers.yaml) wins
-        st["usual_cam_v"] = 1           # when his face is there (ohnePixel: a GTA character's face was taken for it)
+    if st.get("usual_cam_v", 0) < 2:   # one time (Nov 25 eve; again Nov 26 for NICKMERCS): a streamer's set webcam spot (streamers.yaml) wins
+        st["usual_cam_v"] = 2           # when his face is there (ohnePixel: a GTA character's face was taken for it)
         for cid0, c0 in clips.items():
             s0 = CFG["streamers"].get(c0.get("login") or "", {})
             usual = ",".join(str(v) for v in (s0.get("facecam") or []))
@@ -3712,7 +3721,8 @@ def main() -> None:
                     ch = hashlib.sha1((c["cam"] + LAYOUT_V + "clean" + "split").encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, True)
                     need_f = need_c = True
-                if ok and vis.get("react") and not c.get("user_layout") and (c.get("layout") != "react" or c.get("react_by") == "faces"):
+                if (ok and vis.get("react") and not c.get("user_layout") and not c.get("react_skip")
+                        and (c.get("layout") != "react" or c.get("react_by") == "faces")):
                     # a REACTION clip (the streamer watching someone else's stream / video): react layout, using
                     # the CHANNEL OWNER's own webcam. Two faces on screen: the AI points out which webcam is the
                     # streamer's; a webcam we already traced / found staying put across the video wins when it's
