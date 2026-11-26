@@ -1,13 +1,13 @@
 {
  "insights": {
-  "updated": "2026-11-26T00:35:58Z",
+  "updated": "2026-11-26T02:36:34Z",
   "videos": 59,
   "v": 4,
   "findings": [
    {
     "feature": "streamer",
     "value": "xQc",
-    "x": 14.83,
+    "x": 14.82,
     "n": 3
    },
    {
@@ -25,7 +25,7 @@
    {
     "feature": "streamer",
     "value": "Lacy",
-    "x": 0.3,
+    "x": 0.29,
     "n": 11
    },
    {
@@ -61,7 +61,7 @@
    {
     "feature": "hook style",
     "value": "formula",
-    "x": 0.43,
+    "x": 0.42,
     "n": 11
    },
    {
@@ -185,7 +185,7 @@
   "top": [
    {
     "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-    "views": 2379
+    "views": 2387
    },
    {
     "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-26T02:31:37Z",
+ "updated": "2026-11-26T02:36:34Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -3768,6 +3768,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T02:31:37Z",
- "log": []
+ "stats_updated": "2026-11-26T02:36:34Z",
+ "log": [
+  "[02:36:36Z] hook learner: 59 videos, 2 lessons"
+ ]
 }
