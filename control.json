@@ -70,18 +70,18 @@
  "yt_channel": "UCtxm_iDQ0Y7baG2mwrGGcSg",
  "yt_check": "ok",
  "tt_check": "ok",
- "manual_check": "2026-11-26T18:28:43Z",
- "stats_at": "2026-11-26T18:17:04Z",
+ "manual_check": "2026-11-26T18:42:31Z",
+ "stats_at": "2026-11-26T18:42:31Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-26",
-  "used": 11,
+  "used": 12,
   "cap": 28,
   "slots": 6,
-  "remain30": 672,
-  "reset30": "2026-12-18T22:03:28Z",
-  "remain24": 593
+  "remain30": 671,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 592
  },
  "yt_verified_v": 1,
  "you_post": [
