@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-26T20:52:43Z",
- "videos": 63,
+ "updated": "2026-11-26T22:53:28Z",
+ "videos": 64,
  "v": 4,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 13.04,
+   "x": 12.96,
    "n": 3
   },
   {
@@ -30,7 +30,7 @@
   {
    "feature": "hook length",
    "value": "long (90+)",
-   "x": 0.29,
+   "x": 0.28,
    "n": 4
   },
   {
@@ -42,13 +42,13 @@
   {
    "feature": "style:cam",
    "value": "small",
-   "x": 0.36,
+   "x": 0.35,
    "n": 8
   },
   {
    "feature": "emotion word",
    "value": "STUNNED",
-   "x": 0.36,
+   "x": 0.35,
    "n": 6
   },
   {
@@ -72,8 +72,8 @@
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 2.33,
-   "n": 27
+   "x": 2.28,
+   "n": 28
   },
   {
    "feature": "CAPS words",
@@ -83,21 +83,27 @@
   },
   {
    "feature": "streamer",
+   "value": "Kai",
+   "x": 2.18,
+   "n": 3
+  },
+  {
+   "feature": "streamer",
    "value": "IShowSpeed",
-   "x": 2.16,
+   "x": 2.14,
    "n": 9
+  },
+  {
+   "feature": "question",
+   "value": "yes",
+   "x": 2.14,
+   "n": 4
   },
   {
    "feature": "hook style",
    "value": "formula",
    "x": 0.47,
    "n": 12
-  },
-  {
-   "feature": "question",
-   "value": "yes",
-   "x": 2.12,
-   "n": 4
   },
   {
    "feature": "streamer",
@@ -126,31 +132,25 @@
   {
    "feature": "hook style",
    "value": "unknown",
-   "x": 1.66,
-   "n": 36
-  },
-  {
-   "feature": "posted",
-   "value": "night (19+)",
-   "x": 0.64,
-   "n": 14
-  },
-  {
-   "feature": "posted",
-   "value": "morning (7-11)",
-   "x": 1.55,
-   "n": 13
+   "x": 1.65,
+   "n": 37
   },
   {
    "feature": "clip length",
    "value": "23 s+",
-   "x": 0.65,
+   "x": 0.64,
    "n": 24
+  },
+  {
+   "feature": "posted",
+   "value": "morning (7-11)",
+   "x": 1.54,
+   "n": 13
   }
  ],
  "guidance": [
-  "AVOID: emotion word = STUNNED (0.36x views, 6 videos)",
-  "AVOID: has a number = no (0.7x views, 15 videos)"
+  "AVOID: emotion word = STUNNED (0.35x views, 6 videos)",
+  "AVOID: has a number = no (0.73x views, 16 videos)"
  ],
  "weights": {
   "formula": 0.368,
@@ -169,8 +169,8 @@
    "medium": 0.722
   },
   "hooklen": {
-   "tiny": 0.163,
-   "story": 0.837
+   "tiny": 0.162,
+   "story": 0.838
   },
   "punch": {
    "off": 0.421,
@@ -184,7 +184,7 @@
  "top": [
   {
    "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-   "views": 2438
+   "views": 2469
   },
   {
    "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
@@ -200,7 +200,7 @@
   },
   {
    "hook": "What do you think about Nick not being family freindly?",
-   "views": 802
+   "views": 849
   }
  ],
  "style_counts": {
@@ -233,6 +233,11 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-26T22:53:28Z",
+   "kind": "data",
+   "text": "judged 64 videos (was 63)"
+  },
   {
    "at": "2026-11-26T18:52:11Z",
    "kind": "data",
@@ -377,11 +382,6 @@
    "at": "2026-11-24T11:56:13Z",
    "kind": "dropped",
    "text": "DO: emotion word = none (1.32x views, 18 videos)"
-  },
-  {
-   "at": "2026-11-24T11:56:13Z",
-   "kind": "dropped",
-   "text": "DO: has a number = yes (1.25x views, 30 videos)"
   }
  ]
 }
