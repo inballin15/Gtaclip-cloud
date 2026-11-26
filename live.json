@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-26T18:20:01Z",
+ "updated": "2026-11-26T18:24:14Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -4025,8 +4025,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T18:20:01Z",
- "log": [
-  "[18:20:04Z] marked as posted manually: vod2941037224_1741"
- ]
+ "stats_updated": "2026-11-26T18:24:14Z",
+ "log": []
 }
