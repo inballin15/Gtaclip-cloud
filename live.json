@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-26T20:52:43Z",
+ "updated": "2026-11-26T20:58:35Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -4078,8 +4078,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-26T20:52:43Z",
- "log": [
-  "[20:52:45Z] hook learner: 63 videos, 2 lessons"
- ]
+ "stats_updated": "2026-11-26T20:58:35Z",
+ "log": []
 }
