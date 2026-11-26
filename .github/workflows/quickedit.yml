@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Getting your clip
         uses: actions/checkout@v4
-        with: { ref: main, sparse-checkout: "quickedit.py\nrender_hook.py\nfonts", sparse-checkout-cone-mode: false }
+        with: { ref: main, sparse-checkout: "quickedit.py\nrender_hook.py\nengage.py\nfonts", sparse-checkout-cone-mode: false }
       - name: Getting ready
         shell: bash
         env:

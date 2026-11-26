@@ -965,6 +965,15 @@ def main() -> None:
                 ctl["errors"] = ctl["errors"][:10]
                 if why != "post now":
                     ctl["last_slot"] = slot_key  # don't hammer the same slot; next slot tries again
+                else:
+                    # Nov 26: a failing Post now was retried every 5 min (~3 Buffer requests each) and used up the
+                    # whole day's budget, so every later slot was skipped. Give it 3 tries, then drop it.
+                    for p in ctl["postnow"]:
+                        if p["id"] == cid:
+                            p["tries"] = p.get("tries", 0) + 1
+                    if any(p["id"] == cid and p["tries"] >= 3 for p in ctl["postnow"]):
+                        log(f"post now gave up on {cid} after 3 failed tries (saves Buffer's budget for the slots)")
+                        ctl["postnow"] = [p for p in ctl["postnow"] if p["id"] != cid]
 
     # 3) follow every post until it's live, and collect stats
     stats_posts = []
