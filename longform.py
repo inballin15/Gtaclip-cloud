@@ -450,7 +450,7 @@ def check_script(plan: dict, scenes: list[dict], game: str, dur: float) -> None:
               "(same 'i'). The intro is a hook over the most eye-catching moment - only check its words.\n"
               "Return JSON: {\"sections\": [{\"i\": 0, \"start\": 0, \"end\": 0, \"lines\": [{\"at\": 0, \"text\": \"\"}]}], "
               "\"changes\": [\"short note of each fix\"]}\n\nDRAFT:\n" + json.dumps(draft) + "\n\nFOOTAGE LOG:\n" + log_txt)
-    res = ai([{"text": prompt}], "checking the script against the footage", temperature=0.2, strong=True)
+    res = ai([{"text": prompt}], "checking the script against the footage", tries=3, temperature=0.2, strong=True)   # optional pass: give up after ~10 min, keep the draft
     if not isinstance(res, dict) or not isinstance(res.get("sections"), list):
         log("script check: no answer from the AI - keeping the first draft")
         return
@@ -625,10 +625,55 @@ def voice_lines(plan: dict, voice: str) -> None:
 
 
 # ------------------------------------------------------------------ 5. the edit
+_NUMW = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
+         "thirteen", "fourteen", "fifteen"]
+
+
+def fix_tip_numbers(plan: dict) -> None:
+    """The narration says the right number for each tip ('mistake number three' on the 3rd tip), whatever the AI wrote."""
+    k = 0
+    pat = re.compile(r"\b(tip|mistake|secret|thing|trick|mechanic)(s?)( number| no\.?| #)? ?(#?\d+|" + "|".join(_NUMW[1:]) + r")\b",
+                     re.I)
+    for s_ in plan["sections"]:
+        if s_.get("kind") != "tip":
+            continue
+        k += 1
+        for ln in s_["lines"]:
+            def rep(m):
+                n = m.group(4).lstrip("#")
+                if not n.isdigit() and n.lower() not in _NUMW:
+                    return m.group(0)
+                if m.group(2):   # "tips five" etc. - plural, not a numbering
+                    return m.group(0)
+                return f"{m.group(1)} number {_NUMW[k] if k < len(_NUMW) else k}"
+            new = pat.sub(rep, ln["text"])
+            if new != ln["text"]:
+                ln["text"] = new
+
+
+def untangle(plan: dict) -> None:
+    """No two tips on the same seconds of footage (a moved tip can land on another): the later one starts where the
+    earlier ends, or the earlier one ends where the later starts."""
+    tips = sorted((x for x in plan["sections"] if x["kind"] == "tip"), key=lambda x: x["start"])
+    for a, b in zip(tips, tips[1:]):
+        if b["start"] < a["end"] - 0.01:
+            if b["end"] - a["end"] >= 6:
+                b["start"] = a["end"]
+            elif b["start"] - a["start"] >= 6:
+                a["end"] = b["start"]
+            else:
+                b["start"], b["end"] = a["end"], a["end"] + (b["end"] - b["start"])
+            log(f"'{a['title']}' and '{b['title']}' shared footage - split it")
+            for x in (a, b):
+                for ln in x["lines"]:
+                    ln["at"] = min(max(ln["at"], x["start"]), x["end"])
+
+
 def fit(plan: dict, dur: float) -> None:
     """Place every line on the finished video's timeline so nothing overlaps and the footage under each line is the
     moment it talks about. If a section is too short for its lines: slow its speed-up, then use more of the footage
     after it, and only then drop the last lines."""
+    untangle(plan)
     order = [x for x in plan["sections"] if x["kind"] != "intro"] + [x for x in plan["sections"] if x["kind"] == "intro"]
     for s in order:   # tips first: the intro is only a hook, so it moves out of a tip's way
         need = 0.3
@@ -1325,6 +1370,7 @@ def make(job: dict, num: int = 0) -> dict:
         place_sections(plan, scenes, dur)
         check_script(plan, scenes, game, dur)
         place_sections(plan, scenes, dur)
+        fix_tip_numbers(plan)
     (WORK / "plan.json").write_text(json.dumps(plan, indent=1))
     status(job, "making", "Recording the voice")
     voice_lines(plan, voice)
