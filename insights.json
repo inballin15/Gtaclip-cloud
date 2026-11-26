@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-25T22:32:32Z",
+ "updated": "2026-11-26T00:35:58Z",
  "videos": 59,
  "v": 4,
  "findings": [
@@ -60,20 +60,20 @@
   {
    "feature": "hook style",
    "value": "formula",
-   "x": 0.42,
+   "x": 0.43,
    "n": 11
-  },
-  {
-   "feature": "streamer",
-   "value": "IShowSpeed",
-   "x": 2.2,
-   "n": 8
   },
   {
    "feature": "streamer",
    "value": "caseoh_",
    "x": 2.2,
    "n": 3
+  },
+  {
+   "feature": "streamer",
+   "value": "IShowSpeed",
+   "x": 2.19,
+   "n": 8
   },
   {
    "feature": "CAPS words",
