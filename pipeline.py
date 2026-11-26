@@ -2467,7 +2467,7 @@ def import_vod_clips(st: dict) -> None:
                 else:
                     cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(m["login"]))
                     usual = ",".join(str(v) for v in (CFG["streamers"].get(m["login"], {}).get("facecam") or []))
-                    if not cam and usual and box_has_face(raw, dur, usual):
+                    if usual and cam != usual and box_has_face(raw, dur, usual):   # a hand-set webcam spot wins (Nov 26)
                         cam, q = usual, "learned"
                     if not cam:
                         rec.update(status="skip", skip_reason="no webcam found")
@@ -2670,7 +2670,7 @@ def main() -> None:
             dur = duration_of(raw)
             cam = find_cam(raw, dur)
             usual = ",".join(str(v) for v in (CFG["streamers"].get(c["login"], {}).get("facecam") or []))
-            if not cam and usual and box_has_face(raw, dur, usual):
+            if usual and cam != usual and box_has_face(raw, dur, usual):   # a hand-set webcam spot wins (Nov 26)
                 cam = usual
             if cam:
                 c.update(status="new", cam=cam)
@@ -2751,7 +2751,7 @@ def main() -> None:
                 else:
                     cam, q, frac = find_cam_info(raw, dur, st.get("learned_cams", {}).get(c["login"]))
                     usual = ",".join(str(v) for v in (s.get("facecam") or []))
-                    if usual and (not cam or not same_spot(cam, usual)) and box_has_face(raw, dur, usual):
+                    if usual and cam != usual and box_has_face(raw, dur, usual):
                         cam, q = usual, "learned"   # his usual webcam spot has his face: that's the webcam (Nov 25)
                     if not cam and (c.get("view_count") or 0) >= NOCAM_MIN_VIEWS:
                         # no webcam, but already proven on Twitch (lots of views): full-screen gameplay instead of skipping
@@ -3145,14 +3145,14 @@ def main() -> None:
                 c0.pop(k, None)
             n += 1
         log(f"reaction clips: {n} re-made with the big webcam layout")
-    if st.get("usual_cam_v", 0) < 2:   # one time (Nov 25 eve; again Nov 26 for NICKMERCS): a streamer's set webcam spot (streamers.yaml) wins
-        st["usual_cam_v"] = 2           # when his face is there (ohnePixel: a GTA character's face was taken for it)
+    if st.get("usual_cam_v", 0) < 3:   # one time (Nov 25 eve; again Nov 26 for NICKMERCS / IShowSpeed): a streamer's set webcam spot (streamers.yaml) wins
+        st["usual_cam_v"] = 3           # when his face is there (ohnePixel: a GTA character's face was taken for it)
         for cid0, c0 in clips.items():
             s0 = CFG["streamers"].get(c0.get("login") or "", {})
             usual = ",".join(str(v) for v in (s0.get("facecam") or []))
             raw0 = RAW / f"{cid0}.mp4"
             if (c0["status"] != "new" or not usual or c0.get("source") == "upload" or (c0.get("user_layout") or {}).get("cam")
-                    or not raw0.exists() or (c0.get("cam") and same_spot(c0["cam"], usual))):
+                    or not raw0.exists() or c0.get("cam") == usual):
                 continue
             try:
                 if not box_has_face(raw0, duration_of(raw0), usual):
@@ -3257,7 +3257,7 @@ def main() -> None:
                 d0 = duration_of(raw)
                 cam, q, _f = find_cam_info(raw, d0, st.get("learned_cams", {}).get(c.get("login", "")))
                 usual = ",".join(str(v) for v in (CFG["streamers"].get(c.get("login", ""), {}).get("facecam") or []))
-                if not cam and usual and box_has_face(raw, d0, usual):
+                if usual and cam != usual and box_has_face(raw, d0, usual):   # a hand-set webcam spot wins (Nov 26)
                     cam, q = usual, "learned"
                 if cam:
                     c.update(cam=cam, cam_q=q, layout="split", cam_v=CAM_V)
