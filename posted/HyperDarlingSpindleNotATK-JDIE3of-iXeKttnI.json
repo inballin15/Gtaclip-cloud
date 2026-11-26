@@ -1,0 +1,36 @@
+{
+ "id": "HyperDarlingSpindleNotATK-JDIE3of-iXeKttnI",
+ "hook": "IShowSpeed FREAKED OUT after landing the first ever backflip in GTA 6",
+ "streamer": "IShowSpeed",
+ "login": "ishowspeed",
+ "campaign": "",
+ "tag": "#IShowSpeed",
+ "caption": "",
+ "why": "11:37 AM slot",
+ "posted_at": "2026-11-26T16:40:34Z",
+ "video": "https://gtaclip-studio.pages.dev/v/HyperDarlingSpindleNotATK-JDIE3of-iXeKttnI_final.mp4?v=4a53fbf751&r=1795691167",
+ "poster": "https://gtaclip-studio.pages.dev/v/HyperDarlingSpindleNotATK-JDIE3of-iXeKttnI.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "uploading",
+   "buffer_id": "6b0861099fe2552d5cf06b14",
+   "error": ""
+  }
+ },
+ "platforms": [
+  "tiktok"
+ ],
+ "hook_kind": "ai",
+ "hook_variant": "formula",
+ "style": {
+  "box": "black",
+  "cam": "small",
+  "hooklen": "story",
+  "punch": "off",
+  "pbar": "off"
+ },
+ "viral": 98,
+ "seconds": 36
+}
