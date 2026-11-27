@@ -1,8 +1,8 @@
 {
  "insights": {
-  "updated": "2026-11-27T05:01:40Z",
+  "updated": "2026-11-27T05:59:11Z",
   "videos": 64,
-  "v": 4,
+  "v": 5,
   "findings": [
    {
     "feature": "streamer",
@@ -154,11 +154,12 @@
    "AVOID: has a number = no (0.73x views, 16 videos)"
   ],
   "weights": {
-   "formula": 0.368,
-   "news": 0.194,
-   "quote": 0.076,
-   "question": 0.086,
-   "lowcaps": 0.275
+   "formula": 0.069,
+   "news": 0.069,
+   "quote": 0.069,
+   "question": 0.069,
+   "vibe": 0.636,
+   "lowcaps": 0.086
   },
   "style_weights": {
    "box": {
@@ -209,6 +210,7 @@
    "news": 2,
    "quote": 4,
    "question": 3,
+   "vibe": 0,
    "lowcaps": 6
   },
   "style_tested": {
@@ -386,7 +388,7 @@
    }
   ]
  },
- "updated": "2026-11-27T05:55:35Z",
+ "updated": "2026-11-27T05:59:11Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -4153,6 +4155,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T05:55:35Z",
- "log": []
+ "stats_updated": "2026-11-27T05:59:11Z",
+ "log": [
+  "[05:59:12Z] hook learner: 64 videos, 2 lessons"
+ ]
 }
