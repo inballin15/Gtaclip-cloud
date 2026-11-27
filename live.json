@@ -386,11 +386,11 @@
    }
   ]
  },
- "updated": "2026-11-27T01:35:59Z",
+ "updated": "2026-11-27T01:42:06Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-27T01:37:00Z",
+ "next_slot": "2026-11-27T13:37:00Z",
  "up_next": "DifferentImpossibleSushiHumbleLife-2oIIYfJqHjMo4iDy",
  "videos": [
   {
@@ -1269,12 +1269,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-26",
-  "used": 16,
+  "used": 17,
   "cap": 28,
   "slots": 6,
-  "remain30": 667,
+  "remain30": 666,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 588,
+  "remain24": 587,
   "active": [
    [
     8,
@@ -4141,6 +4141,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T01:35:59Z",
- "log": []
+ "stats_updated": "2026-11-27T01:42:06Z",
+ "log": [
+  "[01:42:07Z] slot due but no finished clip is ready"
+ ]
 }
