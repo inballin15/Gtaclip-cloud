@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-27T05:01:40Z",
+ "updated": "2026-11-27T05:07:49Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1367,7 +1367,6 @@
  ],
  "blocked": [
   "ArtisticIncredulousHamTwitchRaid-Px1UVi0rMoYRt7k2",
-  "ArtisticUnsightlyPicklesPastaThat-9b7fw1YKOkQPNf4i",
   "SilkyCrypticLionBCouch-DZtp4u9G6jQBKnpU",
   "vod2939504732_11720",
   "vod2939504732_16722",
@@ -4142,8 +4141,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T05:01:40Z",
- "log": [
-  "[05:01:42Z] hook learner: 64 videos, 2 lessons"
- ]
+ "stats_updated": "2026-11-27T05:07:49Z",
+ "log": []
 }
