@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-27T02:59:31Z",
+ "updated": "2026-11-27T05:01:40Z",
  "videos": 64,
  "v": 4,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 12.95,
+   "x": 12.94,
    "n": 3
   },
   {
@@ -108,7 +108,7 @@
   {
    "feature": "streamer",
    "value": "caseoh_",
-   "x": 2.05,
+   "x": 2.06,
    "n": 3
   },
   {
@@ -173,8 +173,8 @@
    "story": 0.838
   },
   "punch": {
-   "off": 0.421,
-   "on": 0.579
+   "off": 0.42,
+   "on": 0.58
   },
   "pbar": {
    "off": 0.5,
@@ -184,7 +184,7 @@
  "top": [
   {
    "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-   "views": 2489
+   "views": 2498
   },
   {
    "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
