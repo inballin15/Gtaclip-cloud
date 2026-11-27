@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-27T16:19:10Z",
+ "updated": "2026-11-27T18:24:15Z",
  "videos": 70,
  "v": 5,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 12.83,
+   "x": 12.82,
    "n": 3
   },
   {
@@ -66,7 +66,7 @@
   {
    "feature": "question",
    "value": "yes",
-   "x": 2.16,
+   "x": 2.17,
    "n": 4
   },
   {
@@ -90,7 +90,7 @@
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 2.02,
+   "x": 2.03,
    "n": 31
   },
   {
@@ -170,8 +170,8 @@
    "medium": 0.686
   },
   "hooklen": {
-   "tiny": 0.179,
-   "story": 0.821
+   "tiny": 0.178,
+   "story": 0.822
   },
   "punch": {
    "off": 0.431,
@@ -180,12 +180,17 @@
   "pbar": {
    "off": 0.467,
    "on": 0.533
+  },
+  "cap": {
+   "question": 0.34,
+   "short": 0.33,
+   "story": 0.33
   }
  },
  "top": [
   {
    "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-   "views": 2545
+   "views": 2555
   },
   {
    "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
@@ -201,7 +206,7 @@
   },
   {
    "hook": "What do you think about Nick not being family freindly?",
-   "views": 909
+   "views": 932
   }
  ],
  "style_counts": {
@@ -232,6 +237,11 @@
   "pbar": {
    "off": 3,
    "on": 2
+  },
+  "cap": {
+   "question": 0,
+   "short": 0,
+   "story": 0
   }
  },
  "feed": [
