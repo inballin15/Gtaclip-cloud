@@ -83,7 +83,7 @@ QUEUE_MAX = 40           # finished videos kept ready (Nov 26: up to 40 at a tim
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v4-hq"   # Nov 25: highest quality re-make of every unposted clip (final + no-caption copy)
 LAYOUT_V_OLD = "v3-textonly-capcut"
-FINAL_V = LAYOUT_V + "-follow6"   # posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
+FINAL_V = LAYOUT_V + "-follow6-peak1"   # peak1 (Nov 27): black & white + face zoom on the big moment; posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
 TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
@@ -1622,8 +1622,11 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
                  hook_y: float | None = None, zoom: float = 1.0, pan: float = 0.0,
                  hook_style: str = "white", hook_scale: float = 1.0, top_h: int | None = None,
                  subs: list | None = None, punch_at: float | None = None, view: str | None = None,
-                 cta: bool = False, pbar: bool = False, follow_voice: str | None = None) -> None:
-    """Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
+                 cta: bool = False, pbar: bool = False, follow_voice: str | None = None,
+                 peak_at: float | None = None) -> None:
+    """peak_at: the big moment (s) - from there to the end the video goes black & white and the webcam zooms in on
+    the face (the top clippers' payoff edit, Nov 27).
+    Split screen (webcam top, gameplay bottom). hook=None makes the clean copy with no caption box.
     No subtitles on any video (Nov 24): whatever is passed in, none are drawn.
     layout="full": no webcam in the video -> the whole frame centred on a blurred background."""
     subs = None               # NO subtitles, ever
@@ -1674,7 +1677,11 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
         fw, fh = _cam_fit(raw, w, h, T, 3.6 if cam_video else 2.8)
         info["cam_px"] = [int(fw), int(fh)]
         punch = ""
-        if punch_at is not None:   # "punch into the reaction": webcam zooms in 10% on the big moment, then back
+        if peak_at is not None:   # the payoff: snap in ~32% on the face and hold to the end
+            a = peak_at - 0.08
+            punch = (f",fps=30,zoompan=z='1+0.32*max(0,min(1,(it-{a:.2f})/0.12))'"
+                     f":x='iw/2-(iw/zoom/2)':y='ih/2.6-(ih/zoom/2.6)':d=1:s={fw}x{fh}:fps=30")
+        elif punch_at is not None:   # "punch into the reaction": webcam zooms in 10% on the big moment, then back
             a, b = punch_at - 0.15, punch_at + 2.0
             punch = (f",fps=30,zoompan=z='1+0.10*max(0,min(1,min((it-{a:.2f})/0.2,({b:.2f}-it)/0.4)))'"
                      f":x='iw/2-(iw/zoom/2)':y='ih/2.4-(ih/zoom/2.4)':d=1:s={fw}x{fh}:fps=30")
@@ -1692,6 +1699,10 @@ def render_final(raw: Path, cid: str, cam: str, hook: str | None, tmp: Path, out
             f"unsharp=3:3:0.4:3:3:0.0,setsar=1[bot];"
             f"[top][bot]vstack=inputs=2"
         )
+    if peak_at is not None and layout in ("split", "react", "cam", "full"):   # black & white from the big moment on
+        a = peak_at - 0.08
+        base += f",hue=s='if(gte(t,{a:.2f}),0,1)',eq=contrast=1.12:enable='gte(t,{a:.2f})'"
+        info["peak_at"] = round(peak_at, 2)
     extra = ["-i", str(cam_video)] if (cam_video and layout == "cam") else []
     if cam_video and layout == "split":   # AI-upscaled webcam (made on its own server) replaces the plain one
         ci = 2 if hook else 1
@@ -3771,9 +3782,12 @@ def main() -> None:
                         c.update(status="skip", skip_reason="react clip: couldn't tell which webcam is the streamer's")
                         log(f"skipped {cid}: react clip, streamer's webcam not found")
                         return job
-                if ok and vhook and len(vhook) >= 20 and not c.get("hook_by_user") and "streamer" not in vhook.lower() \
+                if ok and vhook and len(vhook) >= (12 if var == "vibe" else 20) and not c.get("hook_by_user") and "streamer" not in vhook.lower() \
                         and names_ok(vhook, hook_context(c) + " " + (vis.get("watching") or "")):
-                    c["hook"], c["hook_kind"], c["hook_variant"] = (f"Part {c['part']}: " if c.get("part") else "") + viral.limit_caps(vhook), "ai", var
+                    vh_ = viral.limit_caps(vhook)
+                    if var == "vibe":   # the clipper style: all lowercase, no emojis
+                        vh_ = re.sub(r"[^\x00-\u2FFF]", "", vh_).strip().lower()
+                    c["hook"], c["hook_kind"], c["hook_variant"] = (f"Part {c['part']}: " if c.get("part") else "") + vh_, "ai", var
                     c.pop("hook_short_tried", None)   # a fresh hook gets its own length check
                     hh = hashlib.sha1((c["hook"] + c["cam"] + FINAL_V + c.get("layout", "")).encode()).hexdigest()[:10]
                     job = (cid, job[1], hh, ch, True, need_c)
@@ -3876,8 +3890,8 @@ def main() -> None:
         if ul.get("trim") or (ul.get("speed") or 1) > 1.01:
             cam_video = None    # the sharp webcam was made for the untrimmed clip
         opts = dict(layout=lay, cut=cut, cam_video=cam_video, hook_y=ul.get("hook_y"), zoom=ul.get("zoom", 1.0),
-                    pan=ul.get("pan", 0.0), hook_style=ul.get("hook_style") or sty.get("box") or "white",
-                    hook_scale=ul.get("hook_scale", 1.0),
+                    pan=ul.get("pan", 0.0), hook_style=ul.get("hook_style") or ("outline" if c.get("hook_variant") == "vibe" else sty.get("box") or "white"),
+                    hook_scale=ul.get("hook_scale", 1.35 if c.get("hook_variant") == "vibe" else 1.0),   # the clipper line: bigger
                     top_h=int(ul["top_h"]) if ul.get("top_h") else learn.CAM_PX.get(sty.get("cam", ""), None),
                     view=(c.get("react_view") or None) if lay == "react" else None)
         # learner tests from the Nov 23 tool review: word-by-word subtitles, punch-in zoom on the big reaction
@@ -3891,6 +3905,22 @@ def main() -> None:
                     opts["punch_at"] = float(int(np.argmax(rms[1:-1])) + 1)
         except Exception as e:  # noqa: BLE001
             log(f"subtitles/punch-in skipped for {cid}: {e}")
+        try:   # the payoff edit (Nov 27): black & white + face zoom from the loudest moment (25-85% in) to the end
+            if (ul.get("peak") or sty.get("peak") or "bw") == "bw" and lay in ("split", "react"):
+                import viral
+                a = viral._audio(raw)
+                secs = len(a) // 16000
+                if secs >= 6:
+                    rms = [float(np.sqrt(np.mean(a[i * 16000:(i + 1) * 16000] ** 2))) for i in range(secs)]
+                    lo, hi = max(1, int(secs * 0.25)), max(2, int(secs * 0.85))
+                    pk = float(lo + int(np.argmax(rms[lo:hi])))
+                    if secs - pk >= 1.5:
+                        opts["peak_at"] = pk
+                        opts.pop("punch_at", None)
+                        c["peak_at"] = pk
+                        c["peak_src"] = round(float((c.get("span") or [0])[0]) + pk, 2) if (ul.get("speed") or 1) <= 1.01 else None
+        except Exception as e:  # noqa: BLE001
+            log(f"peak edit skipped for {cid}: {e}")
         if need_f:
             rinfo = render_final(raw, cid, cam, None if c.get("no_hook") else c["hook"], tmp, **opts,
                                  cta=True, pbar=sty.get("pbar") == "on",

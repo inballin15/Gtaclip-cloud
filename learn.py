@@ -18,6 +18,10 @@ VARIANTS = {
     "news": "Breaking-news angle: '[name] just BECAME the FIRST…' / '[name] is OFFICIALLY…' / 'No way [name]…'.",
     "quote": "Lead with the streamer's own most shocking words in quotes-free form, then the context: '[name] said … after …'.",
     "question": "A curiosity question the clip answers: 'Why did [name] …?' / 'How did [name] …?' At most 1 CAPS word.",
+    "vibe": ("Like the top TikTok clippers (Nov 27): ONE short casual line in all lowercase, 3-8 words, how a viewer "
+             "would react - no headline, no streamer name needed, NO emojis, may end with '..'. Examples: 'this is the "
+             "craziest clip yet..' / 'bro is letting it all out' / 'he really did not have to do that..' / 'nobody was "
+             "ready for this'."),
     "lowcaps": ("NATURAL, like a friend telling you what happened: normal spelling, NO all-caps words (GTA is fine), "
                 "casual and specific, 8-15 words. Real top performers on this channel: 'Marlon can't handle a night in "
                 "GTA 6' / 'Lacy stalking in gta 6' / 'Adapt tries texting and driving in GTA 6'."),
@@ -25,8 +29,8 @@ VARIANTS = {
 # Starting point = what the biggest GTA clip pages do (110 of their videos studied, 1-7M views each):
 # name + CAPS emotion + one concrete detail, 'FIRST'/news angle second. Our own views move it from here.
 # Nov 22 clipper study (974 videos): story sentences with 1-2 CAPS words win; all-caps formulas did worse.
-PRIOR = {"formula": 0.5, "news": 0.15, "lowcaps": 0.2, "quote": 0.05, "question": 0.1}
-LEARN_V = 4      # bump when the rules change -> the poster re-learns right away
+PRIOR = {"vibe": 0.7, "formula": 0.12, "news": 0.04, "lowcaps": 0.08, "quote": 0.02, "question": 0.04}   # Nov 27: the clipper style first
+LEARN_V = 5      # bump when the rules change -> the poster re-learns right away
 EVIDENCE = 8     # our own videos needed before they count as much as the proven starting point   # start mostly on what's proven
 MIN_WEIGHT = 0.08          # every style keeps getting a few tries so the learner can notice when tastes change
 

@@ -1549,7 +1549,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=11');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=12');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1688,7 +1688,7 @@ function openVoice(r) {
   // the voice pack (made ahead of time on GitHub) makes the swap instant: start loading everything now
   if (base && window.VideoEncoder) {
     Promise.all([fetch(base + 'lines.json').then((x) => (x.ok ? x.json() : null)).catch(() => null),
-      import(PAGES + 'vendor/render.mjs?v=11').catch(() => null)]).then(([p, m]) => {
+      import(PAGES + 'vendor/render.mjs?v=12').catch(() => null)]).then(([p, m]) => {
       RM2 = m; pack = p && (p.voices || []).length ? p : null;
       if (pack && m) { m.warm(); if (!(vid instanceof Blob)) m.prefetch(vid); m.prefetch(base + 'game.m4a'); m.prefetch(base + pick + '.m4a');
         followAudio((r.user_layout || {}).follow_voice || favFollow());
@@ -1764,7 +1764,7 @@ let RMOD = null;
 function warmPhone(r) {   // an editor opened: start downloading the footage + loading the video maker NOW, so Save is instant
   try {
     const ED = edSrc(r); if (!ED || !ED.full || !window.VideoEncoder) return;
-    (RMOD ? Promise.resolve(RMOD) : import(PAGES + 'vendor/render.mjs?v=11')).then((m) => { RMOD = m; m.warm(ED.src); }).catch(() => {});
+    (RMOD ? Promise.resolve(RMOD) : import(PAGES + 'vendor/render.mjs?v=12')).then((m) => { RMOD = m; m.warm(ED.src); }).catch(() => {});
     followAudio((r.user_layout || {}).follow_voice || favFollow());
   } catch (e) { /* */ }
 }
@@ -1802,11 +1802,14 @@ function reactGeom(W, H, cam, view) {   // same numbers as pipeline.react_geomet
   const c_w = Math.min(1080, c_h * (W * vw) / (H * vh)), f_w = Math.min(1040, f_h * pw / ph);
   return { vx, vy, vw, vh, cw: c_w, ch: c_h, cb: 400 + c_h + 24, fw: f_w, fh: f_h };
 }
-function drawLayout(g, src, W, H, S, cw, ch, view) {   // your layout from one frame of footage, on a cw x ch (9:16) canvas
+function drawLayout(g, src, W, H, S, cw, ch, view, t) {   // your layout from one frame of footage, on a cw x ch (9:16) canvas
   g.fillStyle = '#000'; g.fillRect(0, 0, cw, ch);
+  const pk = S.peak_at != null && t != null && t >= S.peak_at - 0.08;   // the payoff edit: face zoom + black & white
   const top = S.top_h || TOP; const tp = top / 1920 * ch; const k = cw / 1080;
   if (S.mode === 'split') {
-    if (S.cam) { const [x, y, w, h] = S.cam; const sw = Math.min(W, w * W), sh = Math.min(H, h * H, sw / (1080 / top)); dImg(g, src, W, H, Math.max(0, Math.min(x * W, W - sw)), Math.max(0, Math.min(y * H, H - sh)), sw, sh, 0, 0, cw, tp); }
+    if (S.cam) { const [x, y, w, h] = S.cam; let sw = Math.min(W, w * W), sh = Math.min(H, h * H, sw / (1080 / top)); let sx = Math.max(0, Math.min(x * W, W - sw)), sy = Math.max(0, Math.min(y * H, H - sh));
+      if (pk) { const z = 1.32; const nw = sw / z, nh = sh / z; sx += (sw - nw) / 2; sy += (sh - nh) / 2.6; sw = nw; sh = nh; }
+      dImg(g, src, W, H, sx, sy, sw, sh, 0, 0, cw, tp); }
     const z = S.zoom || 1, pan = S.pan || 0; const sw = W / z, sh = H / z, sx = (W - sw) / 2 * (1 + pan), sy = (H - sh) / 2;
     const scale = (ch - tp) / sh; const vis = Math.min(sw, cw / scale); const vx = sx + (sw - vis) / 2 * (1 + pan);
     dImg(g, src, W, H, Math.max(0, vx), sy, vis, sh, 0, tp, cw, ch - tp);
@@ -1823,6 +1826,7 @@ function drawLayout(g, src, W, H, S, cw, ch, view) {   // your layout from one f
     softBg(g, src, 0, 0, W, H, cw, ch, 0.12, W, H);
     const fh = H * cw / W; dImg(g, src, W, H, 0, 0, W, H, 0, (ch - fh) / 2, cw, fh);
   }
+  if (pk) { g.save(); g.globalCompositeOperation = 'saturation'; g.fillStyle = '#808080'; g.fillRect(0, 0, cw, ch); g.restore(); }   // black & white (cheap on every phone)
 }
 const FVBUF = {};
 async function followAudio(v) {   // the spoken follow line's audio for your phone's video maker (null = just the pop)
@@ -1832,7 +1836,7 @@ async function followAudio(v) {   // the spoken follow line's audio for your pho
   catch (e) { return null; }
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=11');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=12');
   if (!S.cam && S.mode !== 'irl' && S.mode !== 'full') {   // never a layout without its webcam
     const c = String((r.user_layout || {}).cam || r.cam_used || r.cam || '').split(',').map(Number);
     if (c.length === 4 && c.every((v) => isFinite(v))) S = { ...S, cam: c }; else S = { ...S, mode: 'full' };
@@ -1845,9 +1849,10 @@ async function phoneEdit(r, S, ED, onPct) {   // the finished video from your ed
   const top = hk ? Math.max(150, Math.min(1920 - hk.height - 300, hookTop(r2, hk.height, S.hook_y))) : 0;
   const cut = (S.span || baseCutOf(r)).map(Number);
   const view = (r.layout_used || r.layout) === 'react' ? r.react_view : null;
+  if (S.peak_at === undefined && r.peak_src != null && (r.user_layout || {}).peak !== 'off') { const pk = +r.peak_src - cut[0]; S = { ...S, peak_at: pk > 1 && pk < cut[1] - cut[0] - 1 ? pk : null }; }
   return mod.phoneRender({ src: ED.src, a: Math.max(0, cut[0] - ED.t0), b: cut[1] - ED.t0, hook: hk, hookY: top,
     ctaY: hk ? ctaCenter(r2, top, hk.height) : 900, pbar: (r.style || {}).pbar === 'on', onPct,
-    compose: (g, frame, W, H) => drawLayout(g, frame, W, H, S, 1080, 1920, view), fps: S._simple ? 30 : 'auto',
+    compose: (g, frame, W, H, t) => drawLayout(g, frame, W, H, S, 1080, 1920, view, t), fps: S._simple ? 30 : 'auto',
     voice: S._simple ? undefined : await followAudio(S.follow_voice || (r.user_layout || {}).follow_voice || favFollow()) });
 }
 const LOCALBUSY = {};   // clip id -> the newest edit waiting while your phone is still making the previous one
@@ -1901,7 +1906,7 @@ function curLayout(r) {   // the clip's layout as it is now, as editor settings 
   if (!['split', 'react', 'full', 'irl'].includes(mode) || (r.style || {}).punch === 'on' || (ul.speed || 1) > 1.01) return null;
   return { mode, cam: (r.cam_used || r.cam || '0,0,0.3,0.3').split(',').map(Number), pan: ul.pan || 0, zoom: ul.zoom || 1,
     irl_x: mode === 'irl' ? parseFloat(lay.split(':')[1] || '0.5') : 0.5, top_h: +(ul.top_h || CAM_PX[(r.style || {}).cam] || TOP),
-    hook: r.hook || '', hook_style: ul.hook_style || (r.style || {}).box || 'white', hook_scale: ul.hook_scale || 1, hook_y: ul.hook_y ?? null,
+    hook: r.hook || '', hook_style: ul.hook_style || (r.hook_variant === 'vibe' ? 'outline' : (r.style || {}).box || 'white'), hook_scale: ul.hook_scale || (r.hook_variant === 'vibe' ? 1.35 : 1), hook_y: ul.hook_y ?? null,
     span: r.span ? r.span.map(Number) : null, speed: 1, follow_voice: ul.follow_voice || null };
 }
 function phoneText(r) {
@@ -1970,7 +1975,7 @@ function openEditor(r) {
   } else pbar.hidden = true;
   // ---- LIVE sound, on your phone: the pop + the spoken follow line play right in the preview, with the clip dipping
   // under the voice (same timing as the finished video). Pick a voice and you hear it on the clip instantly.
-  let RM = null; import(PAGES + 'vendor/render.mjs?v=11').then((m) => { RM = m; draw(); }).catch(() => {});
+  let RM = null; import(PAGES + 'vendor/render.mjs?v=12').then((m) => { RM = m; draw(); }).catch(() => {});
   let ac = null, duck = null, pass = 0, sched = []; const fvDec = {};
   function audioOn() {   // has to start inside a tap on iPhone
     if (!mv) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
@@ -1985,7 +1990,7 @@ function openEditor(r) {
     if (duck && ac) { duck.gain.cancelScheduledValues(0); duck.gain.setValueAtTime(1, ac.currentTime); } }
   async function scheduleExtras() {   // from wherever the playhead is now
     if (!ac || !mv || mv.paused) return;
-    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=11'); } catch (e) { return; } }
+    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=12'); } catch (e) { return; } }
     unschedule(); const my = pass;
     const vb = await voiceDec(S.follow_voice || favFollow()); if (my !== pass || mv.paused) return;
     const c = cutNow(); const rate = mv.playbackRate || 1; const ct = mv.currentTime + ED.t0 - c[0]; const now = ac.currentTime;

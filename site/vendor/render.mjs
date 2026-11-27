@@ -229,7 +229,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
       if (lastT >= 0 && rt < lastT + 1 / FPS - 0.004) { frame.close(); return; }   // only when the phone can't do 60: 60 -> 30 fps
       lastT = rt;
       try {
-        if (compose) compose(g, frame, frame.displayWidth || frame.codedWidth, frame.displayHeight || frame.codedHeight);
+        if (compose) compose(g, frame, frame.displayWidth || frame.codedWidth, frame.displayHeight || frame.codedHeight, rt);
         else g.drawImage(frame, 0, 0, W, H);
       } catch (e) { failed = e; }
       frame.close();
