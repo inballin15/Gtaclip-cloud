@@ -71,21 +71,18 @@
  "yt_check": "ok",
  "tt_check": "ok",
  "manual_check": "2026-11-27T16:33:11Z",
- "stats_at": "2026-11-27T13:42:07Z",
+ "stats_at": "2026-11-27T16:38:23Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-27",
-  "used": 2,
+  "used": 5,
   "cap": 29,
   "slots": 6,
-  "remain30": 664,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 585
+  "remain30": 661,
+  "reset30": "2026-12-18T22:03:18Z",
+  "remain24": 582
  },
  "yt_verified_v": 1,
- "you_post": [
-  "tiktok",
-  "youtube"
- ]
+ "you_post": []
 }

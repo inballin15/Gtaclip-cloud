@@ -1,0 +1,42 @@
+{
+ "id": "ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry",
+ "hook": "Kai Cenat laughed after a witness got a flying kick for calling cops",
+ "streamer": "Kai Cenat",
+ "login": "kaicenat",
+ "campaign": "Kai",
+ "tag": "#KaiCenat",
+ "caption": "",
+ "why": "post now",
+ "posted_at": "2026-11-27T16:38:23Z",
+ "video": "https://gtaclip-studio.pages.dev/v/ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry_final.mp4?v=e786fe2180&r=1795790366",
+ "poster": "https://gtaclip-studio.pages.dev/v/ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry.jpg",
+ "tiktok": "",
+ "youtube": "",
+ "status": {
+  "tiktok": {
+   "state": "uploading",
+   "buffer_id": "6b09b20932c212878fe81ece",
+   "error": ""
+  },
+  "youtube": {
+   "state": "uploading",
+   "buffer_id": "6b09b21432c212878fe821b4",
+   "error": ""
+  }
+ },
+ "platforms": [
+  "tiktok",
+  "youtube"
+ ],
+ "hook_kind": "ai",
+ "hook_variant": "formula",
+ "style": {
+  "box": "white",
+  "cam": "medium",
+  "hooklen": "story",
+  "punch": "on",
+  "pbar": "off"
+ },
+ "viral": 88,
+ "seconds": 30
+}

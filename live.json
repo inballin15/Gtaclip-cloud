@@ -388,12 +388,12 @@
    }
   ]
  },
- "updated": "2026-11-27T16:33:11Z",
+ "updated": "2026-11-27T16:38:23Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-27T16:37:00Z",
- "up_next": "ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry",
+ "next_slot": "2026-11-27T18:07:00Z",
+ "up_next": "DifferentImpossibleSushiHumbleLife-2oIIYfJqHjMo4iDy",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7712721017021500703",
@@ -1288,20 +1288,17 @@
  "buffer_off": false,
  "buffer_wait": "",
  "split": true,
- "you_post": [
-  "tiktok",
-  "youtube"
- ],
+ "you_post": [],
  "yt_per_day": 2,
  "submitted": {},
  "budget": {
   "day": "2026-11-27",
-  "used": 2,
+  "used": 5,
   "cap": 29,
   "slots": 6,
-  "remain30": 664,
-  "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 585,
+  "remain30": 661,
+  "reset30": "2026-12-18T22:03:18Z",
+  "remain24": 582,
   "active": [
    [
     8,
@@ -1404,6 +1401,48 @@
   "vod2939983603_26445"
  ],
  "posts": {
+  "ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry": {
+   "id": "ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry",
+   "hook": "Kai Cenat laughed after a witness got a flying kick for calling cops",
+   "streamer": "Kai Cenat",
+   "login": "kaicenat",
+   "campaign": "Kai",
+   "tag": "#KaiCenat",
+   "caption": "",
+   "why": "post now",
+   "posted_at": "2026-11-27T16:38:23Z",
+   "video": "https://gtaclip-studio.pages.dev/v/ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry_final.mp4?v=e786fe2180&r=1795790366",
+   "poster": "https://gtaclip-studio.pages.dev/v/ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b09b20932c212878fe81ece",
+     "error": ""
+    },
+    "youtube": {
+     "state": "uploading",
+     "buffer_id": "6b09b21432c212878fe821b4",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok",
+    "youtube"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "formula",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off"
+   },
+   "viral": 88,
+   "seconds": 30
+  },
   "vod2941037224_2990": {
    "id": "vod2941037224_2990",
    "hook": "YourRAGE was SHOCKED watching this creepy space horror signal",
@@ -4181,6 +4220,13 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T16:33:11Z",
- "log": []
+ "stats_updated": "2026-11-27T16:38:23Z",
+ "log": [
+  "[16:38:26Z] Tiktok: back to automatic uploads.",
+  "[16:38:27Z] Youtube: back to automatic uploads.",
+  "[16:38:29Z] post-now requested: ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry",
+  "[16:38:31Z] posting ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry (post now) to tiktok, youtube: Kai Cenat laughed after a witness got a flying kick for calling cops",
+  "[16:38:47Z]   tiktok: uploading ",
+  "[16:38:47Z]   youtube: uploading "
+ ]
 }
