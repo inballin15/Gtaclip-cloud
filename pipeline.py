@@ -3931,7 +3931,7 @@ def main() -> None:
                     c["rendered"] = int(time.time())
                 done += 1
                 log(f"made video {done}/{len(jobs)}: {c['streamer']} {cid}")
-                if done % 4 == 0 and done < len(jobs):
+                if done % 2 == 0 and done < len(jobs):   # new videos go live every 2 (was 4)
                     write_queue()
                     publish_site()
             except Exception as e:  # noqa: BLE001
@@ -3996,6 +3996,12 @@ def main() -> None:
             if not c or c["status"] != "new" or c.get("hd"):
                 f.unlink(missing_ok=True)
 
+    if done:   # the new videos go live NOW - the extras below (trim previews, editor footage) can take minutes
+        try:
+            write_queue()
+            publish_site()
+        except Exception as e:  # noqa: BLE001
+            log(f"early publish skipped: {e}")
     # 4e. size guard: GitHub Pages sites must stay under 1 GB -> drop the lowest-rated queued clips if close
     def site_mb():
         return sum(f.stat().st_size for f in VID.rglob("*") if f.is_file()

@@ -501,8 +501,9 @@ def same_moment(r: dict, recs: dict) -> bool:
 def too_old(r: dict) -> bool:
     if r.get("source") == "upload":   # clips from your own videos aren't time-sensitive
         return False
+    yours = r.get("user_layout") or r.get("hook_by_user") or r.get("post_now")   # clips you edited: a week (Nov 26)
     try:
-        return (NOW - parse(r.get("created") or r.get("found") or iso(NOW))) > timedelta(hours=MAX_AGE_HOURS)
+        return (NOW - parse(r.get("created") or r.get("found") or iso(NOW))) > timedelta(hours=7 * 24 if yours else MAX_AGE_HOURS)
     except Exception:  # noqa: BLE001
         return False
 
