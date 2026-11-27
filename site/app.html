@@ -889,6 +889,7 @@ function binPane(ql, r) {
   return d;
 }
 function inspPane(r) {
+  if (r) warmPhone(r);
   const d = el('div', 'pane insp'); d.append(ttl('Edit', '', true, 'insp'));
   if (!r) return d;
   if (JOBS[r.id]) d.append(jobBar(r.id));
@@ -927,9 +928,12 @@ function inspPane(r) {
     note.textContent = c.m ? 'Crop, subtitles and punch-in change the whole video: ready in a few minutes (progress bar shows it).' : c.t ? 'Words and text box: saved and shown instantly — no waiting.' : 'Change anything above, then Save.'; }
   sv.onclick = async () => { const c = changed(); sv.disabled = true;
     if (c.m) { const out = { ...ul, hook_style: S.box, hook_scale: S.scale, pan: S.pan, punch: S.punch }; if (S.y != null) out.hook_y = S.y; if (S.hook.trim() !== cur.hook.trim()) out.hook = S.hook.trim();
+      const ED = edSrc(r); const S2 = ED && ED.full && S.punch !== 'on' && window.VideoEncoder ? curLayout(r) : null;
+      if (S2 && ghKey()) {   // instant: your phone starts now, GitHub's posting copy is asked for at the same time
+        Object.assign(S2, { pan: S.pan || 0, hook: S.hook, hook_style: S.box, hook_scale: S.scale, hook_y: S.y }); toast('Saved ✓'); localMake(r, S2, ED);
+        ghTap('layout: ' + r.id, JSON.stringify(out)).then((ok) => { if (!ok) { toast('Saved on your phone — the posting copy didn’t start, tap Save again'); sv.disabled = false; } });
+        return; }
       if (await ghTap('layout: ' + r.id, JSON.stringify(out))) {
-        // instant: your phone makes it from the full footage (GitHub's posting copy follows in the background)
-        const ED = edSrc(r); const S2 = ED && ED.full && S.punch !== 'on' && window.VideoEncoder ? curLayout(r) : null;
         if (S2) { Object.assign(S2, { pan: S.pan || 0, hook: S.hook, hook_style: S.box, hook_scale: S.scale, hook_y: S.y }); localMake(r, S2, ED); return; }
         startJob(r.id, 'remake'); toast('Saved — re-making the video'); lastSig = ''; render(); } else sv.disabled = false; return; }
     const t = {}; if (S.hook.trim() !== cur.hook.trim() && S.hook.trim()) t.hook = S.hook.trim(); if (S.box !== cur.box) t.hook_style = S.box; if (Math.abs(S.scale - cur.scale) > 0.01) t.hook_scale = S.scale; if (S.y !== cur.y && S.y != null) t.hook_y = S.y;
@@ -1544,7 +1548,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=9');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=10');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1703,8 +1707,33 @@ function openHookEdit(r) {
 // ---------------------------------------------------------------- LIVE editing on your phone (Nov 25)
 // Like CapCut / TikTok: the clip's full-quality footage plays under your edit while you change it, and Save makes
 // the finished video ON YOUR PHONE in seconds (WebCodecs). GitHub still makes the posting copy in the background.
-const LOCALV = {};   // clip id -> { url, blob, at } : the video your phone made from your last edit (this visit)
-function localOf(r) { const v = LOCALV[r.id]; if (!v || !v.url) return null; if ((r.rendered || 0) * 1000 > v.at + 60000) return null; return v; }
+const LOCALV = {};   // clip id -> { url, blob, at } : the video your phone made from your last edit (kept on the phone)
+const LCACHE = 'gc-local-v1';
+function keepLocal(id, blob, at) {   // saved on the phone at once: a reload / closing the app doesn't lose your edit
+  try { caches.open(LCACHE).then((c) => c.put(`/local/${encodeURIComponent(id)}`, new Response(blob, { headers: { 'Content-Type': 'video/mp4', 'x-at': String(at) } }))).catch(() => {}); } catch (e) { /* */ }
+}
+function dropLocal(id) { try { caches.open(LCACHE).then((c) => c.delete(`/local/${encodeURIComponent(id)}`)).catch(() => {}); } catch (e) { /* */ } }
+(async () => {   // bring back phone-made videos from earlier visits (newest 6 h)
+  try {
+    const c = await caches.open(LCACHE);
+    for (const req of await c.keys()) {
+      const res = await c.match(req); const at = +(res.headers.get('x-at') || 0);
+      const id = decodeURIComponent(new URL(req.url).pathname.replace('/local/', ''));
+      if (Date.now() - at > 6 * 3600e3) { c.delete(req); continue; }
+      const blob = await res.blob(); if (!LOCALV[id]) LOCALV[id] = { url: URL.createObjectURL(blob), blob, at };
+    }
+    lastSig = ''; render();
+  } catch (e) { /* no storage: this visit only */ }
+})();
+let RMOD = null;
+function warmPhone(r) {   // an editor opened: start downloading the footage + loading the video maker NOW, so Save is instant
+  try {
+    const ED = edSrc(r); if (!ED || !ED.full || !window.VideoEncoder) return;
+    (RMOD ? Promise.resolve(RMOD) : import(PAGES + 'vendor/render.mjs?v=10')).then((m) => { RMOD = m; m.warm(ED.src); }).catch(() => {});
+    followAudio((r.user_layout || {}).follow_voice || favFollow());
+  } catch (e) { /* */ }
+}
+function localOf(r) { const v = LOCALV[r.id]; if (!v || !v.url) return null; if ((r.rendered || 0) * 1000 > v.at + 60000) { dropLocal(r.id); return null; } return v; }
 function edSrc(r) {   // the footage the editor plays: full quality when the clip has it, else the small Trim preview
   if (r.ed_src && r.ed) return { src: PAGES + r.ed_src.replace(/^v\/m\/ed\//, 'v/ed/'), t0: +r.ed.t0, t1: +r.ed.t1, full: true };
   if (r.wide_src && r.wide) return { src: PAGES + r.wide_src, t0: +r.wide.t0, t1: +r.wide.t1, full: false };
@@ -1768,7 +1797,7 @@ async function followAudio(v) {   // the spoken follow line's audio for your pho
   catch (e) { return null; }
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=9');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=10');
   if (!S.cam && S.mode !== 'irl' && S.mode !== 'full') {   // never a layout without its webcam
     const c = String((r.user_layout || {}).cam || r.cam_used || r.cam || '').split(',').map(Number);
     if (c.length === 4 && c.every((v) => isFinite(v))) S = { ...S, cam: c }; else S = { ...S, mode: 'full' };
@@ -1813,20 +1842,21 @@ async function localMake1(r, S, ED) {
   const t0 = Date.now();
   try {
     const prog = (p) => { if (JOBS[id]) { JOBS[id].pct = Math.max(1, p * 100); JOBS[id].label = 'Making it on your phone…'; paintJobs(); } };
-    let blob = await phoneEdit(r, S, ED, prog);
+    let blob = null;
+    try { blob = await phoneEdit(r, S, ED, prog); } catch (e) { console.warn('phone edit (full way):', e); blob = null; }   // an error = the simple way next, not GitHub
     if (!(await playsOk(blob))) {   // didn't play on this phone: once more the simplest way (30 fps, the clip's own sound)
       console.warn('phone video did not play - trying the simple way');
       blob = await phoneEdit(r, { ...S, _simple: true }, ED, prog);
       if (!(await playsOk(blob))) throw new Error('the phone-made video would not play');
     }
     const old = LOCALV[id]; if (old && old.url) URL.revokeObjectURL(old.url);
-    LOCALV[id] = { url: URL.createObjectURL(blob), blob, at: Date.now() };
+    LOCALV[id] = { url: URL.createObjectURL(blob), blob, at: Date.now() }; keepLocal(id, blob, LOCALV[id].at);
     JOBS[id] = { kind: 'phone', at: t0, pct: 100, done: true, end: Date.now(), label: `Done ✓ — made on your phone in ${Math.max(1, Math.round((Date.now() - t0) / 1000))}s` };
     saveJobs(); toast('Your edit is ready ✓'); haptic(); lastSig = ''; render();
     return true;
   } catch (e) {
     console.warn('phone edit:', e);
-    delete LOCALV[id];   // never leave a broken video on the clip
+    delete LOCALV[id]; dropLocal(id);   // never leave a broken video on the clip
     JOBS[id] = { kind: 'remake', at: t0, pct: 5, label: 'Being made on GitHub (about 4 min)' }; saveJobs(); lastSig = ''; render(); pollJobs();
     return false;
   }
@@ -1845,6 +1875,7 @@ function phoneText(r) {
   localMake(r, S, ED);
 }
 function openEditor(r) {
+  warmPhone(r);
   if (!r.src) { sheet('Edit', [el('div', 'note warn', 'This clip was made before the editor existed. Its still frame appears after its next re-make (a few minutes) — try again soon.')]); return; }
   const ul = r.user_layout || {}; const used = r.layout_used || 'split';
   const base = { mode: (ul.mode === 'split' && !ul.v && used === 'react') ? 'react' : ul.mode || (used === 'react' ? 'react' : used.startsWith('irl') || used === 'fill' ? 'irl' : used === 'full' ? 'full' : 'split'), zoom: ul.zoom || 1, pan: ul.pan || 0,
@@ -1904,7 +1935,7 @@ function openEditor(r) {
   } else pbar.hidden = true;
   // ---- LIVE sound, on your phone: the pop + the spoken follow line play right in the preview, with the clip dipping
   // under the voice (same timing as the finished video). Pick a voice and you hear it on the clip instantly.
-  let RM = null; import(PAGES + 'vendor/render.mjs?v=9').then((m) => { RM = m; draw(); }).catch(() => {});
+  let RM = null; import(PAGES + 'vendor/render.mjs?v=10').then((m) => { RM = m; draw(); }).catch(() => {});
   let ac = null, duck = null, pass = 0, sched = []; const fvDec = {};
   function audioOn() {   // has to start inside a tap on iPhone
     if (!mv) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
@@ -1919,7 +1950,7 @@ function openEditor(r) {
     if (duck && ac) { duck.gain.cancelScheduledValues(0); duck.gain.setValueAtTime(1, ac.currentTime); } }
   async function scheduleExtras() {   // from wherever the playhead is now
     if (!ac || !mv || mv.paused) return;
-    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=9'); } catch (e) { return; } }
+    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=10'); } catch (e) { return; } }
     unschedule(); const my = pass;
     const vb = await voiceDec(S.follow_voice || favFollow()); if (my !== pass || mv.paused) return;
     const c = cutNow(); const rate = mv.playbackRate || 1; const ct = mv.currentTime + ED.t0 - c[0]; const now = ac.currentTime;
@@ -2174,6 +2205,12 @@ function openEditor(r) {
     }
     const canPhone = !!(ED && ED.full && window.VideoEncoder && window.VideoDecoder && !(S.speed > 1.01));
     const Sx = JSON.parse(JSON.stringify(S));
+    if (canPhone && ghKey()) {   // instant: your phone starts at once; GitHub's posting copy is asked for at the same time
+      ls.set(draftKey, null); delete TRIMS[r.id]; ls.set('gc-trims', TRIMS); close(); toast('Saved ✓');
+      localMake(r, Sx, ED);
+      ghTap('layout: ' + r.id, JSON.stringify(out)).then((ok) => { if (!ok) toast('Saved on your phone — the posting copy didn’t start, tap Save again'); });
+      return;
+    }
     if (await ghTap('layout: ' + r.id, JSON.stringify(out))) {
       ls.set(draftKey, null);
       if (canPhone) { delete TRIMS[r.id]; ls.set('gc-trims', TRIMS); close(); localMake(r, Sx, ED); return; }

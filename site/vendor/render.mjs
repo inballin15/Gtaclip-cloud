@@ -113,10 +113,46 @@ export async function mixSound(fileBuf, a, b, voiceBuf) {
  * compose(g, frame, w, h): draw the LAYOUT yourself from a source frame (the live editor's full footage: webcam +
  * game, reaction, full screen...) onto the 1080x1920 canvas - without it the frame is drawn full size (no-caption copy).
  */
+// ---- speed: the footage is downloaded ONCE per visit (the editor starts it when it opens), mp4box is loaded early,
+// and what this phone's video chip supports is asked once, not on every save
+const BUF = new Map();   // footage link -> Promise<ArrayBuffer> (last 3)
+export function prefetch(src) {
+  if (!src) return null;
+  if (!BUF.has(src)) {
+    const p = fetch(src).then((r) => { if (!r.ok) throw new Error('footage ' + r.status); return r.arrayBuffer(); });
+    p.catch(() => BUF.delete(src));
+    BUF.set(src, p);
+    while (BUF.size > 3) BUF.delete(BUF.keys().next().value);
+  }
+  return BUF.get(src);
+}
+let MP4 = null;
+export function warm(src) {   // call when an editor opens: everything the next save needs starts now
+  if (!MP4) MP4 = loadScript(new URL('./mp4box.all.js', import.meta.url).href).catch((e) => { MP4 = null; throw e; });
+  if (src) prefetch(src);
+  return MP4;
+}
+const SUP = new Map();   // config key -> supported config (or null)
+async function encSupported(c) {
+  const k = JSON.stringify(c);
+  if (!SUP.has(k)) { let ok = false; try { ok = (await window.VideoEncoder.isConfigSupported(c)).supported; } catch (e) { ok = false; } SUP.set(k, ok); }
+  return SUP.get(k);
+}
+async function decSupported(c) {
+  const k = 'd' + JSON.stringify({ ...c, description: undefined });
+  if (!SUP.has(k)) { let ok = false; try { ok = (await window.VideoDecoder.isConfigSupported(c)).supported; } catch (e) { ok = false; } SUP.set(k, ok); }
+  return SUP.get(k);
+}
+const waitQ = (codec) => new Promise((r) => {   // wake as soon as the chip takes the next frame (no busy polling)
+  let done = false; const go = () => { if (!done) { done = true; r(); } };
+  try { codec.addEventListener('dequeue', go, { once: true }); } catch (e) { /* older phones */ }
+  setTimeout(go, 3);
+});
+
 export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY = 0, ctaY = 800, pbar = false, onPct = () => {}, compose = null, fps = 30, voice = undefined }) {
   if (!supported()) throw new Error('this phone can\'t make videos in the browser');
-  await loadScript(new URL('./mp4box.all.js', import.meta.url).href);
-  const buf = await (await fetch(src)).arrayBuffer();
+  const [, cached] = await Promise.all([warm(), prefetch(src)]);
+  const buf = cached.slice(0);   // a copy: the cached footage stays clean for the next save
   buf.fileStart = 0;
   const file = window.MP4Box.createFile();
   let info = null;
@@ -152,14 +188,15 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   let cfg = null, FPS = 30;
   for (const t of tries) {
     const c = { codec: t.codec, width: W, height: H, bitrate: t.br, framerate: t.fr, avc: { format: 'avc' }, hardwareAcceleration: 'prefer-hardware' };
-    try { if ((await window.VideoEncoder.isConfigSupported(c)).supported) { cfg = c; FPS = t.fr; break; } } catch (e) { /* try the next */ }
-    try { delete c.hardwareAcceleration; if ((await window.VideoEncoder.isConfigSupported(c)).supported) { cfg = c; FPS = t.fr; break; } } catch (e) { /* */ }
+    if (await encSupported(c)) { cfg = c; FPS = t.fr; break; }
+    delete c.hardwareAcceleration; if (await encSupported(c)) { cfg = c; FPS = t.fr; break; }
   }
   if (!cfg) throw new Error('no H.264 encoder on this phone');
   const target = new ArrayBufferTarget();
   // sound with the pop + spoken follow line (voice: the line's audio file; undefined = copy the sound as is)
-  let mixed = null;
-  if (voice !== undefined && at) { try { mixed = await mixSound(buf, a, b, voice); } catch (e) { mixed = null; } }
+  let mixed = null;   // made on the side WHILE the picture is made (was: before it)
+  const mixP = voice !== undefined && at ? mixSound(buf, a, b, voice).catch(() => null) : Promise.resolve(null);
+
   let aCfg = null;
   if (at) {
     const esds = file.getTrackById(at.id).mdia.minf.stbl.stsd.entries[0].esds;
@@ -167,12 +204,10 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
     aCfg = { codec: at.codec || 'mp4a.40.2', sampleRate: at.audio.sample_rate, numberOfChannels: at.audio.channel_count,
              description: dsi ? new Uint8Array(dsi.data) : undefined };
   }
-  const muxer = new Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: FPS },
-    audio: mixed ? { codec: 'aac', sampleRate: mixed.sr, numberOfChannels: 2 }
-      : aCfg ? { codec: 'aac', sampleRate: aCfg.sampleRate, numberOfChannels: aCfg.numberOfChannels } : undefined,
-    fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
+  // the picture's chunks wait here; the file is put together once the sound mix (made alongside) is known
+  const vChunks = [];
   let failed = null;
-  const enc = new window.VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: (e) => { failed = e; } });
+  const enc = new window.VideoEncoder({ output: (chunk, meta) => vChunks.push([chunk, meta]), error: (e) => { failed = e; } });
   enc.configure(cfg);
 
   // ---- drawing surface
@@ -203,8 +238,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
     error: (e) => { failed = e; },
   });
   let dcfg = { codec: vt.codec, codedWidth: vt.video.width, codedHeight: vt.video.height, description, hardwareAcceleration: 'prefer-hardware' };
-  try { if (!(await window.VideoDecoder.isConfigSupported(dcfg)).supported) { delete dcfg.hardwareAcceleration; } } catch (e) { delete dcfg.hardwareAcceleration; }
-  try { if (!(await window.VideoDecoder.isConfigSupported(dcfg)).supported) throw new Error('this phone can\'t read ' + vt.codec); } catch (e) { throw e; }
+  if (!(await decSupported(dcfg))) { delete dcfg.hardwareAcceleration; if (!(await decSupported(dcfg))) throw new Error('this phone can\'t read ' + vt.codec); }
   dec.configure(dcfg);
   const ts = vs[0].timescale;
   let first = 0;   // decode from the last keyframe at or before the start
@@ -212,7 +246,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   for (let i = first; i < vs.length; i++) {
     const s = vs[i];
     if ((s.dts - vShift) / ts > b + 0.6) break;
-    while ((dec.decodeQueueSize > 6 || enc.encodeQueueSize > 6) && !failed) await new Promise((r) => setTimeout(r, 4));
+    while ((dec.decodeQueueSize > 10 || enc.encodeQueueSize > 12) && !failed) await waitQ(enc.encodeQueueSize > 12 ? enc : dec);
     if (failed) break;
     dec.decode(new window.EncodedVideoChunk({ type: s.is_sync ? 'key' : 'delta', timestamp: Math.round((s.cts - vShift) / ts * 1e6),
       duration: Math.round(s.duration / ts * 1e6), data: s.data }));
@@ -222,7 +256,14 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   dec.close(); enc.close();
   if (failed) throw failed;
   if (!n) throw new Error('no frames came out');
-  // ---- sound: the mix made above (pop + follow line), else copied as is (no quality loss)
+  // ---- sound: the mix made alongside (pop + follow line), else copied as is (no quality loss)
+  mixed = await mixP;   // null = no mix on this phone: the clip's own sound is copied instead (never a silent fail)
+  const muxer = new Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: FPS },
+    audio: mixed ? { codec: 'aac', sampleRate: mixed.sr, numberOfChannels: 2 }
+      : aCfg ? { codec: 'aac', sampleRate: aCfg.sampleRate, numberOfChannels: aCfg.numberOfChannels } : undefined,
+    fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
+  for (const [c, m] of vChunks) muxer.addVideoChunk(c, m);
+  vChunks.length = 0;
   if (mixed) {   // (some phones leave out the AAC setup bytes: AAC-LC 48 kHz stereo = 0x11 0x90)
     let first = true;
     for (const [c, m] of mixed.chunks) {
