@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-27T00:10:00Z",
+ "updated": "2026-11-27T00:15:02Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -4141,8 +4141,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T00:10:00Z",
- "log": [
-  "[00:10:03Z] slot due but no finished clip is ready"
- ]
+ "stats_updated": "2026-11-27T00:15:02Z",
+ "log": []
 }
