@@ -68,9 +68,9 @@
   "ZanyMistySandstormTriHard-vwje4dB6O6NlJsMD"
  ],
  "yt_channel": "UCtxm_iDQ0Y7baG2mwrGGcSg",
- "yt_check": "failed: HTTP Error 503: Service Unavailable",
+ "yt_check": "ok",
  "tt_check": "ok",
- "manual_check": "2026-11-27T07:59:01Z",
+ "manual_check": "2026-11-27T08:09:09Z",
  "stats_at": "2026-11-27T07:43:45Z",
  "buffer_wait": "",
  "buffer_off": false,
