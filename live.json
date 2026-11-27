@@ -388,7 +388,7 @@
    }
   ]
  },
- "updated": "2026-11-27T17:03:58Z",
+ "updated": "2026-11-27T17:08:39Z",
  "paused": true,
  "switched_at": "2026-11-27T16:56:58Z",
  "postnow": [],
@@ -1332,12 +1332,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-27",
-  "used": 7,
+  "used": 8,
   "cap": 29,
   "slots": 6,
-  "remain30": 659,
-  "reset30": "2026-12-18T22:03:28Z",
-  "remain24": 598,
+  "remain30": 658,
+  "reset30": "2026-12-18T22:03:15Z",
+  "remain24": 597,
   "active": [
    [
     8,
@@ -1452,11 +1452,11 @@
    "posted_at": "2026-11-27T16:40:42Z",
    "video": "https://gtaclip-studio.pages.dev/v/UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz_final.mp4?v=ab8304b8d5&r=1795790231",
    "poster": "https://gtaclip-studio.pages.dev/v/UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz.jpg",
-   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7712892044145872141",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712892044145872141",
    "youtube": "",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b09b28f34d224b14a9d57ee",
      "error": ""
     }
@@ -3091,6 +3091,20 @@
  },
  "stats": [
   {
+   "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7712892044145872141",
+   "sent": "2026-11-27T16:41:29.393Z",
+   "hook": "Did you expect this moment to play out like this? 😳",
+   "clip": "",
+   "streamer": "ishowspeed",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
    "service": "youtube",
    "link": "https://www.youtube.com/shorts/mErOP0Q0Hn4",
    "sent": "2026-11-27T16:38:46.870Z",
@@ -4323,6 +4337,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T17:03:58Z",
+ "stats_updated": "2026-11-27T17:08:39Z",
  "log": []
 }
