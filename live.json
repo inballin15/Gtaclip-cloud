@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-27T18:24:15Z",
+  "updated": "2026-11-27T20:27:10Z",
   "videos": 70,
   "v": 5,
   "findings": [
@@ -203,7 +203,7 @@
    },
    {
     "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
-    "views": 1249
+    "views": 1250
    },
    {
     "hook": "What do you think about Nick not being family freindly?",
@@ -398,7 +398,7 @@
    }
   ]
  },
- "updated": "2026-11-27T20:21:22Z",
+ "updated": "2026-11-27T20:27:10Z",
  "paused": true,
  "switched_at": "2026-11-27T16:56:58Z",
  "postnow": [],
@@ -4360,6 +4360,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T20:21:22Z",
- "log": []
+ "stats_updated": "2026-11-27T20:27:10Z",
+ "log": [
+  "[20:27:11Z] hook learner: 70 videos, 2 lessons"
+ ]
 }
