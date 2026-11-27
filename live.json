@@ -388,12 +388,12 @@
    }
   ]
  },
- "updated": "2026-11-27T16:38:23Z",
+ "updated": "2026-11-27T16:40:42Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-27T18:07:00Z",
- "up_next": "DifferentImpossibleSushiHumbleLife-2oIIYfJqHjMo4iDy",
+ "up_next": "SplendidPluckyGiraffeFrankerZ-XGWrghpRJR_Pumwl",
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7712721017021500703",
@@ -1293,12 +1293,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-27",
-  "used": 5,
+  "used": 7,
   "cap": 29,
   "slots": 6,
-  "remain30": 661,
-  "reset30": "2026-12-18T22:03:18Z",
-  "remain24": 582,
+  "remain30": 659,
+  "reset30": "2026-12-18T22:03:28Z",
+  "remain24": 598,
   "active": [
    [
     8,
@@ -1401,6 +1401,42 @@
   "vod2939983603_26445"
  ],
  "posts": {
+  "UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz": {
+   "id": "UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz",
+   "hook": "IShowSpeed panicked after accidentally hitting a granny in GTA 6",
+   "streamer": "IShowSpeed",
+   "login": "ishowspeed",
+   "campaign": "",
+   "tag": "#IShowSpeed",
+   "caption": "",
+   "why": "11:37 AM slot",
+   "posted_at": "2026-11-27T16:40:42Z",
+   "video": "https://gtaclip-studio.pages.dev/v/UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz_final.mp4?v=ab8304b8d5&r=1795790231",
+   "poster": "https://gtaclip-studio.pages.dev/v/UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz.jpg",
+   "tiktok": "",
+   "youtube": "",
+   "status": {
+    "tiktok": {
+     "state": "uploading",
+     "buffer_id": "6b09b28f34d224b14a9d57ee",
+     "error": ""
+    }
+   },
+   "platforms": [
+    "tiktok"
+   ],
+   "hook_kind": "ai",
+   "hook_variant": "vibe",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off"
+   },
+   "viral": 88,
+   "seconds": 30
+  },
   "ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry": {
    "id": "ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry",
    "hook": "Kai Cenat laughed after a witness got a flying kick for calling cops",
@@ -1413,16 +1449,16 @@
    "posted_at": "2026-11-27T16:38:23Z",
    "video": "https://gtaclip-studio.pages.dev/v/ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry_final.mp4?v=e786fe2180&r=1795790366",
    "poster": "https://gtaclip-studio.pages.dev/v/ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry.jpg",
-   "tiktok": "",
-   "youtube": "",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712891455689346318",
+   "youtube": "https://www.youtube.com/shorts/mErOP0Q0Hn4",
    "status": {
     "tiktok": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b09b20932c212878fe81ece",
      "error": ""
     },
     "youtube": {
-     "state": "uploading",
+     "state": "live",
      "buffer_id": "6b09b21432c212878fe821b4",
      "error": ""
     }
@@ -3017,6 +3053,34 @@
  "stats": [
   {
    "service": "youtube",
+   "link": "https://www.youtube.com/shorts/mErOP0Q0Hn4",
+   "sent": "2026-11-27T16:38:46.870Z",
+   "hook": "Have you seen NPCs acting this crazy in GTA 6 yet? 😳",
+   "clip": "",
+   "streamer": "Kai Cenat",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "tiktok",
+   "link": "https://tiktok.com/@gtaclip96/video/7712891455689346318",
+   "sent": "2026-11-27T16:39:16.024Z",
+   "hook": "Have you seen NPCs acting this crazy in GTA 6 yet? 😳",
+   "clip": "",
+   "streamer": "kaicenat",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
+   "service": "youtube",
    "link": "https://www.youtube.com/shorts/LQCv6las1WI",
    "sent": "2026-11-27T05:42:43.000Z",
    "hook": "",
@@ -4220,13 +4284,9 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T16:38:23Z",
+ "stats_updated": "2026-11-27T16:40:42Z",
  "log": [
-  "[16:38:26Z] Tiktok: back to automatic uploads.",
-  "[16:38:27Z] Youtube: back to automatic uploads.",
-  "[16:38:29Z] post-now requested: ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry",
-  "[16:38:31Z] posting ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry (post now) to tiktok, youtube: Kai Cenat laughed after a witness got a flying kick for calling cops",
-  "[16:38:47Z]   tiktok: uploading ",
-  "[16:38:47Z]   youtube: uploading "
+  "[16:40:44Z] posting UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz (11:37 AM slot) to tiktok: IShowSpeed panicked after accidentally hitting a granny in GTA 6",
+  "[16:40:57Z]   tiktok: uploading "
  ]
 }

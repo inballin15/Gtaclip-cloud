@@ -10,16 +10,16 @@
  "posted_at": "2026-11-27T16:38:23Z",
  "video": "https://gtaclip-studio.pages.dev/v/ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry_final.mp4?v=e786fe2180&r=1795790366",
  "poster": "https://gtaclip-studio.pages.dev/v/ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry.jpg",
- "tiktok": "",
- "youtube": "",
+ "tiktok": "https://tiktok.com/@gtaclip96/video/7712891455689346318",
+ "youtube": "https://www.youtube.com/shorts/mErOP0Q0Hn4",
  "status": {
   "tiktok": {
-   "state": "uploading",
+   "state": "live",
    "buffer_id": "6b09b20932c212878fe81ece",
    "error": ""
   },
   "youtube": {
-   "state": "uploading",
+   "state": "live",
    "buffer_id": "6b09b21432c212878fe821b4",
    "error": ""
   }
