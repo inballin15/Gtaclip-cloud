@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  actions: write
   contents: write
 
 jobs:
@@ -38,3 +39,9 @@ jobs:
             cd - >/dev/null; git worktree remove -f /tmp/gp; sleep 5
           done
           exit 1
+      - name: put the new site on Cloudflare (direct)
+        continue-on-error: true
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cfdeploy.yml -R "${{ github.repository }}" || true

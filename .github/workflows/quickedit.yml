@@ -58,3 +58,9 @@ jobs:
           gh issue close ${{ github.event.issue.number }} -R ${{ github.repository }} -c "Done — your text is on the video (no full re-make needed)."
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: put the new site on Cloudflare (direct)
+        continue-on-error: true
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cfdeploy.yml -R "${{ github.repository }}" || true

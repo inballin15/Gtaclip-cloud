@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  actions: write
   contents: write
   issues: write
 
@@ -101,3 +102,9 @@ jobs:
           tree=$(git write-tree); unset GIT_INDEX_FILE
           c=$(git commit-tree "$tree" -m "your clips $(date -u +%FT%TZ)")
           for i in 1 2 3 4; do git push -qf origin "$c:refs/heads/mine" && break; [ $i = 4 ] && exit 1; sleep $((i*5)); done
+      - name: put the new site on Cloudflare (direct)
+        continue-on-error: true
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cfdeploy.yml -R "${{ github.repository }}" || true
