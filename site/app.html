@@ -1568,7 +1568,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=12');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=13');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1707,7 +1707,7 @@ function openVoice(r) {
   // the voice pack (made ahead of time on GitHub) makes the swap instant: start loading everything now
   if (base && window.VideoEncoder) {
     Promise.all([fetch(base + 'lines.json').then((x) => (x.ok ? x.json() : null)).catch(() => null),
-      import(PAGES + 'vendor/render.mjs?v=12').catch(() => null)]).then(([p, m]) => {
+      import(PAGES + 'vendor/render.mjs?v=13').catch(() => null)]).then(([p, m]) => {
       RM2 = m; pack = p && (p.voices || []).length ? p : null;
       if (pack && m) { m.warm(); if (!(vid instanceof Blob)) m.prefetch(vid); m.prefetch(base + 'game.m4a'); m.prefetch(base + pick + '.m4a');
         followAudio((r.user_layout || {}).follow_voice || favFollow());
@@ -1783,7 +1783,7 @@ let RMOD = null;
 function warmPhone(r) {   // an editor opened: start downloading the footage + loading the video maker NOW, so Save is instant
   try {
     const ED = edSrc(r); if (!ED || !ED.full || !window.VideoEncoder) return;
-    (RMOD ? Promise.resolve(RMOD) : import(PAGES + 'vendor/render.mjs?v=12')).then((m) => { RMOD = m; m.warm(ED.src); }).catch(() => {});
+    (RMOD ? Promise.resolve(RMOD) : import(PAGES + 'vendor/render.mjs?v=13')).then((m) => { RMOD = m; m.warm(ED.src); }).catch(() => {});
     followAudio((r.user_layout || {}).follow_voice || favFollow());
   } catch (e) { /* */ }
 }
@@ -1855,7 +1855,7 @@ async function followAudio(v) {   // the spoken follow line's audio for your pho
   catch (e) { return null; }
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=12');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=13');
   if (!S.cam && S.mode !== 'irl' && S.mode !== 'full') {   // never a layout without its webcam
     const c = String((r.user_layout || {}).cam || r.cam_used || r.cam || '').split(',').map(Number);
     if (c.length === 4 && c.every((v) => isFinite(v))) S = { ...S, cam: c }; else S = { ...S, mode: 'full' };
@@ -1995,7 +1995,7 @@ function openEditor(r) {
   } else pbar.hidden = true;
   // ---- LIVE sound, on your phone: the pop + the spoken follow line play right in the preview, with the clip dipping
   // under the voice (same timing as the finished video). Pick a voice and you hear it on the clip instantly.
-  let RM = null; import(PAGES + 'vendor/render.mjs?v=12').then((m) => { RM = m; draw(); }).catch(() => {});
+  let RM = null; import(PAGES + 'vendor/render.mjs?v=13').then((m) => { RM = m; draw(); }).catch(() => {});
   let ac = null, duck = null, pass = 0, sched = []; const fvDec = {};
   function audioOn() {   // has to start inside a tap on iPhone
     if (!mv) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
@@ -2010,7 +2010,7 @@ function openEditor(r) {
     if (duck && ac) { duck.gain.cancelScheduledValues(0); duck.gain.setValueAtTime(1, ac.currentTime); } }
   async function scheduleExtras() {   // from wherever the playhead is now
     if (!ac || !mv || mv.paused) return;
-    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=12'); } catch (e) { return; } }
+    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=13'); } catch (e) { return; } }
     unschedule(); const my = pass;
     const vb = await voiceDec(S.follow_voice || favFollow()); if (my !== pass || mv.paused) return;
     const c = cutNow(); const rate = mv.playbackRate || 1; const ct = mv.currentTime + ED.t0 - c[0]; const now = ac.currentTime;
@@ -2580,7 +2580,7 @@ function openSettings(why) {
   const bs = el('button', 'btn', L && L.buffer_off ? 'Buffer: OFF — tap to manage' : 'Buffer: ON — tap to manage'); bs.onclick = openBufferSwitch;
   const bh = el('button', 'btn ghost', 'Buffer connection help'); bh.onclick = openBufferHelp;
   const fv = el('button', 'btn', `\ud83c\udf99 Follow line voice: ${((VOICES.find((v) => v[0] === ((L && L.follow_voice) || 'am_puck')) || ['', 'No voice'])[1])}`); fv.onclick = openFollowVoice;
-  nodes.push(el('div', 'btns'), fv, ab, bs, bh);
+  nodes.push(el('div', 'btns'), ab, bs, bh);   // (no follow-line voice any more - Nov 27: just the chip + a click)
   nodes.push(appSection());
   sheet('Settings', nodes);
 }

@@ -25,45 +25,46 @@ function findTag(d, tag) {   // the AAC "AudioSpecificConfig" inside the esds bo
   return null;
 }
 
-// ---- the follow pop-up, drawn exactly like engage.py (pop in 0.7 s, pulse, pop out at ~3.95 s)
-const START = 0.7, IN_S = 0.35, HOLD_S = 2.6, OUT_S = 0.3;
-function easeBack(x) { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2; }
-function ctaState(t) {
+// ---- the follow chip, drawn exactly like engage.py (Nov 27 redesign): small dark glass chip, top-right corner,
+// slides + fades in at 0.7 s, rests 3 s, fades out. No pulse, no voice - just a soft click.
+const START = 0.7, IN_S = 0.25, HOLD_S = 3.0, OUT_S = 0.3, MARGIN = 36, SLIDE = 40, CHIP_Y = 150 + 24;
+function ctaState(t) {   // [x offset, alpha]
   const u = t - START; if (u < 0 || u > IN_S + HOLD_S + OUT_S) return null;
-  if (u < IN_S) { const x = u / IN_S; return [0.55 + 0.45 * easeBack(x), Math.min(1, x * 1.6)]; }
-  if (u < IN_S + HOLD_S) { const v = (u - IN_S) / HOLD_S; return [1 + (v >= 0.35 && v <= 0.65 ? 0.06 * Math.sin((v - 0.35) / 0.3 * Math.PI) : 0), 1]; }
-  const x = (u - IN_S - HOLD_S) / OUT_S; return [1 - 0.25 * x, Math.max(0, 1 - x)];
+  if (u < IN_S) { const x = 1 - (1 - u / IN_S) ** 3; return [SLIDE * (1 - x), x]; }
+  if (u < IN_S + HOLD_S) return [0, 1];
+  return [0, Math.max(0, 1 - (u - IN_S - HOLD_S) / OUT_S)];
 }
-export const CTA_H = 104;
-export function drawCta(g, t, cy) {
+export const CTA_H = 64;
+export function drawCta(g, t /* , cy: not used any more - the chip has its own corner */) {
   const st = ctaState(t); if (!st) return;
-  const [s, a] = st; const TEXT = 'Follow & Subscribe', TEXT2 = 'for daily clips';
+  const [dx, a] = st; const T1 = 'Follow', T2 = 'for daily clips';
+  const F1 = '700 30px Inter, -apple-system, "Helvetica Neue", Arial, sans-serif', F2 = '600 25px Inter, -apple-system, "Helvetica Neue", Arial, sans-serif';
   g.save(); g.globalAlpha = a;
-  const F1 = '700 46px Inter, -apple-system, "Helvetica Neue", Arial, sans-serif', F2 = '600 34px Inter, -apple-system, "Helvetica Neue", Arial, sans-serif';
-  g.font = F1; const tw = g.measureText(TEXT).width; g.font = F2; const tw2 = g.measureText(TEXT2).width;
-  const h = 104, circ = 72, pad = 16; const w = pad + circ + 22 + tw + 14 + tw2 + 36;
-  g.translate(W / 2, cy); g.scale(s, s); g.translate(-w / 2, -h / 2);
-  g.fillStyle = '#fff'; g.beginPath(); if (g.roundRect) g.roundRect(0, 0, w, h, h / 2); else g.rect(0, 0, w, h); g.fill();
-  const cx = pad + circ / 2, cyy = h / 2;
-  g.fillStyle = '#ff2e88'; g.beginPath(); g.arc(cx, cyy, circ / 2, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#fff'; g.fillRect(cx - 17, cyy - 3.5, 34, 7); g.fillRect(cx - 3.5, cyy - 17, 7, 34);
+  g.font = F1; const tw = g.measureText(T1).width; g.font = F2; const tw2 = g.measureText(T2).width;
+  const h = 64, circ = 42, pad = 11; const w = pad + circ + 14 + tw + 10 + tw2 + 24;
+  const x = W - MARGIN - w + dx, y = CHIP_Y + 1;
+  g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, h / 2); else g.rect(x, y, w, h);
+  g.fillStyle = 'rgba(12,12,16,0.59)'; g.fill(); g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,0.2)'; g.stroke();
+  const cx = x + pad + circ / 2, cy = y + h / 2;
+  g.fillStyle = '#ff2e88'; g.beginPath(); g.arc(cx, cy, circ / 2, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#fff'; g.fillRect(cx - 10, cy - 2, 20, 4); g.fillRect(cx - 2, cy - 10, 4, 20);
   g.textBaseline = 'middle';
-  g.font = F1; g.fillStyle = '#0a0a0e'; g.fillText(TEXT, pad + circ + 22, cyy + 2);
-  g.font = F2; g.fillStyle = '#6e6a80'; g.fillText(TEXT2, pad + circ + 22 + tw + 14, cyy + 4);
+  g.font = F1; g.fillStyle = '#fff'; g.fillText(T1, x + pad + circ + 14, cy + 1);
+  g.font = F2; g.fillStyle = 'rgba(255,255,255,0.75)'; g.fillText(T2, x + pad + circ + 14 + tw + 10, cy + 2);
   g.restore();
 }
 
 // ---- the sound like engage.py: the clip, a "pop" as the button appears, and the spoken follow line right after it
 // (the clip dips ~3 dB for the pop and ~11 dB under the voice, then straight back). Made by the phone's audio
 // engine (OfflineAudioContext) and its AAC encoder (WebCodecs). null = this phone can't: the sound is copied as is.
-export const POP_AT = START + 0.06, SAY_AT = POP_AT + 0.22, SAY_DUCK = 0.12, SAY_GAIN = 1.8;
-export function popBuffer(ctx) {
-  const sr = ctx.sampleRate, n = Math.round(sr * 0.22); const b = ctx.createBuffer(2, n, sr);
-  const L = b.getChannelData(0), R = b.getChannelData(1); let ph = 0, seed = 7;
+export const POP_AT = START + 0.04, SAY_AT = POP_AT + 0.22, SAY_DUCK = 0.12, SAY_GAIN = 1.8;   // SAY_*: kept for old callers (no voice now)
+export function popBuffer(ctx) {   // the soft click (same as engage.py): 3 ms tick + a tiny 2.4 kHz tap
+  const sr = ctx.sampleRate, n = Math.round(sr * 0.05); const b = ctx.createBuffer(2, n, sr);
+  const L = b.getChannelData(0), R = b.getChannelData(1); let seed = 11;
   const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  for (let i = 0; i < n; i++) { const t = i / sr; const f = 300 + 1100 * Math.exp(-t / 0.018); ph += 2 * Math.PI * f / sr;
-    const env = Math.min(1, t / 0.002) * Math.exp(-t / 0.045); const click = (rnd() * 2 - 1) * Math.exp(-t / 0.0015) * 0.35;
-    const v = Math.max(-1, Math.min(1, 0.85 * Math.sin(ph) * env + click)) * 0.79; L[i] = v; R[i] = v; }
+  for (let i = 0; i < n; i++) { const t = i / sr;
+    const v = Math.max(-1, Math.min(1, (rnd() * 2 - 1) * Math.exp(-t / 0.0009) * 0.55 + Math.sin(2 * Math.PI * 2400 * t) * Math.exp(-t / 0.004) * 0.6
+      + Math.sin(2 * Math.PI * 900 * t) * Math.exp(-t / 0.006) * 0.25)) * 0.67; L[i] = v; R[i] = v; }
   return b;
 }
 export async function mixSound(fileBuf, a, b, voiceBuf, opts = {}) {   // opts: { baseGain, layers: [[ArrayBuffer, gain], ...] }
@@ -75,7 +76,7 @@ export async function mixSound(fileBuf, a, b, voiceBuf, opts = {}) {   // opts: 
   const dur = Math.max(0.2, b - a);
   const dec = new OAC(2, sr, sr);
   let src; try { src = await dec.decodeAudioData(fileBuf.slice(0)); } catch (e) { return null; }
-  let voice = null; if (voiceBuf) { try { voice = await dec.decodeAudioData(voiceBuf.slice(0)); } catch (e) { voice = null; } }
+  
   const off = new OAC(2, Math.ceil(dur * sr), sr);
   const s = off.createBufferSource(); s.buffer = src; const g = off.createGain();
   const bg = off.createGain(); bg.gain.value = opts.baseGain ?? 1; s.connect(bg); bg.connect(g);
@@ -86,14 +87,8 @@ export async function mixSound(fileBuf, a, b, voiceBuf, opts = {}) {   // opts: 
   const lim = off.createDynamicsCompressor();   // a safety limiter on the mix
   lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.12;
   g.connect(lim); lim.connect(off.destination);
-  const G = g.gain; const p0 = Math.max(0, POP_AT - 0.06), p1 = POP_AT + 0.45;
-  G.setValueAtTime(1, 0); G.setValueAtTime(1, p0); G.linearRampToValueAtTime(0.7, p0 + 0.06);
-  if (voice) {
-    const v0 = SAY_AT - 0.08, v1 = SAY_AT + voice.duration + 0.05;
-    G.linearRampToValueAtTime(SAY_DUCK, v0 + 0.12); G.setValueAtTime(SAY_DUCK, v1); G.linearRampToValueAtTime(1, v1 + 0.3);
-    const vs = off.createBufferSource(); vs.buffer = voice; const vg = off.createGain(); vg.gain.value = SAY_GAIN; vs.connect(vg); vg.connect(lim); vs.start(SAY_AT);
-  } else { G.setValueAtTime(0.7, p1 - 0.18); G.linearRampToValueAtTime(1, p1); }
-  const ps = off.createBufferSource(); ps.buffer = popBuffer(off); const pg = off.createGain(); pg.gain.value = 0.85; ps.connect(pg); pg.connect(lim); ps.start(POP_AT);
+  // Nov 27: no spoken line and no dip any more - the clip's sound stays as it is, plus a soft click
+  const ps = off.createBufferSource(); ps.buffer = popBuffer(off); const pg = off.createGain(); pg.gain.value = 0.55; ps.connect(pg); pg.connect(lim); ps.start(POP_AT);
   s.start(0, Math.max(0, a), dur);
   const out = await off.startRendering();
   const chunks = []; let err = null;

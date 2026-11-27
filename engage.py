@@ -17,76 +17,67 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent
 FONT = ROOT / "fonts" / "Inter-Bold.otf"
 FPS = 30
-TEXT = "Follow & Subscribe"          # same video goes to TikTok and YouTube
+TEXT = "Follow"                      # Nov 27 redesign: a small dark "glass" chip in the top-right corner
 TEXT2 = "for daily clips"
 PINK = (255, 46, 136)
 SAFE_TOP, SAFE_BOTTOM = 150, 300      # TikTok / Shorts cover these (same numbers as pipeline.py)
-START, IN_S, HOLD_S, OUT_S = 0.7, 0.35, 2.6, 0.3   # appears 0.7 s in (the very first frame stays clean)
+START, IN_S, HOLD_S, OUT_S = 0.7, 0.25, 3.0, 0.3   # appears 0.7 s in, slides in, rests 3 s, fades (no pulse)
+MARGIN, SLIDE = 36, 40   # from the right edge; slides in from 40 px further right
 
 _cache: dict[str, tuple[str, int, int]] = {}
 
 
-def _button(scale: float, alpha: float, ss: int = 2) -> Image.Image:
-    """The button at a given size / opacity, drawn big then shrunk (smooth edges)."""
-    fs = 46 * ss
-    font = ImageFont.truetype(str(FONT), fs)
-    font2 = ImageFont.truetype(str(ROOT / "fonts" / "Inter-SemiBold.otf"), 34 * ss)
-    tw = font.getbbox(TEXT)[2]
-    tw2 = font2.getbbox(TEXT2)[2]
-    h = 104 * ss
-    circ = 72 * ss
-    pad = 16 * ss
-    w = pad + circ + 22 * ss + tw + 14 * ss + tw2 + 36 * ss
+def _button(alpha: float = 1.0, ss: int = 3) -> Image.Image:
+    """The chip: dark see-through glass, a thin light edge, a small pink + circle, 'Follow' + 'for daily clips'."""
+    font = ImageFont.truetype(str(FONT), 30 * ss)
+    font2 = ImageFont.truetype(str(ROOT / "fonts" / "Inter-SemiBold.otf"), 25 * ss)
+    tw, tw2 = font.getbbox(TEXT)[2], font2.getbbox(TEXT2)[2]
+    h, circ, pad = 64 * ss, 42 * ss, 11 * ss
+    w = pad + circ + 14 * ss + tw + 10 * ss + tw2 + 24 * ss
     im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle([0, 0, w - 1, h - 1], radius=h // 2, fill=(255, 255, 255, 255))
-    cy = h // 2
-    cx = pad + circ // 2
+    d.rounded_rectangle([0, 0, w - 1, h - 1], radius=h // 2, fill=(12, 12, 16, 150), outline=(255, 255, 255, 52), width=2 * ss)
+    cy, cx = h // 2, pad + circ // 2
     d.ellipse([cx - circ // 2, cy - circ // 2, cx + circ // 2, cy + circ // 2], fill=PINK + (255,))
-    arm, th = 17 * ss, 7 * ss   # the "+"
+    arm, th = 10 * ss, 4 * ss
     d.rounded_rectangle([cx - arm, cy - th // 2, cx + arm, cy + th // 2], radius=th // 2, fill=(255, 255, 255, 255))
     d.rounded_rectangle([cx - th // 2, cy - arm, cx + th // 2, cy + arm], radius=th // 2, fill=(255, 255, 255, 255))
+    x0 = pad + circ + 14 * ss
     tb = font.getbbox(TEXT)
-    x0 = pad + circ + 22 * ss
-    d.text((x0, cy - (tb[1] + tb[3]) / 2), TEXT, font=font, fill=(10, 10, 14, 255))
+    d.text((x0, cy - (tb[1] + tb[3]) / 2), TEXT, font=font, fill=(255, 255, 255, 255))
     tb2 = font2.getbbox(TEXT2)
-    d.text((x0 + tw + 14 * ss, cy - (tb2[1] + tb2[3]) / 2 + 2 * ss), TEXT2, font=font2, fill=(110, 106, 128, 255))
-    im = im.resize((max(1, int(w / ss * scale)), max(1, int(h / ss * scale))), Image.LANCZOS)
+    d.text((x0 + tw + 10 * ss, cy - (tb2[1] + tb2[3]) / 2 + ss), TEXT2, font=font2, fill=(255, 255, 255, 190))
+    im = im.resize((max(1, w // ss), max(1, h // ss)), Image.LANCZOS)
     if alpha < 1:
-        a = im.getchannel("A").point(lambda v: int(v * alpha))
-        im.putalpha(a)
+        im.putalpha(im.getchannel("A").point(lambda v: int(v * alpha)))
     return im
 
 
-def _ease_back(x: float) -> float:   # overshoot a little, then settle (a "pop")
-    c1 = 1.70158
-    c3 = c1 + 1
-    return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2
+def _ease_out(x: float) -> float:
+    return 1 - (1 - x) ** 3
 
 
 def cta_frames(out_dir: Path) -> tuple[str, int, int]:
-    """PNG frames of the whole pop-up (pop in, pulse, pop out) on a fixed-size see-through canvas."""
+    """PNG frames of the chip (slide + fade in, rest, fade out) on a fixed see-through canvas, right-aligned."""
     key = str(out_dir)
     if key in _cache:
         return _cache[key]
     out_dir.mkdir(parents=True, exist_ok=True)
-    full = _button(1.0, 1.0)
-    W, H = int(full.width * 1.12) + 4, int(full.height * 1.12) + 4
+    full = _button()
+    W, H = full.width + SLIDE + 2, full.height + 2
     n = int(round((IN_S + HOLD_S + OUT_S) * FPS))
     for i in range(n):
         t = i / FPS
-        if t < IN_S:                                   # pop in
-            x = t / IN_S
-            s, a = 0.55 + 0.45 * _ease_back(x), min(1.0, x * 1.6)
-        elif t < IN_S + HOLD_S:                        # one gentle pulse halfway (draws the eye without nagging)
-            u = (t - IN_S) / HOLD_S
-            s, a = 1.0 + (0.06 * math.sin((u - 0.35) / 0.3 * math.pi) if 0.35 <= u <= 0.65 else 0.0), 1.0
-        else:                                          # pop out
-            x = (t - IN_S - HOLD_S) / OUT_S
-            s, a = 1.0 - 0.25 * x, max(0.0, 1 - x)
-        b = _button(max(0.05, s), a)
+        if t < IN_S:
+            x = _ease_out(t / IN_S)
+            dx, a = SLIDE * (1 - x), x
+        elif t < IN_S + HOLD_S:
+            dx, a = 0, 1.0
+        else:
+            dx, a = 0, max(0.0, 1 - (t - IN_S - HOLD_S) / OUT_S)
+        b = _button(a)
         can = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        can.alpha_composite(b, ((W - b.width) // 2, (H - b.height) // 2))
+        can.alpha_composite(b, (W - b.width - SLIDE + int(round(dx)), 1))
         can.save(out_dir / f"cta_{i:03d}.png")
     _cache[key] = (str(out_dir / "cta_%03d.png"), W, H)
     return _cache[key]
@@ -113,9 +104,9 @@ def add(inputs: list, flt: str, last: str, dur: float, work: Path, hook_top: flo
         pat, cw, ch = cta_frames(work / "cta")
         k = inputs.count("-i")
         inputs = inputs + ["-framerate", str(FPS), "-i", pat]
-        y = cta_y(hook_top, hook_h, layout, ch)
+        y = SAFE_TOP + 24   # top-right corner, just below TikTok / Shorts' top bar: away from the action
         flt += (f";[{k}:v]format=rgba,setpts=PTS-STARTPTS+{START}/TB[ctav]"
-                f";[{last}][ctav]overlay=x=(W-w)/2:y={y}:eof_action=pass:format=auto[ctao]")
+                f";[{last}][ctav]overlay=x=W-w-{MARGIN - SLIDE}:y={y}:eof_action=pass:format=auto[ctao]")
         last = "ctao"
     if pbar and dur > 2:
         k = inputs.count("-i")
@@ -126,34 +117,32 @@ def add(inputs: list, flt: str, last: str, dur: float, work: Path, hook_top: flo
     return inputs, flt, last
 
 
-POP_AT = START + 0.06   # the sound lands as the button pops in
+POP_AT = START + 0.04   # the click lands as the chip starts sliding in
 
 
 def pop_wav(path: Path) -> Path:
-    """A short, clean "pop" (made here - no stock sound): a quick downward pitch blip + a tiny click on top."""
+    """A soft, crisp UI click (made here - no stock sound): a 3 ms tick + a tiny 2.4 kHz tap that dies in ~12 ms."""
+    path = path.with_name("click.wav")
     if path.exists():
         return path
     import random
     import struct
     import wave
-    sr, n = 48000, int(48000 * 0.22)
-    rnd = random.Random(7)
+    sr, n = 48000, int(48000 * 0.05)
+    rnd = random.Random(11)
     out = []
-    ph = 0.0
     for i in range(n):
         t = i / sr
-        f = 300 + 1100 * math.exp(-t / 0.018)             # 1400 Hz falling fast to ~300 Hz: the "pop"
-        ph += 2 * math.pi * f / sr
-        env = min(1.0, t / 0.002) * math.exp(-t / 0.045)  # 2 ms attack, short tail
-        body = math.sin(ph) * env
-        click = (rnd.random() * 2 - 1) * math.exp(-t / 0.0015) * 0.35   # bright tick right at the start
-        out.append(max(-1.0, min(1.0, 0.85 * body + click)))
+        tick = (rnd.random() * 2 - 1) * math.exp(-t / 0.0009) * 0.55
+        tap = math.sin(2 * math.pi * 2400 * t) * math.exp(-t / 0.004) * 0.6
+        low = math.sin(2 * math.pi * 900 * t) * math.exp(-t / 0.006) * 0.25
+        out.append(max(-1.0, min(1.0, tick + tap + low)))
     path.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(path), "wb") as w:
         w.setnchannels(2)
         w.setsampwidth(2)
         w.setframerate(sr)
-        w.writeframes(b"".join(struct.pack("<hh", int(v * 26000), int(v * 26000)) for v in out))
+        w.writeframes(b"".join(struct.pack("<hh", int(v * 22000), int(v * 22000)) for v in out))
     return path
 
 
@@ -203,27 +192,14 @@ def follow_voice(work: Path, voice: str | None = None) -> tuple[Path, float] | N
 
 def add_audio(inputs: list, flt: str, work: Path, src_a: str = "0:a", say: bool = True,
               voice: str | None = None) -> tuple[list, str, str]:
-    """The pop sound at the moment the button appears + the spoken "Don't forget to follow and subscribe for daily
-    clips!" right after it. The clip's own sound dips a little for the pop (about -3 dB) and a bit more under the
-    voice (about -6 dB) so the line is clear, then goes straight back up. Returns (inputs, filter, audio label)."""
+    """Nov 27: just a soft click as the chip slides in - no spoken line, the clip's sound isn't touched.
+    (say / voice are kept so older callers still work; they do nothing now.) Returns (inputs, filter, audio label)."""
     k = inputs.count("-i")
     inputs = inputs + ["-i", str(pop_wav(work / "pop.wav"))]
-    a0, a1 = POP_AT - 0.06, POP_AT + 0.45
     ms = int(POP_AT * 1000)
-    fv = follow_voice(work, voice) if say else None
-    duck = f"0.3*clip((t-{a0:.3f})/0.06,0,1)*clip(({a1:.3f}-t)/0.18,0,1)"
-    if fv:   # under the voice the clip drops ~11 dB so the line is clearly heard (Nov 25: -6 dB was too quiet)
-        b0, b1 = SAY_AT - 0.08, SAY_AT + fv[1] + 0.05
-        duck = f"max({duck},{1 - SAY_DUCK}*clip((t-{b0:.3f})/0.12,0,1)*clip(({b1:.3f}-t)/0.3,0,1))"
-    flt += (f";[{src_a}]aresample=48000,volume='1-{duck}':eval=frame[adk]"
-            f";[{k}:a]aresample=48000,adelay={ms}|{ms},volume=0.85[apop]")
-    if fv:
-        inputs = inputs + ["-i", str(fv[0])]
-        sm = int(SAY_AT * 1000)
-        flt += (f";[{k + 1}:a]aresample=48000,pan=stereo|c0=c0|c1=c0,adelay={sm}|{sm},volume={SAY_GAIN}[asay]"
-                f";[adk][apop][asay]amix=inputs=3:duration=first:normalize=0,alimiter=limit=0.95:level=false[amix]")
-    else:
-        flt += ";[adk][apop]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=false[amix]"
+    flt += (f";[{src_a}]aresample=48000[adk]"
+            f";[{k}:a]aresample=48000,adelay={ms}|{ms},volume=0.55[apop]"
+            ";[adk][apop]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=false[amix]")
     return inputs, flt, "amix"
 
 
