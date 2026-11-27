@@ -646,6 +646,14 @@ def fix_tip_numbers(plan: dict) -> None:
         if s_.get("kind") != "tip":
             continue
         k += 1
+        ls_ = s_["lines"]   # the joke's 'Nah, I'm kidding' line comes right after the joke
+        j = next((i for i, x in enumerate(ls_) if "subscrib" in x["text"].lower() and "kidding" not in x["text"].lower()), None)
+        kd = next((i for i, x in enumerate(ls_) if "kidding" in x["text"].lower()), None)
+        if j is not None and kd is not None and kd != j + 1:
+            ln_k = ls_.pop(kd)
+            j = next(i for i, x in enumerate(ls_) if "subscrib" in x["text"].lower() and "kidding" not in x["text"].lower())
+            ln_k["at"] = ls_[j]["at"]
+            ls_.insert(j + 1, ln_k)
         for ln in s_["lines"]:
             def rep(m):
                 n = m.group(4).lstrip("#")
@@ -657,6 +665,22 @@ def fix_tip_numbers(plan: dict) -> None:
             new = pat.sub(rep, ln["text"])
             if new != ln["text"]:
                 ln["text"] = new
+
+
+def fix_counts(plan: dict) -> None:
+    """The title and intro promise exactly as many tips as the video has ('4 ... You MISSED' with 3 tips was wrong)."""
+    n = sum(1 for x in plan["sections"] if x["kind"] == "tip")
+    if not n:
+        return
+    plan["title"] = re.sub(r"^(\D{0,12}?)\d+(?=\s)", lambda m: m.group(1) + str(n), plan.get("title") or "", count=1)
+    nouns = r"(mistakes?|tips?|things?|details?|secrets?|tricks?|mechanics?|ways?|features?)"
+    for x in plan["sections"]:
+        if x["kind"] != "intro":
+            continue
+        for ln in x["lines"]:
+            ln["text"] = re.sub(r"\b(\d+|" + "|".join(_NUMW[2:]) + r")(\s+(?:\w+\s+){0,2}" + nouns + r")\b",
+                                lambda m: (_NUMW[n] if not m.group(1).isdigit() and n < len(_NUMW) else str(n)) + m.group(2),
+                                ln["text"], count=1, flags=re.I)
 
 
 def untangle(plan: dict) -> None:
@@ -709,6 +733,10 @@ def fit(plan: dict, dur: float) -> None:
                         cands.append(t)
                         t += 2.0
                     t0 = max(t0, b)
+                if cands and max(look(g) for g in cands) <= 0 and sc:   # every free stretch is boring / off-topic:
+                    allc = [t for t in (x * 2.0 for x in range(int(dur // 2))) if t + ln_ <= dur]   # the intro becomes
+                    if allc and max(look(g) for g in allc) > 0:                                      # a preview of the
+                        cands = allc                                                                 # best footage
                 if cands:
                     gaps = cands
                     st = max(cands, key=lambda g: (look(g), -abs(g - s["start"])))
@@ -1392,10 +1420,21 @@ def make(job: dict, num: int = 0) -> dict:
         check_script(plan, scenes, game, dur)
         place_sections(plan, scenes, dur)
         fix_tip_numbers(plan)
+        fix_counts(plan)
     (WORK / "plan.json").write_text(json.dumps(plan, indent=1))
     status(job, "making", "Recording the voice")
     voice_lines(plan, voice)
     fit(plan, dur)
+    empty = [x for x in plan["sections"] if x["kind"] == "tip" and not x["lines"]]
+    if empty:   # a tip whose footage was too short lost all its lines: drop it, renumber the rest, fix the counts
+        plan["sections"] = [x for x in plan["sections"] if x not in empty]
+        log(f"dropped {len(empty)} tip(s) left without narration: {', '.join(x['title'] for x in empty)}")
+        before = {id(ln): ln["text"] for x in plan["sections"] for ln in x["lines"]}
+        fix_tip_numbers(plan)
+        fix_counts(plan)
+        if any(ln["text"] != before.get(id(ln)) for x in plan["sections"] for ln in x["lines"]):
+            voice_lines(plan, voice)
+            fit(plan, dur)
     tidy_outro(plan, dur)
     (WORK / "plan_fit.json").write_text(json.dumps(plan, indent=1, default=str))
     status(job, "making", "Editing the video")
