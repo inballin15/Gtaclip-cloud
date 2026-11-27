@@ -2666,9 +2666,10 @@ function yourTurnCard(ql) {
   return c;
 }
 function heroCard(ql) {
-  const on = L && !L.paused && !L.buffer_off;
+  const allYou = ['tiktok', 'youtube'].every((x) => youPost().includes(x));   // both platforms set to "you post": nothing posts by itself
+  const on = L && !L.paused && !L.buffer_off && !allYou;
   const hero = el('div', 'hero2 ' + (on ? 'on' : 'off'));
-  const top = el('div', 'hrow'); const st = el('div', 'st'); st.append(el('span', 'pulse ' + (on ? 'ok' : 'bad')), document.createTextNode(!L ? 'Loading…' : L.buffer_off ? 'Paused — Buffer off' : L.paused ? 'Auto-posting off' : 'Auto-posting on'));
+  const top = el('div', 'hrow'); const st = el('div', 'st'); st.append(el('span', 'pulse ' + (on ? 'ok' : 'bad')), document.createTextNode(!L ? 'Loading…' : L.buffer_off ? 'Paused — Buffer off' : L.paused ? 'Auto-posting off' : allYou ? 'Auto-posting off — you post both' : 'Auto-posting on'));
   top.append(st); hero.append(top);
   if (on && L.next_slot) {
     const big = el('div', 'next'); big.append(el('span', 'lbl', 'Next post'), el('b', null, tET(L.next_slot)));
@@ -2682,6 +2683,13 @@ function heroCard(ql) {
     g.append(bar, el('div', 'mut', `${B.slots} slots today · auto: ${auto} · Buffer ${B.used || 0}/${B.cap} today · ${B.remain30 ?? '?'} left this month`)); hero.append(g);
   }
   if (L && L.buffer_off) { const b = el('button', 'big go', isPending('buffer:') ? 'Turning on…' : 'Turn Buffer back on'); b.disabled = isPending('buffer:'); b.onclick = openBufferSwitch; hero.append(b); }
+  else if (L && allYou && !L.paused) {   // turning auto back on = TikTok + YouTube back to automatic
+    const wait = isPending('youpost: tiktok') || isPending('youpost: youtube');
+    const b = el('button', 'big go', wait ? 'Turning on…' : 'Start auto-posting'); b.disabled = wait;
+    b.onclick = async () => { b.disabled = true; b.textContent = 'Sending…'; const a = await ghTap('youpost: tiktok off'); const y = await ghTap('youpost: youtube off');
+      if (a && y) toast('Auto-posting back on'); lastSig = ''; render(); };
+    hero.append(el('div', 'mut', 'Nothing posts by itself. Your clips wait under “Your turn” — Save, post, tap Posted ✓.'), b);
+  }
   else if (L) {
     const wantOn = isPending('resume:'), wantOff = isPending('pause:');
     const b = el('button', 'big ' + (on ? 'stop' : 'go'), wantOn || wantOff ? `Turning ${wantOn ? 'on' : 'off'}…` : on ? 'Stop posting' : 'Start posting'); b.disabled = wantOn || wantOff;
