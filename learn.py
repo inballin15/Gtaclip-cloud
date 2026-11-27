@@ -46,11 +46,14 @@ STYLE_DIMS = {
     "punch": {"off": "steady webcam", "on": "webcam punches in on the big reaction"},
     # Nov 25: viewers leave early -> does a bar showing how short the clip is keep them to the end?
     "pbar": {"off": "no progress bar", "on": "progress bar along the top"},
+    # Nov 27: which caption gets views - the question first (comments), one short line, or a short story + question
+    "cap": {"question": "question-first caption", "short": "one short line + 3 tags", "story": "what happens + a question"},
 }
 STYLE_PRIOR = {"box": {"white": 0.75, "black": 0.25}, "cam": {"small": 0.3, "medium": 0.7},   # top pages:
                "hooklen": {"tiny": 0.25, "story": 0.75},
                "punch": {"off": 0.5, "on": 0.5},
-               "pbar": {"off": 0.5, "on": 0.5}}   # new tests: no data yet, 50/50   # Nov 22 study: winners peak ~middle of ~25 s clips, ~13-word hooks
+               "pbar": {"off": 0.5, "on": 0.5},
+               "cap": {"question": 0.34, "short": 0.33, "story": 0.33}}   # new tests: no data yet, 50/50   # Nov 22 study: winners peak ~middle of ~25 s clips, ~13-word hooks
 CAM_PX = {"small": 560, "medium": 672}
 
 EMOTIONS = ["LOSES IT", "SHOCKED", "DEVASTATED", "DISAPPOINTED", "FURIOUS", "CRYING", "SCARED", "CONFUSED", "SPEECHLESS",

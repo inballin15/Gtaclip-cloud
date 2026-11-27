@@ -377,11 +377,28 @@ def texts(c: dict) -> tuple[str, str, str]:
     # like the tips video that blew up (vicecityfiles, 100K+ likes): the QUESTION first - it's what shows under the
     # video and it pulls comments - then the follow line, then the plain sentence + keywords for search, then tags
     em = ["😳", "😂", "🔥", "💀", "🤯"][int(hashlib.md5((c.get("id") or hook).encode()).hexdigest(), 16) % 5]
-    tt = cap or f"{q} {em}\n{fol}\n\n{plain}\n{kw}{f' 🎥 @{login}' if login else ''}\n\n{tag} {tags} #fyp".replace("\n\n ", "\n\n").strip()
     credit = (f" Credit: {streamer} (https://www.twitch.tv/{login})" if login else f" Credit: {streamer}" if streamer else "")
-    yt = cap or f"{q} {em}\n{sub}\n\n{plain}\n{kw}.{credit}\n\n{tag} {tags} #Shorts".replace("\n\n ", "\n\n").strip()
+    tag3 = " ".join((f"{tag} {tags}".split())[:3])
+    style = ((c.get("style") or {}).get("cap") or "question")   # caption test (Nov 27): views decide which wins
+    at = f" 🎥 @{login}" if login else ""
+    if style == "short":      # one short line + 3 tags
+        tt = f"{plain} {em}\n\n{tag3} #fyp"
+        yt = f"{plain} {em}\n{credit.strip()}\n\n{tag3} #Shorts"
+    elif style == "story":    # what happens + the question
+        tt = f"{plain}. {q} {em}\n{fol}\n\n{kw}{at}\n\n{tag3} #fyp"
+        yt = f"{plain}. {q} {em}\n{sub}\n\n{kw}.{credit}\n\n{tag3} #Shorts"
+    else:                     # the question first (comments), then follow line, plain sentence + keywords for search
+        tt = f"{q} {em}\n{fol}\n\n{plain}\n{kw}{at}\n\n{tag} {tags} #fyp"
+        yt = f"{q} {em}\n{sub}\n\n{plain}\n{kw}.{credit}\n\n{tag} {tags} #Shorts"
+    tt = cap or tt.replace("\n\n ", "\n\n").strip()
+    yt = cap or yt.replace("\n\n ", "\n\n").strip()
+    # YouTube title / the caption you paste on YouTube: ONE line that fits YouTube's 100 characters, hashtags included
     title = plain if game.lower().replace(" ", "") in plain.lower().replace(" ", "") else f"{plain} | {(streamer + ' ' + game).strip()}".strip(" |")
-    title = (title[:88] + " #Shorts").strip()
+    end = f" #Shorts {tag}".rstrip() if tag else " #Shorts"
+    room = 100 - len(end)
+    if len(title) > room:
+        title = title[:room - 1].rsplit(" ", 1)[0].rstrip(" ,.|-") + "…"
+    title = (title + end).strip()
     return tt, yt, title
 
 

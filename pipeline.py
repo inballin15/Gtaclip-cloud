@@ -2799,13 +2799,19 @@ def main() -> None:
             _hh = hashlib.sha1((r.get("hook", "") + r.get("cam", "") + FINAL_V + r.get("layout", "")).encode()).hexdigest()[:10]
             _olds = {hashlib.sha1((r.get("hook", "") + r.get("cam", "") + v_ + r.get("layout", "")).encode()).hexdigest()[:10]
                      for v_ in (LAYOUT_V_OLD, LAYOUT_V_OLD + "-follow1", LAYOUT_V_OLD + "-follow2", LAYOUT_V_OLD + "-follow3",
-                                LAYOUT_V + "-follow2", LAYOUT_V + "-follow3", LAYOUT_V + "-follow4", LAYOUT_V + "-follow5")}
+                                LAYOUT_V + "-follow2", LAYOUT_V + "-follow3", LAYOUT_V + "-follow4", LAYOUT_V + "-follow5",
+                                LAYOUT_V + "-follow6", LAYOUT_V + "-follow6-peak1")}   # still shown while being re-made
             r["final"] = (f"v/{r['id']}_final.mp4?v={r['final_v']}"   # (an older video still counts until it's re-made)
                           if r.get("final_v") and (r.get("hook") or r.get("no_hook")) and (r.get("final_v") == _hh or r.get("final_v") in _olds)
                           and (VID / f"{r['id']}_final.mp4").exists() else "")
             r["final_abs"] = f"{PAGES}/v/{r['id']}_final.mp4?v={r['final_v']}" if r["final"] else ""
             r["clean"] = (f"v/{r['id']}_clean.mp4?v={r['clean_v']}"
                           if r.get("clean_v") and (VID / f"{r['id']}_clean.mp4").exists() else "")
+            try:   # the captions to copy: written the same way the poster writes them (style chosen + learned per clip)
+                import poster as _po
+                r["cap_tt"], _yt, r["yt_title"] = _po.texts(r)
+            except Exception as e:  # noqa: BLE001
+                log(f"captions skipped for {r['id']}: {e}")
             if r["final"] and r.get("rendered"):     # re-made with a new layout: new address so phones don't show the old one
                 r["final"] += f"&r={r['rendered']}"
                 r["final_abs"] += f"&r={r['rendered']}"
@@ -3660,6 +3666,8 @@ def main() -> None:
             # dynamic model: test looks, keep what gets views. Your pasted clips get the same looks (Nov 24) -
             # but the subtitles on/off you picked when making them always wins.
             c["style"] = {**learn.pick_style(LEARNED_INS, cid), **(c.get("style") or {})}
+        if c.get("style") is not None and "cap" not in c["style"]:   # caption test (Nov 27) for clips made before it
+            c["style"]["cap"] = learn.pick_style(LEARNED_INS, cid).get("cap", "question")
         sty = {**(c.get("style") or {}), **{k: v for k, v in (c.get("user_layout") or {}).items() if k in ("subs", "punch")}}
         span_u = (c.get("user_layout") or {}).get("span")   # your own start / end from the Studio's Trim
         up = c.get("source") == "upload"

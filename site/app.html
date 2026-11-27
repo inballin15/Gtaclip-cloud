@@ -1533,9 +1533,10 @@ function clipCard(r, st) {
   bw.onclick = () => togglePeak(r, !bwOn, bw);
   const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, pd, ed, vo, bw, gp, mb); b.append(btns);
   const more = el('div', 'more'); const mi = el('div'); const mbt = el('div', 'btns');
-  const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
+  const cc = el('button', 'btn', 'Copy TikTok caption'); cc.onclick = () => copy(captionFor(r, 'tiktok'), 'Caption');
+  const cy = el('button', 'btn', 'Copy YouTube caption'); cy.onclick = () => copy(captionFor(r, 'youtube'), 'YouTube caption (fits 100 characters)');
   const hk = el('button', 'btn', 'Edit hook'); hk.onclick = () => openHookEdit(r);
-  mbt.append(cc, hk);
+  mbt.append(cc, cy, hk);
   if (r.twitch) { const tw = el('a', 'btn', 'Source'); tw.href = r.twitch; tw.target = '_blank'; tw.rel = 'noopener'; mbt.append(tw); }
   const sk = el('button', 'btn del', "Don't post");
   sk.onclick = async () => { if (sk.dataset.arm) { sk.disabled = true; if (await ghTap('skip: ' + r.id)) toast('Removed from the queue'); lastSig = ''; render(); } else { sk.dataset.arm = 1; sk.textContent = 'Tap again to remove'; setTimeout(() => { delete sk.dataset.arm; sk.textContent = "Don't post"; }, 3000); } };
@@ -1547,7 +1548,10 @@ function naturalCase(t) {   // "Lacy LOSES IT over EXPENSIVE furniture" -> "Lacy
   const keep = /^(GTA|GTAVI|NPC|NPCS|NPCs|SWAT|FBI|CEO|USA|UK|VI|IV|V|OG|POV|AI|\d+)$/;
   return String(t || '').split(' ').map((w) => (w.length > 1 && w === w.toUpperCase() && /[A-Z]/.test(w) && !keep.test(w.replace(/[^A-Za-z0-9]/g, ''))) ? w.toLowerCase() : w).join(' ').replace(/\bNPCS\b/g, 'NPCs');
 }
-function captionFor(r) { const game = (Q.topic && Q.topic.name) || 'GTA 6'; const kw = r.streamer ? `${r.streamer} ${game} stream highlight` : `${game} highlight`; return (r.caption || `${naturalCase(r.hook)}\n\n${kw}${r.login ? ' 🎥 @' + r.login : ''}\n\n${[r.tag, (Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'].filter(Boolean).join(' ')} #fyp`).trim(); }
+function captionFor(r, sv) {   // the AI-tested caption (cap_tt); for YouTube ONE line that fits its 100 characters
+  if (sv === 'youtube' && r.yt_title) return r.yt_title;
+  if (r.cap_tt) return r.cap_tt;
+  const game = (Q.topic && Q.topic.name) || 'GTA 6'; const kw = r.streamer ? `${r.streamer} ${game} stream highlight` : `${game} highlight`; return (r.caption || `${naturalCase(r.hook)}\n\n${kw}${r.login ? ' 🎥 @' + r.login : ''}\n\n${[r.tag, (Q.topic && Q.topic.tags) || '#GTA6 #GTAVI #gaming'].filter(Boolean).join(' ')} #fyp`).trim(); }
 const SAVE_READY = {};
 function saveBtn(r, cls, text, which) { const b = el('button', cls, text);
   if (SAVE_READY[r.id]) { b.textContent = 'Tap to save ✓'; b.classList.add('ready'); b.onclick = async () => { const f = SAVE_READY[r.id]; delete SAVE_READY[r.id]; b.classList.remove('ready'); b.textContent = text; b.onclick = () => saveVideo(r, b, which); if (!(await f())) toast('Couldn\'t open Save — press and hold the video instead'); }; }
@@ -1581,7 +1585,7 @@ async function phoneMake(r, onPct) {
   return mod.phoneRender({ src: U(r.clean), a: Math.max(0, a), b, hook: hk, hookY: top, ctaY: hk ? ctaCenter(r, top, hk.height) : 900,
     pbar: (r.style || {}).pbar === 'on', onPct });
 }
-async function saveVideo(r, btn, which) {
+async function saveVideo(r, btn, which, sv) {
   // 1) get the right video file   2) open Save/Share - phones only allow that right after a tap, so when getting
   // the file took a while, the button turns into "Tap to save ✓" and your next tap opens it straight away
   const clean = which ? which === 'clean' && r.clean : (variant === 'clean' && r.clean);
@@ -1628,7 +1632,7 @@ async function saveVideo(r, btn, which) {
   }
   const type = blob.type && blob.type.startsWith('video') ? blob.type : 'video/mp4';
   const file = new File([blob], `${name}.${type.includes('webm') ? 'webm' : 'mp4'}`, { type });
-  copy(captionFor(r), 'Caption');
+  copy(captionFor(r, sv), sv === 'youtube' ? 'YouTube caption (fits 100 characters)' : 'Caption');
   const out = async () => {
     try {
       if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
@@ -2678,8 +2682,8 @@ function yourTurnCard(ql) {
     const it = el('div', 'tit'); const th = el('div', 'th'); th.style.backgroundImage = `url(${PAGES + (r.vposter || r.poster)})`;
     const body = el('div', 'tb'); body.append(el('span', 'pill ' + (sv === 'tiktok' ? 'tt' : 'yt'), PN[sv]), el('div', 'h', r.hook || ''));
     const bt = el('div', 'tbtn');
-    const sv1 = el('button', 'btn pink', 'Save + copy'); sv1.onclick = () => saveVideo(r, sv1, 'final');
-    const sv2 = el('button', 'btn', r.clean ? 'No caption' : 'No caption (making…)'); sv2.disabled = !r.clean; sv2.onclick = () => saveVideo(r, sv2, 'clean');
+    const sv1 = el('button', 'btn pink', 'Save + copy'); sv1.onclick = () => saveVideo(r, sv1, 'final', sv);
+    const sv2 = el('button', 'btn', r.clean ? 'No caption' : 'No caption (making…)'); sv2.disabled = !r.clean; sv2.onclick = () => saveVideo(r, sv2, 'clean', sv);
     const op = el('a', 'btn', 'Open app'); op.href = sv === 'tiktok' ? 'https://www.tiktok.com/upload' : 'https://studio.youtube.com'; op.target = '_blank'; op.rel = 'noopener';
     const ok = el('button', 'btn ok', 'Posted ✓'); ok.onclick = async () => { ok.disabled = true; if (await ghTap(`manual: ${r.id} ${sv}`)) { toast(`Marked posted on ${PN[sv]}`); openGetPaid(r); } lastSig = ''; render(); };
     bt.append(sv1, sv2, op, ok); body.append(bt); it.append(th, body); c.append(it);
