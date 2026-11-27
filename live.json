@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-26T22:53:28Z",
+  "updated": "2026-11-27T00:55:37Z",
   "videos": 64,
   "v": 4,
   "findings": [
@@ -61,7 +61,7 @@
    {
     "feature": "streamer",
     "value": "Clix",
-    "x": 0.41,
+    "x": 0.4,
     "n": 6
    },
    {
@@ -162,8 +162,8 @@
   },
   "style_weights": {
    "box": {
-    "white": 0.788,
-    "black": 0.212
+    "white": 0.789,
+    "black": 0.211
    },
    "cam": {
     "small": 0.278,
@@ -185,7 +185,7 @@
   "top": [
    {
     "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-    "views": 2469
+    "views": 2473
    },
    {
     "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
@@ -201,7 +201,7 @@
    },
    {
     "hook": "What do you think about Nick not being family freindly?",
-    "views": 849
+    "views": 859
    }
   ],
   "style_counts": {
@@ -386,7 +386,7 @@
    }
   ]
  },
- "updated": "2026-11-27T00:49:56Z",
+ "updated": "2026-11-27T00:55:37Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -4141,6 +4141,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T00:49:56Z",
- "log": []
+ "stats_updated": "2026-11-27T00:55:37Z",
+ "log": [
+  "[00:55:38Z] hook learner: 64 videos, 2 lessons"
+ ]
 }
