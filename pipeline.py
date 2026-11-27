@@ -83,7 +83,7 @@ QUEUE_MAX = 40           # finished videos kept ready (Nov 26: up to 40 at a tim
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v4-hq"   # Nov 25: highest quality re-make of every unposted clip (final + no-caption copy)
 LAYOUT_V_OLD = "v3-textonly-capcut"
-FINAL_V = LAYOUT_V + "-follow6-peak1"   # peak1 (Nov 27): black & white + face zoom on the big moment; posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
+FINAL_V = LAYOUT_V + "-follow6-peak2"   # peak2 (Nov 27): the black & white moment only on clips you switch it on for; posted videos only (not the clean copies): + follow pop-up / progress bar, follow4: + the spoken follow line (Nov 25)
 TOP_H = 672   # webcam strip height (1/3-ish of 1920), gameplay gets the rest
 KEEP_POSTED_HOURS = 72
 NOW = datetime.now(timezone.utc)
@@ -232,6 +232,8 @@ def apply_layout(c: dict, body: str) -> str:
         for k in ("punch",):   # studio switch: punch-in zoom (subtitles are gone for good)
             if ul.get(k) in ("on", "off"):
                 keep[k] = ul[k]
+        if ul.get("peak") in ("bw", "off"):   # your switch: black & white + face zoom on the big moment (off by default)
+            keep["peak"] = ul["peak"]
         tr = ul.get("trim")
         if isinstance(tr, list) and len(tr) == 2 and all(isinstance(v, (int, float)) for v in tr) and tr[1] - tr[0] >= 3:
             keep["trim"] = [max(0.0, float(tr[0])), float(tr[1])]
@@ -411,7 +413,8 @@ def auto_hook(c: dict) -> tuple[str, str]:
 
 def yours(c: dict) -> bool:
     """A clip you worked on: edited its layout / words, picked Post now, or uploaded. Never pushed out of the queue."""
-    return bool(c.get("user_layout") or c.get("hook_by_user") or c.get("post_now") or c.get("source") == "upload")
+    ul = {k: v for k, v in (c.get("user_layout") or {}).items() if k != "peak"}   # the B&W switch alone isn't an edit
+    return bool(ul or c.get("hook_by_user") or c.get("post_now") or c.get("source") == "upload")
 
 
 def clip_quality(c: dict) -> float:
@@ -3906,7 +3909,8 @@ def main() -> None:
         except Exception as e:  # noqa: BLE001
             log(f"subtitles/punch-in skipped for {cid}: {e}")
         try:   # the payoff edit (Nov 27): black & white + face zoom from the loudest moment (25-85% in) to the end
-            if (ul.get("peak") or sty.get("peak") or "bw") == "bw" and lay in ("split", "react"):
+            if lay in ("split", "react"):   # the moment is always found (so the switch on the site works at once);
+                                             # the effect is used only when you switch it on for that clip
                 import viral
                 a = viral._audio(raw)
                 secs = len(a) // 16000
@@ -3915,8 +3919,9 @@ def main() -> None:
                     lo, hi = max(1, int(secs * 0.25)), max(2, int(secs * 0.85))
                     pk = float(lo + int(np.argmax(rms[lo:hi])))
                     if secs - pk >= 1.5:
-                        opts["peak_at"] = pk
-                        opts.pop("punch_at", None)
+                        if ul.get("peak") == "bw":
+                            opts["peak_at"] = pk
+                            opts.pop("punch_at", None)
                         c["peak_at"] = pk
                         c["peak_src"] = round(float((c.get("span") or [0])[0]) + pk, 2) if (ul.get("speed") or 1) <= 1.01 else None
         except Exception as e:  # noqa: BLE001

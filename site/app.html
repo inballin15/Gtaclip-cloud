@@ -322,6 +322,7 @@ nav .ind{transition:transform .45s var(--spring),width .45s var(--spring)!import
 .row2{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.row2 .btn{flex:1}
 .empty{color:var(--mut);text-align:center;padding:30px 10px;font-size:13px}
 .lshorts{margin-top:12px;display:grid;gap:8px}.lshorts .vrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.lshorts .t{flex:1;min-width:160px}
+.btns .btn.on{background:#e6e6e6;color:#111;border-color:#e6e6e6}
 /* ===== beginner help ===== */
 .ttl .q{width:18px;height:18px;border-radius:50%;border:1px solid #ffffff33;background:none;color:#b9b0c9;font:700 10px var(--mono);margin-left:8px;padding:0;vertical-align:middle}
 .needs{border:1px solid #ff2e8866;background:linear-gradient(90deg,#2a0d22,#160c1c);border-radius:10px;padding:12px 14px;margin-bottom:12px}
@@ -731,7 +732,7 @@ const isPending = (prefix) => Object.keys(pend).some((k) => k.startsWith(prefix)
 function queueList() {
   const P = posts(); const blocked = new Set((L && L.blocked) || []);
   const now = new Set(((L && L.postnow) || []).map((p) => p.id));
-  const yours = (r) => r.source === 'upload' || r.user_layout || r.hook_by_user || r.post_now;   // clips you worked on: kept a week (like the clip maker)
+  const yours = (r) => r.source === 'upload' || Object.keys(r.user_layout || {}).some((k) => k !== 'peak') || r.hook_by_user || r.post_now;   // clips you worked on: kept a week (like the clip maker)
   const list = (Q.ready || []).filter((r) => ((Date.now() - new Date(r.created || r.found || Date.now())) < (yours(r) ? 7 * 24 : 36) * 3600e3)   // same limits as the poster
     && !P[r.id] && !blocked.has(r.id) && !isPending('skip: ' + r.id) && !isPending('manual: ' + r.id));
   const tapped = (r) => now.has(r.id) || isPending('post: ' + r.id);
@@ -1250,6 +1251,17 @@ function platState(p, s) {
 }
 
 // ---------------------------------------------------------------- QUEUE
+const PEAKSET = {};   // B&W switch flipped this visit (shows at once, before the clip maker catches up)
+async function togglePeak(r, on, btn) {   // one tap: black & white + face zoom on the big moment, for this clip only
+  if (r.peak_src == null && on) { toast('This clip has no big moment found yet — try again after the next run'); return; }
+  const val = on ? 'bw' : 'off'; PEAKSET[r.id] = val; btn.disabled = true;
+  btn.textContent = on ? '◐ B&W: on' : '◐ B&W: off'; btn.classList.toggle('on', on); haptic();
+  const ul = { ...(r.user_layout || {}) }; if (on) ul.peak = 'bw'; else ul.peak = 'off';
+  const ED = edSrc(r); const S = ED && ED.full && window.VideoEncoder ? curLayout(r) : null;
+  if (S) { S.peak = val; localMake(r, S, ED); }   // your phone makes it now
+  const ok = await ghTap('layout: ' + r.id, JSON.stringify(ul));   // the posting copy follows
+  btn.disabled = false; if (ok && !S) toast(on ? 'B&W on — re-making (a few minutes)' : 'B&W off — re-making (a few minutes)');
+}
 function renderQueue(v, ql) {   // Clips tab: stream clips (With caption / No caption) or Your clips — separate feeds
   if (feed === 'mine') return renderMine(v, ql);
   if (feed === 'long') return renderLong(v, ql);
@@ -1516,7 +1528,10 @@ function clipCard(r, st) {
   const gp = el('button', 'btn' + (CR[campOf(r)] && !subd ? ' paid' : ''), subd ? '✓ Submitted' : '$ Get paid'); gp.onclick = () => openGetPaid(r);
   const pd = el('button', 'btn ok', 'Posted ✓'); pd.onclick = () => openPosted(r);
   const vo = el('button', 'btn', '🎙 Voice'); vo.onclick = () => openVoice(r);
-  const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, pd, ed, vo, gp, mb); b.append(btns);
+  const bwOn = ((r.user_layout || {}).peak || PEAKSET[r.id]) === 'bw' && PEAKSET[r.id] !== 'off';
+  const bw = el('button', 'btn' + (bwOn ? ' on' : ''), bwOn ? '◐ B&W: on' : '◐ B&W: off'); bw.title = 'Black & white + face zoom on the big moment';
+  bw.onclick = () => togglePeak(r, !bwOn, bw);
+  const mb = el('button', 'btn ghost', '⋯'); btns.append(dl, pd, ed, vo, bw, gp, mb); b.append(btns);
   const more = el('div', 'more'); const mi = el('div'); const mbt = el('div', 'btns');
   const cc = el('button', 'btn', 'Copy caption'); cc.onclick = () => copy(captionFor(r), 'Caption');
   const hk = el('button', 'btn', 'Edit hook'); hk.onclick = () => openHookEdit(r);
@@ -1849,7 +1864,7 @@ async function phoneEdit(r, S, ED, onPct) {   // the finished video from your ed
   const top = hk ? Math.max(150, Math.min(1920 - hk.height - 300, hookTop(r2, hk.height, S.hook_y))) : 0;
   const cut = (S.span || baseCutOf(r)).map(Number);
   const view = (r.layout_used || r.layout) === 'react' ? r.react_view : null;
-  if (S.peak_at === undefined && r.peak_src != null && (r.user_layout || {}).peak !== 'off') { const pk = +r.peak_src - cut[0]; S = { ...S, peak_at: pk > 1 && pk < cut[1] - cut[0] - 1 ? pk : null }; }
+  if (S.peak_at === undefined && r.peak_src != null && (S.peak || (r.user_layout || {}).peak) === 'bw') { const pk = +r.peak_src - cut[0]; S = { ...S, peak_at: pk > 1 && pk < cut[1] - cut[0] - 1 ? pk : null }; }
   return mod.phoneRender({ src: ED.src, a: Math.max(0, cut[0] - ED.t0), b: cut[1] - ED.t0, hook: hk, hookY: top,
     ctaY: hk ? ctaCenter(r2, top, hk.height) : 900, pbar: (r.style || {}).pbar === 'on', onPct,
     compose: (g, frame, W, H, t) => drawLayout(g, frame, W, H, S, 1080, 1920, view, t), fps: S._simple ? 30 : 'auto',
@@ -1906,6 +1921,7 @@ function curLayout(r) {   // the clip's layout as it is now, as editor settings 
   if (!['split', 'react', 'full', 'irl'].includes(mode) || (r.style || {}).punch === 'on' || (ul.speed || 1) > 1.01) return null;
   return { mode, cam: (r.cam_used || r.cam || '0,0,0.3,0.3').split(',').map(Number), pan: ul.pan || 0, zoom: ul.zoom || 1,
     irl_x: mode === 'irl' ? parseFloat(lay.split(':')[1] || '0.5') : 0.5, top_h: +(ul.top_h || CAM_PX[(r.style || {}).cam] || TOP),
+    peak: ul.peak === 'bw' ? 'bw' : 'off',
     hook: r.hook || '', hook_style: ul.hook_style || (r.hook_variant === 'vibe' ? 'outline' : (r.style || {}).box || 'white'), hook_scale: ul.hook_scale || (r.hook_variant === 'vibe' ? 1.35 : 1), hook_y: ul.hook_y ?? null,
     span: r.span ? r.span.map(Number) : null, speed: 1, follow_voice: ul.follow_voice || null };
 }
@@ -2212,7 +2228,7 @@ function openEditor(r) {
   }
   sv.onclick = async () => {
     sv.disabled = true; sv.textContent = 'Saving…';
-    const out = { mode: S.mode, hook_style: S.hook_style };
+    const out = { mode: S.mode, hook_style: S.hook_style }; if (S.peak === 'bw') out.peak = 'bw';
     out.v = 2;   // knows the Reaction layout (older saves said "split" for reaction clips)
     if (S.mode === 'split') { out.cam = S.cam.map((n) => (+n).toFixed(4)).join(','); out.pan = +S.pan.toFixed(3); if (S.top_h !== TOP) out.top_h = S.top_h; }
     if (S.mode === 'react' && S.cam) out.cam = S.cam.map((n) => (+n).toFixed(4)).join(',');
