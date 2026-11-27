@@ -63,10 +63,11 @@ RAW = Path(os.environ.get("RAW_DIR", ROOT / "_raw"))  # cached raw downloads (ac
 PAGES = os.environ.get("SITE_URL", "https://gtaclip-studio.pages.dev")   # Cloudflare since Nov 25 (GitHub Pages was capped at 1 GB)
 KEEP_UPLOAD_HOURS = 48   # clips made from your own uploads stay 2 days
 NOCAM_MIN_VIEWS = 200   # no-webcam clips are only kept (full-screen gameplay) when 200+ people already watched them
+KEEP_EDITED_HOURS = 7 * 24   # clips YOU edited (layout / words) stay a week, and never lose their spot (Nov 26)
 KEEP_NEW_HOURS = 36      # clips stay postable for 36 h after they were clipped (Nov 23: quality over newest)
 REPLACE_QUEUE_EACH_RUN = False   # (the old all-at-once swap stays off - see REPLACE_MIN_NEW)
 REPLACE_MIN_NEW = 5   # once 5+ finished clips under REPLACE_AGE_H old are ready, older stream clips leave the queue
-PER_STREAMER_MAX = 4   # most clips one streamer can have waiting in the queue (their best ones)
+PER_STREAMER_MAX = 5   # most clips one streamer can have waiting in the queue (their best ones)
 REPLACE_AGE_H = 36   # same as the keep limit: quality decides what posts, age only retires clips at 36 h
 MAX_RENDERS = 12         # videos made per run (2 at a time); the rest next run
 CAMSRC = Path("_camsrc")   # webcam sources waiting for the AI upscaler (branch camsrc)
@@ -76,9 +77,9 @@ CAMHD = Path("_camhd")     # AI-upscaled webcam strips (branch camhd)
 def hd_key(cid: str, c: dict) -> str:
     """File name for a clip's webcam in the upscaler branches (a new suffix = a fresh upscale from a new source)."""
     return cid + c.get("hd_sfx", "")
-SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "1600"))       # stream clips on the site (Cloudflare since Nov 25 - no 1 GB limit;
+SITE_MAX_MB = int(os.environ.get("SITE_MAX_MB", "2400"))       # stream clips on the site (Cloudflare since Nov 25 - no 1 GB limit;
                                                                # this just keeps the GitHub working copy a sensible size)
-QUEUE_MAX = 30           # finished videos kept ready (11 posts a day)
+QUEUE_MAX = 40           # finished videos kept ready (Nov 26: up to 40 at a time)
 CAPTION_CUT = 0.0    # no cutting: full gameplay (user choice, Nov 19)
 LAYOUT_V = "v4-hq"   # Nov 25: highest quality re-make of every unposted clip (final + no-caption copy)
 LAYOUT_V_OLD = "v3-textonly-capcut"
@@ -406,6 +407,11 @@ def auto_hook(c: dict) -> tuple[str, str]:
             hook += f" in {tn}"
         return hook[:100], "title"
     return f"{name} can't believe this in {fetch_clips_mod.TOPIC.get('name') or 'GTA 6'}", "placeholder"
+
+
+def yours(c: dict) -> bool:
+    """A clip you worked on: edited its layout / words, picked Post now, or uploaded. Never pushed out of the queue."""
+    return bool(c.get("user_layout") or c.get("hook_by_user") or c.get("post_now") or c.get("source") == "upload")
 
 
 def clip_quality(c: dict) -> float:
@@ -3105,6 +3111,15 @@ def main() -> None:
             gone.append(c0.get("streamer") or who)
     if gone:
         log(f"took {len(gone)} clips of other streamers out of the queue: {', '.join(sorted(set(gone)))}")
+    if st.get("revive_edited_v", 0) < 1:   # one time (Nov 26): your 2 edited Nick Eh 30 clips aged out - back in
+        st["revive_edited_v"] = 1
+        for cid0 in ("LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc", "RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx"):
+            c0 = clips.get(cid0)
+            if c0 and c0["status"] == "expired":
+                c0.update(status="new", found=iso(NOW))
+                for k in ("skip_reason", "final_hash", "clean_v", "final_v"):
+                    c0.pop(k, None)
+                log(f"{cid0}: your edited clip is back in the queue (it had aged out)")
     if st.get("kai_duo_v", 0) < 1:   # one time (Nov 26): Kai Cenat PLAYING with a duo's webcam on screen was
         st["kai_duo_v"] = 1           # taken for a reaction clip -> normal game-big layout
         for cid0, c0 in clips.items():
@@ -3417,7 +3432,7 @@ def main() -> None:
             for cid, c in clips.items():
                 if c["status"] != "new" or cid in fresh_ids:
                     continue
-                if c.get("source") == "upload" or c.get("post_now") or c.get("hook_by_user"):
+                if yours(c):
                     continue
                 if c.get("source") == "vod" and NOW - parse(c.get("found") or iso(NOW)) < timedelta(hours=1):
                     continue
@@ -3438,8 +3453,7 @@ def main() -> None:
     if len(newer_ok) >= REPLACE_MIN_NEW:
         n_old = 0
         for cid, c in clips.items():
-            if c["status"] == "new" and c.get("source") != "upload" and not c.get("post_now") and not c.get("hook_by_user") \
-                    and _age_h(c) >= REPLACE_AGE_H:
+            if c["status"] == "new" and not yours(c) and _age_h(c) >= REPLACE_AGE_H:
                 c.update(status="expired", skip_reason="replaced by newer clips")
                 n_old += 1
         if n_old:
@@ -3452,12 +3466,12 @@ def main() -> None:
     per, capped = {}, []
     for r in sorted([r for r in fresh if r.get("source") != "upload"], key=clip_quality, reverse=True):
         k = (r.get("login") or r.get("streamer") or "").lower()
-        if r.get("post_now") or r.get("hook_by_user") or per.get(k, 0) < PER_STREAMER_MAX:
+        if yours(r) or per.get(k, 0) < PER_STREAMER_MAX:
             per[k] = per.get(k, 0) + 1
             capped.append(r)
-    keep = {r["id"] for r in mix_order(capped)[:QUEUE_MAX]}   # your pasted clips don't use up stream-clip spots
+    keep = {r["id"] for r in mix_order(capped)[:QUEUE_MAX]} | {r["id"] for r in capped if yours(r)}   # your pasted clips don't use up stream-clip spots
     for r in fresh:
-        if r["id"] not in keep and not r.get("post_now") and not r.get("hook_by_user") and r.get("source") != "upload":
+        if r["id"] not in keep and not yours(r):
             clips[r["id"]].update(status="expired", skip_reason="queue full")
     if len([r for r in fresh if r.get("source") != "upload"]) > QUEUE_MAX:
         log(f"queue full: kept {QUEUE_MAX} stream clips")
@@ -3555,7 +3569,7 @@ def main() -> None:
         age_ref = c.get("posted_at") or c.get("found") or iso(NOW)
         age_h = (NOW - parse(age_ref)).total_seconds() / 3600
         clip_age_h = (NOW - parse(c.get("created") or c.get("found") or iso(NOW))).total_seconds() / 3600
-        keep_h = KEEP_UPLOAD_HOURS if c.get("source") == "upload" else KEEP_NEW_HOURS
+        keep_h = KEEP_UPLOAD_HOURS if c.get("source") == "upload" else KEEP_EDITED_HOURS if yours(c) else KEEP_NEW_HOURS
         if (c["status"] == "new" and clip_age_h > keep_h) or (c["status"] != "new" and age_h > KEEP_POSTED_HOURS):
             c["status"] = "expired" if c["status"] == "new" else c["status"]
         if c["status"] == "used" and age_h < 3:
@@ -4076,7 +4090,7 @@ def main() -> None:
                 age = 6.0
             return clip_quality(c)
         cands = sorted([(keep_score(c), cid) for cid, c in clips.items() if c["status"] == "new"
-                        and c.get("source") != "upload" and not c.get("post_now")])
+                        and not yours(c)])
         for _, cid in cands:
             if mb <= SITE_MAX_MB:
                 break
