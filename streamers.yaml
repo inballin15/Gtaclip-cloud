@@ -21,7 +21,7 @@ discovery:
                      "stripper", "mandy", "club", "twerk", "thirst", "booty", "lap dance", "hooker", "pole", "gyatt", "gyat", "stepbro", "stepsis", "step bro", "step sis", "onlyfans", "gyaa", "disabled", "retard", "kills cat", "kill cat", "killed cat", "kills dog", "kill dog", "killed dog", "kills a cat", "kills a dog", "animal abuse", "kills horse", "kills deer", "shoots dog", "shoots cat", "run over dog", "runs over dog"]
 
 # VOD miner: whose broadcasts get checked for moments (campaign streamers you have clipping rights for)
-vod_streamers: [clix, lacy, kaicenat, yourragegaming]
+vod_streamers: [nickeh30, clix, lacy, kaicenat, yourragegaming]   # Nov 27: Nick Eh 30 added (Nicholas OK, not a campaign) - first, so he is checked first
 
 streamers:
   clix:        {name: "Clix",          tag: "#Clix",     campaign: "Clix", facecam: [0, 0, 0.248, 0.248], boost: 0.6}
