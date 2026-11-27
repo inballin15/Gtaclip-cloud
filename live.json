@@ -388,11 +388,11 @@
    }
   ]
  },
- "updated": "2026-11-27T13:35:56Z",
+ "updated": "2026-11-27T13:42:07Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
- "next_slot": "2026-11-27T13:37:00Z",
+ "next_slot": "2026-11-27T16:37:00Z",
  "up_next": "ResourcefulPleasantCasetteBIRB-o4dpCMlGWX1vzPry",
  "videos": [
   {
@@ -1296,12 +1296,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-27",
-  "used": 1,
+  "used": 2,
   "cap": 29,
   "slots": 6,
-  "remain30": 665,
+  "remain30": 664,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 586,
+  "remain24": 585,
   "active": [
    [
     8,
@@ -2984,8 +2984,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 0,
-   "likes": 0,
+   "views": 330,
+   "likes": 3,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -3082,8 +3082,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 640,
-   "likes": 11,
+   "views": 885,
+   "likes": 18,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -3096,7 +3096,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1471,
+   "views": 1472,
    "likes": 11,
    "comments": 1,
    "shares": 0,
@@ -3278,8 +3278,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 2410,
-   "likes": 26,
+   "views": 2521,
+   "likes": 27,
    "comments": 2,
    "shares": 0,
    "reposts": 0,
@@ -4182,6 +4182,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T13:35:56Z",
- "log": []
+ "stats_updated": "2026-11-27T13:42:07Z",
+ "log": [
+  "[13:42:09Z] slot due but no finished clip is ready"
+ ]
 }
