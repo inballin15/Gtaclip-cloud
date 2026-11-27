@@ -61,6 +61,7 @@ def main() -> None:
     for name in ("apply_issues", "import_vod_clips"):
         setattr(P, name, lambda *a, **k: None)
     P.process_uploads = lambda *a, **k: None
+    P.publish_site = lambda *a, **k: None   # NEVER publish the site from here: it would hold only this one clip (Nov 26 bug)
     t0 = time.time()
     P.main()
     out = W / "site" / "v" / f"{cid}_final.mp4"
