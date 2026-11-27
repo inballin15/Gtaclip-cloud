@@ -6,7 +6,7 @@ on:
     - cron: "7,27,47 * * * *"
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: voicepack
   cancel-in-progress: false
