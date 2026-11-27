@@ -386,12 +386,12 @@
    }
   ]
  },
- "updated": "2026-11-27T01:07:02Z",
+ "updated": "2026-11-27T01:08:29Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
  "next_slot": "2026-11-27T01:37:00Z",
- "up_next": "DifferentImpossibleSushiHumbleLife-2oIIYfJqHjMo4iDy",
+ "up_next": null,
  "videos": [
   {
    "link": "https://www.tiktok.com/@gtaclip96/video/7712589792755633421",
@@ -4142,6 +4142,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T01:07:02Z",
+ "stats_updated": "2026-11-27T01:08:29Z",
  "log": []
 }
