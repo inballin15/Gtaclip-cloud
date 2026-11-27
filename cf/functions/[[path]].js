@@ -6,7 +6,7 @@
 //     through from there with the right type.
 const BIG = 'https://github.com/inballin15/Gtaclip-cloud/releases/download/site-big/';
 
-function typeOf(p) { return p.endsWith('.jpg') ? 'image/jpeg' : p.endsWith('.png') ? 'image/png' : p.endsWith('.mp3') ? 'audio/mpeg' : p.endsWith('.wav') ? 'audio/wav' : 'video/mp4'; }
+function typeOf(p) { return p.endsWith('.jpg') ? 'image/jpeg' : p.endsWith('.png') ? 'image/png' : p.endsWith('.mp3') ? 'audio/mpeg' : p.endsWith('.wav') ? 'audio/wav' : p.endsWith('.m4a') ? 'audio/mp4' : p.endsWith('.json') ? 'application/json' : 'video/mp4'; }
 
 function parseRange(h, size) {
   const m = /^bytes=(\d*)-(\d*)$/.exec((h || '').trim());

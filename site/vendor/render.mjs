@@ -66,17 +66,23 @@ export function popBuffer(ctx) {
     const v = Math.max(-1, Math.min(1, 0.85 * Math.sin(ph) * env + click)) * 0.79; L[i] = v; R[i] = v; }
   return b;
 }
-export async function mixSound(fileBuf, a, b, voiceBuf) {
+export async function mixSound(fileBuf, a, b, voiceBuf, opts = {}) {   // opts: { baseGain, layers: [[ArrayBuffer, gain], ...] }
   const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
   if (!OAC || typeof window.AudioEncoder !== 'function' || typeof window.AudioData !== 'function') return null;
-  const sr = 48000; const cfg = { codec: 'mp4a.40.2', sampleRate: sr, numberOfChannels: 2, bitrate: 192000 };
-  try { if (!(await window.AudioEncoder.isConfigSupported(cfg)).supported) return null; } catch (e) { return null; }
+  const sr = 48000; let cfg = { codec: 'mp4a.40.2', sampleRate: sr, numberOfChannels: 2, bitrate: 192000 }; let kind = 'aac';
+  const okA = async (c) => { try { return (await window.AudioEncoder.isConfigSupported(c)).supported; } catch (e) { return false; } };
+  if (!(await okA(cfg))) { cfg = { codec: 'opus', sampleRate: sr, numberOfChannels: 2, bitrate: 192000 }; kind = 'opus'; if (!(await okA(cfg))) return null; }   // AAC on iPhones; Opus elsewhere
   const dur = Math.max(0.2, b - a);
   const dec = new OAC(2, sr, sr);
   let src; try { src = await dec.decodeAudioData(fileBuf.slice(0)); } catch (e) { return null; }
   let voice = null; if (voiceBuf) { try { voice = await dec.decodeAudioData(voiceBuf.slice(0)); } catch (e) { voice = null; } }
   const off = new OAC(2, Math.ceil(dur * sr), sr);
-  const s = off.createBufferSource(); s.buffer = src; const g = off.createGain(); s.connect(g);
+  const s = off.createBufferSource(); s.buffer = src; const g = off.createGain();
+  const bg = off.createGain(); bg.gain.value = opts.baseGain ?? 1; s.connect(bg); bg.connect(g);
+  for (const [lb, lgain] of opts.layers || []) {   // e.g. the swapped-in AI voice: dips under the follow line like the clip
+    try { const ab = await dec.decodeAudioData(lb.slice(0)); const ls = off.createBufferSource(); ls.buffer = ab; const lg = off.createGain(); lg.gain.value = lgain;
+      ls.connect(lg); lg.connect(g); ls.start(0, Math.max(0, a)); } catch (e) { /* skip a layer this phone can't read */ }
+  }
   const lim = off.createDynamicsCompressor();   // a safety limiter on the mix
   lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.12;
   g.connect(lim); lim.connect(off.destination);
@@ -103,7 +109,7 @@ export async function mixSound(fileBuf, a, b, voiceBuf) {
   }
   await enc.flush(); enc.close();
   if (err || !chunks.length) return null;
-  return { chunks, sr };
+  return { chunks, sr, kind };
 }
 
 /**
@@ -259,7 +265,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   // ---- sound: the mix made alongside (pop + follow line), else copied as is (no quality loss)
   mixed = await mixP;   // null = no mix on this phone: the clip's own sound is copied instead (never a silent fail)
   const muxer = new Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: FPS },
-    audio: mixed ? { codec: 'aac', sampleRate: mixed.sr, numberOfChannels: 2 }
+    audio: mixed ? { codec: mixed.kind || 'aac', sampleRate: mixed.sr, numberOfChannels: 2 }
       : aCfg ? { codec: 'aac', sampleRate: aCfg.sampleRate, numberOfChannels: aCfg.numberOfChannels } : undefined,
     fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
   for (const [c, m] of vChunks) muxer.addVideoChunk(c, m);
@@ -268,7 +274,7 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
     let first = true;
     for (const [c, m] of mixed.chunks) {
       let meta = m;
-      if (first) { const dc = (m && m.decoderConfig) || {}; if (!dc.description) meta = { decoderConfig: { codec: 'mp4a.40.2', sampleRate: mixed.sr, numberOfChannels: 2, description: new Uint8Array([0x11, 0x90]) } }; first = false; }
+      if (first) { const dc = (m && m.decoderConfig) || {}; if (!dc.description && mixed.kind !== 'opus') meta = { decoderConfig: { codec: 'mp4a.40.2', sampleRate: mixed.sr, numberOfChannels: 2, description: new Uint8Array([0x11, 0x90]) } }; first = false; }
       muxer.addAudioChunk(c, meta);
     }
   }
@@ -284,5 +290,52 @@ export async function phoneRender({ src, a = 0, b = Infinity, hook = null, hookY
   }
   muxer.finalize();
   onPct(1);
+  return new Blob([target.buffer], { type: 'video/mp4' });
+}
+
+/**
+ * Instant voice swap (< 1 s): the clip's finished picture is COPIED as is (no re-encode) and only the sound is new:
+ * the clip's voice-free sound (voice pack "game") + the AI voice you picked reading the same lines at the same
+ * moments + the pop and follow line, like every clip. video/game/voice: links (fetched once, then cached).
+ */
+export async function voiceSwap({ video, game, voice = null, follow = null, onPct = () => {} }) {
+  if (!supported()) throw new Error('this phone can\'t make videos in the browser');
+  const [, vb, gb, vcb] = await Promise.all([warm(), video instanceof Blob ? video.arrayBuffer() : prefetch(video), prefetch(game), voice ? prefetch(voice) : null]);
+  onPct(0.2);
+  const buf = vb.slice(0); buf.fileStart = 0;
+  const file = window.MP4Box.createFile(); let info = null;
+  file.onReady = (i) => { info = i; }; file.appendBuffer(buf); file.flush();
+  if (!info || !info.videoTracks[0]) throw new Error('could not read the video');
+  const vt = info.videoTracks[0]; const vs = [];
+  file.onSamples = (id, user, samples) => { vs.push(...samples); };
+  file.setExtractionOptions(vt.id, 'v', { nbSamples: 1e9 }); file.start(); file.flush();
+  const trak = file.getTrackById(vt.id); const entry = trak.mdia.minf.stbl.stsd.entries[0]; const box = entry.avcC || entry.hvcC;
+  const ds = new window.DataStream(undefined, 0, window.DataStream.BIG_ENDIAN); box.write(ds);
+  const description = new Uint8Array(ds.buffer, 8);
+  const e0 = trak.edts && trak.edts.elst && trak.edts.elst.entries && trak.edts.elst.entries[0]; const shift = e0 && e0.media_time > 0 ? e0.media_time : 0;
+  const ts = vs[0].timescale; const last = vs[vs.length - 1];
+  const dur = (last.cts + last.duration - shift) / ts;
+  const mixed = await mixSound(gb, 0, dur, follow, { baseGain: 0.85, layers: vcb ? [[vcb, 1.6]] : [] });
+  if (!mixed) throw new Error('this phone can\'t mix sound');
+  onPct(0.8);
+  const target = new ArrayBufferTarget();
+  const W = vt.video.width, H = vt.video.height;
+  const fps = Math.round(vs.length / Math.max(0.1, dur));
+  const muxer = new Muxer({ target, video: { codec: 'avc', width: W, height: H, frameRate: fps },
+    audio: { codec: mixed.kind || 'aac', sampleRate: mixed.sr, numberOfChannels: 2 }, fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
+  let first = true;
+  for (const smp of vs) {
+    const pts = (smp.cts - shift) / ts, dts = (smp.dts - shift) / ts;
+    muxer.addVideoChunkRaw(new Uint8Array(smp.data), smp.is_sync ? 'key' : 'delta', Math.round(pts * 1e6), Math.round(smp.duration / ts * 1e6),
+      first ? { decoderConfig: { codec: vt.codec, codedWidth: W, codedHeight: H, description } } : undefined, Math.round((pts - dts) * 1e6));
+    first = false;
+  }
+  let fa = true;
+  for (const [c, m] of mixed.chunks) {
+    let meta = m;
+    if (fa) { const dc = (m && m.decoderConfig) || {}; if (!dc.description && mixed.kind !== 'opus') meta = { decoderConfig: { codec: 'mp4a.40.2', sampleRate: mixed.sr, numberOfChannels: 2, description: new Uint8Array([0x11, 0x90]) } }; fa = false; }
+    muxer.addAudioChunk(c, meta);
+  }
+  muxer.finalize(); onPct(1);
   return new Blob([target.buffer], { type: 'video/mp4' });
 }

@@ -1548,7 +1548,7 @@ function ctaCenter(r, top, hh) {   // same spot as engage.py: next to the hook, 
 }
 function phoneCan(r) { return !!(r.clean && window.VideoEncoder && window.VideoDecoder && (r.layout_used || r.layout) !== 'cam'); }
 async function phoneMake(r, onPct) {
-  const mod = await import(PAGES + 'vendor/render.mjs?v=10');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=11');
   const pv = r._preview || {}; const tr = trimOf(r); const ul = r.user_layout || {};
   const text = pv.hook || (tr && tr.hook) || r.hook || '';
   const style = pv.style || (tr && tr.hook_style) || ul.hook_style || (r.style || {}).box || 'white';
@@ -1673,16 +1673,50 @@ function openFollowVoice() {   // who says "Don't forget to follow and subscribe
   go.onclick = async () => { go.disabled = true; VAU.pause(); await setFavFollow(pick); closeSheet(); go.disabled = false; };
   sheet('Follow line voice', [el('div', 'mut', 'Tap a voice to hear it say “Don’t forget to follow and subscribe for daily clips!”. ★ = your favorite: every clip uses it. To give one clip a different voice: Full editor → Voice.'), list, go]);
 }
+function vpBase(r) { return r && r.clean_v ? PAGES + `v/vp/${encodeURIComponent(r.id)}_${r.clean_v}_` : null; }
+function clipVideo(r) {   // the video the card shows right now: your phone-made one, else the newest finished one
+  const lv = localOf(r); if (lv && lv.blob) return lv.blob;
+  if (r.final && !/^https?:/.test(r.final)) return PAGES + r.final;
+  return r.final_abs || (r.video ? PAGES + r.video : null);
+}
 function openVoice(r) {
   let pick = ls.get('gc-voice', 'am_michael'); const au = VAU;
-  const list = voicePicker(pick, (id) => { pick = id; ls.set('gc-voice', id); });
-  const sc = el('textarea'); sc.placeholder = 'Leave empty: the new voice says the same lines, at the same moments. Or type your own script.'; sc.maxLength = 3000;
+  const base = vpBase(r); let pack = null; let RM2 = null;
+  const vid = clipVideo(r);
+  const state = el('div', 'mut', 'Getting this clip\u2019s voices ready\u2026');
+  // the voice pack (made ahead of time on GitHub) makes the swap instant: start loading everything now
+  if (base && window.VideoEncoder) {
+    Promise.all([fetch(base + 'lines.json').then((x) => (x.ok ? x.json() : null)).catch(() => null),
+      import(PAGES + 'vendor/render.mjs?v=11').catch(() => null)]).then(([p, m]) => {
+      RM2 = m; pack = p && (p.voices || []).length ? p : null;
+      if (pack && m) { m.warm(); if (!(vid instanceof Blob)) m.prefetch(vid); m.prefetch(base + 'game.m4a'); m.prefetch(base + pick + '.m4a');
+        followAudio((r.user_layout || {}).follow_voice || favFollow());
+        state.textContent = 'Instant: tap a voice to hear it, then Replace — done on your phone in about a second.'; }
+      else state.textContent = p && !(p.voices || []).length ? 'Nobody talks in this clip, so there\u2019s no voice to replace.' : 'This clip\u2019s instant voices are still being made (a few minutes after it joins the queue) — Replace now takes 3–5 minutes on GitHub.';
+    });
+  } else state.textContent = 'Replace takes 3–5 minutes on GitHub for this clip.';
+  const list = voicePicker(pick, (id) => { pick = id; ls.set('gc-voice', id); if (pack && RM2) RM2.prefetch(base + id + '.m4a'); });
+  const sc = el('textarea'); sc.placeholder = 'Leave empty: the new voice says the same lines, at the same moments. Or type your own script (takes a few minutes).'; sc.maxLength = 3000;
   const go = el('button', 'big go', 'Replace the voice');
   go.onclick = async () => { go.disabled = true; au.pause();
-    if (await ghTap('voice: ' + r.id, JSON.stringify({ voice: pick, script: sc.value.trim() }))) {
+    const body = JSON.stringify({ voice: pick, script: sc.value.trim() });
+    if (pack && RM2 && !sc.value.trim()) {   // instant, on your phone
+      const t0 = performance.now();
+      try {
+        const blob = await RM2.voiceSwap({ video: vid, game: base + 'game.m4a', voice: base + pick + '.m4a',
+          follow: await followAudio((r.user_layout || {}).follow_voice || favFollow()) });
+        const old = LOCALV[r.id]; if (old && old.url) URL.revokeObjectURL(old.url);
+        LOCALV[r.id] = { url: URL.createObjectURL(blob), blob, at: Date.now() }; keepLocal(r.id, blob, LOCALV[r.id].at);
+        JOBS[r.id] = { kind: 'phone', at: Date.now(), pct: 100, done: true, end: Date.now(), label: `New voice ✓ — ${((performance.now() - t0) / 1000).toFixed(1)}s on your phone` };
+        saveJobs(); closeSheet(); toast('New voice ✓'); haptic(); lastSig = ''; render();
+        ghTap('voice: ' + r.id, body);   // the posting copy follows on GitHub in the background
+        return;
+      } catch (e) { console.warn('instant voice:', e); toast('Couldn\u2019t do it on the phone — using GitHub'); }
+    }
+    if (await ghTap('voice: ' + r.id, body)) {
       toast('Swapping the voice — about 3–5 minutes'); closeSheet(); JOBS[r.id] = { kind: 'voice', at: Date.now(), pct: 2, label: 'New voice: starting…' }; saveJobs(); pollJobs(); lastSig = ''; render(); }
     go.disabled = false; };
-  sheet('New voice', [el('div', 'mut', 'Takes out the voice talking in this clip (game sounds stay) and puts in the AI voice you pick. Tap ▶ to hear one.'), list,
+  sheet('New voice', [el('div', 'mut', 'Takes out the voice talking in this clip (game sounds stay) and puts in the AI voice you pick. Tap a voice to hear it.'), state, list,
     el('label', null, 'Script (optional)'), sc, go]);
 }
 function openPosted(r) {   // you posted this clip yourself: the bot won't post it there (or anywhere, with Both)
@@ -1729,7 +1763,7 @@ let RMOD = null;
 function warmPhone(r) {   // an editor opened: start downloading the footage + loading the video maker NOW, so Save is instant
   try {
     const ED = edSrc(r); if (!ED || !ED.full || !window.VideoEncoder) return;
-    (RMOD ? Promise.resolve(RMOD) : import(PAGES + 'vendor/render.mjs?v=10')).then((m) => { RMOD = m; m.warm(ED.src); }).catch(() => {});
+    (RMOD ? Promise.resolve(RMOD) : import(PAGES + 'vendor/render.mjs?v=11')).then((m) => { RMOD = m; m.warm(ED.src); }).catch(() => {});
     followAudio((r.user_layout || {}).follow_voice || favFollow());
   } catch (e) { /* */ }
 }
@@ -1797,7 +1831,7 @@ async function followAudio(v) {   // the spoken follow line's audio for your pho
   catch (e) { return null; }
 }
 async function phoneEdit(r, S, ED, onPct) {   // the finished video from your edit, made by your phone
-  const mod = await import(PAGES + 'vendor/render.mjs?v=10');
+  const mod = await import(PAGES + 'vendor/render.mjs?v=11');
   if (!S.cam && S.mode !== 'irl' && S.mode !== 'full') {   // never a layout without its webcam
     const c = String((r.user_layout || {}).cam || r.cam_used || r.cam || '').split(',').map(Number);
     if (c.length === 4 && c.every((v) => isFinite(v))) S = { ...S, cam: c }; else S = { ...S, mode: 'full' };
@@ -1935,7 +1969,7 @@ function openEditor(r) {
   } else pbar.hidden = true;
   // ---- LIVE sound, on your phone: the pop + the spoken follow line play right in the preview, with the clip dipping
   // under the voice (same timing as the finished video). Pick a voice and you hear it on the clip instantly.
-  let RM = null; import(PAGES + 'vendor/render.mjs?v=10').then((m) => { RM = m; draw(); }).catch(() => {});
+  let RM = null; import(PAGES + 'vendor/render.mjs?v=11').then((m) => { RM = m; draw(); }).catch(() => {});
   let ac = null, duck = null, pass = 0, sched = []; const fvDec = {};
   function audioOn() {   // has to start inside a tap on iPhone
     if (!mv) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
@@ -1950,7 +1984,7 @@ function openEditor(r) {
     if (duck && ac) { duck.gain.cancelScheduledValues(0); duck.gain.setValueAtTime(1, ac.currentTime); } }
   async function scheduleExtras() {   // from wherever the playhead is now
     if (!ac || !mv || mv.paused) return;
-    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=10'); } catch (e) { return; } }
+    if (!RM) { try { RM = await import(PAGES + 'vendor/render.mjs?v=11'); } catch (e) { return; } }
     unschedule(); const my = pass;
     const vb = await voiceDec(S.follow_voice || favFollow()); if (my !== pass || mv.paused) return;
     const c = cutNow(); const rate = mv.playbackRate || 1; const ct = mv.currentTime + ED.t0 - c[0]; const now = ac.currentTime;
