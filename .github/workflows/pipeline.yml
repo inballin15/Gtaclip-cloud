@@ -108,6 +108,12 @@ jobs:
             publish _camsrc camsrc
             gh workflow run enhance.yml -R "${{ github.repository }}" || true
           fi
+      - name: put the new site on Cloudflare (direct - GitHub's "after a run" trigger stopped firing on Nov 27)
+        continue-on-error: true
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cfdeploy.yml -R "${{ github.repository }}" || true
       - name: save log (so Claude can read it)
         continue-on-error: true
         if: always()
