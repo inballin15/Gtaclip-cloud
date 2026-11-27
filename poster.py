@@ -759,6 +759,9 @@ def slots_today(on: datetime | None = None) -> list[datetime]:
     return [datetime(d.year, d.month, d.day, h, m, tzinfo=ET) for h, m in ACTIVE_SLOTS]
 
 
+MIN_GAP_MIN = 60   # a scheduled post waits for the next slot if anything (Post now too) went out in the last hour
+
+
 def due_slot() -> datetime | None:
     past = [s for s in slots_today() if s <= NOW]
     if not past:
@@ -902,6 +905,12 @@ def main() -> None:
                  and (r.get("tiktok") or (r.get("status") or {}).get("tiktok", {}).get("state") in ("live", "uploading")))
     if not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key and last24 >= DAILY_CAP:
         log(f"daily cap reached ({last24} posts in 24 h) — skipping this slot")
+        ctl["last_slot"] = slot_key
+    recent = [NOW - parse(r["posted_at"]) for r in recs.values() if r.get("posted_at")]
+    gap = min(recent) if recent else None
+    if (not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key
+            and gap is not None and gap < timedelta(minutes=MIN_GAP_MIN)):   # never two posts back to back (Nov 27)
+        log(f"slot skipped — something posted {int(gap.total_seconds() // 60)} min ago (at least {MIN_GAP_MIN} min apart)")
         ctl["last_slot"] = slot_key
     if not to_post and slot and not ctl.get("paused") and ctl.get("last_slot") != slot_key:
         pending_now = {p["id"] for p in ctl["postnow"]}

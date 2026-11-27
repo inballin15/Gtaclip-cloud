@@ -2687,10 +2687,10 @@ function yourTurnCard(ql) {
   return c;
 }
 function heroCard(ql) {
-  const allYou = ['tiktok', 'youtube'].every((x) => youPost().includes(x));   // both platforms set to "you post": nothing posts by itself
+  const allYou = youPost().includes('tiktok');   // TikTok set to "you post" (YouTube is always yours): nothing posts by itself
   const on = L && !L.paused && !L.buffer_off && !allYou;
   const hero = el('div', 'hero2 ' + (on ? 'on' : 'off'));
-  const top = el('div', 'hrow'); const st = el('div', 'st'); st.append(el('span', 'pulse ' + (on ? 'ok' : 'bad')), document.createTextNode(!L ? 'Loading…' : L.buffer_off ? 'Paused — Buffer off' : L.paused ? 'Auto-posting off' : allYou ? 'Auto-posting off — you post both' : 'Auto-posting on'));
+  const top = el('div', 'hrow'); const st = el('div', 'st'); st.append(el('span', 'pulse ' + (on ? 'ok' : 'bad')), document.createTextNode(!L ? 'Loading…' : L.buffer_off ? 'Paused — Buffer off' : L.paused ? 'Auto-posting off' : allYou ? 'Auto-posting off — you post' : 'Auto-posting on'));
   top.append(st); hero.append(top);
   if (on && L.next_slot) {
     const big = el('div', 'next'); big.append(el('span', 'lbl', 'Next post'), el('b', null, tET(L.next_slot)));
@@ -2707,8 +2707,8 @@ function heroCard(ql) {
   else if (L && allYou && !L.paused) {   // turning auto back on = TikTok + YouTube back to automatic
     const wait = isPending('youpost: tiktok') || isPending('youpost: youtube');
     const b = el('button', 'big go', wait ? 'Turning on…' : 'Start auto-posting'); b.disabled = wait;
-    b.onclick = async () => { b.disabled = true; b.textContent = 'Sending…'; const a = await ghTap('youpost: tiktok off'); const y = await ghTap('youpost: youtube off');
-      if (a && y) toast('Auto-posting back on'); lastSig = ''; render(); };
+    b.onclick = async () => { b.disabled = true; b.textContent = 'Sending…'; const a = await ghTap('youpost: tiktok off');   // YouTube stays yours to post
+      if (a) toast('Auto-posting back on for TikTok (you still post YouTube)'); lastSig = ''; render(); };
     hero.append(el('div', 'mut', 'Nothing posts by itself. Your clips wait under “Your turn” — Save, post, tap Posted ✓.'), b);
   }
   else if (L) {
