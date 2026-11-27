@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-27T08:04:14Z",
+  "updated": "2026-11-27T10:06:56Z",
   "videos": 65,
   "v": 5,
   "findings": [
@@ -85,7 +85,7 @@
    {
     "feature": "streamer",
     "value": "Kai",
-    "x": 2.16,
+    "x": 2.15,
     "n": 3
    },
    {
@@ -109,7 +109,7 @@
    {
     "feature": "streamer",
     "value": "caseoh_",
-    "x": 2.05,
+    "x": 2.06,
     "n": 3
    },
    {
@@ -186,11 +186,11 @@
   "top": [
    {
     "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-    "views": 2513
+    "views": 2516
    },
    {
     "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
-    "views": 1471
+    "views": 1472
    },
    {
     "hook": "Speed found him",
@@ -202,7 +202,7 @@
    },
    {
     "hook": "What do you think about Nick not being family freindly?",
-    "views": 879
+    "views": 885
    }
   ],
   "style_counts": {
@@ -388,7 +388,7 @@
    }
   ]
  },
- "updated": "2026-11-27T10:01:29Z",
+ "updated": "2026-11-27T10:06:56Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -4182,6 +4182,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T10:01:29Z",
- "log": []
+ "stats_updated": "2026-11-27T10:06:56Z",
+ "log": [
+  "[10:06:57Z] hook learner: 65 videos, 2 lessons"
+ ]
 }
