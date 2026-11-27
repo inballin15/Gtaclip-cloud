@@ -388,7 +388,7 @@
    }
   ]
  },
- "updated": "2026-11-27T07:38:53Z",
+ "updated": "2026-11-27T07:43:45Z",
  "paused": false,
  "switched_at": "2026-11-21T19:06:01Z",
  "postnow": [],
@@ -1296,12 +1296,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-27",
-  "used": 0,
+  "used": 1,
   "cap": 29,
   "slots": 6,
-  "remain30": 666,
+  "remain30": 665,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 587,
+  "remain24": 586,
   "active": [
    [
     8,
@@ -2978,6 +2978,20 @@
  },
  "stats": [
   {
+   "service": "youtube",
+   "link": "https://www.youtube.com/shorts/LQCv6las1WI",
+   "sent": "2026-11-27T05:42:43.000Z",
+   "hook": "",
+   "clip": "",
+   "streamer": "",
+   "views": 0,
+   "likes": 0,
+   "comments": 0,
+   "shares": 0,
+   "reposts": 0,
+   "saves": 0
+  },
+  {
    "service": "tiktok",
    "link": "https://tiktok.com/@gtaclip96/video/7712589792755633421",
    "sent": "2026-11-26T21:08:16.986Z",
@@ -4168,6 +4182,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T07:38:53Z",
+ "stats_updated": "2026-11-27T07:43:45Z",
  "log": []
 }

@@ -71,17 +71,17 @@
  "yt_check": "failed: HTTP Error 503: Service Unavailable",
  "tt_check": "ok",
  "manual_check": "2026-11-27T07:38:53Z",
- "stats_at": "2026-11-27T01:42:06Z",
+ "stats_at": "2026-11-27T07:43:45Z",
  "buffer_wait": "",
  "buffer_off": false,
  "budget": {
   "day": "2026-11-27",
-  "used": 0,
+  "used": 1,
   "cap": 29,
   "slots": 6,
-  "remain30": 666,
+  "remain30": 665,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 587
+  "remain24": 586
  },
  "yt_verified_v": 1,
  "you_post": [
