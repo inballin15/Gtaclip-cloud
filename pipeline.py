@@ -3486,7 +3486,7 @@ def main() -> None:
     per, capped = {}, []
     for r in sorted([r for r in fresh if r.get("source") != "upload"], key=clip_quality, reverse=True):
         k = (r.get("login") or r.get("streamer") or "").lower()
-        if yours(r) or per.get(k, 0) < PER_STREAMER_MAX:
+        if yours(r) or per.get(k, 0) < (CFG["streamers"].get(k, {}) or {}).get("queue_max", PER_STREAMER_MAX):
             per[k] = per.get(k, 0) + 1
             capped.append(r)
     keep = {r["id"] for r in mix_order(capped)[:QUEUE_MAX]} | {r["id"] for r in capped if yours(r)}   # your pasted clips don't use up stream-clip spots

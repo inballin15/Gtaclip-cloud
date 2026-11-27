@@ -37,7 +37,7 @@ streamers:
   stableronaldo: {name: "Stable Ronaldo", tag: "#StableRonaldo", facecam: [0.02, 0.53, 0.23, 0.29]}   # cut-out cam, bottom left above the map (Nov 25)
   jasontheween: {name: "JasonTheWeen", tag: "#JasonTheWeen", facecam: null}
   nickmercs:   {name: "NICKMERCS",     tag: "#Nickmercs", facecam: [0.786, 0.437, 0.208, 0.203]}   # bottom-right cam, ABOVE his overlay bar (the detector took the bar too)
-  nickeh30:    {name: "Nick Eh 30",    tag: "#NickEh30",  facecam: [0, 0.15, 0.23, 0.46], boost: 1.5}   # cut-out cam, left side (no border - detector missed it)   # added Nov 23: popping off in GTA 6
+  nickeh30:    {name: "Nick Eh 30",    tag: "#NickEh30",  facecam: [0, 0.15, 0.23, 0.46], boost: 3.0, max_clips: 12, min_views: 15, queue_max: 12}   # Nov 27: he's blowing up - top priority, up to 12 waiting   # cut-out cam, left side (no border - detector missed it)   # added Nov 23: popping off in GTA 6
   ohnepixel:   {name: "ohnePixel",     tag: "#ohnePixel", facecam: [0.05, 0.64, 0.24, 0.36]}   # cut-out cam, bottom left (no border - detector missed it)
   marlon:      {name: "Marlon",        tag: "#Marlon",   facecam: null}
   adapt:       {name: "Adapt",         tag: "#Adapt",    facecam: null}

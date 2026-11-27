@@ -157,11 +157,11 @@ def pick_clips(h: dict, seen: set[str]) -> list[dict]:
         good = [c for c in clips
                 if (on_topic(c.get("game_id", ""), c.get("title", "")) or (s.get("discovered") and not TOPIC.get("game_ids")))
                 and c["id"] not in seen
-                and c["view_count"] >= d["min_views"]
+                and c["view_count"] >= s.get("min_views", d["min_views"])
                 and d["min_seconds"] <= c["duration"] <= d["max_seconds"]
                 and not any(w in c["title"].lower() for w in bad)]
         good.sort(key=lambda c: c["view_count"], reverse=True)
-        for c in good[: d["max_per_streamer"]]:
+        for c in good[: s.get("max_clips", d["max_per_streamer"])]:   # a hot streamer can get more per run
             c["login"], c["name"], c["tag"] = login, s["name"], s.get("tag", "")
             c["paid"] = bool(s.get("campaign"))
             c["discovered"] = bool(s.get("discovered"))
