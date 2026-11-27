@@ -398,11 +398,11 @@
    }
   ]
  },
- "updated": "2026-11-27T21:06:39Z",
+ "updated": "2026-11-27T21:09:55Z",
  "paused": true,
  "switched_at": "2026-11-27T16:56:58Z",
  "postnow": [],
- "next_slot": "2026-11-27T21:07:00Z",
+ "next_slot": "2026-11-28T00:07:00Z",
  "up_next": null,
  "videos": [
   {
@@ -4360,6 +4360,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-27T21:06:39Z",
+ "stats_updated": "2026-11-27T21:09:55Z",
  "log": []
 }
