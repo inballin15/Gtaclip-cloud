@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-        with: { ref: main, sparse-checkout: "voice.py\nvoicepack.py\nquickedit.py\nrender_hook.py\nengage.py", sparse-checkout-cone-mode: false }
+        with: { ref: main, sparse-checkout: "voice.py\nvoicepack.py\nquickedit.py\nrender_hook.py\nengage.py\nfonts", sparse-checkout-cone-mode: false }
       - uses: actions/setup-python@v5
         with: { python-version: "3.11", cache: pip, cache-dependency-path: voice.py }
       - name: Getting ready
