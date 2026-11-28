@@ -65,6 +65,11 @@ h2{font-size:15px;margin:0 0 10px;letter-spacing:-.1px}
 .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:12px;padding-bottom:2px}
 .chip{flex:none;border:1px solid var(--line);background:var(--p1);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;transition:transform .12s}
 .chip:active{transform:scale(.95)}
+.whorow{margin:0 -2px 10px;padding:2px 2px 4px}
+.whorow .chip{font-size:13px;padding:8px 13px}.whorow .chip::before{display:none}
+.whorow .chip b{font-weight:800;color:var(--mut);font-size:11px;background:var(--p3);border-radius:999px;padding:1px 7px}
+.whorow .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}.whorow .chip[aria-pressed="true"] b{background:rgba(0,0,0,.12);color:var(--bg)}
+.whohd{display:flex;align-items:baseline;gap:8px;margin:4px 2px 10px;font-weight:800;font-size:18px}.whohd span{font-size:12px;font-weight:600;color:var(--mut)}
 .chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cyan)}
 .chip.warn{color:var(--amber)}.chip.warn::before{background:var(--amber)}.chip.bad{color:#ff9a9a}.chip.bad::before{background:var(--red)}.chip.good{color:var(--green)}.chip.good::before{background:var(--green)}
 .pulse{width:9px;height:9px;border-radius:50%;background:var(--mut);flex:none}
@@ -1271,14 +1276,30 @@ function renderQueue(v, ql) {   // Clips tab: stream clips (With caption / No ca
   const ready = qs.filter((r) => r.final); const prep = qs.length - ready.length;
   v.append(Object.assign(el('div', 'mut', `${ready.length} stream clips ready in posting order${prep ? ` · ${prep} being made` : ''}${variant === 'clean' ? ' · no-caption copies (auto-posts use the captioned one)' : ''}`), { style: 'margin:0 2px 10px' }));
   if (!ready.length) { v.append(el('div', 'empty', 'Queue is empty — new clips arrive with the next clip-maker run (every 10 min).')); return; }
-  const plan = slotPlan().filter((s) => +s > Date.now() - 60000); let qi = 0;
-  ready.forEach((r, i) => {
+  // one section per streamer (Nov 27): tap a name to see only their clips; "All" = everything in posting order
+  const cnt = {}; for (const r of ready) { const k = r.streamer || 'Other'; cnt[k] = (cnt[k] || 0) + 1; }
+  const names = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a] || a.localeCompare(b));
+  let who = ls.get('gc-who', 'all'); if (who !== 'all' && !cnt[who]) who = 'all';
+  const row = el('div', 'chips whorow');
+  for (const k of ['all', ...names]) {
+    const b = el('button', 'chip'); b.append(k === 'all' ? 'All' : k, el('b', null, String(k === 'all' ? ready.length : cnt[k])));
+    b.setAttribute('aria-pressed', who === k);
+    b.onclick = () => { ls.set('gc-who', k); haptic(); lastSig = ''; render(); window.scrollTo(0, 0); };
+    row.append(b);
+  }
+  v.append(row);
+  if (who !== 'all') { const hd = el('div', 'whohd', who); hd.append(el('span', null, `${cnt[who]} clip${cnt[who] > 1 ? 's' : ''} · numbers = place in the posting line`)); v.append(hd); }
+  setTimeout(() => { const on = row.querySelector('[aria-pressed="true"]'); if (on && on.scrollIntoView) on.scrollIntoView({ inline: 'center', block: 'nearest' }); }, 0);
+  const plan = slotPlan().filter((s) => +s > Date.now() - 60000); let qi = 0, shown = 0;
+  ready.forEach((r) => {
+    const mine = who === 'all' || (r.streamer || 'Other') === who;
     let st;
     if (r.nowing) st = { cls: 's-busy', txt: 'Posting now', spin: true };
     else if (L && (L.paused || L.buffer_off)) st = { cls: 's-wait', txt: `#${qi + 1} in line · posting ${L.buffer_off ? 'paused' : 'off'}` };
     else { const s = plan[qi]; st = { cls: qi === 0 ? 's-next' : 's-wait', txt: s ? `${qi === 0 ? 'Next · ' : ''}~${tET(s)}` : `#${qi + 1} · tomorrow` }; }
     if (!r.nowing) qi++;
-    const c = clipCard(r, st); c.style.animationDelay = Math.min(i, 6) * 40 + 'ms'; v.append(c);
+    if (!mine) return;
+    const c = clipCard(r, st); c.style.animationDelay = Math.min(shown++, 6) * 40 + 'ms'; v.append(c);
   });
 }
 function variantSeg(ql) { const seg = el('div', 'seg'); const nm = (ql || []).filter((r) => r.source === 'upload' && r.final).length;
