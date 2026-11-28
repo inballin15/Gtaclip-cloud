@@ -1,0 +1,342 @@
+{
+ "updated": "2026-11-25T19:59:19Z",
+ "ready": [
+  {
+   "id": "upmwuw3jf8_3",
+   "status": "new",
+   "source": "upload",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "src_link": "",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "ScreenRecording_11-24-2026 08-57-34_1 @ 0:15",
+   "created": "2026-11-24T16:20:20Z",
+   "found": "2026-11-24T16:20:20Z",
+   "twitch": "",
+   "transcript": "terrifying and potentially in some instances scarring Oh my god What did you just say on my family friendly stream it? What did you just say buddy?",
+   "seconds": 23,
+   "moment": {
+    "start": 14.26,
+    "end": 41.5,
+    "score": 3.74,
+    "reasons": [
+     "big reaction",
+     "hype words",
+     "action on screen"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "Jynxzi FREAKED OUT over Nick Eh 30 audio",
+   "hook_kind": "user",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "len": "s22",
+    "hooklen": "tiny",
+    "start": "build",
+    "punch": "off"
+   },
+   "cam": "0.0000,0.5328,0.2952,0.4672",
+   "cam_q": "owner",
+   "layout": "react",
+   "cam_used": "0.0000,0.5473,0.3078,0.4527",
+   "layout_used": "react",
+   "final_s": 37,
+   "rendered": 1795637063,
+   "src_commit": "345a6dffb2d7184526d43675603438b56e426e95",
+   "bars": [
+    258,
+    0,
+    2348,
+    1320
+   ],
+   "viral": 88,
+   "viral_why": "High energy reaction to a streamer breaking their family friendly brand",
+   "viral_verdict": "post",
+   "hook_short_tried": true,
+   "hook_by_user": true,
+   "react": true,
+   "react_by": "faces",
+   "user_layout": {
+    "mode": "react",
+    "v": 2,
+    "cam": "0.0000,0.5473,0.3078,0.4527",
+    "hook_style": "white",
+    "span": [
+     4.3,
+     41.49
+    ]
+   },
+   "pic_ok": true,
+   "span": [
+    4.3,
+    41.49
+   ],
+   "avail": [
+    0.0,
+    61.5
+   ],
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "9d367dfedd",
+   "raw_win": [
+    0.0,
+    61.5
+   ],
+   "src_s": 534.0,
+   "wide": {
+    "k": "q2-0.00-61.5-72207109",
+    "t0": 0.0,
+    "t1": 61.5
+   },
+   "avail_max": [
+    0.0,
+    534.0
+   ],
+   "raw_asset": {
+    "name": "upmwuw3jf8_3_1a7ef17664.mp4",
+    "key": "1a7ef17664",
+    "size": 72207109
+   },
+   "clean_v": "f698574726",
+   "ed": {
+    "k": "97d54d1f",
+    "t0": 0.0,
+    "t1": 61.5,
+    "path": "v/ed/upmwuw3jf8_3_97d54d1f.mp4"
+   },
+   "video": "v/m/upmwuw3jf8_3_final.mp4",
+   "poster": "v/m/upmwuw3jf8_3.jpg",
+   "final": "v/m/upmwuw3jf8_3_final.mp4?v=9d367dfedd&r=1795637063",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/m/upmwuw3jf8_3_final.mp4?v=9d367dfedd&r=1795637063",
+   "clean": "v/m/upmwuw3jf8_3_clean.mp4?v=f698574726&r=1795637063",
+   "src": "v/m/upmwuw3jf8_3_src.jpg",
+   "wide_src": "v/m/upmwuw3jf8_3_wide.mp4?k=q2-0.00-61.5-72207109",
+   "vposter": "v/m/upmwuw3jf8_3_p.jpg?r=1795637063",
+   "ed_src": "v/ed/upmwuw3jf8_3_97d54d1f.mp4",
+   "clipped": "2026-11-24T16:20:20Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "upmwuw3jf8_2",
+   "status": "new",
+   "source": "upload",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "src_link": "",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "ScreenRecording_11-24-2026 08-57-34_1 @ 8:18",
+   "created": "2026-11-24T16:20:20Z",
+   "found": "2026-11-24T16:20:20Z",
+   "twitch": "",
+   "transcript": "It's just his methods are so creative. It's so insane 30 clips make me want to play GTA 6 Like I've been too busy playing world of craft walking simulator getting stupid ass sleeping bags If you know, you know, and I'm on the PVP server cuz I ain't the pussy good morning You're from brothers, but he did ask the funniest ever see bro Nikkei 30 is that it's just a family friendly",
+   "seconds": 22,
+   "moment": {
+    "start": 497.69,
+    "end": 523.41,
+    "score": 3.91,
+    "reasons": [
+     "hype words",
+     "action on screen",
+     "fast talking"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "Jynxzi ROASTED Nick Eh 30 for being too family friendly",
+   "hook_kind": "user",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "len": "s22",
+    "hooklen": "tiny",
+    "start": "build",
+    "punch": "on"
+   },
+   "cam": "0.0000,0.5328,0.2952,0.4672",
+   "cam_q": "owner",
+   "layout": "react",
+   "hook_variant": "formula",
+   "cam_used": "0.0000,0.5328,0.2952,0.4672",
+   "layout_used": "react",
+   "final_s": 26,
+   "rendered": 1795637013,
+   "src_commit": "345a6dffb2d7184526d43675603438b56e426e95",
+   "bars": [
+    258,
+    0,
+    2348,
+    1320
+   ],
+   "viral": 52,
+   "viral_why": "Relatable comparison between World of Warcraft and GTA 6 methods",
+   "viral_verdict": "maybe",
+   "hook_short_tried": true,
+   "hook_by_user": true,
+   "react": true,
+   "pic_ok": true,
+   "watching": "NickEh30",
+   "react_view": "",
+   "span": [
+    497.69,
+    523.41
+   ],
+   "avail": [
+    477.69,
+    534.01
+   ],
+   "view_ok": true,
+   "view_why": "",
+   "raw_win": [
+    477.69,
+    534.0
+   ],
+   "src_s": 534.0,
+   "wide": {
+    "k": "q2-477.69-56.3-83087615",
+    "t0": 477.69,
+    "t1": 534.01
+   },
+   "raw_asset": {
+    "name": "upmwuw3jf8_2_8a160052d1.mp4",
+    "key": "8a160052d1",
+    "size": 83087615
+   },
+   "avail_max": [
+    0.0,
+    534.0
+   ],
+   "ed": {
+    "k": "bb075ffc",
+    "t0": 477.69,
+    "t1": 534.01,
+    "path": "v/ed/upmwuw3jf8_2_bb075ffc.mp4"
+   },
+   "final_v": "1cd7e630da",
+   "clean_v": "f698574726",
+   "video": "v/m/upmwuw3jf8_2_final.mp4",
+   "poster": "v/m/upmwuw3jf8_2.jpg",
+   "final": "v/m/upmwuw3jf8_2_final.mp4?v=1cd7e630da&r=1795637013",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/m/upmwuw3jf8_2_final.mp4?v=1cd7e630da&r=1795637013",
+   "clean": "v/m/upmwuw3jf8_2_clean.mp4?v=f698574726&r=1795637013",
+   "src": "v/m/upmwuw3jf8_2_src.jpg",
+   "wide_src": "v/m/upmwuw3jf8_2_wide.mp4?k=q2-477.69-56.3-83087615",
+   "vposter": "v/m/upmwuw3jf8_2_p.jpg?r=1795637013",
+   "ed_src": "v/ed/upmwuw3jf8_2_bb075ffc.mp4",
+   "clipped": "2026-11-24T16:20:20Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "upmwuw3jf8_1",
+   "status": "new",
+   "source": "upload",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "src_link": "",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "ScreenRecording_11-24-2026 08-57-34_1 @ 6:21",
+   "created": "2026-11-24T16:20:20Z",
+   "found": "2026-11-24T16:20:20Z",
+   "twitch": "",
+   "transcript": "Is that not insane? Nika 30 would be the most entertaining GTA 6 streamer and trust me what I say this But this is just the tip of the iceberg. I haven't even showed you the crazy stuff And like I think the best part about all this is that there's literally not a single clip from a cutscene Like if you scroll Twitter or tech talk within five swipes you're gonna see a Nika 30 clip and not a single one is of a single cutscene",
+   "seconds": 27,
+   "moment": {
+    "start": 380.74,
+    "end": 411.9,
+    "score": 3.97,
+    "reasons": [
+     "hype words",
+     "action on screen",
+     "fast talking",
+     "strong opening line"
+    ]
+   },
+   "cam_v": 6,
+   "hook": "Jynxzi says Nick Eh 30 is the FUNNIEST GTA 6 streamer",
+   "hook_kind": "user",
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "len": "s22",
+    "hooklen": "story",
+    "start": "build",
+    "punch": "on"
+   },
+   "cam": "0.0000,0.5328,0.2952,0.4672",
+   "cam_q": "owner",
+   "layout": "react",
+   "cam_used": "0.0000,0.5328,0.2952,0.4672",
+   "layout_used": "react",
+   "final_s": 31,
+   "rendered": 1795637147,
+   "src_commit": "345a6dffb2d7184526d43675603438b56e426e95",
+   "bars": [
+    258,
+    0,
+    2348,
+    1320
+   ],
+   "viral": 45,
+   "viral_why": "Commentary on Nick Eh 30 clips rather than direct gameplay action",
+   "viral_verdict": "maybe",
+   "hook_by_user": true,
+   "react": true,
+   "pic_ok": true,
+   "watching": "NickEh30",
+   "react_view": "",
+   "span": [
+    380.74,
+    411.9
+   ],
+   "avail": [
+    360.74,
+    431.89
+   ],
+   "view_ok": true,
+   "view_why": "",
+   "raw_win": [
+    360.74,
+    431.9
+   ],
+   "src_s": 534.0,
+   "wide": {
+    "k": "q2-360.74-71.2-85648892",
+    "t0": 360.74,
+    "t1": 431.89
+   },
+   "raw_asset": {
+    "name": "upmwuw3jf8_1_0d60e0434c.mp4",
+    "key": "0d60e0434c",
+    "size": 85648892
+   },
+   "avail_max": [
+    0.0,
+    534.0
+   ],
+   "ed": {
+    "k": "e1374231",
+    "t0": 360.74,
+    "t1": 431.89,
+    "path": "v/ed/upmwuw3jf8_1_e1374231.mp4"
+   },
+   "final_v": "0315323517",
+   "clean_v": "f698574726",
+   "video": "v/m/upmwuw3jf8_1_final.mp4",
+   "poster": "v/m/upmwuw3jf8_1.jpg",
+   "final": "v/m/upmwuw3jf8_1_final.mp4?v=0315323517&r=1795637147",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/m/upmwuw3jf8_1_final.mp4?v=0315323517&r=1795637147",
+   "clean": "v/m/upmwuw3jf8_1_clean.mp4?v=f698574726&r=1795637147",
+   "src": "v/m/upmwuw3jf8_1_src.jpg",
+   "wide_src": "v/m/upmwuw3jf8_1_wide.mp4?k=q2-360.74-71.2-85648892",
+   "vposter": "v/m/upmwuw3jf8_1_p.jpg?r=1795637147",
+   "ed_src": "v/ed/upmwuw3jf8_1_e1374231.mp4",
+   "clipped": "2026-11-24T16:20:20Z",
+   "approved": false,
+   "post_now": false
+  }
+ ]
+}

@@ -1,0 +1,4417 @@
+{
+ "site_build": "185e2be549",
+ "updated": "2026-11-28T16:51:06Z",
+ "paused": true,
+ "posting_on": false,
+ "ready": [
+  {
+   "id": "vod2942722041_6534",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "tag": "#Lacy",
+   "campaign": "Lacy",
+   "title": "🎄 BACK IN LA 🎄 CHRISTMAS TIME 🎄 BEST TIME OF THE YEAR 🎄 BLACK FRIDAY 🎄 CHILL DES @ 1:48:54",
+   "views": 0,
+   "created": "2026-11-28T01:20:57Z",
+   "found": "2026-11-28T02:16:53Z",
+   "twitch": "https://www.twitch.tv/videos/2942722041?t=1h48m54s",
+   "transcript": "Do you stick your oh my god the turkeys uncooked Zero cheese on the Mac and you just stug your foot into the plate. You're a disgusting human You're a you're a disgrace to the holiday of Thanksgiving, bro Onions carrots is disgusting zero out of ten Just AI gift nothing me as a turkey again",
+   "seconds": 30,
+   "moment": {
+    "score": 8.47,
+    "reasons": [
+     "hype words",
+     "fast talking"
+    ],
+    "ai_score": 9.0
+   },
+   "cam_v": 6,
+   "cam": "0.7162,0.0042,0.2575,0.4069",
+   "cam_q": "learned",
+   "hook": "he really did not have to see that",
+   "hook_kind": "ai",
+   "viral": 90,
+   "viral_verdict": "post",
+   "viral_why": "hype words, fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    8.0,
+    22.5
+   ],
+   "span": [
+    8.0,
+    22.5
+   ],
+   "avail": [
+    0.0,
+    30.3
+   ],
+   "avail_max": [
+    0.0,
+    30.3
+   ],
+   "pic_ok": true,
+   "cap_q": "Would you be able to eat that or are you gagging?",
+   "in_game": false,
+   "layout": "react",
+   "react": true,
+   "watching": "X",
+   "react_view": "",
+   "hook_variant": "vibe",
+   "cam_used": "0.7162,0.0042,0.2575,0.4069",
+   "layout_used": "react",
+   "peak_at": 5.0,
+   "peak_src": 13.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "f560faaabd",
+   "final_s": 14,
+   "clean_v": "0cd063dac7",
+   "rendered": 1795832875,
+   "wide": {
+    "k": "q2-0.00-30.3-24176602",
+    "t0": 0.0,
+    "t1": 30.3
+   },
+   "ed": {
+    "k": "f36e94ac",
+    "t0": 0.0,
+    "t1": 30.3,
+    "path": "v/ed/vod2942722041_6534_f36e94ac.mp4"
+   },
+   "video": "v/vod2942722041_6534_final.mp4",
+   "poster": "v/vod2942722041_6534.jpg",
+   "final": "v/vod2942722041_6534_final.mp4?v=f560faaabd&r=1795832875",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942722041_6534_final.mp4?v=f560faaabd&r=1795832875",
+   "clean": "v/vod2942722041_6534_clean.mp4?v=0cd063dac7&r=1795832875",
+   "cap_tt": "he really did not have to see that. Would you be able to eat that or are you gagging? 😳\nFollow for daily Lacy clips\n\nLacy stream highlight 🎥 @lacy\n\n#Lacy #gaming #streamer #fyp",
+   "yt_title": "he really did not have to see that #Shorts #Lacy",
+   "src": "v/vod2942722041_6534_src.jpg",
+   "wide_src": "v/vod2942722041_6534_wide.mp4?k=q2-0.00-30.3-24176602",
+   "vposter": "v/vod2942722041_6534_p.jpg?r=1795832875",
+   "ed_src": "v/ed/vod2942722041_6534_f36e94ac.mp4",
+   "clipped": "2026-11-28T01:20:57Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2943284130_1056",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11) @ 0:17:36",
+   "views": 0,
+   "created": "2026-11-28T14:49:21Z",
+   "found": "2026-11-28T15:52:06Z",
+   "twitch": "https://www.twitch.tv/videos/2943284130?t=0h17m36s",
+   "transcript": "I'm sick of it. I'm fucking sick of it. Oh. Bitch, are you stupid? What the fuck is wrong with you? You need to lay. Good, but you're all fucking dumb ass. That's why you need to say the fuck around us. Oh, it's jammed, get him, get him. Get him, Lucia. Get him. I don't know what else. That's your bitch ass stuff. Yeah. Damn. Anyway, can we get some food for you? She filmed that too. Like, where's the weed in? The D-roaks?",
+   "seconds": 32,
+   "moment": {
+    "score": 7.66,
+    "reasons": [
+     "big reaction",
+     "hype words"
+    ],
+    "ai_score": 9.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "nick eh 30 loses it during this intense gta 6 mission",
+   "hook_kind": "ai",
+   "viral": 90,
+   "viral_verdict": "post",
+   "viral_why": "big reaction, hype words",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "off",
+    "cap": "short"
+   },
+   "trim": [
+    0.0,
+    18.0
+   ],
+   "span": [
+    0.0,
+    18.0
+   ],
+   "avail": [
+    0.0,
+    32.0
+   ],
+   "avail_max": [
+    0.0,
+    32.0
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that mission or would you have failed it?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0,0.15,0.23,0.46",
+   "cap_cut": 0.116,
+   "cam_used": "0,0.15,0.23,0.46",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 4.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "36829f8a22",
+   "final_s": 18,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795885121,
+   "wide": {
+    "k": "q2-0.00-32.0-70188045",
+    "t0": 0.0,
+    "t1": 32.0
+   },
+   "ed": {
+    "k": "31258600",
+    "t0": 0.0,
+    "t1": 32.0,
+    "path": "v/ed/vod2943284130_1056_31258600.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2943284130_1056_final.mp4",
+   "poster": "v/vod2943284130_1056.jpg",
+   "final": "v/vod2943284130_1056_final.mp4?v=36829f8a22&r=1795885121",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2943284130_1056_final.mp4?v=36829f8a22&r=1795885121",
+   "clean": "v/vod2943284130_1056_clean.mp4?v=9ca8aa9e12&r=1795885121",
+   "cap_tt": "nick eh 30 loses it during this intense gta 6 mission 😳\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "nick eh 30 loses it during this intense gta 6 mission #Shorts #NickEh30",
+   "src": "v/vod2943284130_1056_src.jpg",
+   "wide_src": "v/vod2943284130_1056_wide.mp4?k=q2-0.00-32.0-70188045",
+   "vposter": "v/vod2943284130_1056_p.jpg?r=1795885121",
+   "ed_src": "v/ed/vod2943284130_1056_31258600.mp4",
+   "clipped": "2026-11-28T14:49:21Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk",
+   "status": "new",
+   "streamer": "IShowSpeed",
+   "login": "ishowspeed",
+   "tag": "#IShowSpeed",
+   "campaign": "",
+   "title": "ishowspeed finished GTA VI",
+   "views": 30,
+   "created": "2026-11-27T19:22:40Z",
+   "found": "2026-11-28T14:31:22Z",
+   "twitch": "https://www.twitch.tv/ishowspeed/clip/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk",
+   "transcript": "",
+   "seconds": 30,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.004,0.432,0.194,0.214",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "viral": 95,
+   "viral_why": "Massive creator completing the biggest game of the year",
+   "viral_verdict": "post",
+   "hook": "he really did not want it to end like this",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    0.0,
+    16.0
+   ],
+   "span": [
+    0.0,
+    16.0
+   ],
+   "avail": [
+    0.0,
+    29.93
+   ],
+   "avail_max": [
+    0.0,
+    29.93
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Did you expect the ending of GTA 6 to be this emotional?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.004,0.432,0.194,0.214",
+   "cap_cut": 0.098,
+   "cam_used": "0.004,0.432,0.194,0.214",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 4.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "56e41e9e07",
+   "final_s": 16,
+   "clean_v": "6e336a54f1",
+   "rendered": 1795880357,
+   "wide": {
+    "k": "q2-0.00-29.9-13877886",
+    "t0": 0.0,
+    "t1": 29.93
+   },
+   "ed": {
+    "k": "5beba9ae",
+    "t0": 0.0,
+    "t1": 29.93,
+    "path": "v/ed/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_5beba9ae.mp4"
+   },
+   "hd": true,
+   "video": "v/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_final.mp4",
+   "poster": "v/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk.jpg",
+   "final": "v/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_final.mp4?v=56e41e9e07&r=1795880357",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_final.mp4?v=56e41e9e07&r=1795880357",
+   "clean": "v/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_clean.mp4?v=6e336a54f1&r=1795880357",
+   "cap_tt": "he really did not want it to end like this. Did you expect the ending of GTA 6 to be this emotional? 🔥\nFollow for daily IShowSpeed clips\n\nIShowSpeed GTA 6 stream highlight 🎥 @ishowspeed\n\n#IShowSpeed #GTA6 #GTAVI #fyp",
+   "yt_title": "he really did not want it to end like this | IShowSpeed GTA 6 #Shorts #IShowSpeed",
+   "src": "v/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_src.jpg",
+   "wide_src": "v/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_wide.mp4?k=q2-0.00-29.9-13877886",
+   "vposter": "v/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_p.jpg?r=1795880357",
+   "ed_src": "v/ed/MistyCoyPieKappaRoss-qXLPB0znrDWWJmOk_5beba9ae.mp4",
+   "clipped": "2026-11-27T19:22:40Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942642953_2228",
+   "status": "new",
+   "source": "vod",
+   "streamer": "YourRAGE",
+   "login": "yourragegaming",
+   "tag": "#YourRAGE",
+   "campaign": "YourRAGE",
+   "title": "Claiming MASSIVE FREE REWARDS! | Marvel Rivals 2nd Anniversary #MarvelRivals #An @ 0:37:08",
+   "views": 0,
+   "created": "2026-11-27T22:38:15Z",
+   "found": "2026-11-27T23:12:36Z",
+   "twitch": "https://www.twitch.tv/videos/2942642953?t=0h37m8s",
+   "transcript": "My lordy lord. Oh damn. Oh Okay, I died I did diet. Oh, I'm see y'all too new gem for this shit. This is what I'm not dead. Yeah I'm not dead. Yeah, I'm not dead. Yeah, I'm not dead. Yeah, I'm too hot for you. Lush man This is what I'm gonna eat in the octopus the octopus ate me Yeah, cuz you gotta get see you don't know how to play Batman bro. You gotta get the orbs. The orbs make them all Oh, they touch me. I'm too good. I'm too good. I'm too good. I got",
+   "seconds": 28,
+   "moment": {
+    "score": 7.21,
+    "reasons": [
+     "hype words",
+     "fast talking"
+    ],
+    "ai_score": 8.0
+   },
+   "cam_v": 6,
+   "cam": "0.0234,0.0171,0.2180,0.3445",
+   "cam_q": "learned",
+   "hook": "he really is too good at this",
+   "hook_kind": "ai",
+   "viral": 80,
+   "viral_verdict": "post",
+   "viral_why": "hype words, fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "black",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    5.0,
+    23.0
+   ],
+   "span": [
+    5.0,
+    23.0
+   ],
+   "avail": [
+    0.0,
+    27.73
+   ],
+   "avail_max": [
+    0.0,
+    27.73
+   ],
+   "pic_ok": true,
+   "cap_q": "Do you think you could beat his high score in this mini-game?",
+   "in_game": false,
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0234,0.0171,0.2180,0.3445",
+   "cap_cut": 0.0,
+   "cam_used": "0.0234,0.0171,0.2180,0.3445",
+   "layout_used": "split",
+   "peak_at": 5.0,
+   "peak_src": 10.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "e432f34439",
+   "final_s": 18,
+   "clean_v": "f6b77b1ea5",
+   "rendered": 1795826420,
+   "wide": {
+    "k": "q2-0.00-27.7-33674170",
+    "t0": 0.0,
+    "t1": 27.73
+   },
+   "ed": {
+    "k": "c97cae80",
+    "t0": 0.0,
+    "t1": 27.73,
+    "path": "v/ed/vod2942642953_2228_c97cae80.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2942642953_2228_final.mp4",
+   "poster": "v/vod2942642953_2228.jpg",
+   "final": "v/vod2942642953_2228_final.mp4?v=e432f34439&r=1795826420",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942642953_2228_final.mp4?v=e432f34439&r=1795826420",
+   "clean": "v/vod2942642953_2228_clean.mp4?v=f6b77b1ea5&r=1795826420",
+   "cap_tt": "he really is too good at this. Do you think you could beat his high score in this mini-game? 😂\nFollow for daily YourRAGE clips\n\nYourRAGE stream highlight 🎥 @yourragegaming\n\n#YourRAGE #gaming #streamer #fyp",
+   "yt_title": "he really is too good at this #Shorts #YourRAGE",
+   "src": "v/vod2942642953_2228_src.jpg",
+   "wide_src": "v/vod2942642953_2228_wide.mp4?k=q2-0.00-27.7-33674170",
+   "vposter": "v/vod2942642953_2228_p.jpg?r=1795826420",
+   "ed_src": "v/ed/vod2942642953_2228_c97cae80.mp4",
+   "clipped": "2026-11-27T22:38:15Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV",
+   "status": "new",
+   "streamer": "JasonTheWeen",
+   "login": "jasontheween",
+   "tag": "#JasonTheWeen",
+   "campaign": "",
+   "title": "Jason",
+   "views": 33,
+   "created": "2026-11-27T15:07:05Z",
+   "found": "2026-11-28T14:21:26Z",
+   "twitch": "https://www.twitch.tv/jasontheween/clip/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV",
+   "transcript": "No, no shit. Yo! What the fuck is his big look?",
+   "seconds": 30,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.8130,0.4514,0.1591,0.2514",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "JasonTheWeen FREAKED OUT after seeing the size of a massive NPC",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    16.0,
+    30.0
+   ],
+   "span": [
+    16.0,
+    30.0
+   ],
+   "avail": [
+    0.0,
+    29.98
+   ],
+   "avail_max": [
+    0.0,
+    29.98
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Have you ever seen an NPC with a head that big in GTA 6?",
+   "hook_variant": "quote",
+   "irl_x": -1,
+   "hd_cam": "0.8130,0.4514,0.1591,0.2514",
+   "cap_cut": 0.0,
+   "cam_used": "0.8130,0.4514,0.1591,0.2514",
+   "layout_used": "split",
+   "peak_at": 10.0,
+   "peak_src": 26.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "666ab8d888",
+   "final_s": 14,
+   "clean_v": "c492c6ec63",
+   "rendered": 1795877689,
+   "wide": {
+    "k": "q2-0.00-30.0-7718144",
+    "t0": 0.0,
+    "t1": 29.98
+   },
+   "ed": {
+    "k": "eda0c576",
+    "t0": 0.0,
+    "t1": 29.98,
+    "path": "v/ed/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_eda0c576.mp4"
+   },
+   "viral": 82,
+   "viral_why": "High energy reaction to a visual surprise with a clear hook",
+   "viral_verdict": "post",
+   "hd": true,
+   "video": "v/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_final.mp4",
+   "poster": "v/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV.jpg",
+   "final": "v/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_final.mp4?v=666ab8d888&r=1795877689",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_final.mp4?v=666ab8d888&r=1795877689",
+   "clean": "v/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_clean.mp4?v=c492c6ec63&r=1795877689",
+   "cap_tt": "JasonTheWeen freaked out after seeing the size of a massive NPC. Have you ever seen an NPC with a head that big in GTA 6? 🤯\nFollow for daily JasonTheWeen clips\n\nJasonTheWeen GTA 6 stream highlight 🎥 @jasontheween\n\n#JasonTheWeen #GTA6 #GTAVI #fyp",
+   "yt_title": "JasonTheWeen freaked out after seeing the size of a massive NPC… #Shorts #JasonTheWeen",
+   "src": "v/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_src.jpg",
+   "wide_src": "v/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_wide.mp4?k=q2-0.00-30.0-7718144",
+   "vposter": "v/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_p.jpg?r=1795877689",
+   "ed_src": "v/ed/FaintSmallMetalSuperVinlin-dvJbsAaYrZTOzoTV_eda0c576.mp4",
+   "clipped": "2026-11-27T15:07:05Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN",
+   "status": "new",
+   "streamer": "ohnePixel",
+   "login": "ohnepixel",
+   "tag": "#ohnePixel",
+   "campaign": "",
+   "title": "gta badass",
+   "views": 34,
+   "created": "2026-11-27T11:13:56Z",
+   "found": "2026-11-28T08:37:24Z",
+   "twitch": "https://www.twitch.tv/ohnepixel/clip/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN",
+   "transcript": "Everybody get into your positions What is this yo yo yo yo? Whoa whoa whoa whoa time out Time out what is happening right now listen listen. What is going on right now? What the fuck? It's fine, bro. If they're doing all of the stuff that he just said, bro, that is not fine. That is not fine Fuck do you mean that's fine? With the six much love. It's art. Okay, is everybody good? Oh, yeah, I am good. Oh, boy. Are you good? Yeah, sure What the fuck",
+   "seconds": 48,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.05,0.64,0.24,0.36",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "ohnePixel FREAKED OUT when his team started acting weird in GTA 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "black",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "question"
+   },
+   "trim": [
+    0.0,
+    14.5
+   ],
+   "span": [
+    0.0,
+    14.5
+   ],
+   "avail": [
+    0.0,
+    47.85
+   ],
+   "avail_max": [
+    0.0,
+    47.85
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have expected this mission in GTA 6?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.05,0.64,0.24,0.36",
+   "cap_cut": 0.0,
+   "cam_used": "0.05,0.64,0.24,0.36",
+   "layout_used": "split",
+   "peak_at": 3.0,
+   "peak_src": 3.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "6ad3d112ac",
+   "final_s": 14,
+   "clean_v": "5073a7a5e9",
+   "rendered": 1795857090,
+   "wide": {
+    "k": "q2-0.00-47.9-10753029",
+    "t0": 0.0,
+    "t1": 47.85
+   },
+   "ed": {
+    "k": "439306fb",
+    "t0": 0.0,
+    "t1": 47.85,
+    "path": "v/ed/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_439306fb.mp4"
+   },
+   "viral": 82,
+   "viral_why": "High energy reaction to unexpected chaos with strong streamer appeal",
+   "viral_verdict": "post",
+   "hd": true,
+   "video": "v/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_final.mp4",
+   "poster": "v/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN.jpg",
+   "final": "v/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_final.mp4?v=6ad3d112ac&r=1795857090",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_final.mp4?v=6ad3d112ac&r=1795857090",
+   "clean": "v/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_clean.mp4?v=5073a7a5e9&r=1795857090",
+   "cap_tt": "Would you have expected this mission in GTA 6? 😳\nFollow for daily ohnePixel clips\n\nohnePixel freaked out when his team started acting weird in GTA 6\nohnePixel GTA 6 stream highlight 🎥 @ohnepixel\n\n#ohnePixel #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "ohnePixel freaked out when his team started acting weird in GTA 6 #Shorts #ohnePixel",
+   "src": "v/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_src.jpg",
+   "wide_src": "v/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_wide.mp4?k=q2-0.00-47.9-10753029",
+   "vposter": "v/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_p.jpg?r=1795857090",
+   "ed_src": "v/ed/AuspiciousInquisitiveWerewolfFreakinStinkin-rYyUcjUfLtVXgLFN_439306fb.mp4",
+   "clipped": "2026-11-27T11:13:56Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN",
+   "status": "new",
+   "streamer": "Kai Cenat",
+   "login": "kaicenat",
+   "tag": "#KaiCenat",
+   "campaign": "Kai",
+   "title": "Kai's GTA 6 Crew Is About to Hit an Armored Truck 😂",
+   "views": 30,
+   "created": "2026-11-27T21:03:27Z",
+   "found": "2026-11-28T13:40:28Z",
+   "twitch": "https://www.twitch.tv/kaicenat/clip/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN",
+   "transcript": "Alright, come on, let's get these doors open. K, let's see what you got. Sticky mom. We're going to stand up on this chart. I want a better call.",
+   "seconds": 50,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.0416,0.4056,0.1239,0.1958",
+   "cam_q": "edge",
+   "cam_v": 6,
+   "hook": "Kai Cenat PANICKED trying to open an armored truck",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "tiny",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "short"
+   },
+   "trim": [
+    16.0,
+    34.0
+   ],
+   "span": [
+    16.0,
+    34.0
+   ],
+   "avail": [
+    0.0,
+    49.98
+   ],
+   "avail_max": [
+    0.0,
+    49.98
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have pulled off this heist or would you have crashed?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0416,0.4056,0.1239,0.1958",
+   "cap_cut": 0.148,
+   "cam_used": "0.0416,0.4056,0.1239,0.1958",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 20.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "a2a783985d",
+   "final_s": 18,
+   "clean_v": "8d10a0602e",
+   "rendered": 1795875187,
+   "wide": {
+    "k": "q2-0.00-50.0-45894046",
+    "t0": 0.0,
+    "t1": 49.98
+   },
+   "ed": {
+    "k": "375ae864",
+    "t0": 0.0,
+    "t1": 49.98,
+    "path": "v/ed/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_375ae864.mp4"
+   },
+   "hd": true,
+   "viral": 72,
+   "viral_why": "High energy heist gameplay with clear stakes and streamer personality",
+   "viral_verdict": "post",
+   "hook_short_tried": true,
+   "video": "v/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_final.mp4",
+   "poster": "v/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN.jpg",
+   "final": "v/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_final.mp4?v=a2a783985d&r=1795875187",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_final.mp4?v=a2a783985d&r=1795875187",
+   "clean": "v/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_clean.mp4?v=8d10a0602e&r=1795875187",
+   "cap_tt": "Kai Cenat panicked trying to open an armored truck 💀\n\n#KaiCenat #GTA6 #GTAVI #fyp",
+   "yt_title": "Kai Cenat panicked trying to open an armored truck | Kai Cenat GTA 6 #Shorts #KaiCenat",
+   "src": "v/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_src.jpg",
+   "wide_src": "v/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_wide.mp4?k=q2-0.00-50.0-45894046",
+   "vposter": "v/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_p.jpg?r=1795875187",
+   "ed_src": "v/ed/UninterestedGracefulTroutBlargNaut-yiduC3LtXF0qxEmN_375ae864.mp4",
+   "clipped": "2026-11-27T21:03:27Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW",
+   "status": "new",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "The best driver",
+   "views": 30,
+   "created": "2026-11-26T18:43:46Z",
+   "found": "2026-11-27T07:34:14Z",
+   "twitch": "https://www.twitch.tv/jynxzi/clip/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW",
+   "transcript": "Hit and run. Yeah, right. What about that? Hit and run. Hit and run. That is three star.",
+   "seconds": 24,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.7672,0.6458,0.2215,0.3500",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "Jynxzi the best driver",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "off",
+    "cap": "question"
+   },
+   "trim": [
+    6.0,
+    23.0
+   ],
+   "span": [
+    6.0,
+    23.0
+   ],
+   "avail": [
+    0.0,
+    23.68
+   ],
+   "avail_max": [
+    0.0,
+    23.68
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that three star chase or nah?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.7672,0.6458,0.2215,0.3500",
+   "cap_cut": 0.101,
+   "cam_used": "0.7672,0.6458,0.2215,0.3500",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 10.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "da4d427a34",
+   "final_s": 17,
+   "clean_v": "337c38bdec",
+   "rendered": 1795819676,
+   "wide": {
+    "k": "q2-0.00-23.7-10883761",
+    "t0": 0.0,
+    "t1": 23.68
+   },
+   "ed": {
+    "k": "cef39cfa",
+    "t0": 0.0,
+    "t1": 23.68,
+    "path": "v/ed/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_cef39cfa.mp4"
+   },
+   "viral": 82,
+   "viral_why": "Relatable chaotic driving and instant police stars create a strong hook",
+   "viral_verdict": "post",
+   "hd": true,
+   "hook_by_user": true,
+   "quick_at": 1795790817,
+   "video": "v/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_final.mp4",
+   "poster": "v/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW.jpg",
+   "final": "v/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_final.mp4?v=da4d427a34&r=1795819676",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_final.mp4?v=da4d427a34&r=1795819676",
+   "clean": "v/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_clean.mp4?v=337c38bdec&r=1795819676",
+   "cap_tt": "Would you have survived that three star chase or nah? 😳\nFollow for daily Jynxzi clips\n\nJynxzi the best driver\nJynxzi GTA 6 stream highlight 🎥 @jynxzi\n\n#Jynxzi #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "Jynxzi the best driver | Jynxzi GTA 6 #Shorts #Jynxzi",
+   "src": "v/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_src.jpg",
+   "wide_src": "v/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_wide.mp4?k=q2-0.00-23.7-10883761",
+   "vposter": "v/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_p.jpg?r=1795819676",
+   "ed_src": "v/ed/AbrasiveCleanMoonKappa-XKNkk6pFBnEOIjMW_cef39cfa.mp4",
+   "clipped": "2026-11-26T18:43:46Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv",
+   "status": "new",
+   "streamer": "Stable Ronaldo",
+   "login": "stableronaldo",
+   "tag": "#StableRonaldo",
+   "campaign": "",
+   "title": "stable ronaldo in chaos in vice city",
+   "views": 30,
+   "created": "2026-11-27T05:25:46Z",
+   "found": "2026-11-28T03:55:36Z",
+   "twitch": "https://www.twitch.tv/stableronaldo/clip/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv",
+   "transcript": "Can I get this rap please can you help Nicole instead of complaining this oh my god first person. Oh my god guys I'm not a good driver guys. I'm not a good driver guys guys guys guys guys",
+   "seconds": 30,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.02,0.53,0.23,0.29",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "Stable Ronaldo panicked while attempting to drive in first person in GTA 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    13.0,
+    30.0
+   ],
+   "span": [
+    13.0,
+    30.0
+   ],
+   "avail": [
+    0.0,
+    29.98
+   ],
+   "avail_max": [
+    0.0,
+    29.98
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that bus ride or would you have crashed too?",
+   "hook_variant": "news",
+   "irl_x": -1,
+   "hd_cam": "0.02,0.53,0.23,0.29",
+   "cap_cut": 0.121,
+   "cam_used": "0.02,0.53,0.23,0.29",
+   "layout_used": "split",
+   "peak_at": 11.0,
+   "peak_src": 24.0,
+   "view_ok": false,
+   "view_why": "a black empty gap in the layout (179 px)",
+   "final_v": "8894f48623",
+   "final_s": 17,
+   "clean_v": "2b93592266",
+   "rendered": 1795840684,
+   "wide": {
+    "k": "q2-0.00-30.0-7985741",
+    "t0": 0.0,
+    "t1": 29.98
+   },
+   "ed": {
+    "k": "e473ab4f",
+    "t0": 0.0,
+    "t1": 29.98,
+    "path": "v/ed/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_e473ab4f.mp4"
+   },
+   "viral": 45,
+   "viral_why": "Relatable first-person driving panic but lacks a clear, punchy payoff",
+   "viral_verdict": "maybe",
+   "hd": true,
+   "video": "v/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_final.mp4",
+   "poster": "v/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv.jpg",
+   "final": "v/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_final.mp4?v=8894f48623&r=1795840684",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_final.mp4?v=8894f48623&r=1795840684",
+   "clean": "v/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_clean.mp4?v=2b93592266&r=1795840684",
+   "cap_tt": "Stable Ronaldo panicked while attempting to drive in first person in GTA 6. Would you have survived that bus ride or would you have crashed too? 🔥\nFollow for daily Stable Ronaldo clips\n\nStable Ronaldo GTA 6 stream highlight 🎥 @stableronaldo\n\n#StableRonaldo #GTA6 #GTAVI #fyp",
+   "yt_title": "Stable Ronaldo panicked while attempting to drive in first person in GTA 6 #Shorts #StableRonaldo",
+   "src": "v/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_src.jpg",
+   "wide_src": "v/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_wide.mp4?k=q2-0.00-30.0-7985741",
+   "vposter": "v/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_p.jpg?r=1795840684",
+   "ed_src": "v/ed/BraveUgliestMuleYouDontSay-W7ulKhUm9c5Eqrwv_e473ab4f.mp4",
+   "clipped": "2026-11-27T05:25:46Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB",
+   "status": "new",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "tag": "#Lacy",
+   "campaign": "Lacy",
+   "title": "LACY BEATS GTA 6",
+   "views": 30,
+   "created": "2026-11-27T15:47:12Z",
+   "found": "2026-11-28T11:09:16Z",
+   "twitch": "https://www.twitch.tv/lacy/clip/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB",
+   "transcript": "No, who's here? Oh my god. No! The car fucking dead Jay. You're fucking dead. Oh my god. We did it in the hard drive We did as did it bro We did as did it bro. Okay. We did as did it. That's the end. We gotta get the hell out of here",
+   "seconds": 43,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0,0,0.256,0.255",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "Lacy FREAKED OUT after finally beating the GTA 6 story mode",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "tiny",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    2.0,
+    18.0
+   ],
+   "span": [
+    2.0,
+    18.0
+   ],
+   "avail": [
+    0.0,
+    42.97
+   ],
+   "avail_max": [
+    0.0,
+    42.97
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that jump or are you toast?",
+   "hook_variant": "news",
+   "irl_x": -1,
+   "hd_cam": "0,0,0.256,0.255",
+   "cap_cut": 0.0,
+   "cam_used": "0,0,0.256,0.255",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 6.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "70d96d31c3",
+   "final_s": 16,
+   "clean_v": "02b86e4fd6",
+   "rendered": 1795865527,
+   "wide": {
+    "k": "q2-0.00-43.0-14397035",
+    "t0": 0.0,
+    "t1": 42.97
+   },
+   "ed": {
+    "k": "b713be85",
+    "t0": 0.0,
+    "t1": 42.97,
+    "path": "v/ed/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_b713be85.mp4"
+   },
+   "viral": 94,
+   "viral_why": "Major milestone payoff with high emotion and clear narrative conclusion",
+   "viral_verdict": "post",
+   "hd": true,
+   "video": "v/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_final.mp4",
+   "poster": "v/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB.jpg",
+   "final": "v/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_final.mp4?v=70d96d31c3&r=1795865527",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_final.mp4?v=70d96d31c3&r=1795865527",
+   "clean": "v/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_clean.mp4?v=02b86e4fd6&r=1795865527",
+   "cap_tt": "Lacy freaked out after finally beating the GTA 6 story mode. Would you have survived that jump or are you toast? 💀\nFollow for daily Lacy clips\n\nLacy GTA 6 stream highlight 🎥 @lacy\n\n#Lacy #GTA6 #GTAVI #fyp",
+   "yt_title": "Lacy freaked out after finally beating the GTA 6 story mode #Shorts #Lacy",
+   "src": "v/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_src.jpg",
+   "wide_src": "v/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_wide.mp4?k=q2-0.00-43.0-14397035",
+   "vposter": "v/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_p.jpg?r=1795865527",
+   "ed_src": "v/ed/BrainyAmusedButterDBstyle-f5h_7MJyTIZqt7GB_b713be85.mp4",
+   "clipped": "2026-11-27T15:47:12Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2943284130_4582",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11) @ 1:16:22",
+   "views": 0,
+   "created": "2026-11-28T15:48:07Z",
+   "found": "2026-11-28T16:23:21Z",
+   "twitch": "https://www.twitch.tv/videos/2943284130?t=1h16m22s",
+   "transcript": "Oh crap More in the rooftop into the network to control to all right Jason. We got time once you access the journal We got to start to have put it to these guys clear in the ball After that it won't take me too long to You got to get this done quick. I need to start editing the feed before Lucie hits that ball",
+   "seconds": 30,
+   "moment": {
+    "score": 7.44,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 8.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "nick eh 30 racing against time in gta 6",
+   "hook_kind": "ai",
+   "viral": 80,
+   "viral_verdict": "post",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    8.0,
+    25.0
+   ],
+   "span": [
+    8.0,
+    25.0
+   ],
+   "avail": [
+    0.0,
+    30.42
+   ],
+   "avail_max": [
+    0.0,
+    30.42
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have been able to complete this mission in time?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0,0.15,0.23,0.46",
+   "cap_cut": 0.148,
+   "cam_used": "0,0.15,0.23,0.46",
+   "layout_used": "split",
+   "peak_at": 8.0,
+   "peak_src": 16.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "14893ba0f4",
+   "final_s": 17,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795883586,
+   "wide": {
+    "k": "q2-0.00-30.4-52010660",
+    "t0": 0.0,
+    "t1": 30.42
+   },
+   "ed": {
+    "k": "29e5cc73",
+    "t0": 0.0,
+    "t1": 30.42,
+    "path": "v/ed/vod2943284130_4582_29e5cc73.mp4"
+   },
+   "video": "v/vod2943284130_4582_final.mp4",
+   "poster": "v/vod2943284130_4582.jpg",
+   "final": "v/vod2943284130_4582_final.mp4?v=14893ba0f4&r=1795883586",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2943284130_4582_final.mp4?v=14893ba0f4&r=1795883586",
+   "clean": "v/vod2943284130_4582_clean.mp4?v=9ca8aa9e12&r=1795883586",
+   "cap_tt": "nick eh 30 racing against time in gta 6. Would you have been able to complete this mission in time? 😂\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "nick eh 30 racing against time in gta 6 #Shorts #NickEh30",
+   "src": "v/vod2943284130_4582_src.jpg",
+   "wide_src": "v/vod2943284130_4582_wide.mp4?k=q2-0.00-30.4-52010660",
+   "vposter": "v/vod2943284130_4582_p.jpg?r=1795883586",
+   "ed_src": "v/ed/vod2943284130_4582_29e5cc73.mp4",
+   "clipped": "2026-11-28T15:48:07Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff",
+   "status": "new",
+   "streamer": "IShowSpeed",
+   "login": "ishowspeed",
+   "tag": "#IShowSpeed",
+   "campaign": "",
+   "title": "shirle running for life",
+   "views": 30,
+   "created": "2026-11-27T14:13:10Z",
+   "found": "2026-11-28T10:49:54Z",
+   "twitch": "https://www.twitch.tv/ishowspeed/clip/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff",
+   "transcript": "Oh fuck, I'm surly rum bro, fuck I'm surly rum Bro give me this car. Give me this car. Give me this car. Give me this car. I Can't I don't kill",
+   "seconds": 22,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.004,0.432,0.194,0.214",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "IShowSpeed panicked while running for his life in GTA 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    4.0,
+    21.0
+   ],
+   "span": [
+    4.0,
+    21.0
+   ],
+   "avail": [
+    0.0,
+    21.53
+   ],
+   "avail_max": [
+    0.0,
+    21.53
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have been able to steal that car or would you have panicked?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.004,0.432,0.194,0.214",
+   "cap_cut": 0.095,
+   "cam_used": "0.004,0.432,0.194,0.214",
+   "layout_used": "split",
+   "peak_at": 8.0,
+   "peak_src": 12.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "996b033a84",
+   "final_s": 17,
+   "clean_v": "6e336a54f1",
+   "rendered": 1795865522,
+   "wide": {
+    "k": "q2-0.00-21.5-13133784",
+    "t0": 0.0,
+    "t1": 21.53
+   },
+   "ed": {
+    "k": "ce45c374",
+    "t0": 0.0,
+    "t1": 21.53,
+    "path": "v/ed/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_ce45c374.mp4"
+   },
+   "hd": true,
+   "viral": 88,
+   "viral_why": "High energy panic with immediate action and a frantic car theft attempt",
+   "viral_verdict": "post",
+   "video": "v/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_final.mp4",
+   "poster": "v/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff.jpg",
+   "final": "v/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_final.mp4?v=996b033a84&r=1795865522",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_final.mp4?v=996b033a84&r=1795865522",
+   "clean": "v/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_clean.mp4?v=6e336a54f1&r=1795865522",
+   "cap_tt": "IShowSpeed panicked while running for his life in GTA 6. Would you have been able to steal that car or would you have panicked? 🔥\nFollow for daily IShowSpeed clips\n\nIShowSpeed GTA 6 stream highlight 🎥 @ishowspeed\n\n#IShowSpeed #GTA6 #GTAVI #fyp",
+   "yt_title": "IShowSpeed panicked while running for his life in GTA 6 #Shorts #IShowSpeed",
+   "src": "v/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_src.jpg",
+   "wide_src": "v/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_wide.mp4?k=q2-0.00-21.5-13133784",
+   "vposter": "v/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_p.jpg?r=1795865522",
+   "ed_src": "v/ed/MildQuaintHumanDxAbomb-2fsucMmr-9loy1Ff_ce45c374.mp4",
+   "clipped": "2026-11-27T14:13:10Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942642953_4732",
+   "status": "new",
+   "source": "vod",
+   "streamer": "YourRAGE",
+   "login": "yourragegaming",
+   "tag": "#YourRAGE",
+   "campaign": "YourRAGE",
+   "title": "Claiming MASSIVE FREE REWARDS! | Marvel Rivals 2nd Anniversary #MarvelRivals #An @ 1:18:52",
+   "views": 0,
+   "created": "2026-11-27T23:19:59Z",
+   "found": "2026-11-27T23:47:33Z",
+   "twitch": "https://www.twitch.tv/videos/2942642953?t=1h18m52s",
+   "transcript": "House against the world means nothing, but the tank is dead. Someone's dead. Let's go. I think it was a deep guess. Attack and healer can die. Attack. The tank is dead.",
+   "seconds": 24,
+   "moment": {
+    "score": 6.99,
+    "reasons": [
+     "hype words",
+     "fast talking"
+    ],
+    "ai_score": 7.0
+   },
+   "cam_v": 6,
+   "cam": "0.0235,0.0264,0.1547,0.2444",
+   "cam_q": "learned",
+   "hook": "YourRAGE lost it when his tank died during a match in Marvel Rivals",
+   "hook_kind": "ai",
+   "viral": 70,
+   "viral_verdict": "post",
+   "viral_why": "hype words, fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    0.0,
+    16.0
+   ],
+   "span": [
+    0.0,
+    16.0
+   ],
+   "avail": [
+    0.0,
+    23.58
+   ],
+   "avail_max": [
+    0.0,
+    23.58
+   ],
+   "pic_ok": true,
+   "cap_q": "Would you have survived that team fight or would you have died too?",
+   "in_game": false,
+   "hook_variant": "lowcaps",
+   "irl_x": -1,
+   "hd_cam": "0.0235,0.0264,0.1547,0.2444",
+   "cap_cut": 0.113,
+   "cam_used": "0.0235,0.0264,0.1547,0.2444",
+   "layout_used": "split",
+   "peak_at": 10.0,
+   "peak_src": 10.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "1f5d3cdf78",
+   "final_s": 16,
+   "clean_v": "926436125c",
+   "rendered": 1795828673,
+   "wide": {
+    "k": "q2-0.00-23.6-77855623",
+    "t0": 0.0,
+    "t1": 23.58
+   },
+   "ed": {
+    "k": "6d8db81b",
+    "t0": 0.0,
+    "t1": 23.58,
+    "path": "v/ed/vod2942642953_4732_6d8db81b.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2942642953_4732_final.mp4",
+   "poster": "v/vod2942642953_4732.jpg",
+   "final": "v/vod2942642953_4732_final.mp4?v=1f5d3cdf78&r=1795828673",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942642953_4732_final.mp4?v=1f5d3cdf78&r=1795828673",
+   "clean": "v/vod2942642953_4732_clean.mp4?v=926436125c&r=1795828673",
+   "cap_tt": "YourRAGE lost it when his tank died during a match in Marvel Rivals. Would you have survived that team fight or would you have died too? 😳\nFollow for daily YourRAGE clips\n\nYourRAGE stream highlight 🎥 @yourragegaming\n\n#YourRAGE #gaming #streamer #fyp",
+   "yt_title": "YourRAGE lost it when his tank died during a match in Marvel Rivals #Shorts #YourRAGE",
+   "src": "v/vod2942642953_4732_src.jpg",
+   "wide_src": "v/vod2942642953_4732_wide.mp4?k=q2-0.00-23.6-77855623",
+   "vposter": "v/vod2942642953_4732_p.jpg?r=1795828673",
+   "ed_src": "v/ed/vod2942642953_4732_6d8db81b.mp4",
+   "clipped": "2026-11-27T23:19:59Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK",
+   "status": "new",
+   "streamer": "ohnePixel",
+   "login": "ohnepixel",
+   "tag": "#ohnePixel",
+   "campaign": "",
+   "title": "ohnePixel checks his save and chat roasts his slow pace",
+   "views": 30,
+   "created": "2026-11-27T16:49:19Z",
+   "found": "2026-11-28T14:31:22Z",
+   "twitch": "https://www.twitch.tv/ohnepixel/clip/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK",
+   "transcript": "Love who served her debts as a society Fuck to see you. You don't even know Let's talk in a car before I get re-enfucking carcerated Girl I'm speechless. I forgot about her. Well, she buys some Think you can join me to my boyfriend's place. He saw in Southside They're kind of fun. So how are you doing? You're out. I'm fucking",
+   "seconds": 30,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.05,0.64,0.24,0.36",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "viral": 78,
+   "viral_why": "Relatable chat interaction and specific story detail about a save file",
+   "viral_verdict": "post",
+   "hook": "ohnepixel gets distracted by a random npc in gta 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    12.0,
+    30.0
+   ],
+   "span": [
+    12.0,
+    30.0
+   ],
+   "avail": [
+    0.0,
+    30.0
+   ],
+   "avail_max": [
+    0.0,
+    30.0
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have picked up this npc or just kept driving in gta 6?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.05,0.64,0.24,0.36",
+   "cap_cut": 0.153,
+   "cam_used": "0.05,0.64,0.24,0.36",
+   "layout_used": "split",
+   "peak_at": 7.0,
+   "peak_src": 19.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "fef33e7cc2",
+   "final_s": 18,
+   "clean_v": "5073a7a5e9",
+   "rendered": 1795880487,
+   "wide": {
+    "k": "q2-0.00-30.0-37790233",
+    "t0": 0.0,
+    "t1": 30.0
+   },
+   "ed": {
+    "k": "e719fb6f",
+    "t0": 0.0,
+    "t1": 30.0,
+    "path": "v/ed/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_e719fb6f.mp4"
+   },
+   "hd": true,
+   "video": "v/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_final.mp4",
+   "poster": "v/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK.jpg",
+   "final": "v/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_final.mp4?v=fef33e7cc2&r=1795880487",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_final.mp4?v=fef33e7cc2&r=1795880487",
+   "clean": "v/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_clean.mp4?v=5073a7a5e9&r=1795880487",
+   "cap_tt": "ohnepixel gets distracted by a random npc in gta 6. Would you have picked up this npc or just kept driving in gta 6? 😂\nFollow for daily ohnePixel clips\n\nohnePixel GTA 6 stream highlight 🎥 @ohnepixel\n\n#ohnePixel #GTA6 #GTAVI #fyp",
+   "yt_title": "ohnepixel gets distracted by a random npc in gta 6 #Shorts #ohnePixel",
+   "src": "v/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_src.jpg",
+   "wide_src": "v/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_wide.mp4?k=q2-0.00-30.0-37790233",
+   "vposter": "v/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_p.jpg?r=1795880487",
+   "ed_src": "v/ed/TiredGlutenFreeRadishHeyGuys-CisrOvMzeo3sdeSK_e719fb6f.mp4",
+   "clipped": "2026-11-27T16:49:19Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8",
+   "status": "new",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "4t3 frew",
+   "views": 30,
+   "created": "2026-11-27T21:09:27Z",
+   "found": "2026-11-28T05:35:58Z",
+   "twitch": "https://www.twitch.tv/jynxzi/clip/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8",
+   "transcript": "What is he driving? What is he driving? Oh my god, where's he gonna land?",
+   "seconds": 54,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0,0.53,0.3,0.47",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "Jynxzi couldn't believe where the player was landing in GTA 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "question"
+   },
+   "trim": [
+    40.0,
+    54.0
+   ],
+   "span": [
+    40.0,
+    54.0
+   ],
+   "avail": [
+    0.0,
+    54.32
+   ],
+   "avail_max": [
+    0.0,
+    54.32
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Where do you think that truck is going to land in GTA 6?",
+   "hook_variant": "quote",
+   "irl_x": -1,
+   "hd_cam": "0,0.53,0.3,0.47",
+   "cap_cut": 0.0,
+   "cam_used": "0,0.53,0.3,0.47",
+   "layout_used": "split",
+   "peak_at": 8.0,
+   "peak_src": 48.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "510f2ff9ee",
+   "final_s": 14,
+   "clean_v": "882f73e7ec",
+   "rendered": 1795846131,
+   "wide": {
+    "k": "q2-0.00-54.3-29055666",
+    "t0": 0.0,
+    "t1": 54.32
+   },
+   "ed": {
+    "k": "24570675",
+    "t0": 0.0,
+    "t1": 54.32,
+    "path": "v/ed/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_24570675.mp4"
+   },
+   "viral": 45,
+   "viral_why": "Clear reaction to gameplay but lacks a specific, punchy narrative detail",
+   "viral_verdict": "maybe",
+   "hd": true,
+   "video": "v/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_final.mp4",
+   "poster": "v/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8.jpg",
+   "final": "v/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_final.mp4?v=510f2ff9ee&r=1795846131",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_final.mp4?v=510f2ff9ee&r=1795846131",
+   "clean": "v/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_clean.mp4?v=882f73e7ec&r=1795846131",
+   "cap_tt": "Where do you think that truck is going to land in GTA 6? 💀\nFollow for daily Jynxzi clips\n\nJynxzi couldn't believe where the player was landing in GTA 6\nJynxzi GTA 6 stream highlight 🎥 @jynxzi\n\n#Jynxzi #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "Jynxzi couldn't believe where the player was landing in GTA 6 #Shorts #Jynxzi",
+   "src": "v/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_src.jpg",
+   "wide_src": "v/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_wide.mp4?k=q2-0.00-54.3-29055666",
+   "vposter": "v/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_p.jpg?r=1795846131",
+   "ed_src": "v/ed/ViscousCrepuscularMacaroniUWot-xx67ZZU-oXB_5mT8_24570675.mp4",
+   "clipped": "2026-11-27T21:09:27Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW",
+   "status": "new",
+   "streamer": "Kai Cenat",
+   "login": "kaicenat",
+   "tag": "#KaiCenat",
+   "campaign": "Kai",
+   "title": "kai was up 500k and died",
+   "views": 33,
+   "created": "2026-11-27T14:59:11Z",
+   "found": "2026-11-27T20:12:12Z",
+   "twitch": "https://www.twitch.tv/kaicenat/clip/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW",
+   "transcript": "Chad, do I play a safe and try to rob? Oh, my dog will put a big one or Chad do I just want the light smaller? Which one should I do? Or do I just rob jewelry stores to just do the lights to do the bad? I sold bro, I sold bro It's not teller, it's not it's not it's not it's not",
+   "seconds": 30,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.0000,0.2981,0.1575,0.2489",
+   "cam_q": "cutout",
+   "cam_v": 6,
+   "hook": "Kai Cenat lost it after failing a jewelry store robbery in GTA 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "question"
+   },
+   "trim": [
+    16.0,
+    30.0
+   ],
+   "span": [
+    16.0,
+    30.0
+   ],
+   "avail": [
+    0.0,
+    30.0
+   ],
+   "avail_max": [
+    0.0,
+    30.0
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have panicked and sold the mission like he did?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.2981,0.1575,0.1567",
+   "cap_cut": 0.1,
+   "cam_used": "0.0000,0.2981,0.1575,0.1567",
+   "layout_used": "split",
+   "peak_at": 7.0,
+   "peak_src": 23.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "1645f735b4",
+   "final_s": 14,
+   "clean_v": "5b385053e7",
+   "rendered": 1795821871,
+   "wide": {
+    "k": "q2-0.00-30.0-22813427",
+    "t0": 0.0,
+    "t1": 30.0
+   },
+   "ed": {
+    "k": "2eb26b45",
+    "t0": 0.0,
+    "t1": 30.0,
+    "path": "v/ed/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_2eb26b45.mp4"
+   },
+   "viral": 65,
+   "viral_why": "High-energy streamer reaction to a failure moments",
+   "viral_verdict": "maybe",
+   "hd": true,
+   "video": "v/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_final.mp4",
+   "poster": "v/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW.jpg",
+   "final": "v/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_final.mp4?v=1645f735b4&r=1795821871",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_final.mp4?v=1645f735b4&r=1795821871",
+   "clean": "v/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_clean.mp4?v=5b385053e7&r=1795821871",
+   "cap_tt": "Would you have panicked and sold the mission like he did? 😂\nFollow for daily Kai Cenat clips\n\nKai Cenat lost it after failing a jewelry store robbery in GTA 6\nKai Cenat GTA 6 stream highlight 🎥 @kaicenat\n\n#KaiCenat #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "Kai Cenat lost it after failing a jewelry store robbery in GTA 6 #Shorts #KaiCenat",
+   "src": "v/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_src.jpg",
+   "wide_src": "v/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_wide.mp4?k=q2-0.00-30.0-22813427",
+   "vposter": "v/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_p.jpg?r=1795821871",
+   "ed_src": "v/ed/ImpartialDifferentSwordPJSalt-ABHS8ykaYRatR_VW_2eb26b45.mp4",
+   "clipped": "2026-11-27T14:59:11Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2943284130_7123",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11) @ 1:58:43",
+   "views": 0,
+   "created": "2026-11-28T16:30:28Z",
+   "found": "2026-11-28T16:51:06Z",
+   "twitch": "https://www.twitch.tv/videos/2943284130?t=1h58m43s",
+   "transcript": "Yeah Okay, I grab her oh Oh Watch like Lucy I'll be able to die here if you mess up. Oh, dang Lucy up Yeah, there's no way she's going down that easy. Oh Little MMA going on here. Yo, we're kicking butt. Oh, what can I do?",
+   "seconds": 29,
+   "moment": {
+    "score": 7.25,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 7.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "Nick Eh 30 was shocked watching Lucy get into a intense MMA fight",
+   "hook_kind": "ai",
+   "viral": 70,
+   "viral_verdict": "post",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "question"
+   },
+   "trim": [
+    2.0,
+    18.5
+   ],
+   "span": [
+    2.0,
+    18.5
+   ],
+   "avail": [
+    0.0,
+    28.85
+   ],
+   "avail_max": [
+    0.0,
+    28.85
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that fight or would you have gone down?",
+   "hook_variant": "lowcaps",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.1500,0.2300,0.3996",
+   "cap_cut": 0.0,
+   "cam_used": "0.0000,0.1500,0.2300,0.3996",
+   "layout_used": "split",
+   "peak_at": 8.0,
+   "peak_src": 10.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "0043e9af99",
+   "final_s": 16,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795885129,
+   "video": "v/vod2943284130_7123_final.mp4",
+   "poster": "v/vod2943284130_7123.jpg",
+   "final": "v/vod2943284130_7123_final.mp4?v=0043e9af99&r=1795885129",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2943284130_7123_final.mp4?v=0043e9af99&r=1795885129",
+   "clean": "v/vod2943284130_7123_clean.mp4?v=9ca8aa9e12&r=1795885129",
+   "cap_tt": "Would you have survived that fight or would you have gone down? 😂\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 was shocked watching Lucy get into a intense mma fight\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "Nick Eh 30 was shocked watching Lucy get into a intense mma fight | Nick Eh 30… #Shorts #NickEh30",
+   "src": "v/vod2943284130_7123_src.jpg",
+   "wide_src": "",
+   "vposter": "v/vod2943284130_7123_p.jpg?r=1795885129",
+   "ed_src": "",
+   "clipped": "2026-11-28T16:30:28Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-",
+   "status": "new",
+   "streamer": "IShowSpeed",
+   "login": "ishowspeed",
+   "tag": "#IShowSpeed",
+   "campaign": "",
+   "title": "Shark Attack!!! | GTA6 | IShowSpeed",
+   "views": 30,
+   "created": "2026-11-27T23:00:14Z",
+   "found": "2026-11-28T15:33:26Z",
+   "twitch": "https://www.twitch.tv/ishowspeed/clip/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-",
+   "transcript": "Oh He's bleeding oh my gosh, bro. Let's do this bleeding Where oh shit oh my gosh oh my gosh Oh my god, it's a short Oh my gosh",
+   "seconds": 60,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.004,0.432,0.194,0.214",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "viral": 78,
+   "viral_why": "High energy reaction to a shark attack provides a strong hook",
+   "viral_verdict": "post",
+   "hook": "ishowspeed panicked during a shark attack in gta 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "question"
+   },
+   "trim": [
+    21.0,
+    37.0
+   ],
+   "span": [
+    21.0,
+    37.0
+   ],
+   "avail": [
+    0.0,
+    59.98
+   ],
+   "avail_max": [
+    0.0,
+    59.98
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that shark attack or would you have panicked too?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.004,0.432,0.194,0.214",
+   "cap_cut": 0.128,
+   "cam_used": "0.004,0.432,0.194,0.214",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 25.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "febb8ba3ae",
+   "final_s": 16,
+   "clean_v": "6e336a54f1",
+   "rendered": 1795883811,
+   "wide": {
+    "k": "q2-0.00-60.0-22666371",
+    "t0": 0.0,
+    "t1": 59.98
+   },
+   "ed": {
+    "k": "7f3e9963",
+    "t0": 0.0,
+    "t1": 59.98,
+    "path": "v/ed/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_7f3e9963.mp4"
+   },
+   "hd": true,
+   "video": "v/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_final.mp4",
+   "poster": "v/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-.jpg",
+   "final": "v/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_final.mp4?v=febb8ba3ae&r=1795883811",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_final.mp4?v=febb8ba3ae&r=1795883811",
+   "clean": "v/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_clean.mp4?v=6e336a54f1&r=1795883811",
+   "cap_tt": "Would you have survived that shark attack or would you have panicked too? 😳\nFollow for daily IShowSpeed clips\n\nishowspeed panicked during a shark attack in gta 6\nIShowSpeed GTA 6 stream highlight 🎥 @ishowspeed\n\n#IShowSpeed #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "ishowspeed panicked during a shark attack in gta 6 #Shorts #IShowSpeed",
+   "src": "v/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_src.jpg",
+   "wide_src": "v/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_wide.mp4?k=q2-0.00-60.0-22666371",
+   "vposter": "v/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_p.jpg?r=1795883811",
+   "ed_src": "v/ed/CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-_7f3e9963.mp4",
+   "clipped": "2026-11-27T23:00:14Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942722041_14362",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "tag": "#Lacy",
+   "campaign": "Lacy",
+   "title": "🎄 BACK IN LA 🎄 CHRISTMAS TIME 🎄 BEST TIME OF THE YEAR 🎄 BLACK FRIDAY 🎄 CHILL DES @ 3:59:22",
+   "views": 0,
+   "created": "2026-11-28T03:31:25Z",
+   "found": "2026-11-28T03:55:36Z",
+   "twitch": "https://www.twitch.tv/videos/2942722041?t=3h59m22s",
+   "transcript": "Spotted with lacy comes forward to clear the air conforming lacy did not cheat on Darla despite the rumors What the fuck there were rumors? What the fuck rumors? Did I miss a chapter?",
+   "seconds": 27,
+   "moment": {
+    "score": 7.05,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 8.0
+   },
+   "cam_v": 6,
+   "cam": "0.8110,0.0722,0.1178,0.1861",
+   "cam_q": "edge",
+   "hook": "lacy reacts to rumors about him cheating on darla",
+   "hook_kind": "ai",
+   "viral": 80,
+   "viral_verdict": "post",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    12.0,
+    26.0
+   ],
+   "span": [
+    12.0,
+    26.0
+   ],
+   "avail": [
+    0.0,
+    26.85
+   ],
+   "avail_max": [
+    0.0,
+    26.85
+   ],
+   "pic_ok": true,
+   "cap_q": "Did you know about these rumors or are you just hearing this now?",
+   "in_game": false,
+   "layout": "react",
+   "react": true,
+   "watching": "veizau",
+   "react_view": "",
+   "hook_variant": "vibe",
+   "cam_used": "0.8110,0.0722,0.1178,0.1861",
+   "layout_used": "react",
+   "peak_at": 7.0,
+   "peak_src": 19.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "11ccb98f79",
+   "final_s": 14,
+   "clean_v": "d46652b7b4",
+   "rendered": 1795838411,
+   "wide": {
+    "k": "q2-0.00-26.9-15202681",
+    "t0": 0.0,
+    "t1": 26.85
+   },
+   "ed": {
+    "k": "420d16e2",
+    "t0": 0.0,
+    "t1": 26.85,
+    "path": "v/ed/vod2942722041_14362_420d16e2.mp4"
+   },
+   "video": "v/vod2942722041_14362_final.mp4",
+   "poster": "v/vod2942722041_14362.jpg",
+   "final": "v/vod2942722041_14362_final.mp4?v=11ccb98f79&r=1795838411",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942722041_14362_final.mp4?v=11ccb98f79&r=1795838411",
+   "clean": "v/vod2942722041_14362_clean.mp4?v=d46652b7b4&r=1795838411",
+   "cap_tt": "lacy reacts to rumors about him cheating on darla. Did you know about these rumors or are you just hearing this now? 💀\nFollow for daily Lacy clips\n\nLacy stream highlight 🎥 @lacy\n\n#Lacy #gaming #streamer #fyp",
+   "yt_title": "lacy reacts to rumors about him cheating on darla #Shorts #Lacy",
+   "src": "v/vod2942722041_14362_src.jpg",
+   "wide_src": "v/vod2942722041_14362_wide.mp4?k=q2-0.00-26.9-15202681",
+   "vposter": "v/vod2942722041_14362_p.jpg?r=1795838411",
+   "ed_src": "v/ed/vod2942722041_14362_420d16e2.mp4",
+   "clipped": "2026-11-28T03:31:25Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9",
+   "status": "new",
+   "streamer": "ohnePixel",
+   "login": "ohnepixel",
+   "tag": "#ohnePixel",
+   "campaign": "",
+   "title": "ohnePixel's shootout goes sideways, chat calls it cinema",
+   "views": 31,
+   "created": "2026-11-27T20:07:56Z",
+   "found": "2026-11-28T16:23:21Z",
+   "twitch": "https://www.twitch.tv/ohnepixel/clip/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9",
+   "transcript": "Eat that wait Jason died Buddy, have you don't see what I just have done",
+   "seconds": 35,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.05,0.64,0.24,0.36",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "viral": 65,
+   "viral_why": "Action-oriented and fits the streamer's personality, clear narrative arc",
+   "viral_verdict": "maybe",
+   "hook": "ohnepixel could not believe how this gta 6 shootout ended",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    18.0,
+    35.0
+   ],
+   "span": [
+    18.0,
+    35.0
+   ],
+   "avail": [
+    0.0,
+    35.0
+   ],
+   "avail_max": [
+    0.0,
+    35.0
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that shootout or would you have died like Jason?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.05,0.64,0.24,0.36",
+   "cap_cut": 0.153,
+   "cam_used": "0.05,0.64,0.24,0.36",
+   "layout_used": "split",
+   "peak_at": 6.0,
+   "peak_src": 24.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "c891233d1a",
+   "final_s": 17,
+   "clean_v": "5073a7a5e9",
+   "rendered": 1795884035,
+   "wide": {
+    "k": "q2-0.00-35.0-44411683",
+    "t0": 0.0,
+    "t1": 35.0
+   },
+   "ed": {
+    "k": "b26f8dff",
+    "t0": 0.0,
+    "t1": 35.0,
+    "path": "v/ed/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_b26f8dff.mp4"
+   },
+   "video": "v/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_final.mp4",
+   "poster": "v/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9.jpg",
+   "final": "v/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_final.mp4?v=c891233d1a&r=1795884035",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_final.mp4?v=c891233d1a&r=1795884035",
+   "clean": "v/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_clean.mp4?v=5073a7a5e9&r=1795884035",
+   "cap_tt": "ohnepixel could not believe how this gta 6 shootout ended. Would you have survived that shootout or would you have died like Jason? 😳\nFollow for daily ohnePixel clips\n\nohnePixel GTA 6 stream highlight 🎥 @ohnepixel\n\n#ohnePixel #GTA6 #GTAVI #fyp",
+   "yt_title": "ohnepixel could not believe how this gta 6 shootout ended #Shorts #ohnePixel",
+   "src": "v/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_src.jpg",
+   "wide_src": "v/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_wide.mp4?k=q2-0.00-35.0-44411683",
+   "vposter": "v/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_p.jpg?r=1795884035",
+   "ed_src": "v/ed/HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9_b26f8dff.mp4",
+   "clipped": "2026-11-27T20:07:56Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0",
+   "status": "new",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "s",
+   "views": 30,
+   "created": "2026-11-27T21:00:00Z",
+   "found": "2026-11-28T11:59:24Z",
+   "twitch": "https://www.twitch.tv/jynxzi/clip/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0",
+   "transcript": "Is he carrying a refrigerator? Chad, is that a refrigerator or an AC unit? I actually don't even know what it is",
+   "seconds": 30,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0,0.53,0.3,0.47",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "Jynxzi CONFUSED by NPC carrying a fridge in GTA 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    1.0,
+    17.0
+   ],
+   "span": [
+    1.0,
+    17.0
+   ],
+   "avail": [
+    0.0,
+    29.98
+   ],
+   "avail_max": [
+    0.0,
+    29.98
+   ],
+   "pic_ok": true,
+   "cap_q": "Do you think that was a refrigerator or an AC unit?",
+   "in_game": false,
+   "layout": "react",
+   "react": true,
+   "watching": "",
+   "react_view": "0.0000,0.0000,1.0000,1.0000",
+   "hook_variant": "vibe",
+   "cam_used": "0,0.53,0.3,0.47",
+   "layout_used": "react",
+   "peak_at": 4.0,
+   "peak_src": 5.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "0a634cb436",
+   "final_s": 16,
+   "clean_v": "8bcfe15e3f",
+   "rendered": 1795869137,
+   "wide": {
+    "k": "q2-0.00-30.0-13059232",
+    "t0": 0.0,
+    "t1": 29.98
+   },
+   "ed": {
+    "k": "daa9561c",
+    "t0": 0.0,
+    "t1": 29.98,
+    "path": "v/ed/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_daa9561c.mp4"
+   },
+   "viral": 35,
+   "viral_why": "Lacks a clear payoff or dramatic event, just a random observation",
+   "viral_verdict": "skip",
+   "hook_short_tried": true,
+   "video": "v/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_final.mp4",
+   "poster": "v/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0.jpg",
+   "final": "v/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_final.mp4?v=0a634cb436&r=1795869137",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_final.mp4?v=0a634cb436&r=1795869137",
+   "clean": "v/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_clean.mp4?v=8bcfe15e3f&r=1795869137",
+   "cap_tt": "Jynxzi confused by NPC carrying a fridge in GTA 6. Do you think that was a refrigerator or an AC unit? 😳\nFollow for daily Jynxzi clips\n\nJynxzi stream highlight 🎥 @jynxzi\n\n#Jynxzi #gaming #streamer #fyp",
+   "yt_title": "Jynxzi confused by NPC carrying a fridge in GTA 6 #Shorts #Jynxzi",
+   "src": "v/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_src.jpg",
+   "wide_src": "v/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_wide.mp4?k=q2-0.00-30.0-13059232",
+   "vposter": "v/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_p.jpg?r=1795869137",
+   "ed_src": "v/ed/EntertainingAdorableYakinikuKeyboardCat-QXfyBG6lTiArpXx0_daa9561c.mp4",
+   "clipped": "2026-11-27T21:00:00Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942642953_3700",
+   "status": "new",
+   "source": "vod",
+   "streamer": "YourRAGE",
+   "login": "yourragegaming",
+   "tag": "#YourRAGE",
+   "campaign": "YourRAGE",
+   "title": "Claiming MASSIVE FREE REWARDS! | Marvel Rivals 2nd Anniversary #MarvelRivals #An @ 1:01:40",
+   "views": 0,
+   "created": "2026-11-27T23:02:47Z",
+   "found": "2026-11-27T23:47:33Z",
+   "twitch": "https://www.twitch.tv/videos/2942642953?t=1h1m40s",
+   "transcript": "See you health. Kind of funny. 30 people. Bitch. Ah! I don't like fire! I have a goal over the place, bro. I think I could go a few more rounds. wow that was so much fun oh I forgot this character has an e-move I just",
+   "seconds": 32,
+   "moment": {
+    "score": 7.97,
+    "reasons": [
+     "big reaction",
+     "hype words",
+     "fast talking"
+    ],
+    "ai_score": 7.0
+   },
+   "cam_v": 6,
+   "cam": "0.0250,0.0264,0.1547,0.2444",
+   "cam_q": "learned",
+   "hook": "YourRAGE had a blast playing Marvel Rivals and forgot his character had an e-move",
+   "hook_kind": "ai",
+   "viral": 70,
+   "viral_verdict": "post",
+   "viral_why": "big reaction, hype words, fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    8.0,
+    24.0
+   ],
+   "span": [
+    8.0,
+    24.0
+   ],
+   "avail": [
+    0.0,
+    32.0
+   ],
+   "avail_max": [
+    0.0,
+    32.0
+   ],
+   "pic_ok": true,
+   "cap_q": "Have you tried out Marvel Rivals yet or are you still waiting to play?",
+   "in_game": false,
+   "hook_variant": "lowcaps",
+   "irl_x": -1,
+   "hd_cam": "0.0250,0.0264,0.1547,0.2444",
+   "cap_cut": 0.112,
+   "cam_used": "0.0250,0.0264,0.1547,0.2444",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 12.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "14f1a07bef",
+   "final_s": 16,
+   "clean_v": "ad1c39c612",
+   "rendered": 1795828957,
+   "wide": {
+    "k": "q2-0.00-32.0-93345538",
+    "t0": 0.0,
+    "t1": 32.0
+   },
+   "ed": {
+    "k": "50410ceb",
+    "t0": 0.0,
+    "t1": 32.0,
+    "path": "v/ed/vod2942642953_3700_50410ceb.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2942642953_3700_final.mp4",
+   "poster": "v/vod2942642953_3700.jpg",
+   "final": "v/vod2942642953_3700_final.mp4?v=14f1a07bef&r=1795828957",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942642953_3700_final.mp4?v=14f1a07bef&r=1795828957",
+   "clean": "v/vod2942642953_3700_clean.mp4?v=ad1c39c612&r=1795828957",
+   "cap_tt": "YourRAGE had a blast playing Marvel Rivals and forgot his character had an e-move. Have you tried out Marvel Rivals yet or are you still waiting to play? 😳\nFollow for daily YourRAGE clips\n\nYourRAGE stream highlight 🎥 @yourragegaming\n\n#YourRAGE #gaming #streamer #fyp",
+   "yt_title": "YourRAGE had a blast playing Marvel Rivals and forgot his character had an e-move #Shorts #YourRAGE",
+   "src": "v/vod2942642953_3700_src.jpg",
+   "wide_src": "v/vod2942642953_3700_wide.mp4?k=q2-0.00-32.0-93345538",
+   "vposter": "v/vod2942642953_3700_p.jpg?r=1795828957",
+   "ed_src": "v/ed/vod2942642953_3700_50410ceb.mp4",
+   "clipped": "2026-11-27T23:02:47Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2943284130_6866",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11) @ 1:54:26",
+   "views": 0,
+   "created": "2026-11-28T16:26:11Z",
+   "found": "2026-11-28T16:51:06Z",
+   "twitch": "https://www.twitch.tv/videos/2943284130?t=1h54m26s",
+   "transcript": "Oh, are we gonna get on this plane? I hear a gunfire. Is that you? Here, come on to work. Oh, there's a car on the way. Oh, they don't even know. Oh, my goodness. This is crazy.",
+   "seconds": 26,
+   "moment": {
+    "score": 7.86,
+    "reasons": [
+     "fast talking",
+     "strong opening line"
+    ],
+    "ai_score": 7.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "Nick Eh 30 freaked out after hearing gunfire while boarding a plane in GTA 6",
+   "hook_kind": "ai",
+   "viral": 70,
+   "viral_verdict": "post",
+   "viral_why": "fast talking, strong opening line",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "video": "v/vod2943284130_6866_final.mp4",
+   "poster": "v/vod2943284130_6866.jpg",
+   "final": "",
+   "final_abs": "",
+   "clean": "",
+   "cap_tt": "Nick Eh 30 freaked out after hearing gunfire while boarding a plane in GTA 6. Funniest part? Wrong answers only 🔥\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "Nick Eh 30 freaked out after hearing gunfire while boarding a plane in GTA 6 #Shorts #NickEh30",
+   "src": "",
+   "wide_src": "",
+   "vposter": "",
+   "ed_src": "",
+   "clipped": "2026-11-28T16:26:11Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3",
+   "status": "new",
+   "streamer": "IShowSpeed",
+   "login": "ishowspeed",
+   "tag": "#IShowSpeed",
+   "campaign": "",
+   "title": "GTA 6 Lucia Jumps Off a Train Bridge Into Water! 😱🔥",
+   "views": 30,
+   "created": "2026-11-27T12:51:56Z",
+   "found": "2026-11-27T20:42:42Z",
+   "twitch": "https://www.twitch.tv/ishowspeed/clip/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3",
+   "transcript": "my god i like i got you in my ear just saying the same thing over and over you just like just give it to me instructions than you just saying it's not. Can you shut the hell up little thing up i got down you got them nerd coming down the truck oh ok we out we out we out we out we out we out we out we out we out we out we out we out. Shit! Let's move! We out!",
+   "seconds": 34,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.004,0.432,0.194,0.214",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "viral": 80,
+   "viral_why": "High energy, clear action, and dramatic gameplay moment",
+   "viral_verdict": "post",
+   "hook": "he really did not have to do that",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    19.0,
+    34.0
+   ],
+   "span": [
+    19.0,
+    34.0
+   ],
+   "avail": [
+    0.0,
+    34.03
+   ],
+   "avail_max": [
+    0.0,
+    34.03
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have jumped off that bridge or found another way down?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.004,0.432,0.194,0.214",
+   "cap_cut": 0.139,
+   "cam_used": "0.004,0.432,0.194,0.214",
+   "layout_used": "split",
+   "peak_at": 8.0,
+   "peak_src": 27.0,
+   "view_ok": false,
+   "view_why": "a black empty gap in the layout (331 px)",
+   "final_v": "5bd3863416",
+   "final_s": 15,
+   "clean_v": "6e336a54f1",
+   "rendered": 1795819537,
+   "wide": {
+    "k": "q2-0.00-34.0-13097367",
+    "t0": 0.0,
+    "t1": 34.03
+   },
+   "ed": {
+    "k": "99f1ca63",
+    "t0": 0.0,
+    "t1": 34.03,
+    "path": "v/ed/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_99f1ca63.mp4"
+   },
+   "hd": true,
+   "video": "v/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_final.mp4",
+   "poster": "v/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3.jpg",
+   "final": "v/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_final.mp4?v=5bd3863416&r=1795819537",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_final.mp4?v=5bd3863416&r=1795819537",
+   "clean": "v/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_clean.mp4?v=6e336a54f1&r=1795819537",
+   "cap_tt": "he really did not have to do that. Would you have jumped off that bridge or found another way down? 💀\nFollow for daily IShowSpeed clips\n\nIShowSpeed GTA 6 stream highlight 🎥 @ishowspeed\n\n#IShowSpeed #GTA6 #GTAVI #fyp",
+   "yt_title": "he really did not have to do that | IShowSpeed GTA 6 #Shorts #IShowSpeed",
+   "src": "v/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_src.jpg",
+   "wide_src": "v/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_wide.mp4?k=q2-0.00-34.0-13097367",
+   "vposter": "v/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_p.jpg?r=1795819537",
+   "ed_src": "v/ed/FaintResoluteFinchPeoplesChamp-WJcxsvfjnq6_Hpc3_99f1ca63.mp4",
+   "clipped": "2026-11-27T12:51:56Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942754066_5511",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Kai Cenat",
+   "login": "kaicenat",
+   "tag": "#KaiCenat",
+   "campaign": "Kai",
+   "title": "CLICK HERE , WIN PS5 @ 1:31:51",
+   "views": 0,
+   "created": "2026-11-28T01:40:30Z",
+   "found": "2026-11-28T02:16:53Z",
+   "twitch": "https://www.twitch.tv/videos/2942754066?t=1h31m51s",
+   "transcript": "Okay, please do that for me, bro. Please then we have seven more the next winner is The bomb shelter you have one AP is five GTA 6 and a hundred dollar gift card. Congratulations, bro Congratulations, bro genuinely congrats",
+   "seconds": 24,
+   "moment": {
+    "score": 5.9,
+    "reasons": [],
+    "ai_score": 5.0
+   },
+   "cam_v": 6,
+   "cam": "0.6173,0.0822,0.1350,0.2133",
+   "cam_q": "cutout",
+   "hook": "Kai Cenat LOST IT announcing the lucky winner of his massive ps5 giveaway",
+   "hook_kind": "ai",
+   "viral": 50,
+   "viral_verdict": "maybe",
+   "viral_why": "",
+   "src_h": 1080,
+   "style": {
+    "box": "black",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "off",
+    "cap": "question"
+   },
+   "trim": [
+    7.0,
+    24.0
+   ],
+   "span": [
+    7.0,
+    24.0
+   ],
+   "avail": [
+    0.0,
+    24.02
+   ],
+   "avail_max": [
+    0.0,
+    24.02
+   ],
+   "pic_ok": true,
+   "cap_q": "Would you have been hyped to win a PS5 from Kai Cenat?",
+   "in_game": false,
+   "hook_variant": "news",
+   "irl_x": 0.4674722671508789,
+   "cam_used": "0.6173,0.0822,0.1350,0.2133",
+   "layout_used": "irl:0.467",
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "5719174739",
+   "final_s": 17,
+   "clean_v": "5550b73104",
+   "rendered": 1795832909,
+   "wide": {
+    "k": "q2-0.00-24.0-43858581",
+    "t0": 0.0,
+    "t1": 24.02
+   },
+   "ed": {
+    "k": "28cfaf62",
+    "t0": 0.0,
+    "t1": 24.02,
+    "path": "v/ed/vod2942754066_5511_28cfaf62.mp4"
+   },
+   "video": "v/vod2942754066_5511_final.mp4",
+   "poster": "v/vod2942754066_5511.jpg",
+   "final": "v/vod2942754066_5511_final.mp4?v=5719174739&r=1795832909",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942754066_5511_final.mp4?v=5719174739&r=1795832909",
+   "clean": "v/vod2942754066_5511_clean.mp4?v=5550b73104&r=1795832909",
+   "cap_tt": "Would you have been hyped to win a PS5 from Kai Cenat? 🔥\nFollow for daily Kai Cenat clips\n\nKai Cenat lost it announcing the lucky winner of his massive ps5 giveaway\nKai Cenat stream highlight 🎥 @kaicenat\n\n#KaiCenat #gaming #streamer #fyp",
+   "yt_title": "Kai Cenat lost it announcing the lucky winner of his massive ps5 giveaway #Shorts #KaiCenat",
+   "src": "v/vod2942754066_5511_src.jpg",
+   "wide_src": "v/vod2942754066_5511_wide.mp4?k=q2-0.00-24.0-43858581",
+   "vposter": "v/vod2942754066_5511_p.jpg?r=1795832909",
+   "ed_src": "v/ed/vod2942754066_5511_28cfaf62.mp4",
+   "clipped": "2026-11-28T01:40:30Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8",
+   "status": "new",
+   "streamer": "Jynxzi",
+   "login": "jynxzi",
+   "tag": "#Jynxzi",
+   "campaign": "",
+   "title": "jynzi react",
+   "views": 33,
+   "created": "2026-11-26T13:22:35Z",
+   "found": "2026-11-26T22:29:04Z",
+   "twitch": "https://www.twitch.tv/jynxzi/clip/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8",
+   "transcript": "Wait, what? That was a lot of work Dang, what is Lucie doing down there? Oh, hey, how you doing? Yo, next stop! Next stop! What the heck? Oh my god Hey, what were they robbling down on? Oh my god, they're over there",
+   "seconds": 50,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.6900,0.5900,0.3000,0.3700",
+   "cam_q": "ai-react",
+   "cam_v": 6,
+   "hook": "Jynxzi lost it after seeing what Nick Eh 30 was doing in GTA 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    29.0,
+    45.0
+   ],
+   "span": [
+    28.0,
+    44.8
+   ],
+   "avail": [
+    0.0,
+    49.83
+   ],
+   "avail_max": [
+    0.0,
+    49.83
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that chaos in GTA 6 or nah?",
+   "layout": "react",
+   "react": true,
+   "watching": "NickEh30",
+   "react_view": "0.0000,0.0000,1.0000,1.0000",
+   "hook_variant": "formula",
+   "cam_used": "0.6900,0.5900,0.3000,0.3700",
+   "layout_used": "react",
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "e4edae35c9",
+   "final_s": 17,
+   "rendered": 1795820026,
+   "wide": {
+    "k": "q2-0.00-49.8-23617694",
+    "t0": 0.0,
+    "t1": 49.83
+   },
+   "ed": {
+    "k": "727ac89b",
+    "t0": 0.0,
+    "t1": 49.83,
+    "path": "v/ed/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_727ac89b.mp4"
+   },
+   "viral": 42,
+   "viral_why": "Reaction is vague and lacks a clear payoff or viral moment",
+   "viral_verdict": "skip",
+   "hook_by_user": true,
+   "user_layout": {
+    "mode": "react",
+    "v": 2,
+    "cam": "0.6900,0.5900,0.3000,0.3700",
+    "hook_style": "white",
+    "span": [
+     28.0,
+     44.8
+    ]
+   },
+   "clean_v": "51691170b3",
+   "peak_at": 6.0,
+   "peak_src": 34.0,
+   "video": "v/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_final.mp4",
+   "poster": "v/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8.jpg",
+   "final": "v/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_final.mp4?v=e4edae35c9&r=1795820026",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_final.mp4?v=e4edae35c9&r=1795820026",
+   "clean": "v/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_clean.mp4?v=51691170b3&r=1795820026",
+   "cap_tt": "Jynxzi lost it after seeing what Nick Eh 30 was doing in GTA 6. Would you have survived that chaos in GTA 6 or nah? 💀\nFollow for daily Jynxzi clips\n\nJynxzi GTA 6 stream highlight 🎥 @jynxzi\n\n#Jynxzi #GTA6 #GTAVI #fyp",
+   "yt_title": "Jynxzi lost it after seeing what Nick Eh 30 was doing in GTA 6 #Shorts #Jynxzi",
+   "src": "v/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_src.jpg",
+   "wide_src": "v/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_wide.mp4?k=q2-0.00-49.8-23617694",
+   "vposter": "v/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_p.jpg?r=1795820026",
+   "ed_src": "v/ed/SullenProductiveNikudonDogFace-WHn5zQpYZUaphvn8_727ac89b.mp4",
+   "clipped": "2026-11-26T13:22:35Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2943284130_5132",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11) @ 1:25:32",
+   "views": 0,
+   "created": "2026-11-28T15:57:17Z",
+   "found": "2026-11-28T16:23:21Z",
+   "twitch": "https://www.twitch.tv/videos/2943284130?t=1h25m32s",
+   "transcript": "Yeah, Omar I got to do it. I got to do it. I got to do it. I got to do it. I can't mess this up. I'm so sorry, bro. You were such a good worker Oh, man he taught me so well With him. I don't want the biggest wheeling",
+   "seconds": 28,
+   "moment": {
+    "score": 7.12,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 7.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "he really did not have to do that",
+   "hook_kind": "ai",
+   "viral": 70,
+   "viral_verdict": "post",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    7.0,
+    25.0
+   ],
+   "span": [
+    7.0,
+    25.0
+   ],
+   "avail": [
+    0.0,
+    28.42
+   ],
+   "avail_max": [
+    0.0,
+    28.42
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have been able to hide the body without getting caught?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.1500,0.2300,0.3912",
+   "cap_cut": 0.116,
+   "cam_used": "0.0000,0.1500,0.2300,0.3912",
+   "layout_used": "split",
+   "peak_at": 5.0,
+   "peak_src": 12.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "f35f6c4970",
+   "final_s": 18,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795883543,
+   "wide": {
+    "k": "q2-0.00-28.4-46376236",
+    "t0": 0.0,
+    "t1": 28.42
+   },
+   "ed": {
+    "k": "f87351aa",
+    "t0": 0.0,
+    "t1": 28.42,
+    "path": "v/ed/vod2943284130_5132_f87351aa.mp4"
+   },
+   "video": "v/vod2943284130_5132_final.mp4",
+   "poster": "v/vod2943284130_5132.jpg",
+   "final": "v/vod2943284130_5132_final.mp4?v=f35f6c4970&r=1795883543",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2943284130_5132_final.mp4?v=f35f6c4970&r=1795883543",
+   "clean": "v/vod2943284130_5132_clean.mp4?v=9ca8aa9e12&r=1795883543",
+   "cap_tt": "he really did not have to do that. Would you have been able to hide the body without getting caught? 😂\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "he really did not have to do that | Nick Eh 30 GTA 6 #Shorts #NickEh30",
+   "src": "v/vod2943284130_5132_src.jpg",
+   "wide_src": "v/vod2943284130_5132_wide.mp4?k=q2-0.00-28.4-46376236",
+   "vposter": "v/vod2943284130_5132_p.jpg?r=1795883543",
+   "ed_src": "v/ed/vod2943284130_5132_f87351aa.mp4",
+   "clipped": "2026-11-28T15:57:17Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942722041_4553",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Lacy",
+   "login": "lacy",
+   "tag": "#Lacy",
+   "campaign": "Lacy",
+   "title": "🎄 BACK IN LA 🎄 CHRISTMAS TIME 🎄 BEST TIME OF THE YEAR 🎄 BLACK FRIDAY 🎄 CHILL DES @ 1:15:53",
+   "views": 0,
+   "created": "2026-11-28T00:47:56Z",
+   "found": "2026-11-28T02:16:53Z",
+   "twitch": "https://www.twitch.tv/videos/2942722041?t=1h15m53s",
+   "transcript": "Like mom, this is not a real image. Play I can't. I can't. I actually can't. I actually can't. Oh god, it is. No, it's not. Some dude on Twitter screen shoted this image off of stream and then made me like double the size and posted it and it got like 20k likes.",
+   "seconds": 29,
+   "moment": {
+    "score": 8.0,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 8.0
+   },
+   "cam_v": 6,
+   "cam": "0,0,0.256,0.255",
+   "cam_q": "learned",
+   "hook": "Lacy couldn't believe someone edited his photo to make him look double the size",
+   "hook_kind": "ai",
+   "viral": 80,
+   "viral_verdict": "post",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    14.0,
+    28.0
+   ],
+   "span": [
+    14.0,
+    28.0
+   ],
+   "avail": [
+    0.0,
+    28.7
+   ],
+   "avail_max": [
+    0.0,
+    28.7
+   ],
+   "pic_ok": true,
+   "cap_q": "Would you be annoyed if someone edited your photo to go viral?",
+   "in_game": false,
+   "layout": "react",
+   "react": true,
+   "watching": "Twitter",
+   "react_view": "",
+   "hook_variant": "lowcaps",
+   "cam_used": "0,0,0.256,0.255",
+   "layout_used": "react",
+   "peak_at": 6.0,
+   "peak_src": 20.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "9378d5d537",
+   "final_s": 14,
+   "clean_v": "c0af37428c",
+   "rendered": 1795833057,
+   "wide": {
+    "k": "q2-0.00-28.7-17903290",
+    "t0": 0.0,
+    "t1": 28.7
+   },
+   "ed": {
+    "k": "e4a04816",
+    "t0": 0.0,
+    "t1": 28.7,
+    "path": "v/ed/vod2942722041_4553_e4a04816.mp4"
+   },
+   "video": "v/vod2942722041_4553_final.mp4",
+   "poster": "v/vod2942722041_4553.jpg",
+   "final": "v/vod2942722041_4553_final.mp4?v=9378d5d537&r=1795833057",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942722041_4553_final.mp4?v=9378d5d537&r=1795833057",
+   "clean": "v/vod2942722041_4553_clean.mp4?v=c0af37428c&r=1795833057",
+   "cap_tt": "Lacy couldn't believe someone edited his photo to make him look double the size. Would you be annoyed if someone edited your photo to go viral? 🤯\nFollow for daily Lacy clips\n\nLacy stream highlight 🎥 @lacy\n\n#Lacy #gaming #streamer #fyp",
+   "yt_title": "Lacy couldn't believe someone edited his photo to make him look double the size #Shorts #Lacy",
+   "src": "v/vod2942722041_4553_src.jpg",
+   "wide_src": "v/vod2942722041_4553_wide.mp4?k=q2-0.00-28.7-17903290",
+   "vposter": "v/vod2942722041_4553_p.jpg?r=1795833057",
+   "ed_src": "v/ed/vod2942722041_4553_e4a04816.mp4",
+   "clipped": "2026-11-28T00:47:56Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR",
+   "status": "new",
+   "streamer": "IShowSpeed",
+   "login": "ishowspeed",
+   "tag": "#IShowSpeed",
+   "campaign": "",
+   "title": "Ishowspeed thinking his going to crack-6",
+   "views": 30,
+   "created": "2026-11-27T20:59:57Z",
+   "found": "2026-11-28T15:11:57Z",
+   "twitch": "https://www.twitch.tv/ishowspeed/clip/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR",
+   "transcript": "I have to know I mean what what does a context have that I don't have I don't like to work all right no Jason you have to tell me You and me we were supposed to get married. We can't get married Why the hell wouldn't they part on their side Red apple Isn't this shit in the god damn house rules should be there Just relax, Bert. It's fine There. Don't come with your prison wife Taking us to another level, man. Oh, this is nothing. I don't want to talk to you. Why?",
+   "seconds": 60,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.004,0.432,0.194,0.214",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "IShowSpeed lost it while roleplaying a breakup scene in GTA 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    3.0,
+    20.5
+   ],
+   "span": [
+    3.0,
+    20.5
+   ],
+   "avail": [
+    0.0,
+    59.98
+   ],
+   "avail_max": [
+    0.0,
+    59.98
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have let her walk out or tried to fix it?",
+   "hook_variant": "lowcaps",
+   "irl_x": -1,
+   "hd_cam": "0.004,0.432,0.194,0.214",
+   "cap_cut": 0.169,
+   "cam_used": "0.004,0.432,0.194,0.214",
+   "layout_used": "split",
+   "peak_at": 5.0,
+   "peak_src": 8.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "4cbe9cfd7c",
+   "final_s": 17,
+   "clean_v": "6e336a54f1",
+   "rendered": 1795881874,
+   "wide": {
+    "k": "q2-0.00-60.0-27486493",
+    "t0": 0.0,
+    "t1": 59.98
+   },
+   "ed": {
+    "k": "02f01d53",
+    "t0": 0.0,
+    "t1": 59.98,
+    "path": "v/ed/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_02f01d53.mp4"
+   },
+   "viral": 45,
+   "viral_why": "Confusing dialogue makes it hard to follow without full context",
+   "viral_verdict": "maybe",
+   "hd": true,
+   "video": "v/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_final.mp4",
+   "poster": "v/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR.jpg",
+   "final": "v/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_final.mp4?v=4cbe9cfd7c&r=1795881874",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_final.mp4?v=4cbe9cfd7c&r=1795881874",
+   "clean": "v/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_clean.mp4?v=6e336a54f1&r=1795881874",
+   "cap_tt": "IShowSpeed lost it while roleplaying a breakup scene in GTA 6. Would you have let her walk out or tried to fix it? 💀\nFollow for daily IShowSpeed clips\n\nIShowSpeed GTA 6 stream highlight 🎥 @ishowspeed\n\n#IShowSpeed #GTA6 #GTAVI #fyp",
+   "yt_title": "IShowSpeed lost it while roleplaying a breakup scene in GTA 6 #Shorts #IShowSpeed",
+   "src": "v/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_src.jpg",
+   "wide_src": "v/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_wide.mp4?k=q2-0.00-60.0-27486493",
+   "vposter": "v/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_p.jpg?r=1795881874",
+   "ed_src": "v/ed/HardJoyousHornetCoolStoryBro-bKH49pC9xur2ZpiR_02f01d53.mp4",
+   "clipped": "2026-11-27T20:59:57Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942366082_24726",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 10) @ 6:52:06",
+   "views": 0,
+   "created": "2026-11-27T23:56:11Z",
+   "found": "2026-11-28T01:44:34Z",
+   "twitch": "https://www.twitch.tv/videos/2942366082?t=6h52m6s",
+   "transcript": "You can find Burmese Python and GTA 6 and a scripted easter egg in Mariana County Where's Mariana County Mariana Right here",
+   "seconds": 29,
+   "moment": {
+    "score": 8.41,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 9.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "nick eh 30 found a secret easter egg in mariana county",
+   "hook_kind": "ai",
+   "viral": 90,
+   "viral_verdict": "post",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "question"
+   },
+   "trim": [
+    0.0,
+    15.5
+   ],
+   "span": [
+    0.0,
+    15.5
+   ],
+   "avail": [
+    0.0,
+    28.58
+   ],
+   "avail_max": [
+    0.0,
+    28.58
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Did you know about this easter egg in GTA 6 or were you clueless?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0,0.15,0.23,0.46",
+   "cap_cut": 0.0,
+   "cam_used": "0,0.15,0.23,0.46",
+   "layout_used": "split",
+   "peak_at": 8.0,
+   "peak_src": 8.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "cc9e2ba704",
+   "final_s": 15,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795835172,
+   "wide": {
+    "k": "q2-0.00-28.6-38115665",
+    "t0": 0.0,
+    "t1": 28.58
+   },
+   "ed": {
+    "k": "b07c6220",
+    "t0": 0.0,
+    "t1": 28.58,
+    "path": "v/ed/vod2942366082_24726_b07c6220.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2942366082_24726_final.mp4",
+   "poster": "v/vod2942366082_24726.jpg",
+   "final": "v/vod2942366082_24726_final.mp4?v=cc9e2ba704&r=1795835172",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942366082_24726_final.mp4?v=cc9e2ba704&r=1795835172",
+   "clean": "v/vod2942366082_24726_clean.mp4?v=9ca8aa9e12&r=1795835172",
+   "cap_tt": "Did you know about this easter egg in GTA 6 or were you clueless? 🔥\nFollow for daily Nick Eh 30 clips\n\nnick eh 30 found a secret easter egg in mariana county\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "nick eh 30 found a secret easter egg in mariana county | Nick Eh 30 GTA 6 #Shorts #NickEh30",
+   "src": "v/vod2942366082_24726_src.jpg",
+   "wide_src": "v/vod2942366082_24726_wide.mp4?k=q2-0.00-28.6-38115665",
+   "vposter": "v/vod2942366082_24726_p.jpg?r=1795835172",
+   "ed_src": "v/ed/vod2942366082_24726_b07c6220.mp4",
+   "clipped": "2026-11-27T23:56:11Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942642953_2512",
+   "status": "new",
+   "source": "vod",
+   "streamer": "YourRAGE",
+   "login": "yourragegaming",
+   "tag": "#YourRAGE",
+   "campaign": "YourRAGE",
+   "title": "Claiming MASSIVE FREE REWARDS! | Marvel Rivals 2nd Anniversary #MarvelRivals #An @ 0:41:52",
+   "views": 0,
+   "created": "2026-11-27T22:42:59Z",
+   "found": "2026-11-27T23:12:36Z",
+   "twitch": "https://www.twitch.tv/videos/2942642953?t=0h41m52s",
+   "transcript": "You can't see me in here. Come on, right? Oh, there's no double double Better wait for this. No, you get on this one. I get on this one. Go back. Tell me your tell me your score All right. Oh shit. Oh, it just starts right away How do I shoot? How do I shoot? How do I shoot? I don't know. Oh, V. Oh, I'm like that. You're melee button. Oh Shit",
+   "seconds": 28,
+   "moment": {
+    "score": 5.88,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 7.0
+   },
+   "cam_v": 6,
+   "cam": "0.0367,0.0264,0.1547,0.2444",
+   "cam_q": "learned",
+   "hook": "he really did not know how to shoot",
+   "hook_kind": "ai",
+   "viral": 70,
+   "viral_verdict": "post",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    2.0,
+    19.5
+   ],
+   "span": [
+    2.0,
+    19.5
+   ],
+   "avail": [
+    0.0,
+    28.45
+   ],
+   "avail_max": [
+    0.0,
+    28.45
+   ],
+   "pic_ok": true,
+   "cap_q": "Have you figured out the controls for this game yet or are you struggling?",
+   "in_game": false,
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0367,0.0264,0.1547,0.2444",
+   "cap_cut": 0.095,
+   "cam_used": "0.0367,0.0264,0.1547,0.2444",
+   "layout_used": "split",
+   "peak_at": 5.0,
+   "peak_src": 7.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "b6101b13f5",
+   "final_s": 18,
+   "clean_v": "7426acd32f",
+   "rendered": 1795826984,
+   "wide": {
+    "k": "q2-0.00-28.4-69192425",
+    "t0": 0.0,
+    "t1": 28.45
+   },
+   "ed": {
+    "k": "280fba69",
+    "t0": 0.0,
+    "t1": 28.45,
+    "path": "v/ed/vod2942642953_2512_280fba69.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2942642953_2512_final.mp4",
+   "poster": "v/vod2942642953_2512.jpg",
+   "final": "v/vod2942642953_2512_final.mp4?v=b6101b13f5&r=1795826984",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942642953_2512_final.mp4?v=b6101b13f5&r=1795826984",
+   "clean": "v/vod2942642953_2512_clean.mp4?v=7426acd32f&r=1795826984",
+   "cap_tt": "he really did not know how to shoot. Have you figured out the controls for this game yet or are you struggling? 🤯\nFollow for daily YourRAGE clips\n\nYourRAGE stream highlight 🎥 @yourragegaming\n\n#YourRAGE #gaming #streamer #fyp",
+   "yt_title": "he really did not know how to shoot #Shorts #YourRAGE",
+   "src": "v/vod2942642953_2512_src.jpg",
+   "wide_src": "v/vod2942642953_2512_wide.mp4?k=q2-0.00-28.4-69192425",
+   "vposter": "v/vod2942642953_2512_p.jpg?r=1795826984",
+   "ed_src": "v/ed/vod2942642953_2512_280fba69.mp4",
+   "clipped": "2026-11-27T22:42:59Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942366082_21453",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 10) @ 5:57:33",
+   "views": 0,
+   "created": "2026-11-27T23:01:38Z",
+   "found": "2026-11-27T23:47:33Z",
+   "twitch": "https://www.twitch.tv/videos/2942366082?t=5h57m33s",
+   "transcript": "You're cool. I'll drop you around the corner by the fleece. Aw, okay. Go, go, go, go. I thought we were not supposed to be seen together right now. We're going to the gym where she works out with the guys. We're getting caught. There's no way, right? Mila fucking Fuentes. I know. What the heck? The singer, the politician, the same person. Oh, shit.",
+   "seconds": 26,
+   "moment": {
+    "score": 8.14,
+    "reasons": [
+     "big reaction",
+     "hype words"
+    ],
+    "ai_score": 9.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "Nick Eh 30 lost it after realizing the singer and politician are the same",
+   "hook_kind": "ai",
+   "viral": 90,
+   "viral_verdict": "post",
+   "viral_why": "big reaction, hype words",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    7.0,
+    23.0
+   ],
+   "span": [
+    7.0,
+    23.0
+   ],
+   "avail": [
+    0.0,
+    26.18
+   ],
+   "avail_max": [
+    0.0,
+    26.18
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Did you catch that detail about the singer and politician in GTA 6?",
+   "hook_variant": "quote",
+   "irl_x": -1,
+   "hd_cam": "0,0.15,0.23,0.46",
+   "cap_cut": 0.12,
+   "cam_used": "0,0.15,0.23,0.46",
+   "layout_used": "split",
+   "peak_at": 6.0,
+   "peak_src": 13.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "ac0b91f093",
+   "final_s": 16,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795828347,
+   "wide": {
+    "k": "q2-0.00-26.2-75366086",
+    "t0": 0.0,
+    "t1": 26.18
+   },
+   "ed": {
+    "k": "d8d691d7",
+    "t0": 0.0,
+    "t1": 26.18,
+    "path": "v/ed/vod2942366082_21453_d8d691d7.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2942366082_21453_final.mp4",
+   "poster": "v/vod2942366082_21453.jpg",
+   "final": "v/vod2942366082_21453_final.mp4?v=ac0b91f093&r=1795828347",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942366082_21453_final.mp4?v=ac0b91f093&r=1795828347",
+   "clean": "v/vod2942366082_21453_clean.mp4?v=9ca8aa9e12&r=1795828347",
+   "cap_tt": "Nick Eh 30 lost it after realizing the singer and politician are the same. Did you catch that detail about the singer and politician in GTA 6? 🔥\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "Nick Eh 30 lost it after realizing the singer and politician are the same | Nick… #Shorts #NickEh30",
+   "src": "v/vod2942366082_21453_src.jpg",
+   "wide_src": "v/vod2942366082_21453_wide.mp4?k=q2-0.00-26.2-75366086",
+   "vposter": "v/vod2942366082_21453_p.jpg?r=1795828347",
+   "ed_src": "v/ed/vod2942366082_21453_d8d691d7.mp4",
+   "clipped": "2026-11-27T23:01:38Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2943284130_1729",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11) @ 0:28:49",
+   "views": 0,
+   "created": "2026-11-28T15:00:34Z",
+   "found": "2026-11-28T15:52:06Z",
+   "twitch": "https://www.twitch.tv/videos/2943284130?t=0h28m49s",
+   "transcript": "Bungle with a pool full of coastery can twinks and only top grade Tina and good times from you're on it Okay, you live in the dream, bro. Jason's listening. Yeah, he's actually listening, bro We're gonna follow him here So we just got to meet up at the spot when he called he knows they're talking to me. Oh shit. I got a present for you That's sweet. You didn't have to know. I know I know a present, bro. Jason got a step in here",
+   "seconds": 31,
+   "moment": {
+    "score": 6.65,
+    "reasons": [
+     "big reaction",
+     "fast talking"
+    ],
+    "ai_score": 7.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "nick eh 30 reacts to this gta 6 club scene",
+   "hook_kind": "ai",
+   "viral": 70,
+   "viral_verdict": "post",
+   "viral_why": "big reaction, fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "black",
+    "cam": "small",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "off",
+    "cap": "short"
+   },
+   "trim": [
+    16.0,
+    30.0
+   ],
+   "span": [
+    16.0,
+    30.0
+   ],
+   "avail": [
+    0.0,
+    30.8
+   ],
+   "avail_max": [
+    0.0,
+    30.8
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "What do you think is happening in this club scene in GTA 6?",
+   "hook_variant": "vibe",
+   "irl_x": 0.8897510230541229,
+   "hd_cam": "0.0000,0.1500,0.2300,0.3926",
+   "cap_cut": 0.2,
+   "cam_used": "0.0000,0.1500,0.2300,0.3926",
+   "layout_used": "split",
+   "peak_at": 9.0,
+   "peak_src": 25.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "258a0de64f",
+   "final_s": 14,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795881810,
+   "wide": {
+    "k": "q2-0.00-30.8-56124922",
+    "t0": 0.0,
+    "t1": 30.8
+   },
+   "ed": {
+    "k": "4eb50175",
+    "t0": 0.0,
+    "t1": 30.8,
+    "path": "v/ed/vod2943284130_1729_4eb50175.mp4"
+   },
+   "video": "v/vod2943284130_1729_final.mp4",
+   "poster": "v/vod2943284130_1729.jpg",
+   "final": "v/vod2943284130_1729_final.mp4?v=258a0de64f&r=1795881810",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2943284130_1729_final.mp4?v=258a0de64f&r=1795881810",
+   "clean": "v/vod2943284130_1729_clean.mp4?v=9ca8aa9e12&r=1795881810",
+   "cap_tt": "nick eh 30 reacts to this gta 6 club scene 🔥\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "nick eh 30 reacts to this gta 6 club scene #Shorts #NickEh30",
+   "src": "v/vod2943284130_1729_src.jpg",
+   "wide_src": "v/vod2943284130_1729_wide.mp4?k=q2-0.00-30.8-56124922",
+   "vposter": "v/vod2943284130_1729_p.jpg?r=1795881810",
+   "ed_src": "v/ed/vod2943284130_1729_4eb50175.mp4",
+   "clipped": "2026-11-28T15:00:34Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90",
+   "status": "new",
+   "streamer": "Kai Cenat",
+   "login": "kaicenat",
+   "tag": "#KaiCenat",
+   "campaign": "Kai",
+   "title": "Folk 😭🙏",
+   "views": 30,
+   "created": "2026-11-27T08:55:45Z",
+   "found": "2026-11-27T20:42:42Z",
+   "twitch": "https://www.twitch.tv/kaicenat/clip/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90",
+   "transcript": "Oh my god Yo, what the fuck?",
+   "seconds": 23,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.0000,0.2903,0.1662,0.2627",
+   "cam_q": "cutout",
+   "cam_v": 6,
+   "viral": 55,
+   "viral_why": "Strong shock reaction, but context is missing from the transcript",
+   "viral_verdict": "maybe",
+   "hook": "kai cenat loses it after crashing his car in gta 6",
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "question"
+   },
+   "trim": [
+    7.0,
+    23.0
+   ],
+   "span": [
+    7.0,
+    23.0
+   ],
+   "avail": [
+    0.0,
+    23.0
+   ],
+   "avail_max": [
+    0.0,
+    23.0
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Have you ever had a driving fail this bad in GTA 6?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.2903,0.1662,0.2627",
+   "cap_cut": 0.0,
+   "cam_used": "0.0000,0.2903,0.1662,0.2627",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 11.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "ed4f637c2e",
+   "final_s": 16,
+   "clean_v": "fac104e762",
+   "rendered": 1795817242,
+   "wide": {
+    "k": "q2-0.00-23.0-18535442",
+    "t0": 0.0,
+    "t1": 23.0
+   },
+   "ed": {
+    "k": "ccf37c03",
+    "t0": 0.0,
+    "t1": 23.0,
+    "path": "v/ed/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_ccf37c03.mp4"
+   },
+   "hd": true,
+   "video": "v/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_final.mp4",
+   "poster": "v/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90.jpg",
+   "final": "v/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_final.mp4?v=ed4f637c2e&r=1795817242",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_final.mp4?v=ed4f637c2e&r=1795817242",
+   "clean": "v/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_clean.mp4?v=fac104e762&r=1795817242",
+   "cap_tt": "Have you ever had a driving fail this bad in GTA 6? 💀\nFollow for daily Kai Cenat clips\n\nkai cenat loses it after crashing his car in gta 6\nKai Cenat GTA 6 stream highlight 🎥 @kaicenat\n\n#KaiCenat #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "kai cenat loses it after crashing his car in gta 6 #Shorts #KaiCenat",
+   "src": "v/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_src.jpg",
+   "wide_src": "v/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_wide.mp4?k=q2-0.00-23.0-18535442",
+   "vposter": "v/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_p.jpg?r=1795817242",
+   "ed_src": "v/ed/GenerousSnappyGuanacoTwitchRaid-NmcU9z70WPWejE90_ccf37c03.mp4",
+   "clipped": "2026-11-27T08:55:45Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942366082_25190",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 10) @ 6:59:50",
+   "views": 0,
+   "created": "2026-11-28T00:03:55Z",
+   "found": "2026-11-28T01:44:34Z",
+   "twitch": "https://www.twitch.tv/videos/2942366082?t=6h59m50s",
+   "transcript": "We're almost there. We're about to see an influencer and a python No spoilers on what happened to either of them Okay, so it's somewhere in this area. Oh my gosh. We got alligators. We got to be careful",
+   "seconds": 27,
+   "moment": {
+    "score": 8.8,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 8.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "nick eh 30 spots gta 6 alligators",
+   "hook_kind": "ai",
+   "viral": 80,
+   "viral_verdict": "post",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    10.0,
+    27.0
+   ],
+   "span": [
+    10.0,
+    27.0
+   ],
+   "avail": [
+    0.0,
+    27.28
+   ],
+   "avail_max": [
+    0.0,
+    27.28
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have spotted those alligators in the water or nah?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0,0.15,0.23,0.46",
+   "cap_cut": 0.0,
+   "cam_used": "0,0.15,0.23,0.46",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 14.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "1811b4d244",
+   "final_s": 17,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795835235,
+   "wide": {
+    "k": "q2-0.00-27.3-80489461",
+    "t0": 0.0,
+    "t1": 27.28
+   },
+   "ed": {
+    "k": "36960cbb",
+    "t0": 0.0,
+    "t1": 27.28,
+    "path": "v/ed/vod2942366082_25190_36960cbb.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2942366082_25190_final.mp4",
+   "poster": "v/vod2942366082_25190.jpg",
+   "final": "v/vod2942366082_25190_final.mp4?v=1811b4d244&r=1795835235",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942366082_25190_final.mp4?v=1811b4d244&r=1795835235",
+   "clean": "v/vod2942366082_25190_clean.mp4?v=9ca8aa9e12&r=1795835235",
+   "cap_tt": "nick eh 30 spots gta 6 alligators. Would you have spotted those alligators in the water or nah? 🔥\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "nick eh 30 spots gta 6 alligators #Shorts #NickEh30",
+   "src": "v/vod2942366082_25190_src.jpg",
+   "wide_src": "v/vod2942366082_25190_wide.mp4?k=q2-0.00-27.3-80489461",
+   "vposter": "v/vod2942366082_25190_p.jpg?r=1795835235",
+   "ed_src": "v/ed/vod2942366082_25190_36960cbb.mp4",
+   "clipped": "2026-11-28T00:03:55Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2943284130_5174",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11) @ 1:26:14",
+   "views": 0,
+   "created": "2026-11-28T15:57:59Z",
+   "found": "2026-11-28T16:23:21Z",
+   "twitch": "https://www.twitch.tv/videos/2943284130?t=1h26m14s",
+   "transcript": "I use it Cisco. I see the bags. They're coming through Cisco. I see the bags. They're coming through. You try to be like cord out",
+   "seconds": 30,
+   "moment": {
+    "score": 6.44,
+    "reasons": [
+     "fast talking"
+    ],
+    "ai_score": 6.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "nick eh 30 spots the bags in gta 6",
+   "hook_kind": "ai",
+   "viral": 60,
+   "viral_verdict": "maybe",
+   "viral_why": "fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "short"
+   },
+   "trim": [
+    15.0,
+    29.0
+   ],
+   "span": [
+    15.0,
+    29.0
+   ],
+   "avail": [
+    0.0,
+    29.58
+   ],
+   "avail_max": [
+    0.0,
+    29.58
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Did you catch what was inside the bags in this GTA 6 mission?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.1500,0.2300,0.4024",
+   "cap_cut": 0.147,
+   "cam_used": "0.0000,0.1500,0.2300,0.4024",
+   "layout_used": "split",
+   "peak_at": 8.0,
+   "peak_src": 23.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "d949040ef2",
+   "final_s": 14,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795884077,
+   "wide": {
+    "k": "q2-0.00-29.6-40068084",
+    "t0": 0.0,
+    "t1": 29.58
+   },
+   "ed": {
+    "k": "ae251b2f",
+    "t0": 0.0,
+    "t1": 29.58,
+    "path": "v/ed/vod2943284130_5174_ae251b2f.mp4"
+   },
+   "video": "v/vod2943284130_5174_final.mp4",
+   "poster": "v/vod2943284130_5174.jpg",
+   "final": "v/vod2943284130_5174_final.mp4?v=d949040ef2&r=1795884077",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2943284130_5174_final.mp4?v=d949040ef2&r=1795884077",
+   "clean": "v/vod2943284130_5174_clean.mp4?v=9ca8aa9e12&r=1795884077",
+   "cap_tt": "nick eh 30 spots the bags in gta 6 😂\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "nick eh 30 spots the bags in gta 6 #Shorts #NickEh30",
+   "src": "v/vod2943284130_5174_src.jpg",
+   "wide_src": "v/vod2943284130_5174_wide.mp4?k=q2-0.00-29.6-40068084",
+   "vposter": "v/vod2943284130_5174_p.jpg?r=1795884077",
+   "ed_src": "v/ed/vod2943284130_5174_ae251b2f.mp4",
+   "clipped": "2026-11-28T15:57:59Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2943284130_3987",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11) @ 1:06:27",
+   "views": 0,
+   "created": "2026-11-28T15:38:12Z",
+   "found": "2026-11-28T15:52:06Z",
+   "twitch": "https://www.twitch.tv/videos/2943284130?t=1h6m27s",
+   "transcript": "Hey, you let her back in is that a good idea? Why you got a problem with it. Oh He's on to us Yeah, we're good. That's why he was asking you know What's our what's happening to ask about the cut and the reason why we didn't ask for the cut as Lucia because we don't care We're working with Wow They should be in there double check for knives ammunition into the bins as well as laptop starts getting good now",
+   "seconds": 32,
+   "moment": {
+    "score": 6.75,
+    "reasons": [
+     "big reaction",
+     "hype words",
+     "fast talking"
+    ],
+    "ai_score": 6.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "nick eh 30 reacts to lucia's intense gta 6 mission",
+   "hook_kind": "ai",
+   "viral": 60,
+   "viral_verdict": "maybe",
+   "viral_why": "big reaction, hype words, fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "off",
+    "pbar": "off",
+    "cap": "story"
+   },
+   "trim": [
+    3.0,
+    19.0
+   ],
+   "span": [
+    3.0,
+    19.0
+   ],
+   "avail": [
+    0.0,
+    31.98
+   ],
+   "avail_max": [
+    0.0,
+    31.98
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have handled this mission differently or just gone in guns blazing?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.1500,0.2300,0.3926",
+   "cap_cut": 0.116,
+   "cam_used": "0.0000,0.1500,0.2300,0.3926",
+   "layout_used": "split",
+   "peak_at": 4.0,
+   "peak_src": 7.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "6096f2d6e9",
+   "final_s": 16,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795881968,
+   "wide": {
+    "k": "q2-0.00-32.0-48190600",
+    "t0": 0.0,
+    "t1": 31.98
+   },
+   "ed": {
+    "k": "3baa85cd",
+    "t0": 0.0,
+    "t1": 31.98,
+    "path": "v/ed/vod2943284130_3987_3baa85cd.mp4"
+   },
+   "video": "v/vod2943284130_3987_final.mp4",
+   "poster": "v/vod2943284130_3987.jpg",
+   "final": "v/vod2943284130_3987_final.mp4?v=6096f2d6e9&r=1795881968",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2943284130_3987_final.mp4?v=6096f2d6e9&r=1795881968",
+   "clean": "v/vod2943284130_3987_clean.mp4?v=9ca8aa9e12&r=1795881968",
+   "cap_tt": "nick eh 30 reacts to lucia's intense gta 6 mission. Would you have handled this mission differently or just gone in guns blazing? 🔥\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "nick eh 30 reacts to lucia's intense gta 6 mission #Shorts #NickEh30",
+   "src": "v/vod2943284130_3987_src.jpg",
+   "wide_src": "v/vod2943284130_3987_wide.mp4?k=q2-0.00-32.0-48190600",
+   "vposter": "v/vod2943284130_3987_p.jpg?r=1795881968",
+   "ed_src": "v/ed/vod2943284130_3987_3baa85cd.mp4",
+   "clipped": "2026-11-28T15:38:12Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "vod2942366082_21657",
+   "status": "new",
+   "source": "vod",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "FAMILY FRIENDLY GTA 6! (Day 10) @ 6:00:57",
+   "views": 0,
+   "created": "2026-11-27T23:05:02Z",
+   "found": "2026-11-27T23:47:33Z",
+   "twitch": "https://www.twitch.tv/videos/2942366082?t=6h0m57s",
+   "transcript": "That garbage can't took me out Ain't no way, bro You saw nothing don't tell anyone you saw that because it's embarrassing Okay, I wish I was a slap instead",
+   "seconds": 28,
+   "moment": {
+    "score": 8.8,
+    "reasons": [
+     "hype words",
+     "fast talking"
+    ],
+    "ai_score": 8.0
+   },
+   "cam_v": 6,
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "hook": "he really did not have to do that",
+   "hook_kind": "ai",
+   "viral": 80,
+   "viral_verdict": "post",
+   "viral_why": "hype words, fast talking",
+   "src_h": 1080,
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "story",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    12.0,
+    28.0
+   ],
+   "span": [
+    12.0,
+    28.0
+   ],
+   "avail": [
+    0.0,
+    28.32
+   ],
+   "avail_max": [
+    0.0,
+    28.32
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have survived that or nah?",
+   "hook_variant": "vibe",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.1500,0.2300,0.3996",
+   "cap_cut": 0.0,
+   "cam_used": "0.0000,0.1500,0.2300,0.3996",
+   "layout_used": "split",
+   "peak_at": 5.0,
+   "peak_src": 17.0,
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "f35f6c4970",
+   "final_s": 16,
+   "clean_v": "9ca8aa9e12",
+   "rendered": 1795828354,
+   "wide": {
+    "k": "q2-0.00-28.3-63505816",
+    "t0": 0.0,
+    "t1": 28.32
+   },
+   "ed": {
+    "k": "4607f199",
+    "t0": 0.0,
+    "t1": 28.32,
+    "path": "v/ed/vod2942366082_21657_4607f199.mp4"
+   },
+   "hd": true,
+   "video": "v/vod2942366082_21657_final.mp4",
+   "poster": "v/vod2942366082_21657.jpg",
+   "final": "v/vod2942366082_21657_final.mp4?v=f35f6c4970&r=1795828354",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/vod2942366082_21657_final.mp4?v=f35f6c4970&r=1795828354",
+   "clean": "v/vod2942366082_21657_clean.mp4?v=9ca8aa9e12&r=1795828354",
+   "cap_tt": "he really did not have to do that. Would you have survived that or nah? 😂\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "he really did not have to do that | Nick Eh 30 GTA 6 #Shorts #NickEh30",
+   "src": "v/vod2942366082_21657_src.jpg",
+   "wide_src": "v/vod2942366082_21657_wide.mp4?k=q2-0.00-28.3-63505816",
+   "vposter": "v/vod2942366082_21657_p.jpg?r=1795828354",
+   "ed_src": "v/ed/vod2942366082_21657_4607f199.mp4",
+   "clipped": "2026-11-27T23:05:02Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx",
+   "status": "new",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "family friendly",
+   "views": 31,
+   "created": "2026-11-24T20:54:20Z",
+   "found": "2026-11-27T05:01:54Z",
+   "twitch": "https://www.twitch.tv/nickeh30/clip/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx",
+   "transcript": "Dang I feel like we should spare him. He might help us. I feel like he might help us Psych",
+   "seconds": 36,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0.0000,0.1429,0.3609,0.5704",
+   "cam_q": "cutout",
+   "cam_v": 6,
+   "viral": 88,
+   "viral_why": "Strong betrayal payoff and clear character decision-making process shown",
+   "viral_verdict": "post",
+   "hook": "Nick Eh 30 WOULDNT even spare a mother of 3 in GTA 6",
+   "hook_auto": true,
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "off",
+    "cap": "story"
+   },
+   "trim": [
+    20.0,
+    35.0
+   ],
+   "span": [
+    20.0,
+    35.0
+   ],
+   "avail": [
+    0.0,
+    36.0
+   ],
+   "avail_max": [
+    0.0,
+    36.0
+   ],
+   "pic_ok": true,
+   "hook_variant": "formula",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.2031,0.3018,0.3339",
+   "cap_cut": 0.066,
+   "cam_used": "0.0000,0.2031,0.3018,0.3339",
+   "layout_used": "split",
+   "view_ok": true,
+   "view_why": "",
+   "final_s": 15,
+   "rendered": 1795759746,
+   "no_wide": true,
+   "hd": true,
+   "ed": {
+    "k": "538306b9",
+    "t0": 0.0,
+    "t1": 36.0,
+    "path": "v/ed/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx_538306b9.mp4"
+   },
+   "hook_by_user": true,
+   "user_layout": {
+    "mode": "split",
+    "v": 2,
+    "cam": "0.0000,0.2031,0.3018,0.3339",
+    "pan": -0.243,
+    "hook_style": "white",
+    "follow_voice": "am_liam"
+   },
+   "quick_at": 1795646141,
+   "final_v": "2f722f1fda",
+   "clean_v": "987130fc17",
+   "peak_at": 7.0,
+   "peak_src": 27.0,
+   "video": "v/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx_final.mp4",
+   "poster": "v/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx.jpg",
+   "final": "v/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx_final.mp4?v=2f722f1fda&r=1795759746",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx_final.mp4?v=2f722f1fda&r=1795759746",
+   "clean": "v/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx_clean.mp4?v=987130fc17&r=1795759746",
+   "cap_tt": "Nick Eh 30 wouldnt even spare a mother of 3 in GTA 6. Would you have reacted the same way? 🔥\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "Nick Eh 30 wouldnt even spare a mother of 3 in GTA 6 #Shorts #NickEh30",
+   "src": "v/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx_src.jpg",
+   "wide_src": "",
+   "vposter": "v/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx_p.jpg?r=1795759746",
+   "ed_src": "v/ed/RockyCrazyCurryHeyGuys-ddUzqeQGffAokUlx_538306b9.mp4",
+   "clipped": "2026-11-24T20:54:20Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc",
+   "status": "new",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "absolute maniac",
+   "views": 31,
+   "created": "2026-11-25T16:31:00Z",
+   "found": "2026-11-27T05:01:54Z",
+   "twitch": "https://www.twitch.tv/nickeh30/clip/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc",
+   "transcript": "And no one's around To witness anything Oops, now you know what you know what RIP to the homie We're gonna pay our respects right here right now We're gonna pay our respects right now to the home. Oh my gosh. She doesn't have a head. Oh, I just saw brain I thought the net was gonna catch her",
+   "seconds": 45,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "hook": "Nick Eh 30 LOST IT after this crazy GTA 6 moment",
+   "hook_auto": true,
+   "hook_kind": "ai",
+   "style": {
+    "box": "white",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "off",
+    "pbar": "on",
+    "cap": "question"
+   },
+   "trim": [
+    3.0,
+    19.5
+   ],
+   "span": [
+    1.0,
+    19.9
+   ],
+   "avail": [
+    0.0,
+    44.93
+   ],
+   "avail_max": [
+    0.0,
+    44.93
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have reacted the same way or were you just as shocked?",
+   "hook_variant": "formula",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.2169,0.2300,0.2544",
+   "cap_cut": 0.094,
+   "view_ok": true,
+   "view_why": "",
+   "final_s": 19,
+   "rendered": 1795760217,
+   "wide": {
+    "k": "q2-0.00-44.9-53545896",
+    "t0": 0.0,
+    "t1": 44.93
+   },
+   "ed": {
+    "k": "191740a4",
+    "t0": 0.0,
+    "t1": 44.93,
+    "path": "v/ed/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_191740a4.mp4"
+   },
+   "viral": 78,
+   "viral_why": "Shocking visual moment with a strong reaction from the streamer",
+   "viral_verdict": "post",
+   "hd": true,
+   "cam_used": "0.0000,0.2169,0.2300,0.2544",
+   "layout_used": "split",
+   "hook_by_user": true,
+   "quick_at": 1795741854,
+   "user_layout": {
+    "mode": "split",
+    "v": 2,
+    "cam": "0.0000,0.2169,0.2300,0.2544",
+    "hook_y": 0.401,
+    "pan": 0.0,
+    "hook_style": "white",
+    "span": [
+     1.0,
+     19.9
+    ]
+   },
+   "final_v": "71c8da89ba",
+   "clean_v": "9ca8aa9e12",
+   "peak_at": 9.0,
+   "peak_src": 10.0,
+   "video": "v/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_final.mp4",
+   "poster": "v/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc.jpg",
+   "final": "v/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_final.mp4?v=71c8da89ba&r=1795760217",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_final.mp4?v=71c8da89ba&r=1795760217",
+   "clean": "v/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_clean.mp4?v=9ca8aa9e12&r=1795760217",
+   "cap_tt": "Would you have reacted the same way or were you just as shocked? 🔥\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 lost it after this crazy GTA 6 moment\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #gaming #fyp",
+   "yt_title": "Nick Eh 30 lost it after this crazy GTA 6 moment #Shorts #NickEh30",
+   "src": "v/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_src.jpg",
+   "wide_src": "v/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_wide.mp4?k=q2-0.00-44.9-53545896",
+   "vposter": "v/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_p.jpg?r=1795760217",
+   "ed_src": "v/ed/LitigiousHonestDelicataLitFam-aCicaJX8hFgMsyQc_191740a4.mp4",
+   "clipped": "2026-11-25T16:31:00Z",
+   "approved": false,
+   "post_now": false
+  },
+  {
+   "id": "PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0",
+   "status": "new",
+   "streamer": "Nick Eh 30",
+   "login": "nickeh30",
+   "tag": "#NickEh30",
+   "campaign": "",
+   "title": "mayhem",
+   "views": 106,
+   "created": "2026-11-27T00:11:19Z",
+   "found": "2026-11-27T00:42:23Z",
+   "twitch": "https://www.twitch.tv/nickeh30/clip/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0",
+   "transcript": "Check if you register or sell just by holding the radio things like our three. Oh Mike white like the wanket. I'm not gonna blow anyone up till I get to No way bro. I'm trying to get to my to not you buddy. I'm just trying to get the vice city beach Wow, this puts family-friendly destruction to all holes",
+   "seconds": 30,
+   "topic": "GTA 6",
+   "topic_tags": "#GTA6 #GTAVI #gaming",
+   "cam": "0,0.15,0.23,0.46",
+   "cam_q": "learned",
+   "cam_v": 6,
+   "viral": 45,
+   "viral_why": "Entertaining streamer personality but lacks a specific viral moment",
+   "viral_verdict": "maybe",
+   "hook": "Nick Eh 30 causes mayhem while driving a tank in GTA 6",
+   "hook_auto": true,
+   "hook_kind": "ai",
+   "style": {
+    "box": "black",
+    "cam": "medium",
+    "hooklen": "tiny",
+    "punch": "on",
+    "pbar": "on",
+    "cap": "story"
+   },
+   "trim": [
+    14.0,
+    30.0
+   ],
+   "span": [
+    13.0,
+    30.0
+   ],
+   "avail": [
+    0.0,
+    30.0
+   ],
+   "avail_max": [
+    0.0,
+    30.0
+   ],
+   "pic_ok": true,
+   "in_game": true,
+   "cap_q": "Would you have caused this much chaos in GTA 6 or played it safe?",
+   "hook_variant": "lowcaps",
+   "irl_x": -1,
+   "hd_cam": "0.0000,0.1628,0.2300,0.2544",
+   "cap_cut": 0.101,
+   "cam_used": "0.0000,0.1628,0.2300,0.2544",
+   "layout_used": "split",
+   "view_ok": true,
+   "view_why": "",
+   "final_v": "91af579900",
+   "final_s": 17,
+   "rendered": 1795762200,
+   "wide": {
+    "k": "q2-0.00-30.0-33757971",
+    "t0": 0.0,
+    "t1": 30.0
+   },
+   "ed": {
+    "k": "ae7b8e36",
+    "t0": 0.0,
+    "t1": 30.0,
+    "path": "v/ed/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_ae7b8e36.mp4"
+   },
+   "hd": true,
+   "user_layout": {
+    "mode": "split",
+    "v": 2,
+    "cam": "0.0000,0.1628,0.2300,0.2544",
+    "pan": 0.0,
+    "hook_style": "white",
+    "span": [
+     13.0,
+     30.0
+    ]
+   },
+   "clean_v": "9ca8aa9e12",
+   "peak_at": 9.0,
+   "peak_src": 22.0,
+   "video": "v/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_final.mp4",
+   "poster": "v/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0.jpg",
+   "final": "v/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_final.mp4?v=91af579900&r=1795762200",
+   "final_abs": "https://gtaclip-studio.pages.dev/v/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_final.mp4?v=91af579900&r=1795762200",
+   "clean": "v/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_clean.mp4?v=9ca8aa9e12&r=1795762200",
+   "cap_tt": "Nick Eh 30 causes mayhem while driving a tank in GTA 6. Would you have caused this much chaos in GTA 6 or played it safe? 😂\nFollow for daily Nick Eh 30 clips\n\nNick Eh 30 GTA 6 stream highlight 🎥 @nickeh30\n\n#NickEh30 #GTA6 #GTAVI #fyp",
+   "yt_title": "Nick Eh 30 causes mayhem while driving a tank in GTA 6 #Shorts #NickEh30",
+   "src": "v/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_src.jpg",
+   "wide_src": "v/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_wide.mp4?k=q2-0.00-30.0-33757971",
+   "vposter": "v/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_p.jpg?r=1795762200",
+   "ed_src": "v/ed/PleasantDirtyWallabyDancingBanana-0knKCXLfB4Uw-FS0_ae7b8e36.mp4",
+   "clipped": "2026-11-27T00:11:19Z",
+   "approved": false,
+   "post_now": false
+  }
+ ],
+ "posted": [
+  {
+   "hook": "IShowSpeed panicked after accidentally hitting a granny in GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-27T16:40:42Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712892044145872141",
+   "youtube": ""
+  },
+  {
+   "hook": "Kai Cenat laughed after a witness got a flying kick for calling cops",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "posted": "2026-11-27T16:38:23Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712891455689346318",
+   "youtube": "https://www.youtube.com/shorts/mErOP0Q0Hn4"
+  },
+  {
+   "hook": "YourRAGE was SHOCKED watching this creepy space horror signal",
+   "streamer": "YourRAGE",
+   "campaign": "YourRAGE",
+   "posted": "2026-11-26T21:07:32Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712589792755633421",
+   "youtube": ""
+  },
+  {
+   "hook": "IShowSpeed lost it after an NPC ignored his polite greeting in GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-26T18:17:04Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712545868217470222",
+   "youtube": ""
+  },
+  {
+   "hook": "YourRAGE lost it after finding out Randy wanted his stolen car in GTA 6",
+   "streamer": "YourRAGE",
+   "campaign": "YourRAGE",
+   "posted": "2026-11-26T18:12:20Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712544606923132174",
+   "youtube": ""
+  },
+  {
+   "hook": "IShowSpeed FREAKED OUT after landing the first ever backflip in GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-26T16:40:34Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712520992710462733",
+   "youtube": ""
+  },
+  {
+   "hook": "YourRAGE PANICKED after seeing a large bank in GTA 6",
+   "streamer": "YourRAGE",
+   "campaign": "YourRAGE",
+   "posted": "2026-11-26T13:38:12Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712474020058270989",
+   "youtube": ""
+  },
+  {
+   "hook": "IShowSpeed lost it when he pulled off a massive backflip in GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-25T13:38:48Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7712103088034745614",
+   "youtube": ""
+  },
+  {
+   "hook": "Kai Cenat panicked when he realized how hard four stars are in GTA 6",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "posted": "2026-11-25T01:37:25Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711917164747328782",
+   "youtube": ""
+  },
+  {
+   "hook": "Caseoh raged after getting stuck in impossible GTA 6 traffic during a mission",
+   "streamer": "caseoh_",
+   "campaign": "",
+   "posted": "2026-11-25T00:11:18Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711894969274895630?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Kai Cenat LOST IT after pulling off the smoothest bank heist in GTA 6",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "posted": "2026-11-24T21:10:57Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711848494805372191?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Lacy PANICKED after choosing to take the deal in GTA 6",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-24T18:08:49Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711801683826855182",
+   "youtube": ""
+  },
+  {
+   "hook": "Kai Cenat LOST IT watching Lucia beat up an NPC in GTA 6",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "posted": "2026-11-24T16:39:07Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711778357830094093",
+   "youtube": ""
+  },
+  {
+   "hook": "Lacy PANICKED while trying to order a double-double during a GTA 6 police chase",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-24T15:06:30Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711751972411477261",
+   "youtube": ""
+  },
+  {
+   "hook": "Kai Cenat lost it after making his first shot in GTA 6 basketball",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "posted": "2026-11-24T13:45:48Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711731211143482638",
+   "youtube": ""
+  },
+  {
+   "hook": "ohnePixel LOST IT when Jenna confessed to throwing up on a bride's mom",
+   "streamer": "ohnePixel",
+   "campaign": "",
+   "posted": "2026-11-24T13:40:42Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711732315809991950",
+   "youtube": ""
+  },
+  {
+   "hook": "IShowSpeed freaked out after finding a Hulk character in GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-24T01:39:27Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711546592687377695?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "DarkViperAU lost it when his wing fell off during a FLIGHT mission",
+   "streamer": "DarkViperAU",
+   "campaign": "",
+   "posted": "2026-11-24T00:09:01Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711523305009728781?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "caseoh_ ROASTED an NPC after hitting their scooter",
+   "streamer": "caseoh_",
+   "campaign": "",
+   "posted": "2026-11-23T21:07:19Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711476381607120141?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Speed GOES CRAZY for the GTA trailer music",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-23T19:10:56Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711443778988526861",
+   "youtube": ""
+  },
+  {
+   "hook": "CaseOh LOST it and threatened to catch a body inside GTA 6",
+   "streamer": "caseoh_",
+   "campaign": "",
+   "posted": "2026-11-23T16:40:07Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711407550045998350?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
+   "streamer": "xQc",
+   "campaign": "",
+   "posted": "2026-11-23T14:30:14Z",
+   "tiktok": "",
+   "youtube": "https://youtube.com/shorts/ARM8P7S899Y"
+  },
+  {
+   "hook": "YourRAGE was shocked after realizing he finally got his own car in GTA 6",
+   "streamer": "YourRAGE",
+   "campaign": "YourRAGE",
+   "posted": "2026-11-23T13:38:46Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711360698101533966?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Ludwig SHOCKED by GTA 6 SCAM CALL",
+   "streamer": "Ludwig",
+   "campaign": "",
+   "posted": "2026-11-23T01:41:38Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711176069138730253",
+   "youtube": ""
+  },
+  {
+   "hook": "Lacy FURIOUS over IMPOSSIBLE low criminal profile",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-23T00:11:06Z",
+   "tiktok": "",
+   "youtube": "https://www.youtube.com/shorts/y-XUC6-h4fo"
+  },
+  {
+   "hook": "Lacy STUNNED watching the GTA 6 ENDING credits",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-23T00:11:06Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711152724267535630",
+   "youtube": ""
+  },
+  {
+   "hook": "IShowSpeed finds an alien in GTA 6",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-22T23:41:15Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711095817939143949",
+   "youtube": ""
+  },
+  {
+   "hook": "IShowSpeed SHOCKED by GTA 6 alligator",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-22T21:09:30Z",
+   "tiktok": "",
+   "youtube": "https://www.youtube.com/shorts/EYbVR82rPhU"
+  },
+  {
+   "hook": "Lacy STUNNED seeing HUGE cocaine stash",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-22T21:09:30Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711105913666555149",
+   "youtube": ""
+  },
+  {
+   "hook": "IShowSpeed accidentally deletes his GTA 6 save",
+   "streamer": "IShowSpeed",
+   "campaign": "",
+   "posted": "2026-11-22T18:07:21Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7711059028377439519?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Lacy SHOCKED by STEALTH mission",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-22T16:41:42Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7711036861694725390",
+   "youtube": ""
+  },
+  {
+   "hook": "xQc FURIOUS after GTA 6 CRASH",
+   "streamer": "xQc",
+   "campaign": "",
+   "posted": "2026-11-22T13:40:15Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710990011201555742?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Kai Cenat SHOCKED seeing UFO in GTA 6",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "posted": "2026-11-22T04:41:02Z",
+   "tiktok": "",
+   "youtube": "https://youtube.com/shorts/bj-AcEd6wTU"
+  },
+  {
+   "hook": "Kai Cenat STUNNED that NPCs REMEMBERED him",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "posted": "2026-11-22T04:41:02Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710848913573432590",
+   "youtube": ""
+  },
+  {
+   "hook": "Why is Clix FURIOUS at his payout?",
+   "streamer": "Clix",
+   "campaign": "Clix",
+   "posted": "2026-11-22T02:09:49Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710812219398769934?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Lacy DISGUSTS chat with food take",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-22T01:09:35Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710796716672421133?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Why is Kai Cenat SHOCKED by GTA 6?",
+   "streamer": "Kai Cenat",
+   "campaign": "Kai",
+   "posted": "2026-11-22T00:09:20Z",
+   "tiktok": "https://tiktok.com/@gtaclip96/video/7710781237085965582",
+   "youtube": ""
+  },
+  {
+   "hook": "Lacy STUNNED fans DELETING 90 hours of GTA 6 progress",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-21T23:08:23Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710765467274611982?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Joe Bartolozzi STUNNED finding first GTA 6 shortcut",
+   "streamer": "Joe_Bartolozzi",
+   "campaign": "",
+   "posted": "2026-11-21T22:07:48Z",
+   "tiktok": "https://www.tiktok.com/@gtaclip96/video/7710749853541797134?utm_campaign=tt4d_open_api&utm_source=7103819247981182978",
+   "youtube": ""
+  },
+  {
+   "hook": "Lacy STUNNED by 90 HOUR restart",
+   "streamer": "Lacy",
+   "campaign": "Lacy",
+   "posted": "2026-11-21T22:07:48Z",
+   "tiktok": "",
+   "youtube": "https://www.youtube.com/shorts/F_AmqAzAaDU"
+  }
+ ],
+ "fetcher": {
+  "last_run_utc": "16:51:06",
+  "last_run": "2026-11-28T16:51:06Z",
+  "fresh_by_streamer": {
+   "Clix": 0,
+   "Lacy": 0,
+   "Kai Cenat": 0,
+   "YourRAGE": 0,
+   "Jynxzi": 0,
+   "xQc": 0,
+   "Vanoss": 0,
+   "H2O Delirious": 0,
+   "IShowSpeed": 0,
+   "Stable Ronaldo": 0,
+   "JasonTheWeen": 0,
+   "NICKMERCS": 0,
+   "Nick Eh 30": 1,
+   "ohnePixel": 0,
+   "Marlon": 0,
+   "Adapt": 0,
+   "Silky": 0
+  },
+  "picked": 1,
+  "added": 0,
+  "found_24h": 197,
+  "kept_24h": 36,
+  "every_min": 10
+ },
+ "live": [
+  {
+   "login": "ohnepixel",
+   "name": "ohnePixel",
+   "viewers": 32898,
+   "game": "Grand Theft Auto VI",
+   "gta": true,
+   "title": "🔴[DROPS] GTA 6 FULL PLAYTHROUGH *ALMOST DONE*🔴",
+   "since": "2026-11-28T13:47:14Z",
+   "approved": true,
+   "thumb": "https://static-cdn.jtvnw.net/previews-ttv/live_user_ohnepixel-320x180.jpg"
+  },
+  {
+   "login": "nickeh30",
+   "name": "NickEh30",
+   "viewers": 7836,
+   "game": "Grand Theft Auto VI",
+   "gta": true,
+   "title": "FAMILY FRIENDLY GTA 6! (Day 11)",
+   "since": "2026-11-28T14:31:40Z",
+   "approved": true,
+   "thumb": "https://static-cdn.jtvnw.net/previews-ttv/live_user_nickeh30-320x180.jpg"
+  }
+ ],
+ "topic": {
+  "name": "GTA 6",
+  "game_ids": [
+   "1867279146"
+  ],
+  "keywords": [],
+  "tags": "#GTA6 #GTAVI #gaming"
+ },
+ "trending": [
+  {
+   "id": "509658",
+   "name": "Just Chatting",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/509658-144x192.jpg"
+  },
+  {
+   "id": "1867279146",
+   "name": "Grand Theft Auto VI",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/1867279146_IGDB-144x192.jpg"
+  },
+  {
+   "id": "509663",
+   "name": "Special Events",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/509663-144x192.jpg"
+  },
+  {
+   "id": "29595",
+   "name": "Dota 2",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/29595-144x192.jpg"
+  },
+  {
+   "id": "21779",
+   "name": "League of Legends",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/21779-144x192.jpg"
+  },
+  {
+   "id": "18122",
+   "name": "World of Warcraft",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/18122-144x192.jpg"
+  },
+  {
+   "id": "509672",
+   "name": "IRL",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/509672-144x192.jpg"
+  },
+  {
+   "id": "516575",
+   "name": "VALORANT",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/516575-144x192.jpg"
+  },
+  {
+   "id": "32399",
+   "name": "Counter-Strike",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/32399-144x192.jpg"
+  },
+  {
+   "id": "1753787976",
+   "name": "ROB RUN",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/1753787976_IGDB-144x192.jpg"
+  },
+  {
+   "id": "1264310518",
+   "name": "Marvel Rivals",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/1264310518_IGDB-144x192.jpg"
+  },
+  {
+   "id": "32982",
+   "name": "Grand Theft Auto V",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/32982_IGDB-144x192.jpg"
+  },
+  {
+   "id": "33214",
+   "name": "Fortnite",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/33214-144x192.jpg"
+  },
+  {
+   "id": "27471",
+   "name": "Minecraft",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/27471_IGDB-144x192.jpg"
+  },
+  {
+   "id": "743",
+   "name": "Chess",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/743-144x192.jpg"
+  },
+  {
+   "id": "491931",
+   "name": "Escape from Tarkov",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/491931_IGDB-144x192.jpg"
+  },
+  {
+   "id": "499973",
+   "name": "Always On",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/499973-144x192.jpg"
+  },
+  {
+   "id": "498566",
+   "name": "Slots",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/498566-144x192.jpg"
+  },
+  {
+   "id": "27546",
+   "name": "World of Tanks",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/27546_IGDB-144x192.jpg"
+  },
+  {
+   "id": "1282866981",
+   "name": "Delta Force",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/1282866981_IGDB-144x192.jpg"
+  },
+  {
+   "id": "123184772",
+   "name": "EA Sports FC 27",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/123184772_IGDB-144x192.jpg"
+  },
+  {
+   "id": "771448419",
+   "name": "AION 2",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/771448419_IGDB-144x192.jpg"
+  },
+  {
+   "id": "491487",
+   "name": "Dead by Daylight",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/491487-144x192.jpg"
+  },
+  {
+   "id": "19619",
+   "name": "Tibia",
+   "box": "https://static-cdn.jtvnw.net/ttv-boxart/19619_IGDB-144x192.jpg"
+  }
+ ],
+ "ai": {
+  "status": "ok",
+  "checked": "2026-11-28T16:23:21Z",
+  "rated": 41
+ }
+}
