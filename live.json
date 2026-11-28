@@ -397,11 +397,11 @@
    }
   ]
  },
- "updated": "2026-11-28T13:35:16Z",
+ "updated": "2026-11-28T13:39:47Z",
  "paused": true,
  "switched_at": "2026-11-27T16:56:58Z",
  "postnow": [],
- "next_slot": "2026-11-28T13:37:00Z",
+ "next_slot": "2026-11-28T16:37:00Z",
  "up_next": null,
  "videos": [
   {
@@ -1450,17 +1450,7 @@
    "error": "InvalidInputError: Invalid post: Video could not be read from its URL."
   }
  ],
- "blocked": [
-  "SilkyCrypticLionBCouch-DZtp4u9G6jQBKnpU",
-  "vod2939504732_11720",
-  "vod2939504732_16722",
-  "vod2939504732_7942",
-  "vod2939638120_9131",
-  "vod2939983603_20676",
-  "vod2939983603_24865",
-  "vod2939983603_26327",
-  "vod2939983603_26445"
- ],
+ "blocked": [],
  "posts": {
   "UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz": {
    "id": "UnusualHeadstrongPeanutKappaWealth-04zirkRBuupZVKLz",
@@ -4373,6 +4363,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-28T13:35:16Z",
+ "stats_updated": "2026-11-28T13:39:47Z",
  "log": []
 }
