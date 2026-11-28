@@ -57,6 +57,7 @@ jobs:
         shell: bash
         run: python pipeline.py 2>&1 | tee /tmp/pipeline.log; exit ${PIPESTATUS[0]}
         env:
+          PYTHONFAULTHANDLER: "1"   # if the native video code ever crashes (2 segfaults on Nov 27), the log shows where
           FETCH: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && '1' || '0' }}
           GH_TOKEN: ${{ github.token }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
