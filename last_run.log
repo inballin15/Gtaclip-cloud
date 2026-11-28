@@ -1,0 +1,68 @@
+[16:23:27Z] hook learner: 1 lessons from 76 videos, style weights {'formula': 0.069, 'news': 0.069, 'quote': 0.069, 'question': 0.069, 'vibe': 0.639, 'lowcaps': 0.085}
+[16:23:53Z] VOD moment Nick Eh 30 -> new 0,0.15,0.23,0.46
+[16:24:11Z] VOD moment Nick Eh 30 -> new 0,0.15,0.23,0.46
+[16:24:28Z] VOD moment Nick Eh 30 -> new 0,0.15,0.23,0.46
+[16:24:29Z] vod import vodclip-20261128160911: 3 clips
+[16:24:29Z] twitch id length=30 secret length=30 (both should be 30)
+[16:24:30Z] Clix: 0 fresh GTA 6 clips
+[16:24:30Z] Lacy: 0 fresh GTA 6 clips
+[16:24:30Z] Kai Cenat: 0 fresh GTA 6 clips
+[16:24:30Z] YourRAGE: 0 fresh GTA 6 clips
+[16:24:31Z] Jynxzi: 0 fresh GTA 6 clips
+[16:24:31Z] xQc: 0 fresh GTA 6 clips
+[16:24:31Z] Vanoss: 0 fresh GTA 6 clips
+[16:24:32Z] H2O Delirious: 0 fresh GTA 6 clips
+[16:24:32Z] IShowSpeed: 0 fresh GTA 6 clips
+[16:24:32Z] Stable Ronaldo: 0 fresh GTA 6 clips
+[16:24:32Z] JasonTheWeen: 0 fresh GTA 6 clips
+[16:24:33Z] NICKMERCS: 0 fresh GTA 6 clips
+[16:24:33Z] Nick Eh 30: 1 fresh GTA 6 clips
+[16:24:33Z] ohnePixel: 3 fresh GTA 6 clips
+[16:24:33Z] Marlon: 0 fresh GTA 6 clips
+[16:24:34Z] Adapt: 0 fresh GTA 6 clips
+[16:24:34Z] Silky: 0 fresh GTA 6 clips
+[16:24:34Z] twitch id length=30 secret length=30 (both should be 30)
+[download] got 1440 Nonex1440@60.0 tbr=None | offered: portrait-360:Nonex360@30.0 360:Nonex360@30.0 portrait-480:Nonex480@30.0 480:Nonex480@30.0 portrait-720:Nonex720@60.0 720:Nonex720@60.0 1080:Nonex1080@60.0 portrait-1332:Nonex1332@60.0 1440:Nonex1440@60.0
+[0;93m2026-11-28 16:24:36.627234189 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[16:24:57Z] ohnePixel 'Set influencer on fire and threw her off xD' -> new 0.05,0.64,0.24,0.36
+[download] got 1440 Nonex1440@60.0 tbr=None | offered: portrait-360:Nonex360@30.0 360:Nonex360@30.0 portrait-480:Nonex480@30.0 480:Nonex480@30.0 portrait-720:Nonex720@60.0 720:Nonex720@60.0 1080:Nonex1080@60.0 portrait-1332:Nonex1332@60.0 1440:Nonex1440@60.0
+[16:25:22Z] ohnePixel 'WHAT' -> new 0.05,0.64,0.24,0.36
+[download] got 1440 Nonex1440@60.0 tbr=None | offered: portrait-360:Nonex360@30.0 360:Nonex360@30.0 portrait-480:Nonex480@30.0 480:Nonex480@30.0 portrait-720:Nonex720@60.0 720:Nonex720@60.0 portrait-1080:Nonex1080@60.0 1080:Nonex1080@60.0 1440:Nonex1440@60.0
+[16:25:49Z] Nick Eh 30 'NICK EH 30 SAYS "C@@CHIE"' -> new 0,0.15,0.23,0.46
+[download] got 1440 Nonex1440@60.0 tbr=None | offered: portrait-360:Nonex360@30.0 360:Nonex360@30.0 portrait-480:Nonex480@30.0 480:Nonex480@30.0 portrait-720:Nonex720@60.0 720:Nonex720@60.0 1080:Nonex1080@60.0 portrait-1332:Nonex1332@60.0 1440:Nonex1440@60.0
+[16:26:20Z] ohnePixel 'ohnePixel's shootout goes sideways, chat calls it cinema' -> new 0.05,0.64,0.24,0.36
+[16:26:20Z] queue full: kept 40 stream clips
+[16:26:21Z] AI models answering now: gemini-3.1-flash-lite, gemini-3-flash-preview, gemini-3.1-flash-lite-preview
+[16:26:47Z] AI scoring: 3 clips rated (ok)
+[16:26:47Z] AI removed AnimatedTriumphantMonkeyTwitchRPG-ChAhSNxiNA4_wa9D: Violent content against NPCs is flagged and likely to be demonetized
+[16:27:00Z] site updated (mid-run)
+[16:28:15Z] trimmed vod2943284130_5132: 28s -> 7-25s (moment at 11s, 4s in)
+[16:28:15Z] trimmed vod2943284130_4582: 30s -> 8-25s (moment at 15s, 7s in)
+[16:28:34Z] chat over the webcam in vod2943284130_5132: webcam box ends above it
+[16:28:48Z] burned-in captions in vod2943284130_5132: cropped just 12% off the bottom of the gameplay
+[16:29:24Z] burned-in captions in vod2943284130_4582: cropped just 15% off the bottom of the gameplay
+[16:32:23Z] made video 1/6: Nick Eh 30 vod2943284130_5132
+[16:33:06Z] made video 2/6: Nick Eh 30 vod2943284130_4582
+[16:33:38Z] trimmed CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-: 60s -> 21-37s (moment at 24s, 3s in)
+[16:33:59Z] site updated (mid-run)
+[16:34:00Z] using AI-upscaled webcam for CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-
+[16:34:11Z] burned-in captions in CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-: cropped just 13% off the bottom of the gameplay
+[16:35:23Z] trimmed HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9: 35s -> 18-35s (moment at 24s, 6s in)
+[16:36:51Z] made video 3/6: IShowSpeed CrypticStrongRatBloodTrail-qU-oZxcrr0gVwjd-
+[16:37:02Z] burned-in captions in HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9: cropped just 15% off the bottom of the gameplay
+[16:37:02Z] SpotlessBraveHawkNinjaGrumpy-_SxiKx4veam-dAtM: not GTA 6 on screen - hook fixed: ohnePixel was confused after finding Reddit content in his stream
+[16:37:02Z] picture check removed SpotlessBraveHawkNinjaGrumpy-_SxiKx4veam-dAtM: The main screen shows a browser window Reddit rather than actual gameplay, which violates 
+[16:37:02Z] made video 4/6: ohnePixel SpotlessBraveHawkNinjaGrumpy-_SxiKx4veam-dAtM
+[16:37:41Z] site updated (mid-run)
+[16:37:57Z] trimmed vod2943284130_5174: 29s -> 15-29s (moment at 22s, 7s in)
+[16:38:09Z] picture check (gemini-3.1-flash-lite): HTTP Error 503: Service Unavailable
+[16:38:09Z] picture check (gemini-3-flash-preview): HTTP Error 429: Too Many Requests
+[16:38:30Z] chat over the webcam in vod2943284130_5174: webcam box ends above it
+[16:38:51Z] burned-in captions in vod2943284130_5174: cropped just 15% off the bottom of the gameplay
+[16:40:35Z] made video 5/6: ohnePixel HyperWildCheetahNerfRedBlaster-257K039TmwZ1s7Y9
+[16:41:17Z] made video 6/6: Nick Eh 30 vod2943284130_5174
+[16:41:55Z] site updated (mid-run)
+[16:42:40Z] trim previews: made 4
+[16:44:47Z] live editor footage: made 4
+[16:44:52Z] live editor footage: removed 6 old
+[16:44:53Z] queue: 41 ready (41 with final video)
