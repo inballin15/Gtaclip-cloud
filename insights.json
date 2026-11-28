@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-28T12:46:35Z",
+ "updated": "2026-11-28T14:53:25Z",
  "videos": 76,
  "v": 5,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 12.71,
+   "x": 12.7,
    "n": 3
   },
   {
@@ -78,7 +78,7 @@
   {
    "feature": "streamer",
    "value": "caseoh_",
-   "x": 2.01,
+   "x": 2.02,
    "n": 3
   },
   {
