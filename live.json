@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-28T00:32:34Z",
+  "updated": "2026-11-28T02:32:43Z",
   "videos": 72,
   "v": 5,
   "findings": [
@@ -190,7 +190,7 @@
   "top": [
    {
     "hook": "IShowSpeed lost it after staying awake for 3 days playing GTA 6",
-    "views": 2560
+    "views": 2561
    },
    {
     "hook": "xQc was SHOCKED saying GTA 6 is a 7.8 without Verya on PC",
@@ -397,7 +397,7 @@
    }
   ]
  },
- "updated": "2026-11-28T02:28:18Z",
+ "updated": "2026-11-28T02:32:43Z",
  "paused": true,
  "switched_at": "2026-11-27T16:56:58Z",
  "postnow": [],
@@ -4373,6 +4373,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-28T02:28:18Z",
- "log": []
+ "stats_updated": "2026-11-28T02:32:43Z",
+ "log": [
+  "[02:32:44Z] hook learner: 72 videos, 1 lessons"
+ ]
 }
