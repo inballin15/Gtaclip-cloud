@@ -1,6 +1,6 @@
 {
  "insights": {
-  "updated": "2026-11-28T06:40:47Z",
+  "updated": "2026-11-28T08:42:41Z",
   "videos": 72,
   "v": 5,
   "findings": [
@@ -97,7 +97,7 @@
    {
     "feature": "streamer",
     "value": "IShowSpeed",
-    "x": 1.97,
+    "x": 1.98,
     "n": 11
    },
    {
@@ -397,7 +397,7 @@
    }
   ]
  },
- "updated": "2026-11-28T08:36:48Z",
+ "updated": "2026-11-28T08:42:41Z",
  "paused": true,
  "switched_at": "2026-11-27T16:56:58Z",
  "postnow": [],
@@ -4373,6 +4373,8 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-28T08:36:48Z",
- "log": []
+ "stats_updated": "2026-11-28T08:42:41Z",
+ "log": [
+  "[08:42:41Z] hook learner: 72 videos, 1 lessons"
+ ]
 }
