@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-27T22:31:32Z",
- "videos": 70,
+ "updated": "2026-11-28T00:32:34Z",
+ "videos": 72,
  "v": 5,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 12.82,
+   "x": 12.03,
    "n": 3
   },
   {
@@ -18,20 +18,20 @@
   {
    "feature": "hook style",
    "value": "quote",
-   "x": 0.16,
+   "x": 0.15,
    "n": 5
-  },
-  {
-   "feature": "streamer",
-   "value": "Lacy",
-   "x": 0.26,
-   "n": 11
   },
   {
    "feature": "hook length",
    "value": "long (90+)",
-   "x": 0.28,
+   "x": 0.24,
    "n": 4
+  },
+  {
+   "feature": "streamer",
+   "value": "Lacy",
+   "x": 0.24,
+   "n": 11
   },
   {
    "feature": "hook style",
@@ -42,140 +42,139 @@
   {
    "feature": "emotion word",
    "value": "STUNNED",
-   "x": 0.35,
+   "x": 0.34,
    "n": 6
   },
   {
    "feature": "streamer",
    "value": "Clix",
-   "x": 0.4,
+   "x": 0.36,
    "n": 6
   },
   {
    "feature": "CAPS words",
    "value": "4-6",
-   "x": 0.43,
+   "x": 0.42,
    "n": 6
   },
   {
    "feature": "style:box",
    "value": "black",
-   "x": 0.46,
+   "x": 0.45,
    "n": 8
-  },
-  {
-   "feature": "question",
-   "value": "yes",
-   "x": 2.17,
-   "n": 4
   },
   {
    "feature": "streamer",
    "value": "Kai",
-   "x": 2.15,
+   "x": 2.13,
    "n": 3
-  },
-  {
-   "feature": "streamer",
-   "value": "caseoh_",
-   "x": 2.07,
-   "n": 3
-  },
-  {
-   "feature": "streamer",
-   "value": "IShowSpeed",
-   "x": 2.05,
-   "n": 11
   },
   {
    "feature": "CAPS words",
    "value": "0-1",
-   "x": 2.03,
-   "n": 31
+   "x": 2.1,
+   "n": 33
   },
   {
    "feature": "style:hooklen",
    "value": "tiny",
-   "x": 0.51,
+   "x": 0.48,
    "n": 12
+  },
+  {
+   "feature": "streamer",
+   "value": "caseoh_",
+   "x": 2.05,
+   "n": 3
+  },
+  {
+   "feature": "question",
+   "value": "yes",
+   "x": 1.99,
+   "n": 4
+  },
+  {
+   "feature": "streamer",
+   "value": "IShowSpeed",
+   "x": 1.97,
+   "n": 11
   },
   {
    "feature": "hook style",
    "value": "formula",
-   "x": 0.53,
+   "x": 0.51,
    "n": 15
   },
   {
    "feature": "style:cam",
    "value": "small",
-   "x": 0.54,
+   "x": 0.52,
    "n": 11
   },
   {
    "feature": "style:cam",
    "value": "medium",
-   "x": 0.56,
+   "x": 0.55,
    "n": 23
   },
   {
    "feature": "CAPS words",
    "value": "2-3",
-   "x": 0.6,
+   "x": 0.56,
    "n": 33
+  },
+  {
+   "feature": "streamer",
+   "value": "?",
+   "x": 1.63,
+   "n": 17
   },
   {
    "feature": "hook style",
    "value": "unknown",
    "x": 1.61,
-   "n": 38
-  },
-  {
-   "feature": "posted",
-   "value": "morning (7-11)",
-   "x": 1.53,
-   "n": 14
+   "n": 40
   },
   {
    "feature": "posted",
    "value": "night (19+)",
-   "x": 0.66,
+   "x": 0.64,
    "n": 15
   },
   {
-   "feature": "hook style",
-   "value": "lowcaps",
-   "x": 1.49,
-   "n": 7
+   "feature": "style:punch",
+   "value": "off",
+   "x": 0.67,
+   "n": 9
   }
  ],
  "guidance": [
-  "AVOID: emotion word = STUNNED (0.35x views, 6 videos)",
-  "AVOID: has a number = no (0.76x views, 17 videos)"
+  "AVOID: emotion word = STUNNED (0.34x views, 6 videos)"
  ],
  "weights": {
-  "formula": 0.072,
+  "formula": 0.07,
   "news": 0.069,
   "quote": 0.069,
   "question": 0.069,
-  "vibe": 0.633,
-  "lowcaps": 0.087
+  "vibe": 0.635,
+  "lowcaps": 0.086
  },
  "style_weights": {
   "box": {
-   "white": 0.782,
-   "black": 0.218
+   "white": 0.777,
+   "black": 0.223
   },
   "cam": {
    "small": 0.314,
    "medium": 0.686
   },
   "hooklen": {
-   "tiny": 0.178,
-   "story": 0.822
+   "tiny": 0.176,
+   "story": 0.824
   },
   "punch": {
-   "off": 0.431,
-   "on": 0.569
+   "off": 0.429,
+   "on": 0.571
   },
   "pbar": {
    "off": 0.467,
@@ -206,7 +205,7 @@
   },
   {
    "hook": "What do you think about Nick not being family freindly?",
-   "views": 947
+   "views": 951
   }
  ],
  "style_counts": {
@@ -245,6 +244,16 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-28T00:32:34Z",
+   "kind": "data",
+   "text": "judged 72 videos (was 70)"
+  },
+  {
+   "at": "2026-11-28T00:32:34Z",
+   "kind": "dropped",
+   "text": "AVOID: has a number = no (0.76x views, 17 videos)"
+  },
   {
    "at": "2026-11-27T16:19:10Z",
    "kind": "data",
@@ -384,16 +393,6 @@
    "at": "2026-11-24T16:02:30Z",
    "kind": "data",
    "text": "judged 46 videos (was 44)"
-  },
-  {
-   "at": "2026-11-24T16:02:30Z",
-   "kind": "shift",
-   "text": "punch: off -> on"
-  },
-  {
-   "at": "2026-11-24T16:02:30Z",
-   "kind": "shift",
-   "text": "subs: on -> off"
   }
  ]
 }
