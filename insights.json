@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-28T10:43:08Z",
- "videos": 73,
+ "updated": "2026-11-28T12:46:35Z",
+ "videos": 76,
  "v": 5,
  "findings": [
   {
    "feature": "streamer",
    "value": "xQc",
-   "x": 12.52,
+   "x": 12.71,
    "n": 3
   },
   {
@@ -30,13 +30,13 @@
   {
    "feature": "hook length",
    "value": "long (90+)",
-   "x": 0.27,
+   "x": 0.29,
    "n": 4
   },
   {
    "feature": "hook style",
    "value": "question",
-   "x": 0.33,
+   "x": 0.32,
    "n": 3
   },
   {
@@ -48,7 +48,7 @@
   {
    "feature": "streamer",
    "value": "Clix",
-   "x": 0.39,
+   "x": 0.41,
    "n": 6
   },
   {
@@ -60,44 +60,32 @@
   {
    "feature": "style:box",
    "value": "black",
-   "x": 0.45,
+   "x": 0.44,
    "n": 8
   },
   {
-   "feature": "hook style",
-   "value": "formula",
-   "x": 0.46,
-   "n": 16
-  },
-  {
-   "feature": "style:pbar",
-   "value": "off",
-   "x": 0.46,
+   "feature": "question",
+   "value": "yes",
+   "x": 2.18,
    "n": 4
   },
   {
    "feature": "streamer",
    "value": "Kai",
-   "x": 2.13,
+   "x": 2.08,
    "n": 3
-  },
-  {
-   "feature": "question",
-   "value": "yes",
-   "x": 2.11,
-   "n": 4
   },
   {
    "feature": "streamer",
    "value": "caseoh_",
-   "x": 2.05,
+   "x": 2.01,
    "n": 3
   },
   {
-   "feature": "streamer",
-   "value": "IShowSpeed",
-   "x": 2.02,
-   "n": 11
+   "feature": "hook style",
+   "value": "formula",
+   "x": 0.5,
+   "n": 17
   },
   {
    "feature": "style:hooklen",
@@ -106,16 +94,10 @@
    "n": 12
   },
   {
-   "feature": "style:cam",
-   "value": "medium",
-   "x": 0.51,
-   "n": 24
-  },
-  {
-   "feature": "CAPS words",
-   "value": "0-1",
-   "x": 1.96,
-   "n": 34
+   "feature": "streamer",
+   "value": "IShowSpeed",
+   "x": 1.95,
+   "n": 12
   },
   {
    "feature": "style:cam",
@@ -124,28 +106,46 @@
    "n": 11
   },
   {
-   "feature": "streamer",
-   "value": "?",
-   "x": 1.76,
-   "n": 17
+   "feature": "CAPS words",
+   "value": "0-1",
+   "x": 1.82,
+   "n": 37
+  },
+  {
+   "feature": "style:cam",
+   "value": "medium",
+   "x": 0.55,
+   "n": 26
   },
   {
    "feature": "CAPS words",
    "value": "2-3",
-   "x": 0.58,
+   "x": 0.6,
    "n": 33
   },
   {
    "feature": "hook style",
    "value": "unknown",
-   "x": 1.7,
-   "n": 40
+   "x": 1.65,
+   "n": 41
   },
   {
-   "feature": "clip length",
-   "value": "23 s+",
-   "x": 0.64,
-   "n": 30
+   "feature": "streamer",
+   "value": "?",
+   "x": 1.59,
+   "n": 18
+  },
+  {
+   "feature": "posted",
+   "value": "night (19+)",
+   "x": 0.65,
+   "n": 15
+  },
+  {
+   "feature": "posted",
+   "value": "morning (7-11)",
+   "x": 1.53,
+   "n": 14
   }
  ],
  "guidance": [
@@ -156,29 +156,29 @@
   "news": 0.069,
   "quote": 0.069,
   "question": 0.069,
-  "vibe": 0.636,
-  "lowcaps": 0.087
+  "vibe": 0.639,
+  "lowcaps": 0.085
  },
  "style_weights": {
   "box": {
-   "white": 0.767,
-   "black": 0.233
+   "white": 0.777,
+   "black": 0.223
   },
   "cam": {
-   "small": 0.33,
-   "medium": 0.67
+   "small": 0.318,
+   "medium": 0.682
   },
   "hooklen": {
-   "tiny": 0.196,
-   "story": 0.804
+   "tiny": 0.189,
+   "story": 0.811
   },
   "punch": {
-   "off": 0.468,
-   "on": 0.532
+   "off": 0.454,
+   "on": 0.546
   },
   "pbar": {
-   "off": 0.413,
-   "on": 0.587
+   "off": 0.44,
+   "on": 0.56
   },
   "cap": {
    "question": 0.34,
@@ -209,32 +209,32 @@
   }
  ],
  "style_counts": {
-  "formula": 16,
+  "formula": 17,
   "news": 2,
   "quote": 5,
   "question": 3,
-  "vibe": 0,
+  "vibe": 1,
   "lowcaps": 7
  },
  "style_tested": {
   "box": {
-   "white": 25,
+   "white": 27,
    "black": 8
   },
   "cam": {
    "small": 11,
-   "medium": 24
+   "medium": 26
   },
   "hooklen": {
    "tiny": 12,
-   "story": 15
+   "story": 17
   },
   "punch": {
    "off": 9,
-   "on": 10
+   "on": 12
   },
   "pbar": {
-   "off": 4,
+   "off": 6,
    "on": 2
   },
   "cap": {
@@ -244,6 +244,11 @@
   }
  },
  "feed": [
+  {
+   "at": "2026-11-28T12:46:35Z",
+   "kind": "data",
+   "text": "judged 76 videos (was 73)"
+  },
   {
    "at": "2026-11-28T10:43:08Z",
    "kind": "data",
@@ -388,11 +393,6 @@
    "at": "2026-11-24T20:04:32Z",
    "kind": "data",
    "text": "judged 48 videos (was 46)"
-  },
-  {
-   "at": "2026-11-24T20:04:32Z",
-   "kind": "shift",
-   "text": "subs: off -> on"
   }
  ]
 }
