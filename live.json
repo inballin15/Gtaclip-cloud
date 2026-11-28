@@ -397,7 +397,7 @@
    }
   ]
  },
- "updated": "2026-11-28T11:14:26Z",
+ "updated": "2026-11-28T11:18:53Z",
  "paused": true,
  "switched_at": "2026-11-27T16:56:58Z",
  "postnow": [],
@@ -1354,12 +1354,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-28",
-  "used": 1,
+  "used": 2,
   "cap": 30,
   "slots": 6,
-  "remain30": 656,
+  "remain30": 655,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 595,
+  "remain24": 594,
   "active": [
    [
     8,
@@ -3175,8 +3175,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 330,
-   "likes": 3,
+   "views": 614,
+   "likes": 4,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -3273,8 +3273,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 885,
-   "likes": 18,
+   "views": 951,
+   "likes": 19,
    "comments": 0,
    "shares": 0,
    "reposts": 0,
@@ -3469,8 +3469,8 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 2521,
-   "likes": 27,
+   "views": 2562,
+   "likes": 28,
    "comments": 2,
    "shares": 0,
    "reposts": 0,
@@ -3735,7 +3735,7 @@
    "hook": "",
    "clip": "",
    "streamer": "",
-   "views": 1249,
+   "views": 1250,
    "likes": 19,
    "comments": 0,
    "shares": 0,
@@ -4373,6 +4373,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-28T11:14:26Z",
+ "stats_updated": "2026-11-28T11:18:53Z",
  "log": []
 }
