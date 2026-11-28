@@ -397,7 +397,7 @@
    }
   ]
  },
- "updated": "2026-11-28T05:11:27Z",
+ "updated": "2026-11-28T05:14:47Z",
  "paused": true,
  "switched_at": "2026-11-27T16:56:58Z",
  "postnow": [],
@@ -1354,12 +1354,12 @@
  "submitted": {},
  "budget": {
   "day": "2026-11-28",
-  "used": 0,
+  "used": 1,
   "cap": 30,
   "slots": 6,
-  "remain30": 657,
+  "remain30": 656,
   "reset30": "2026-12-18T22:03:15Z",
-  "remain24": 596,
+  "remain24": 595,
   "active": [
    [
     8,
@@ -4373,6 +4373,6 @@
    "saves": 0
   }
  ],
- "stats_updated": "2026-11-28T05:11:27Z",
+ "stats_updated": "2026-11-28T05:14:47Z",
  "log": []
 }
